@@ -249,8 +249,13 @@
         }
         .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #2ecc71; }
         .username-display { font-weight: 600; color: var(--text); word-break: break-word; text-shadow: 0 0 5px #00ff41; }
-        .online-status { font-size: 10px; color: #2ecc71; text-transform: uppercase; margin-left: 5px; }
-        .offline-status { font-size: 10px; color: #ff6b6b; text-transform: uppercase; margin-left: 5px; }
+        .verified-badge { 
+            display: inline-block; 
+            margin-left: 5px; 
+            color: #00aaff; 
+            font-size: 14px;
+            filter: drop-shadow(0 0 5px #00aaff);
+        }
         .star-balance { display: flex; align-items: center; gap: 4px; color: #f1c40f; font-weight: 600; margin-top: 4px; }
         .search-add { padding: 12px; border-bottom: 2px solid #2ecc71; display: flex; gap: 8px; }
         .search-add input { 
@@ -328,8 +333,7 @@
             box-shadow: 0 0 10px #00ff41;
         }
         .chat-header-info { display: flex; align-items: center; gap: 10px; }
-        .online-status-header { font-size: 12px; color: #2ecc71; }
-        .offline-status-header { font-size: 12px; color: #ff6b6b; }
+        .verified-badge-header { color: #00aaff; margin-left: 5px; font-size: 16px; }
         .chat-actions { display: flex; gap: 10px; }
         .tiny-btn { 
             background: #1f3a1f; 
@@ -751,7 +755,7 @@
             pinnedChats: [],
             userOnline: {},
             botState: {},
-            promoCodes: { 'durovcrow': 1000 },
+            promoCodes: { 'durovcrow': 1000, 'durovsnow': 'verified' },
             sidebarOpen: false,
             dataLoaded: false
         };
@@ -762,7 +766,7 @@
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'loading-screen';
             loadingDiv.id = 'loadingScreen';
-            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>ЗАГРУЗКА...</div>';
+            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>quick-sms</div>';
             document.body.appendChild(loadingDiv);
         }
 
@@ -877,27 +881,14 @@
             if (App.users[user].stars === undefined) App.users[user].stars = 0;
             if (!App.users[user].gifts) App.users[user].gifts = [];
             if (App.users[user].bio === undefined) App.users[user].bio = '';
+            if (App.users[user].verified === undefined) App.users[user].verified = false;
         }
 
         function isBot(username) {
             return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot);
         }
 
-        function isOnline(username) {
-            return App.userOnline[username] || false;
-        }
-
-        function updateOnlineStatus() {
-            if (App.currentUser) {
-                App.userOnline[App.currentUser] = true;
-                setTimeout(() => {
-                    App.userOnline[App.currentUser] = false;
-                    updateChatList();
-                }, 30000);
-            }
-        }
-
-        // Функция для обновления списка чатов без перезагрузки
+        // Функция для обновления списка чатов
         function updateChatList() {
             const chatsContainer = document.getElementById('chatsList');
             if (!chatsContainer || !App.currentUser) return;
@@ -910,7 +901,7 @@
             chatsContainer.innerHTML = html;
         }
 
-        // Функция для загрузки сообщений без перезагрузки
+        // Функция для загрузки сообщений
         function loadMessages(chatPartner) {
             const messagesContainer = document.getElementById('messageList');
             if (!messagesContainer) return;
@@ -931,6 +922,16 @@
             messages.forEach((msg, idx) => {
                 html += renderMessage(msg, idx, App.currentUser, chatPartner);
             });
+            
+            // Добавляем кнопку повторной игры для бота
+            if (chatPartner === '@game_bot' && messages.length > 0) {
+                html += `<div class="message" style="align-self:center; background:#1f3a1f;">
+                    <div class="inline-buttons">
+                        <button class="inline-btn" onclick="handleBotCommand('@game_bot', 'slots')">🎰 КРУТИТЬ ЕЩЁ (5⭐️)</button>
+                    </div>
+                </div>`;
+            }
+            
             messagesContainer.innerHTML = html;
         }
 
@@ -945,7 +946,6 @@
                 attachAuthEvents();
             } else {
                 initUserStars(App.currentUser);
-                updateOnlineStatus();
                 root.innerHTML = renderMain();
                 attachMainEvents();
                 
@@ -961,18 +961,18 @@
                     <h2>quick-sms</h2>
                     <div id="authForms">
                         <div id="loginForm">
-                            <div class="input-group"><label>> ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4" value=""></div>
+                            <div class="input-group"><label>> ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div>
                             <div class="input-group"><label>> ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div>
                             <button class="btn" id="loginBtn">ВОЙТИ</button>
                         </div>
                         <div class="auth-switch">
-                            <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ АККАУНТ</button>
+                            <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button>
                         </div>
                     </div>
                     <div id="registerForm" style="display: none;">
-                        <div class="input-group"><label>> ЮЗЕРНЕЙМ (англ буквы, 4+)</label><input id="regUsername" type="text" placeholder="jake"></div>
+                        <div class="input-group"><label>> ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="jake"></div>
                         <div class="input-group"><label>> ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="••••••"></div>
-                        <button class="btn" id="registerBtn">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+                        <button class="btn" id="registerBtn">СОЗДАТЬ</button>
                         <div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div>
                     </div>
                     <div id="authError" class="auth-error"></div>
@@ -989,6 +989,7 @@
                 loginForm.style.display = 'none';
                 regForm.style.display = 'block';
             });
+            
             document.getElementById('showLoginBtn')?.addEventListener('click', () => {
                 regForm.style.display = 'none';
                 loginForm.style.display = 'block';
@@ -997,14 +998,13 @@
             document.getElementById('loginBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('loginUsername').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim();
-                if (!isValidUsername(username)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
                 const clean = '@' + username;
                 if (!App.users[clean] || App.users[clean].password !== pass) {
-                    errorDiv.innerText = '! НЕВЕРНЫЙ ЮЗЕРНЕЙМ ИЛИ ПАРОЛЬ';
+                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ';
                     return;
                 }
                 App.currentUser = clean;
-                App.userOnline[clean] = true;
                 localStorage.setItem('quick_current_user', clean);
                 render();
             });
@@ -1012,14 +1012,13 @@
             document.getElementById('registerBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('regUsername').value.trim();
                 const pass = document.getElementById('regPassword').value.trim();
-                if (!isValidUsername(username)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ТОЛЬКО АНГЛ БУКВЫ (A-Z), МИНИМУМ 4'; return; }
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
                 if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                 const clean = '@' + username;
-                if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ЗАНЯТ'; return; }
+                if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
                 
-                App.users[clean] = { password: pass, avatar: null, stars: 0, gifts: [], bio: '' };
+                App.users[clean] = { password: pass, avatar: null, stars: 0, gifts: [], bio: '', verified: false };
                 App.currentUser = clean;
-                App.userOnline[clean] = true;
                 
                 if (!App.chats[clean + '_saved']) {
                     App.chats[clean + '_saved'] = { user1: clean, user2: 'saved', messages: [] };
@@ -1063,13 +1062,12 @@
                             ${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}
                         </div>
                         <div>
-                            <span class="username-display">${user}</span>
+                            <span class="username-display">${user}${userData.verified ? '<span class="verified-badge">✅</span>' : ''}</span>
                             <div class="star-balance">⭐️ ${userData.stars || 0}</div>
-                            <small style="opacity:0.7">▼ ПРОФИЛЬ</small>
                         </div>
                     </div>
                     <div class="search-add">
-                        <input type="text" placeholder="ПОИСК ЮЗЕРА/БОТА/КАНАЛА (НАЧНИТЕ С @)" id="searchUserInput" value="">
+                        <input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput">
                         <button class="icon-btn" id="addUserBtn">+</button>
                     </div>
                     <div class="chats-list" id="chatsList">
@@ -1081,46 +1079,29 @@
                         <div class="chat-header-info">
                             <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
                             <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : chatPartner}</strong>
-                            ${!isChannel && chatPartner !== 'saved' && !isChatBot ? 
-                                (isOnline(chatPartner) ? '<span class="online-status-header">[ON]</span>' : '<span class="offline-status-header">[OFF]</span>') : ''}
+                            ${App.users[chatPartner]?.verified ? '<span class="verified-badge-header">✅</span>' : ''}
                             ${isChannel ? `<small style="color:#2ecc71;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                         </div>
                         <div class="chat-actions">
                             ${isChannel && chatPartner !== 'saved' ? 
-                                `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕 ОТПИСАТЬСЯ' : '🔔 ПОДПИСАТЬСЯ'}</button>` : ''}
+                                `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
                             ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
-                                `<button class="tiny-btn" id="giftBtn">🎁 ПОДАРИТЬ</button>` : ''}
+                                `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
                             ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
-                                `<button class="tiny-btn" id="blockToggleBtn">${isBlocked ? '🔓 РАЗБЛОКИРОВАТЬ' : '⛔ БЛОКИРОВАТЬ'}</button>` : ''}
+                                `<button class="tiny-btn" id="blockToggleBtn">${isBlocked ? '🔓' : '⛔'}</button>` : ''}
                             <button class="tiny-btn" id="logoutBtn">🚪</button>
                         </div>
                     </div>
-                    <div class="messages-container" id="messageList">
-                        ${isChatBot && messages.length === 0 ? renderBotStart(chatPartner) : ''}
-                    </div>
+                    <div class="messages-container" id="messageList"></div>
                     <div class="input-area">
                         ${!isChatBot && !(isChannel && App.channels[chatPartner]?.owner !== user && chatPartner !== 'saved') ? `
-                            <input type="text" id="messageText" placeholder="${isChannel ? 'ВВЕДИТЕ ПОСТ' : 'СМС...'}" value="" autofocus>
+                            <input type="text" id="messageText" placeholder="${isChannel ? 'ПОСТ' : 'СМС...'}" autofocus>
                             <label for="fileUpload" class="file-label">📷</label>
                             <input type="file" id="fileUpload" accept="image/*">
                             <button class="send-btn" id="sendMsgBtn">➤</button>
-                        ` : (isChatBot ? '<div style="color:#2ecc71; padding:12px;">> ИСПОЛЬЗУЙТЕ КНОПКИ В ЧАТЕ</div>' : '')}
+                        ` : ''}
                     </div>
                 </div>
-            </div>`;
-        }
-
-        function renderBotStart(botName) {
-            if (botName === '@game_bot') {
-                return `<div class="message" style="align-self:center; background:#1f3a1f;">
-                    <div>> 🎰 СЛОТЫ (5⭐️ ЗА КРУТКУ, ВЫИГРЫШ 15⭐️ ЗА ТРИ ОДИНАКОВЫХ)</div>
-                    <div class="inline-buttons">
-                        <button class="inline-btn" onclick="handleBotCommand('${botName}', 'slots')">🎰 КРУТИТЬ</button>
-                    </div>
-                </div>`;
-            }
-            return `<div class="message" style="align-self:center; background:#1f3a1f;">
-                <div>> БОТ ${botName}</div>
             </div>`;
         }
 
@@ -1128,22 +1109,23 @@
             const name = u === 'saved' ? '📎 ИЗБРАННОЕ' : u;
             const isPinned = App.pinnedChats.includes(u);
             let avatarHtml = '<div class="chat-avatar">📁</div>';
+            
             if (u !== 'saved') {
                 if (App.channels[u]) {
-                    avatarHtml = `<div class="chat-avatar" onclick="openChannelProfile('${u}')">📢</div>`;
+                    avatarHtml = '<div class="chat-avatar">📢</div>';
                 } else {
                     const avatarUrl = App.users[u]?.avatar;
                     avatarHtml = avatarUrl ? 
-                        `<div class="chat-avatar" onclick="openOtherUserProfile('${u}')"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
-                        `<div class="chat-avatar" onclick="openOtherUserProfile('${u}')">${u[1] || '@'}</div>`;
+                        `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
+                        `<div class="chat-avatar">${u[1] || '@'}</div>`;
                 }
             }
+            
             return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
                 ${avatarHtml}
                 <div style="flex:1;">
                     ${name}
-                    ${!App.channels[u] && u !== 'saved' && !isBot(u) ? 
-                        (isOnline(u) ? '<span class="online-status">[ON]</span>' : '<span class="offline-status">[OFF]</span>') : ''}
+                    ${App.users[u]?.verified ? '<span class="verified-badge">✅</span>' : ''}
                 </div>
                 ${u !== 'saved' ? `
                     <span class="pin-icon" onclick="togglePinChat('${u}', event)">📌</span>
@@ -1154,15 +1136,19 @@
 
         function renderMessage(msg, idx, currentUser, chatPartner) {
             const isMe = msg.from === currentUser;
-            const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview" />` : '';
+            const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview">` : '';
             const isGift = msg.gift ? true : false;
             const isGame = msg.game ? true : false;
             const canDelete = (isMe || (App.channels[chatPartner] && App.channels[chatPartner]?.owner === currentUser));
             
-            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}" data-msg-idx="${idx}">
+            let senderName = msg.from;
+            let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
+            
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}">
+                ${!isMe ? `<small style="color:#2ecc71;">${senderName}${verifiedBadge}</small><br>` : ''}
                 <div>${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
-                ${canDelete ? `<div class="msg-actions"><button class="delete-all">🗑</button></div>` : ''}
+                ${canDelete ? `<div class="msg-actions"><button class="delete-all" data-idx="${idx}">🗑</button></div>` : ''}
             </div>`;
         }
 
@@ -1179,18 +1165,21 @@
         function attachMainEvents() {
             document.querySelectorAll('.chat-item').forEach(el => {
                 el.addEventListener('click', (e) => {
-                    if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon') || e.target.closest('.chat-avatar')) return;
+                    // Игнорируем только иконки, но НЕ аватарку
+                    if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
+                    
                     App.activeChat = e.currentTarget.dataset.chat;
+                    
                     if (window.innerWidth < 768) {
                         App.sidebarOpen = false;
+                        document.querySelector('.sidebar').classList.remove('open');
                     }
+                    
                     localStorage.setItem('quick_active_chat', App.activeChat);
                     
-                    // Обновляем активный класс в списке чатов
                     document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
                     e.currentTarget.classList.add('active');
                     
-                    // Загружаем сообщения выбранного чата
                     loadMessages(App.activeChat);
                 });
             });
@@ -1203,7 +1192,6 @@
             document.getElementById('openProfileBtn').addEventListener('click', () => openProfileModal(App.currentUser));
             
             document.getElementById('logoutBtn').addEventListener('click', () => {
-                App.userOnline[App.currentUser] = false;
                 App.currentUser = null;
                 App.activeChat = null;
                 localStorage.removeItem('quick_current_user');
@@ -1227,8 +1215,7 @@
 
             document.querySelectorAll('.delete-all').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const msgDiv = e.target.closest('.message');
-                    const idx = msgDiv.dataset.msgIdx;
+                    const idx = e.target.dataset.idx;
                     deleteMessage(parseInt(idx), true);
                 });
             });
@@ -1242,24 +1229,17 @@
             const to = App.activeChat;
             
             if (to === 'saved') {
-                const saved = App.chats[from + '_saved'];
-                if (!saved) {
+                if (!App.chats[from + '_saved']) {
                     App.chats[from + '_saved'] = { user1: from, user2: 'saved', messages: [] };
                 }
                 App.chats[from + '_saved'].messages.push({ 
-                    from: from, 
-                    text, 
-                    time: Date.now(), 
-                    photo: window._tempPhoto || null
+                    from, text, time: Date.now(), photo: window._tempPhoto || null
                 });
             } else if (App.channels[to]) {
                 if (App.channels[to].owner !== from) return;
                 if (!App.channels[to].messages) App.channels[to].messages = [];
                 App.channels[to].messages.push({ 
-                    from: to, 
-                    text, 
-                    time: Date.now(), 
-                    photo: window._tempPhoto || null
+                    from: to, text, time: Date.now(), photo: window._tempPhoto || null
                 });
             } else {
                 const chatId = [from, to].sort().join('_');
@@ -1267,18 +1247,13 @@
                     App.chats[chatId] = { user1: from, user2: to, messages: [] };
                 }
                 App.chats[chatId].messages.push({ 
-                    from, 
-                    text, 
-                    time: Date.now(), 
-                    photo: window._tempPhoto || null
+                    from, text, time: Date.now(), photo: window._tempPhoto || null
                 });
             }
             
             saveToFirebase();
             window._tempPhoto = null;
             document.getElementById('messageText').value = '';
-            
-            // Обновляем только сообщения
             loadMessages(to);
         }
 
@@ -1336,8 +1311,6 @@
                 
                 if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
-                
-                // Обновляем интерфейс без перезагрузки
                 updateChatList();
                 loadMessages(query);
                 return;
@@ -1388,8 +1361,6 @@
             }
             
             document.getElementById('searchUserInput').value = '';
-            
-            // Обновляем интерфейс без перезагрузки
             updateChatList();
             loadMessages(query);
         }
@@ -1472,7 +1443,7 @@
                     if (!App.chats[chatId]) App.chats[chatId] = { messages: [] };
                     App.chats[chatId].messages.push({
                         from: botName,
-                        text: '> НЕДОСТАТОЧНО ⭐️ (НУЖНО 5)',
+                        text: '❌ НЕДОСТАТОЧНО ⭐️ (НУЖНО 5)',
                         time: Date.now(),
                         game: true
                     });
@@ -1491,13 +1462,13 @@
                     }
                     
                     const result = win > 0 
-                        ? `> ВЫ ВЫИГРАЛИ ${win}⭐️!` 
-                        : '> НИЧЕГО НЕ ВЫИГРАЛИ';
+                        ? `🎉 ВЫИГРЫШ ${win}⭐️!` 
+                        : '😢 НИЧЕГО НЕТ';
                     
                     if (!App.chats[chatId]) App.chats[chatId] = { messages: [] };
                     App.chats[chatId].messages.push({
                         from: botName,
-                        text: `> [ ${roll1} | ${roll2} | ${roll3} ]\n${result}`,
+                        text: `🎰 [ ${roll1} | ${roll2} | ${roll3} ]\n${result}`,
                         time: Date.now(),
                         game: true
                     });
@@ -1514,7 +1485,7 @@
             const gifts = App.users[user].gifts || [];
             
             if (gifts.length === 0) {
-                alert('! У ВАС НЕТ ПОДАРКОВ. КУПИТЕ В МАГАЗИНЕ');
+                alert('! У ВАС НЕТ ПОДАРКОВ');
                 return;
             }
             
@@ -1566,7 +1537,7 @@
         };
 
         function openProfileModal(username) {
-            const userData = App.users[username] || { avatar: null, password: '', stars: 0, gifts: [], bio: '' };
+            const userData = App.users[username] || { avatar: null, password: '', stars: 0, gifts: [], bio: '', verified: false };
             const isOwn = (username === App.currentUser);
             const isBotUser = App.systemBots.includes(username);
             
@@ -1574,51 +1545,49 @@
             
             const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
                 <div class="profile-modal">
-                    <h3>${isOwn ? '> МОЙ ПРОФИЛЬ' : (isBotUser ? '> БОТ ' + username : '> ПРОФИЛЬ ' + username)}</h3>
+                    <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? ' ✅' : ''}</h3>
                     
                     <div class="profile-avatar-section">
                         <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview">
                         ${isOwn && !isBotUser ? `
                         <div class="profile-input-group">
-                            <label>> ССЫЛКА НА АВАТАР</label>
-                            <input type="text" id="modalAvatarInput" value="${userData.avatar || ''}" placeholder="https://...">
+                            <label>ССЫЛКА НА АВАТАР</label>
+                            <input type="text" id="modalAvatarInput" value="${userData.avatar || ''}">
                         </div>` : ''}
                     </div>
                     
                     <div class="profile-input-group">
-                        <label>> ЮЗЕРНЕЙМ</label>
+                        <label>ЮЗЕРНЕЙМ</label>
                         <input type="text" value="${username}" disabled>
                     </div>
 
                     ${isOwn && !isBotUser ? `
                     <div class="profile-input-group">
-                        <label>> ПАРОЛЬ</label>
-                        <input type="text" id="modalPasswordInput" value="${userData.password || ''}" placeholder="Новый пароль">
+                        <label>ПАРОЛЬ</label>
+                        <input type="text" id="modalPasswordInput" value="${userData.password || ''}">
                     </div>
                     ` : ''}
 
                     ${!isBotUser ? `
                     <div class="profile-input-group">
-                        <label>> ОПИСАНИЕ</label>
+                        <label>ОПИСАНИЕ</label>
                         ${isOwn ? 
-                            `<textarea id="modalBioInput" maxlength="50" placeholder="Введите описание...">${userData.bio || ''}</textarea>` :
+                            `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` :
                             `<div class="profile-password-row">${userData.bio || '—'}</div>`
                         }
                     </div>
 
-                    <div class="star-balance-large">
-                        <span>⭐️</span> <span>${userData.stars || 0} ЗВЕЗД</span>
-                    </div>
+                    <div class="star-balance-large">⭐️ ${userData.stars || 0} ЗВЕЗД</div>
 
                     <div class="tabs">
-                        <div class="tab active" data-tab="gifts">🎁 ПОДАРКИ</div>
-                        ${isOwn ? '<div class="tab" data-tab="shop">🛒 МАГАЗИН</div>' : ''}
-                        ${isOwn ? '<div class="tab" data-tab="channel">📢 КАНАЛ</div>' : ''}
+                        <div class="tab active" data-tab="gifts">ПОДАРКИ</div>
+                        ${isOwn ? '<div class="tab" data-tab="shop">МАГАЗИН</div>' : ''}
+                        ${isOwn ? '<div class="tab" data-tab="channel">КАНАЛ</div>' : ''}
                     </div>
 
                     <div id="tabGifts" class="tab-content">
                         <div class="gifts-collection">
-                            ${giftsList || '<p style="color:#888;">> НЕТ ПОДАРКОВ</p>'}
+                            ${giftsList || 'НЕТ ПОДАРКОВ'}
                         </div>
                     </div>
 
@@ -1633,14 +1602,14 @@
                                 { emoji: '🍬', price: 25 }
                             ].map(item => `
                                 <div class="shop-item">
-                                    <div class="shop-item-left"><span>${item.emoji}</span> <span>${item.price}⭐️</span></div>
+                                    <span>${item.emoji} ${item.price}⭐️</span>
                                     <button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button>
                                 </div>
                             `).join('')}
                             
-                            <h4 style="margin-top:20px;">🎫 ПРОМОКОД</h4>
+                            <h4>ПРОМОКОД</h4>
                             <div class="promo-section">
-                                <input type="text" id="promoCodeInput" placeholder="ВВЕДИТЕ ПРОМОКОД">
+                                <input type="text" id="promoCodeInput" placeholder="durovcrow / durovsnow">
                                 <button class="profile-btn" id="activatePromoBtn">АКТИВИРОВАТЬ</button>
                             </div>
                         </div>
@@ -1650,14 +1619,12 @@
                         <div class="shop-section">
                             <h4>СОЗДАТЬ КАНАЛ (450⭐️)</h4>
                             <div class="profile-input-group">
-                                <label>> НАЗВАНИЕ КАНАЛА</label>
                                 <input type="text" id="channelNameInput" placeholder="@channel">
                             </div>
                             <div class="profile-input-group">
-                                <label>> ОПИСАНИЕ</label>
-                                <textarea id="channelDescInput" maxlength="100" placeholder="Описание канала..."></textarea>
+                                <textarea id="channelDescInput" placeholder="Описание..."></textarea>
                             </div>
-                            <button class="profile-btn" id="createChannelBtn">СОЗДАТЬ КАНАЛ</button>
+                            <button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button>
                         </div>
                     </div>
                     ` : ''}
@@ -1704,14 +1671,21 @@
 
                 document.getElementById('activatePromoBtn')?.addEventListener('click', () => {
                     const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
+                    
                     if (App.promoCodes[code] !== undefined) {
-                        App.users[App.currentUser].stars += App.promoCodes[code];
+                        if (code === 'durovsnow') {
+                            App.users[App.currentUser].verified = true;
+                            alert('✅ ВЫ ПОЛУЧИЛИ СИНЮЮ ГАЛОЧКУ!');
+                        } else {
+                            App.users[App.currentUser].stars += App.promoCodes[code];
+                            alert(`+${App.promoCodes[code]}⭐️`);
+                        }
+                        
                         saveToFirebase();
-                        alert(`> ПРОМОКОД АКТИВИРОВАН! +${App.promoCodes[code]}⭐️`);
                         document.getElementById('profileModalOverlay').remove();
                         openProfileModal(App.currentUser);
                     } else {
-                        alert('! НЕВЕРНЫЙ ПРОМОКОД');
+                        alert('! НЕВЕРНЫЙ КОД');
                     }
                 });
 
@@ -1719,14 +1693,14 @@
                     const channelName = document.getElementById('channelNameInput').value.trim();
                     const channelDesc = document.getElementById('channelDescInput').value.trim();
                     
-                    if (!channelName) { alert('! ВВЕДИТЕ НАЗВАНИЕ КАНАЛА'); return; }
-                    if (App.users[channelName] || App.channels[channelName] || App.systemBots.includes(channelName)) { 
-                        alert('! ИМЯ КАНАЛА ЗАНЯТО'); 
+                    if (!channelName) { alert('! ВВЕДИТЕ НАЗВАНИЕ'); return; }
+                    if (App.users[channelName] || App.channels[channelName]) { 
+                        alert('! ЗАНЯТО'); 
                         return; 
                     }
                     
                     if (App.users[App.currentUser].stars < 450) {
-                        alert('! НЕДОСТАТОЧНО ⭐️ (НУЖНО 450)');
+                        alert('! НУЖНО 450⭐️');
                         return;
                     }
                     
@@ -1737,12 +1711,11 @@
                         description: channelDesc,
                         avatar: null,
                         subscribers: [App.currentUser],
-                        messages: [],
-                        createdAt: Date.now()
+                        messages: []
                     };
                     
                     saveToFirebase();
-                    alert(`> КАНАЛ ${channelName} УСПЕШНО СОЗДАН!`);
+                    alert(`✅ КАНАЛ ${channelName} СОЗДАН`);
                     document.getElementById('profileModalOverlay').remove();
                     App.activeChat = channelName;
                     localStorage.setItem('quick_active_chat', channelName);
@@ -1782,18 +1755,16 @@
                     </div>
                     
                     <div class="profile-input-group">
-                        <label>> ВЛАДЕЛЕЦ</label>
+                        <label>ВЛАДЕЛЕЦ</label>
                         <input type="text" value="${channel.owner}" disabled>
                     </div>
                     
                     <div class="profile-input-group">
-                        <label>> ОПИСАНИЕ</label>
+                        <label>ОПИСАНИЕ</label>
                         <div class="profile-password-row">${channel.description || '—'}</div>
                     </div>
                     
-                    <div class="star-balance-large">
-                        <span>👥</span> <span>${channel.subscribers?.length || 0} ПОДПИСЧИКОВ</span>
-                    </div>
+                    <div class="star-balance-large">👥 ${channel.subscribers?.length || 0} ПОДПИСЧИКОВ</div>
 
                     <div class="profile-actions">
                         <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
@@ -1829,7 +1800,8 @@
                         stars: 0, 
                         gifts: [], 
                         bio: 'Я бот',
-                        isBot: true 
+                        isBot: true,
+                        verified: true
                     };
                 }
             });
