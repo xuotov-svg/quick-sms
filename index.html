@@ -18,6 +18,7 @@
             overflow: hidden;
         }
         
+        /* Матричный эффект (оставляем, но он не мешает) */
         body::before {
             content: "";
             position: absolute;
@@ -68,7 +69,6 @@
             border: none;
             position: relative;
             z-index: 1;
-            backdrop-filter: blur(1px);
         }
         
         #app::before {
@@ -669,6 +669,36 @@
             border-radius: 2px;
             box-shadow: 0 0 5px #00ff41;
         }
+
+        /* Индикатор загрузки */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0f0a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: #00ff41;
+            font-size: 24px;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #1f3a1f;
+            border-top: 3px solid #00ff41;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -737,9 +767,58 @@
 
         App.systemBots = ['@game_bot', '@ggsuw'];
 
+        // Показываем экран загрузки
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-screen';
+            loadingDiv.id = 'loadingScreen';
+            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>ЗАГРУЗКА ДАННЫХ...</div>';
+            document.body.appendChild(loadingDiv);
+        }
+
+        // Скрываем экран загрузки
+        function hideLoading() {
+            const loading = document.getElementById('loadingScreen');
+            if (loading) loading.remove();
+        }
+
         // Загрузка данных из Firebase
         function loadFromFirebase() {
+            showLoading();
+            
+            // Сначала пробуем загрузить из кэша (чтобы быстро показать интерфейс)
+            const cachedData = localStorage.getItem('quick_cache');
+            if (cachedData) {
+                try {
+                    const cache = JSON.parse(cachedData);
+                    if (cache.users) App.users = cache.users;
+                    if (cache.chats) App.chats = cache.chats;
+                    console.log('📦 Загружено из кэша');
+                } catch(e) {}
+            }
+
+            // Таймаут 3 секунды (если Firebase тормозит)
+            const timeout = setTimeout(() => {
+                console.log('⚠️ Таймаут Firebase, показываем из кэша');
+                App.dataLoaded = true;
+                
+                const savedUser = localStorage.getItem('quick_current_user');
+                const savedChat = localStorage.getItem('quick_active_chat');
+                
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = savedChat;
+                }
+                
+                hideLoading();
+                render();
+            }, 3000);
+
+            // Пытаемся загрузить из Firebase
             database.ref().get().then((snapshot) => {
+                clearTimeout(timeout);
+                console.log('✅ Данные из Firebase получены!');
+                
                 if (snapshot.exists()) {
                     const data = snapshot.val();
                     if (data.users) App.users = data.users;
@@ -747,9 +826,17 @@
                     if (data.blocked) App.blocked = data.blocked;
                     if (data.channels) App.channels = data.channels;
                     if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
+                    
+                    // Сохраняем в кэш
+                    localStorage.setItem('quick_cache', JSON.stringify({
+                        users: data.users,
+                        chats: data.chats,
+                        blocked: data.blocked,
+                        channels: data.channels,
+                        pinnedChats: data.pinnedChats
+                    }));
                 }
                 
-                // Восстанавливаем сессию
                 const savedUser = localStorage.getItem('quick_current_user');
                 const savedChat = localStorage.getItem('quick_active_chat');
                 
@@ -759,6 +846,23 @@
                 }
                 
                 App.dataLoaded = true;
+                hideLoading();
+                render();
+            }).catch((error) => {
+                clearTimeout(timeout);
+                console.error('❌ Ошибка Firebase:', error);
+                
+                // Всё равно показываем интерфейс
+                const savedUser = localStorage.getItem('quick_current_user');
+                const savedChat = localStorage.getItem('quick_active_chat');
+                
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = savedChat;
+                }
+                
+                App.dataLoaded = true;
+                hideLoading();
                 render();
             });
         }
@@ -766,24 +870,26 @@
         // Сохранение в Firebase
         function saveToFirebase() {
             if (!App.dataLoaded) return;
+            
             database.ref().set({
                 users: App.users,
                 chats: App.chats,
                 blocked: App.blocked,
                 channels: App.channels,
                 pinnedChats: App.pinnedChats
+            }).then(() => {
+                console.log('💾 Сохранено в Firebase');
+                // Обновляем кэш
+                localStorage.setItem('quick_cache', JSON.stringify({
+                    users: App.users,
+                    chats: App.chats,
+                    blocked: App.blocked,
+                    channels: App.channels,
+                    pinnedChats: App.pinnedChats
+                }));
+            }).catch(error => {
+                console.error('❌ Ошибка сохранения:', error);
             });
-        }
-
-        // Сохранение сессии
-        function saveSession() {
-            if (App.currentUser) {
-                localStorage.setItem('quick_current_user', App.currentUser);
-                localStorage.setItem('quick_active_chat', App.activeChat || '');
-            } else {
-                localStorage.removeItem('quick_current_user');
-                localStorage.removeItem('quick_active_chat');
-            }
         }
 
         function ensureChat(userA, userB) {
@@ -823,15 +929,9 @@
             }
         }
 
-        function toggleSidebar() {
-            App.sidebarOpen = !App.sidebarOpen;
-            render();
-        }
-
         function render() {
             const root = document.getElementById('app');
             if (!App.dataLoaded) {
-                root.innerHTML = '<div style="color:#2ecc71; text-align:center; margin-top:50vh;">ЗАГРУЗКА...</div>';
                 return;
             }
             
@@ -896,7 +996,7 @@
                 }
                 App.currentUser = clean;
                 App.userOnline[clean] = true;
-                saveSession();
+                localStorage.setItem('quick_current_user', clean);
                 render();
             });
 
@@ -917,8 +1017,8 @@
                 }
                 if (!App.blocked[clean]) App.blocked[clean] = [];
                 
+                localStorage.setItem('quick_current_user', clean);
                 saveToFirebase();
-                saveSession();
                 render();
             });
         }
@@ -940,7 +1040,7 @@
             let chatPartner = App.activeChat || (chatsList.length > 1 ? chatsList[1] : 'saved');
             if (!chatsList.includes(chatPartner)) chatPartner = 'saved';
             App.activeChat = chatPartner;
-            saveSession();
+            localStorage.setItem('quick_active_chat', chatPartner);
             
             const messages = getMessages(user, chatPartner);
             const userData = App.users[user] || {};
@@ -1090,7 +1190,7 @@
                     if (window.innerWidth < 768) {
                         App.sidebarOpen = false;
                     }
-                    saveSession();
+                    localStorage.setItem('quick_active_chat', App.activeChat);
                     render();
                 });
             });
@@ -1106,7 +1206,8 @@
                 App.userOnline[App.currentUser] = false;
                 App.currentUser = null;
                 App.activeChat = null;
-                saveSession();
+                localStorage.removeItem('quick_current_user');
+                localStorage.removeItem('quick_active_chat');
                 render();
             });
             
@@ -1234,7 +1335,7 @@
                 if (window.innerWidth < 768) {
                     App.sidebarOpen = false;
                 }
-                saveSession();
+                localStorage.setItem('quick_active_chat', query);
                 document.getElementById('searchUserInput').value = '';
                 render();
                 return;
@@ -1245,7 +1346,7 @@
                 if (window.innerWidth < 768) {
                     App.sidebarOpen = false;
                 }
-                saveSession();
+                localStorage.setItem('quick_active_chat', query);
                 document.getElementById('searchUserInput').value = '';
                 render();
                 return;
@@ -1262,7 +1363,7 @@
             if (window.innerWidth < 768) {
                 App.sidebarOpen = false;
             }
-            saveSession();
+            localStorage.setItem('quick_active_chat', query);
             document.getElementById('searchUserInput').value = '';
             render();
         }
@@ -1327,7 +1428,7 @@
             
             if (App.activeChat === chat) {
                 App.activeChat = 'saved';
-                saveSession();
+                localStorage.setItem('quick_active_chat', 'saved');
             }
             
             saveToFirebase();
@@ -1609,7 +1710,7 @@
                     alert(`> КАНАЛ ${channelName} УСПЕШНО СОЗДАН!`);
                     document.getElementById('profileModalOverlay').remove();
                     App.activeChat = channelName;
-                    saveSession();
+                    localStorage.setItem('quick_active_chat', channelName);
                     render();
                 });
 
