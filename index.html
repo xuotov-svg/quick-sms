@@ -18,7 +18,6 @@
             overflow: hidden;
         }
         
-        /* Матричный эффект (оставляем, но он не мешает) */
         body::before {
             content: "";
             position: absolute;
@@ -102,13 +101,6 @@
             height: 50px;
         }
         .logo { display: flex; align-items: center; gap: 8px; }
-        .paper-plane { 
-            font-size: 24px; 
-            filter: drop-shadow(0 0 5px #00ff41); 
-            transform: rotate(-5deg); 
-            color: #2ecc71; 
-            text-shadow: 0 0 10px #00ff41;
-        }
         .logo span { 
             font-weight: 700; 
             font-size: 18px; 
@@ -670,7 +662,6 @@
             box-shadow: 0 0 5px #00ff41;
         }
 
-        /* Индикатор загрузки */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -767,26 +758,27 @@
 
         App.systemBots = ['@game_bot', '@ggsuw'];
 
-        // Показываем экран загрузки
         function showLoading() {
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'loading-screen';
             loadingDiv.id = 'loadingScreen';
-            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>ЗАГРУЗКА ДАННЫХ...</div>';
+            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>ЗАГРУЗКА...</div>';
             document.body.appendChild(loadingDiv);
         }
 
-        // Скрываем экран загрузки
         function hideLoading() {
             const loading = document.getElementById('loadingScreen');
             if (loading) loading.remove();
         }
 
-        // Загрузка данных из Firebase
         function loadFromFirebase() {
-            showLoading();
+            console.log('🔄 Загружаем данные...');
             
-            // Сначала пробуем загрузить из кэша (чтобы быстро показать интерфейс)
+            App.dataLoaded = true;
+            
+            const savedUser = localStorage.getItem('quick_current_user');
+            const savedChat = localStorage.getItem('quick_active_chat');
+            
             const cachedData = localStorage.getItem('quick_cache');
             if (cachedData) {
                 try {
@@ -796,78 +788,54 @@
                     console.log('📦 Загружено из кэша');
                 } catch(e) {}
             }
-
-            // Таймаут 3 секунды (если Firebase тормозит)
-            const timeout = setTimeout(() => {
-                console.log('⚠️ Таймаут Firebase, показываем из кэша');
-                App.dataLoaded = true;
-                
-                const savedUser = localStorage.getItem('quick_current_user');
-                const savedChat = localStorage.getItem('quick_active_chat');
-                
-                if (savedUser && App.users[savedUser]) {
-                    App.currentUser = savedUser;
-                    App.activeChat = savedChat;
-                }
-                
-                hideLoading();
+            
+            if (savedUser && App.users[savedUser]) {
+                App.currentUser = savedUser;
+                App.activeChat = savedChat;
                 render();
-            }, 3000);
-
-            // Пытаемся загрузить из Firebase
-            database.ref().get().then((snapshot) => {
-                clearTimeout(timeout);
-                console.log('✅ Данные из Firebase получены!');
-                
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    if (data.users) App.users = data.users;
-                    if (data.chats) App.chats = data.chats;
-                    if (data.blocked) App.blocked = data.blocked;
-                    if (data.channels) App.channels = data.channels;
-                    if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
-                    
-                    // Сохраняем в кэш
-                    localStorage.setItem('quick_cache', JSON.stringify({
-                        users: data.users,
-                        chats: data.chats,
-                        blocked: data.blocked,
-                        channels: data.channels,
-                        pinnedChats: data.pinnedChats
-                    }));
-                }
-                
-                const savedUser = localStorage.getItem('quick_current_user');
-                const savedChat = localStorage.getItem('quick_active_chat');
-                
-                if (savedUser && App.users[savedUser]) {
-                    App.currentUser = savedUser;
-                    App.activeChat = savedChat;
-                }
-                
-                App.dataLoaded = true;
-                hideLoading();
+            } else {
                 render();
-            }).catch((error) => {
-                clearTimeout(timeout);
-                console.error('❌ Ошибка Firebase:', error);
-                
-                // Всё равно показываем интерфейс
-                const savedUser = localStorage.getItem('quick_current_user');
-                const savedChat = localStorage.getItem('quick_active_chat');
-                
-                if (savedUser && App.users[savedUser]) {
-                    App.currentUser = savedUser;
-                    App.activeChat = savedChat;
-                }
-                
-                App.dataLoaded = true;
-                hideLoading();
-                render();
-            });
+            }
+            
+            database.ref().get()
+                .then((snapshot) => {
+                    console.log('✅ Получены свежие данные из Firebase');
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        let changed = false;
+                        
+                        if (data.users) {
+                            App.users = data.users;
+                            changed = true;
+                        }
+                        if (data.chats) {
+                            App.chats = data.chats;
+                            changed = true;
+                        }
+                        if (data.blocked) App.blocked = data.blocked;
+                        if (data.channels) App.channels = data.channels;
+                        if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
+                        
+                        if (changed) {
+                            localStorage.setItem('quick_cache', JSON.stringify({
+                                users: App.users,
+                                chats: App.chats,
+                                blocked: App.blocked,
+                                channels: App.channels,
+                                pinnedChats: App.pinnedChats
+                            }));
+                            
+                            if (App.currentUser) {
+                                render();
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Ошибка Firebase:', error);
+                });
         }
 
-        // Сохранение в Firebase
         function saveToFirebase() {
             if (!App.dataLoaded) return;
             
@@ -879,7 +847,6 @@
                 pinnedChats: App.pinnedChats
             }).then(() => {
                 console.log('💾 Сохранено в Firebase');
-                // Обновляем кэш
                 localStorage.setItem('quick_cache', JSON.stringify({
                     users: App.users,
                     chats: App.chats,
@@ -949,7 +916,7 @@
         function renderAuth() {
             return `<div class="auth-container">
                 <div class="auth-box">
-                    <h2>✈️ quick-sms</h2>
+                    <h2>quick-sms</h2>
                     <div id="authForms">
                         <div id="loginForm">
                             <div class="input-group"><label>> ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4" value=""></div>
@@ -1331,11 +1298,15 @@
             
             if (App.systemBots.includes(query) || (App.users[query] && App.users[query].isBot)) {
                 App.activeChat = query;
-                ensureChat(App.currentUser, query);
-                if (window.innerWidth < 768) {
-                    App.sidebarOpen = false;
-                }
                 localStorage.setItem('quick_active_chat', query);
+                
+                const chatId = [App.currentUser, query].sort().join('_');
+                if (!App.chats[chatId]) {
+                    App.chats[chatId] = { user1: App.currentUser, user2: query, messages: [] };
+                    database.ref('chats/' + chatId).set(App.chats[chatId]);
+                }
+                
+                if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
                 render();
                 return;
@@ -1343,10 +1314,8 @@
             
             if (App.channels[query]) {
                 App.activeChat = query;
-                if (window.innerWidth < 768) {
-                    App.sidebarOpen = false;
-                }
                 localStorage.setItem('quick_active_chat', query);
+                if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
                 render();
                 return;
@@ -1356,14 +1325,36 @@
                 alert('! ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН'); 
                 return; 
             }
-            if (query === App.currentUser) { alert('! ЭТО ВЫ'); return; }
+            if (query === App.currentUser) { 
+                alert('! ЭТО ВЫ'); 
+                return; 
+            }
             
-            ensureChat(App.currentUser, query);
+            const chatId = [App.currentUser, query].sort().join('_');
+            
+            if (!App.chats[chatId]) {
+                App.chats[chatId] = { 
+                    user1: App.currentUser, 
+                    user2: query, 
+                    messages: [] 
+                };
+                
+                database.ref('chats/' + chatId).set(App.chats[chatId])
+                    .then(() => {
+                        console.log('✅ Чат создан и сохранён');
+                    })
+                    .catch(error => {
+                        console.error('❌ Ошибка сохранения чата:', error);
+                    });
+            }
+            
             App.activeChat = query;
+            localStorage.setItem('quick_active_chat', query);
+            
             if (window.innerWidth < 768) {
                 App.sidebarOpen = false;
             }
-            localStorage.setItem('quick_active_chat', query);
+            
             document.getElementById('searchUserInput').value = '';
             render();
         }
@@ -1562,6 +1553,13 @@
                         <input type="text" value="${username}" disabled>
                     </div>
 
+                    ${isOwn && !isBotUser ? `
+                    <div class="profile-input-group">
+                        <label>> ПАРОЛЬ</label>
+                        <input type="text" id="modalPasswordInput" value="${userData.password || ''}" placeholder="Новый пароль">
+                    </div>
+                    ` : ''}
+
                     ${!isBotUser ? `
                     <div class="profile-input-group">
                         <label>> ОПИСАНИЕ</label>
@@ -1716,9 +1714,11 @@
 
                 document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => {
                     const newAvatar = document.getElementById('modalAvatarInput')?.value.trim();
+                    const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
                     const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
                     
                     if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
+                    if (newPassword) App.users[App.currentUser].password = newPassword;
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
                     
                     saveToFirebase();
