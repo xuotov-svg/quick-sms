@@ -165,7 +165,6 @@
         .auth-error { color: #ff6b6b; margin-top: 12px; font-size: 14px; text-align: center; text-shadow: 0 0 5px #ff0000; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
 
-        /* Мобильная навигация */
         .main-container { 
             flex-direction: row;
             position: relative;
@@ -674,7 +673,28 @@
 </head>
 <body>
 <div id="app"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
 <script>
+    // 🔥 ВАШ КОНФИГ FIREBASE
+    const firebaseConfig = {
+        apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4",
+        authDomain: "quick-sms-772c4.firebaseapp.com",
+        databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com",
+        projectId: "quick-sms-772c4",
+        storageBucket: "quick-sms-772c4.firebasestorage.app",
+        messagingSenderId: "722370764251",
+        appId: "1:722370764251:web:1f93437108ee3d54f15bfe",
+        measurementId: "G-WH8RF3FK57"
+    };
+
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
     // Эффект кода
     function initCodeEffect() {
         const overlay = document.createElement('div');
@@ -701,13 +721,13 @@
 
     (function() {
         const App = {
-            users: JSON.parse(localStorage.getItem('quick_users')) || {},
-            currentUser: localStorage.getItem('quick_current_user') || null,
-            chats: JSON.parse(localStorage.getItem('quick_chats')) || {},
-            activeChat: localStorage.getItem('quick_active_chat') || null,
-            blocked: JSON.parse(localStorage.getItem('quick_blocked')) || {},
-            channels: JSON.parse(localStorage.getItem('quick_channels')) || {},
-            pinnedChats: JSON.parse(localStorage.getItem('quick_pinned')) || [],
+            users: {},
+            currentUser: null,
+            chats: {},
+            activeChat: null,
+            blocked: {},
+            channels: {},
+            pinnedChats: [],
             userOnline: {},
             botState: {},
             promoCodes: { 'durovcrow': 1000 },
@@ -716,16 +736,30 @@
 
         App.systemBots = ['@game_bot', '@ggsuw'];
 
-        function saveUsers() { localStorage.setItem('quick_users', JSON.stringify(App.users)); }
-        function saveChats() { localStorage.setItem('quick_chats', JSON.stringify(App.chats)); }
-        function saveBlocked() { localStorage.setItem('quick_blocked', JSON.stringify(App.blocked)); }
-        function saveChannels() { localStorage.setItem('quick_channels', JSON.stringify(App.channels)); }
-        function savePinned() { localStorage.setItem('quick_pinned', JSON.stringify(App.pinnedChats)); }
-        function saveSession() {
-            if (App.currentUser) localStorage.setItem('quick_current_user', App.currentUser);
-            else localStorage.removeItem('quick_current_user');
-            if (App.activeChat) localStorage.setItem('quick_active_chat', App.activeChat);
-            else localStorage.removeItem('quick_active_chat');
+        // Загрузка данных из Firebase
+        function loadFromFirebase() {
+            database.ref().get().then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    if (data.users) App.users = data.users;
+                    if (data.chats) App.chats = data.chats;
+                    if (data.blocked) App.blocked = data.blocked;
+                    if (data.channels) App.channels = data.channels;
+                    if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
+                }
+                render();
+            });
+        }
+
+        // Сохранение в Firebase
+        function saveToFirebase() {
+            database.ref().set({
+                users: App.users,
+                chats: App.chats,
+                blocked: App.blocked,
+                channels: App.channels,
+                pinnedChats: App.pinnedChats
+            });
         }
 
         function ensureChat(userA, userB) {
@@ -733,7 +767,7 @@
             const id1 = [userA, userB].sort().join('_');
             if (!App.chats[id1]) {
                 App.chats[id1] = { user1: userA, user2: userB, messages: [] };
-                saveChats();
+                saveToFirebase();
             }
         }
 
@@ -833,7 +867,6 @@
                 }
                 App.currentUser = clean;
                 App.userOnline[clean] = true;
-                saveSession();
                 render();
             });
 
@@ -844,15 +877,17 @@
                 if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                 const clean = '@' + username;
                 if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ЗАНЯТ'; return; }
-                // НОВЫЙ ПОЛЬЗОВАТЕЛЬ: 0 ЗВЕЗД, НЕТ ПОДАРКОВ
+                
                 App.users[clean] = { password: pass, avatar: null, stars: 0, gifts: [], bio: '' };
                 App.currentUser = clean;
                 App.userOnline[clean] = true;
+                
                 if (!App.chats[clean + '_saved']) {
                     App.chats[clean + '_saved'] = { user1: clean, user2: 'saved', messages: [] };
                 }
                 if (!App.blocked[clean]) App.blocked[clean] = [];
-                saveUsers(); saveChats(); saveBlocked(); saveSession();
+                
+                saveToFirebase();
                 render();
             });
         }
@@ -874,7 +909,6 @@
             let chatPartner = App.activeChat || (chatsList.length > 1 ? chatsList[1] : 'saved');
             if (!chatsList.includes(chatPartner)) chatPartner = 'saved';
             App.activeChat = chatPartner;
-            saveSession();
             
             const messages = getMessages(user, chatPartner);
             const userData = App.users[user] || {};
@@ -1039,7 +1073,6 @@
                 App.userOnline[App.currentUser] = false;
                 App.currentUser = null;
                 App.activeChat = null;
-                saveSession();
                 render();
             });
             
@@ -1081,7 +1114,7 @@
                     time: Date.now(), 
                     photo: window._tempPhoto || null
                 });
-                saveChats(); 
+                saveToFirebase();
                 window._tempPhoto = null;
                 document.getElementById('messageText').value = '';
                 render(); 
@@ -1097,7 +1130,7 @@
                     time: Date.now(), 
                     photo: window._tempPhoto || null
                 });
-                saveChannels(); 
+                saveToFirebase();
                 window._tempPhoto = null;
                 document.getElementById('messageText').value = '';
                 render(); 
@@ -1112,7 +1145,7 @@
                 time: Date.now(), 
                 photo: window._tempPhoto || null
             });
-            saveChats(); 
+            saveToFirebase();
             window._tempPhoto = null;
             document.getElementById('messageText').value = '';
             render();
@@ -1148,7 +1181,7 @@
             msgArray.splice(idx, 1);
             
             if (App.channels[to]) saveChannels();
-            else saveChats();
+            saveToFirebase();
             render();
         }
 
@@ -1161,7 +1194,6 @@
                 return;
             }
             
-            // Проверка на бота
             if (App.systemBots.includes(query) || (App.users[query] && App.users[query].isBot)) {
                 App.activeChat = query;
                 ensureChat(App.currentUser, query);
@@ -1173,7 +1205,6 @@
                 return;
             }
             
-            // Проверка на канал
             if (App.channels[query]) {
                 App.activeChat = query;
                 if (window.innerWidth < 768) {
@@ -1184,7 +1215,6 @@
                 return;
             }
             
-            // Проверка на пользователя
             if (!App.users[query]) { 
                 alert('! ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН'); 
                 return; 
@@ -1210,7 +1240,7 @@
             } else {
                 App.blocked[user].splice(idx, 1);
             }
-            saveBlocked();
+            saveToFirebase();
             render();
         }
 
@@ -1225,7 +1255,7 @@
             } else {
                 App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user);
             }
-            saveChannels();
+            saveToFirebase();
             render();
         }
 
@@ -1240,7 +1270,7 @@
                 }
                 App.pinnedChats.push(chat);
             }
-            savePinned();
+            saveToFirebase();
             render();
         }
 
@@ -1262,8 +1292,7 @@
                 App.activeChat = 'saved';
             }
             
-            saveChats();
-            savePinned();
+            saveToFirebase();
             render();
         }
 
@@ -1305,10 +1334,9 @@
                         game: true
                     });
                     
-                    saveUsers();
+                    saveToFirebase();
                 }
                 
-                saveChats();
                 render();
             }
         }
@@ -1366,8 +1394,7 @@
                 gift: true
             });
             
-            saveUsers();
-            saveChats();
+            saveToFirebase();
             if (App.activeChat === toUser) render();
         };
 
@@ -1492,7 +1519,7 @@
                             App.users[user].stars -= price;
                             if (!App.users[user].gifts) App.users[user].gifts = [];
                             App.users[user].gifts.push(gift);
-                            saveUsers();
+                            saveToFirebase();
                             document.getElementById('profileModalOverlay').remove();
                             openProfileModal(user);
                         } else {
@@ -1505,7 +1532,7 @@
                     const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
                     if (App.promoCodes[code] !== undefined) {
                         App.users[App.currentUser].stars += App.promoCodes[code];
-                        saveUsers();
+                        saveToFirebase();
                         alert(`> ПРОМОКОД АКТИВИРОВАН! +${App.promoCodes[code]}⭐️`);
                         document.getElementById('profileModalOverlay').remove();
                         openProfileModal(App.currentUser);
@@ -1540,8 +1567,7 @@
                         createdAt: Date.now()
                     };
                     
-                    saveUsers();
-                    saveChannels();
+                    saveToFirebase();
                     alert(`> КАНАЛ ${channelName} УСПЕШНО СОЗДАН!`);
                     document.getElementById('profileModalOverlay').remove();
                     App.activeChat = channelName;
@@ -1555,7 +1581,7 @@
                     if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
                     
-                    saveUsers();
+                    saveToFirebase();
                     document.getElementById('profileModalOverlay').remove();
                     render();
                 });
@@ -1630,29 +1656,27 @@
                     };
                 }
             });
-            saveUsers();
+            saveToFirebase();
         }
 
         window.addEventListener('load', () => {
-            initBots();
             initCodeEffect();
+            loadFromFirebase();
             
             if (Object.keys(App.users).length === 0) {
                 App.users = { 
                     '@test': { 
                         password: 'test111', 
                         avatar: null, 
-                        stars: 100, // тестовому дадим 100 звезд
+                        stars: 100,
                         gifts: [],
                         bio: 'Тестовый пользователь'
                     } 
                 };
-                saveUsers();
+                saveToFirebase();
             }
             if (App.currentUser && !App.blocked[App.currentUser]) App.blocked[App.currentUser] = [];
             if (!App.pinnedChats) App.pinnedChats = [];
-            
-            render();
         });
     })();
 </script>
