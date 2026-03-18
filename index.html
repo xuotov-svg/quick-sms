@@ -319,7 +319,6 @@
             box-shadow: 0 0 5px #00ff41;
         }
         .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .chat-avatar[onclick] { cursor: pointer; }
         .pin-icon { margin-left: auto; color: #f1c40f; font-size: 14px; cursor: pointer; }
         .delete-chat-icon { margin-left: 5px; color: #ff6b6b; font-size: 14px; cursor: pointer; }
 
@@ -1067,7 +1066,6 @@
             localStorage.setItem('quick_active_chat', chatPartner);
             
             const userData = App.users[user] || {};
-            const isBlocked = App.blocked[user]?.includes(chatPartner) || false;
             const isChatBot = isBot(chatPartner);
             const isChannel = App.channels[chatPartner] ? true : false;
 
@@ -1102,8 +1100,6 @@
                                 `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
                             ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
                                 `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
-                            ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
-                                `<button class="tiny-btn" id="blockToggleBtn">${isBlocked ? '🔓' : '⛔'}</button>` : ''}
                             <button class="tiny-btn" id="logoutBtn">🚪</button>
                         </div>
                     </div>
@@ -1123,7 +1119,7 @@
         function renderChatItem(u, active, currentUser) {
             const name = u === 'saved' ? '📎 ИЗБРАННОЕ' : u;
             const isPinned = App.pinnedChats.includes(u);
-            let avatarHtml = '<div class="chat-avatar">📁</div>';
+            let avatarHtml = '<div class="chat-avatar" onclick="openProfileModal(\'' + u + '\')">📁</div>';
             
             if (u !== 'saved') {
                 if (App.channels[u]) {
@@ -1131,8 +1127,8 @@
                 } else {
                     const avatarUrl = App.users[u]?.avatar;
                     avatarHtml = avatarUrl ? 
-                        `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
-                        `<div class="chat-avatar">${u[1] || '@'}</div>`;
+                        `<div class="chat-avatar" onclick="openProfileModal('${u}')"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
+                        `<div class="chat-avatar" onclick="openProfileModal('${u}')">${u[1] || '@'}</div>`;
                 }
             }
             
@@ -1226,9 +1222,6 @@
             
             if (document.getElementById('giftBtn')) {
                 document.getElementById('giftBtn').addEventListener('click', openGiftMenu);
-            }
-            if (document.getElementById('blockToggleBtn')) {
-                document.getElementById('blockToggleBtn').addEventListener('click', toggleBlock);
             }
             if (document.getElementById('subscribeBtn')) {
                 document.getElementById('subscribeBtn').addEventListener('click', toggleSubscribe);
@@ -1388,20 +1381,6 @@
             document.getElementById('searchUserInput').value = '';
             updateChatList();
             loadMessages(query);
-        }
-
-        function toggleBlock() {
-            const user = App.currentUser;
-            const target = App.activeChat;
-            if (!App.blocked[user]) App.blocked[user] = [];
-            const idx = App.blocked[user].indexOf(target);
-            if (idx === -1) {
-                App.blocked[user].push(target);
-            } else {
-                App.blocked[user].splice(idx, 1);
-            }
-            saveToFirebase();
-            updateChatList();
         }
 
         function toggleSubscribe() {
