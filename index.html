@@ -11,30 +11,30 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            background: #f5f5f5; 
+            background: #1a1a1a; 
             padding: 0;
             margin: 0;
         }
 
         #app { 
-            --bg: #ffffff; 
-            --bg-panel: #f8f8f8; 
-            --text: #333333; 
-            --soft: #e8e8e8; 
-            --border: #dddddd; 
+            --bg: #2d2d2d; 
+            --bg-panel: #333333; 
+            --text: #e0e0e0; 
+            --soft: #404040; 
+            --border: #4a4a4a; 
             --accent: #d4af37; 
-            --accent-soft: #e6d5a8; 
-            --message-me: #e6f3ff; 
-            --message-other: #f0f0f0; 
-            --header: #ffffff; 
-            --shadow: rgba(0,0,0,0.05); 
+            --accent-soft: #b8942e; 
+            --message-me: #3d3d3d; 
+            --message-other: #2a2a2a; 
+            --header: #252525; 
+            --shadow: rgba(0,0,0,0.3); 
             
             width: 100%;
             max-width: 100%;
             height: 100vh;
             max-height: 100vh;
             background: var(--bg-panel); 
-            box-shadow: 0 0 20px rgba(0,0,0,0.1); 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); 
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
@@ -49,34 +49,34 @@
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            border-bottom: 1px solid var(--border); 
+            border-bottom: 1px solid var(--accent); 
             height: 50px;
         }
         .logo span { 
             font-weight: 700; 
             font-size: 18px; 
             letter-spacing: 0.5px; 
-            color: var(--text); 
+            color: var(--accent); 
         }
 
         .auth-container, .main-container { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
         .auth-box { 
             max-width: 400px; 
             margin: auto; 
-            background: white; 
+            background: var(--bg-panel); 
             padding: 30px 24px; 
             border-radius: 16px; 
-            border: 1px solid var(--border); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            border: 1px solid var(--accent); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
             width: 90%; 
         }
-        h2 { color: var(--text); margin-bottom: 16px; font-weight: 500; letter-spacing: 0.5px; }
+        h2 { color: var(--accent); margin-bottom: 16px; font-weight: 500; letter-spacing: 0.5px; }
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; margin-bottom: 6px; color: var(--text); opacity: 0.8; font-size: 14px; }
         .input-group input { 
             width: 100%; 
             padding: 12px 16px; 
-            background: #f9f9f9; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             border-radius: 8px; 
             color: var(--text); 
@@ -86,7 +86,7 @@
         .input-group input:focus { border-color: var(--accent); }
         .btn { 
             background: var(--accent); 
-            color: white; 
+            color: #1a1a1a; 
             border: none; 
             padding: 12px; 
             border-radius: 8px; 
@@ -97,9 +97,9 @@
             transition: 0.1s; 
             margin-top: 8px; 
         }
-        .btn-secondary { background: #e0e0e0; color: var(--text); }
+        .btn-secondary { background: var(--soft); color: var(--text); border: 1px solid var(--border); }
         .btn:hover { opacity: 0.9; }
-        .auth-error { color: #ff4444; margin-top: 12px; font-size: 14px; text-align: center; }
+        .auth-error { color: #ff6b6b; margin-top: 12px; font-size: 14px; text-align: center; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
 
         .main-container { 
@@ -109,8 +109,8 @@
         
         .sidebar { 
             width: 280px; 
-            background: white; 
-            border-right: 1px solid var(--border); 
+            background: var(--bg-panel); 
+            border-right: 1px solid var(--accent); 
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
@@ -122,7 +122,7 @@
             z-index: 10;
             transform: translateX(-100%);
             transition: transform 0.3s ease;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.3);
         }
         
         .sidebar.open {
@@ -169,7 +169,7 @@
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            border-bottom: 1px solid var(--border); 
+            border-bottom: 1px solid var(--accent); 
             background: var(--soft); 
             cursor: pointer; 
         }
@@ -182,7 +182,7 @@
             align-items: center; 
             justify-content: center; 
             font-size: 24px; 
-            color: white; 
+            color: #1a1a1a; 
             font-weight: 500; 
             border: 2px solid var(--accent); 
             overflow: hidden; 
@@ -197,10 +197,10 @@
             font-size: 14px;
         }
         .star-balance { display: flex; align-items: center; gap: 4px; color: var(--accent); font-weight: 600; margin-top: 4px; }
-        .search-add { padding: 12px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; }
+        .search-add { padding: 12px; border-bottom: 1px solid var(--accent); display: flex; gap: 8px; }
         .search-add input { 
             flex: 1; 
-            background: #f9f9f9; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             border-radius: 8px; 
             padding: 10px 15px; 
@@ -210,7 +210,7 @@
         .icon-btn { 
             background: var(--accent); 
             border: none; 
-            color: white; 
+            color: #1a1a1a; 
             width: 40px; 
             height: 40px; 
             border-radius: 8px; 
@@ -220,7 +220,7 @@
             align-items: center; 
             justify-content: center; 
         }
-        .icon-btn:hover { background: var(--accent-soft); color: var(--text); }
+        .icon-btn:hover { background: var(--accent-soft); }
         .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
         .chat-item { 
             padding: 12px 16px; 
@@ -231,12 +231,12 @@
             gap: 12px; 
             cursor: pointer; 
             color: var(--text); 
-            background: white; 
+            background: var(--bg-panel); 
             border: 1px solid transparent; 
             transition: 0.1s; 
         }
-        .chat-item:hover { background: var(--soft); border-color: var(--border); }
-        .chat-item.active { background: var(--accent-soft); border-color: var(--accent); color: white; }
+        .chat-item:hover { background: var(--soft); border-color: var(--accent); }
+        .chat-item.active { background: var(--accent-soft); border-color: var(--accent); color: #1a1a1a; }
         .chat-item.pinned { border-left: 6px solid var(--accent); }
         .chat-avatar { 
             width: 40px; 
@@ -254,23 +254,22 @@
         }
         .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
         .pin-icon { margin-left: auto; color: var(--accent); font-size: 14px; cursor: pointer; }
-        .delete-chat-icon { margin-left: 5px; color: #ff4444; font-size: 14px; cursor: pointer; }
+        .delete-chat-icon { margin-left: 5px; color: #ff6b6b; font-size: 14px; cursor: pointer; }
 
         .chat-header { 
             padding: 12px 16px; 
-            background: white; 
-            border-bottom: 1px solid var(--border); 
+            background: var(--header); 
+            border-bottom: 1px solid var(--accent); 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             color: var(--text); 
-            box-shadow: 0 1px 4px rgba(0,0,0,0.02);
         }
         .chat-header-info { display: flex; align-items: center; gap: 10px; }
         .verified-badge-header { color: #1da1f2; margin-left: 5px; font-size: 16px; }
         .chat-actions { display: flex; gap: 10px; }
         .tiny-btn { 
-            background: #f0f0f0; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             padding: 6px 12px; 
             border-radius: 8px; 
@@ -278,7 +277,7 @@
             font-size: 12px; 
             color: var(--text); 
         }
-        .tiny-btn:hover { background: var(--accent-soft); color: white; }
+        .tiny-btn:hover { background: var(--accent-soft); color: #1a1a1a; }
         
         .messages-container { 
             flex: 1; 
@@ -287,7 +286,7 @@
             display: flex; 
             flex-direction: column; 
             gap: 8px; 
-            background: #fafafa;
+            background: var(--bg);
         }
         .message { 
             max-width: 85%; 
@@ -298,7 +297,7 @@
             align-self: flex-start; 
             word-break: break-word; 
             border: 1px solid var(--border); 
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
             position: relative;
         }
         .message.me { align-self: flex-end; background: var(--message-me); }
@@ -307,11 +306,11 @@
             opacity: 0.6; 
             margin-top: 4px; 
             text-align: right; 
-            color: #999; 
+            color: var(--accent); 
         }
         .gift-message { 
             animation: giftGlow 1.5s infinite;
-            background: #fff9e6;
+            background: #3d3d1a;
             border-color: var(--accent);
         }
         @keyframes giftGlow {
@@ -319,12 +318,12 @@
             50% { box-shadow: 0 0 20px #d4af37, 0 0 30px #d4af37; }
             100% { box-shadow: 0 0 5px #d4af37, 0 0 10px #d4af37; }
         }
-        .game-message { background: #f0f0f0; border-color: var(--accent); }
+        .game-message { background: var(--soft); border-color: var(--accent); }
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
         .msg-actions button { 
             background: none; 
             border: none; 
-            color: #999; 
+            color: var(--accent); 
             cursor: pointer; 
             font-size: 11px; 
             text-decoration: underline; 
@@ -333,7 +332,7 @@
         .media-preview { max-width: 150px; max-height: 150px; border-radius: 8px; margin-top: 4px; border: 1px solid var(--border); }
         .inline-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
         .inline-btn { 
-            background: #f0f0f0; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             padding: 8px 12px; 
             border-radius: 8px; 
@@ -341,7 +340,7 @@
             color: var(--text); 
             font-size: 13px; 
         }
-        .inline-btn:hover { background: var(--accent-soft); color: white; }
+        .inline-btn:hover { background: var(--accent-soft); color: #1a1a1a; }
         .message-username {
             cursor: pointer;
             color: var(--accent);
@@ -355,8 +354,8 @@
             display: flex; 
             gap: 8px; 
             padding: 12px; 
-            background: white; 
-            border-top: 1px solid var(--border); 
+            background: var(--header); 
+            border-top: 1px solid var(--accent); 
             align-items: center; 
             flex-wrap: wrap; 
             z-index: 2;
@@ -364,7 +363,7 @@
         .input-area input[type="text"] { 
             flex: 2; 
             min-width: 120px; 
-            background: #f9f9f9; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             border-radius: 20px; 
             padding: 10px 14px; 
@@ -374,7 +373,7 @@
         }
         .input-area input[type="file"] { display: none; }
         .file-label { 
-            background: #f0f0f0; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             padding: 8px 12px; 
             border-radius: 20px; 
@@ -388,7 +387,7 @@
             width: 44px; 
             height: 44px; 
             border-radius: 50%; 
-            color: white; 
+            color: #1a1a1a; 
             cursor: pointer; 
             display: flex; 
             align-items: center; 
@@ -402,20 +401,20 @@
             left:0; 
             width:100%; 
             height:100%; 
-            background: rgba(0,0,0,0.5); 
+            background: rgba(0,0,0,0.8); 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             z-index: 3000; 
         }
         .profile-modal { 
-            background: white; 
+            background: var(--bg-panel); 
             border-radius: 16px; 
             width: 90%; 
             max-width: 400px; 
             padding: 24px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-            border: 1px solid var(--border); 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+            border: 1px solid var(--accent); 
             color: var(--text); 
             max-height: 80vh; 
             overflow-y: auto; 
@@ -424,7 +423,7 @@
             font-size: 22px; 
             margin-bottom: 16px; 
             color: var(--accent); 
-            border-bottom: 1px solid var(--border); 
+            border-bottom: 1px solid var(--accent); 
             padding-bottom: 10px; 
         }
         .profile-avatar-section { 
@@ -434,7 +433,7 @@
             gap: 16px; 
             margin-bottom: 20px; 
             padding: 15px;
-            background: #f9f9f9;
+            background: var(--soft);
             border-radius: 16px;
             border: 1px solid var(--border);
         }
@@ -458,7 +457,7 @@
         .profile-password-row { 
             width: 100%; 
             padding: 10px 14px; 
-            background: #f9f9f9; 
+            background: var(--soft); 
             border: 1px solid var(--border); 
             border-radius: 8px; 
             color: var(--text); 
@@ -471,7 +470,7 @@
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            background: #f9f9f9; 
+            background: var(--soft); 
             padding: 12px; 
             border-radius: 8px; 
             margin-bottom: 16px; 
@@ -485,14 +484,14 @@
             gap: 10px; 
             margin: 16px 0; 
             padding: 12px; 
-            background: #f9f9f9; 
+            background: var(--soft); 
             border-radius: 16px; 
             justify-content: center; 
             border: 1px solid var(--border);
         }
         .gift-item { 
             font-size: 28px; 
-            background: white; 
+            background: var(--bg-panel); 
             padding: 8px; 
             border-radius: 8px; 
             border: 1px solid var(--border); 
@@ -503,7 +502,7 @@
         .gift-item:hover { background: var(--accent-soft); transform: scale(1.1); }
         
         .shop-section { 
-            background: #f9f9f9; 
+            background: var(--soft); 
             border-radius: 16px; 
             padding: 16px; 
             margin: 16px 0; 
@@ -513,7 +512,7 @@
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
-            background: white; 
+            background: var(--bg-panel); 
             padding: 10px 14px; 
             border-radius: 8px; 
             margin-bottom: 8px; 
@@ -523,7 +522,7 @@
         .shop-item button { 
             background: var(--accent); 
             border: none; 
-            color: white; 
+            color: #1a1a1a; 
             padding: 6px 12px; 
             border-radius: 8px; 
             font-weight: 600; 
@@ -536,14 +535,14 @@
             padding: 10px; 
             border-radius: 8px; 
             border: 1px solid var(--border); 
-            background: white; 
+            background: var(--bg-panel); 
             color: var(--text); 
         }
         .profile-actions { display: flex; gap: 12px; margin-top: 16px; }
         .profile-btn { 
             background: var(--accent); 
             border: none; 
-            color: white; 
+            color: #1a1a1a; 
             padding: 12px; 
             border-radius: 8px; 
             font-size: 14px; 
@@ -551,7 +550,7 @@
             flex: 1; 
             cursor: pointer; 
         }
-        .profile-btn.secondary { background: #e0e0e0; color: var(--text); }
+        .profile-btn.secondary { background: var(--soft); color: var(--text); border: 1px solid var(--border); }
         .tabs { 
             display: flex; 
             gap: 8px; 
@@ -559,31 +558,32 @@
             border: 1px solid var(--border); 
             padding: 4px; 
             border-radius: 8px;
-            background: #f9f9f9;
+            background: var(--soft);
         }
         .tab { 
             flex: 1; 
             text-align: center; 
             padding: 10px; 
-            background: #e0e0e0; 
+            background: var(--bg-panel); 
             border-radius: 8px; 
             cursor: pointer; 
             font-weight: 600; 
             font-size: 13px;
+            color: var(--text);
         }
         .tab.active { 
             background: var(--accent); 
-            color: white; 
+            color: #1a1a1a; 
         }
 
         .hidden { display: none; }
         
         ::-webkit-scrollbar {
             width: 4px;
-            background: #f0f0f0;
+            background: var(--soft);
         }
         ::-webkit-scrollbar-thumb {
-            background: #ccc;
+            background: var(--accent);
             border-radius: 2px;
         }
 
@@ -593,7 +593,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: white;
+            background: #1a1a1a;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -606,7 +606,7 @@
         .loading-spinner {
             width: 50px;
             height: 50px;
-            border: 3px solid #f0f0f0;
+            border: 3px solid var(--soft);
             border-top: 3px solid var(--accent);
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -818,7 +818,7 @@
             });
             
             if (chatPartner === '@game_bot') {
-                html += `<div class="message" style="align-self:center; background:#f0f0f0;">
+                html += `<div class="message" style="align-self:center; background:var(--soft);">
                     <div class="inline-buttons">
                         <button class="inline-btn" onclick="handleBotCommand('@game_bot', 'slots')">🎰 КРУТИТЬ (5⭐️)</button>
                     </div>
@@ -971,7 +971,7 @@
                         <div class="chat-header-info">
                             <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
                             <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : chatPartner}${App.users[chatPartner]?.verified ? ' ✅' : ''}</strong>
-                            ${isChannel ? `<small style="color:#999;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
+                            ${isChannel ? `<small style="color:var(--accent);">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                         </div>
                         <div class="chat-actions">
                             ${isChannel && chatPartner !== 'saved' ? 
@@ -1122,18 +1122,29 @@
             const from = App.currentUser;
             const to = App.activeChat;
             
+            if (!to) {
+                alert('! ВЫБЕРИТЕ ЧАТ');
+                return;
+            }
+            
             if (to === 'saved') {
                 if (!App.chats[from + '_saved']) {
                     App.chats[from + '_saved'] = { user1: from, user2: 'saved', messages: [] };
                 }
                 App.chats[from + '_saved'].messages.push({ 
-                    from, text, time: Date.now(), photo: window._tempPhoto || null
+                    from, 
+                    text, 
+                    time: Date.now(), 
+                    photo: window._tempPhoto || null
                 });
             } else if (App.channels[to]) {
                 if (App.channels[to].owner !== from) return;
                 if (!App.channels[to].messages) App.channels[to].messages = [];
                 App.channels[to].messages.push({ 
-                    from: to, text, time: Date.now(), photo: window._tempPhoto || null
+                    from: to, 
+                    text, 
+                    time: Date.now(), 
+                    photo: window._tempPhoto || null
                 });
             } else {
                 const chatId = [from, to].sort().join('_');
@@ -1141,7 +1152,10 @@
                     App.chats[chatId] = { user1: from, user2: to, messages: [] };
                 }
                 App.chats[chatId].messages.push({ 
-                    from, text, time: Date.now(), photo: window._tempPhoto || null
+                    from, 
+                    text, 
+                    time: Date.now(), 
+                    photo: window._tempPhoto || null
                 });
             }
             
