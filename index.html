@@ -1,1 +1,1677 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMPORTANT SMS · HACKER EDITION</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', 'Fira Code', monospace; }
+        body { 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: #0a0f0a; 
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, 
+                rgba(0,255,0,0.03) 0px, 
+                rgba(0,20,0,0.8) 1px, 
+                transparent 2px,
+                transparent 5px,
+                rgba(0,255,0,0.02) 6px
+            );
+            pointer-events: none;
+            z-index: -1;
+            animation: matrixRain 20s linear infinite;
+        }
+        
+        @keyframes matrixRain {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 30px; }
+        }
+        
+        .code-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.1;
+            font-size: 12px;
+            color: #00ff41;
+            white-space: pre;
+            overflow: hidden;
+        }
 
+        #app { 
+            --bg: #0f1a0f; 
+            --bg-panel: #142014; 
+            --text: #b3ffb3; 
+            --soft: #1f2e1f; 
+            --border: #2ecc71; 
+            --accent: #00ff41; 
+            --accent-soft: #1f8f4b; 
+            --message-me: #1e3a1e; 
+            --message-other: #0a1a0a; 
+            --header: #102010; 
+            --shadow: rgba(0,255,0,0.3); 
+            --glow: 0 0 10px #00ff41;
+            --cardboard: #0f1a0f; 
+            
+            width: 1300px; 
+            max-width: 100%; 
+            height: 900px; 
+            max-height: 95vh; 
+            background: var(--bg-panel); 
+            border-radius: 16px; 
+            box-shadow: 0 0 30px #00ff41, inset 0 0 20px #00ff41; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            border: 2px solid #2ecc71; 
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(1px);
+        }
+        
+        #app::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0,255,0,0.02) 0px, rgba(0,0,0,0.3) 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 0;
+            animation: scan 8s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 20px; }
+        }
+
+        .app-header { 
+            background: var(--header); 
+            padding: 8px 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            border-bottom: 2px solid #2ecc71; 
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 0 15px #00ff41;
+        }
+        .logo { display: flex; align-items: center; gap: 8px; }
+        .paper-plane { 
+            font-size: 28px; 
+            filter: drop-shadow(0 0 5px #00ff41); 
+            transform: rotate(-5deg); 
+            color: #2ecc71; 
+            text-shadow: 0 0 10px #00ff41;
+        }
+        .logo span { 
+            font-weight: 700; 
+            font-size: 22px; 
+            letter-spacing: 3px; 
+            color: var(--text); 
+            text-shadow: 0 0 5px #00ff41; 
+            animation: flicker 3s infinite;
+        }
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.8; text-shadow: 0 0 15px #00ff41; }
+            100% { opacity: 1; }
+        }
+        .cardboard-badge { 
+            background: #1f3a1f; 
+            color: #b3ffb3; 
+            padding: 4px 10px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: 600; 
+            border: 1px solid #2ecc71; 
+            letter-spacing: 1px;
+            box-shadow: 0 0 5px #00ff41;
+        }
+
+        .auth-container, .main-container { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; position: relative; z-index: 2; }
+        .auth-box { 
+            max-width: 420px; 
+            margin: auto; 
+            background: var(--bg-panel); 
+            padding: 40px 32px; 
+            border-radius: 16px; 
+            border: 2px solid #2ecc71; 
+            box-shadow: 0 0 30px #00ff41; 
+            width: 90%; 
+        }
+        h2 { color: var(--text); margin-bottom: 16px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 6px; color: var(--text); opacity: 0.9; font-size: 14px; letter-spacing: 1px; }
+        .input-group input { 
+            width: 100%; 
+            padding: 14px 16px; 
+            background: #0f1a0f; 
+            border: 2px solid #2ecc71; 
+            border-radius: 8px; 
+            color: var(--text); 
+            font-size: 15px; 
+            outline: none; 
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 0 5px #00ff41;
+        }
+        .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 15px #00ff41; }
+        .btn { 
+            background: #1f3a1f; 
+            color: var(--text); 
+            border: 2px solid #2ecc71; 
+            padding: 14px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            width: 100%; 
+            cursor: pointer; 
+            transition: 0.15s; 
+            margin-top: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .btn-secondary { background: #0f1a0f; }
+        .btn:hover { background: #2ecc71; color: #0a0f0a; box-shadow: 0 0 20px #00ff41; }
+        .auth-error { color: #ff6b6b; margin-top: 12px; font-size: 14px; text-align: center; text-shadow: 0 0 5px #ff0000; }
+        .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
+
+        .main-container { flex-direction: row; }
+        .sidebar { 
+            width: 300px; 
+            background: var(--bg-panel); 
+            border-right: 2px solid #2ecc71; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            flex-shrink: 0; 
+            position: relative;
+            z-index: 2;
+            box-shadow: -5px 0 15px #00ff41 inset;
+        }
+        .user-profile { 
+            padding: 16px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            border-bottom: 2px solid #2ecc71; 
+            background: var(--soft); 
+            cursor: pointer; 
+            transition: 0.1s; 
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .user-profile:hover { background: var(--accent-soft); }
+        .avatar { 
+            width: 48px; 
+            height: 48px; 
+            background: #1f3a1f; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px; 
+            color: var(--text); 
+            font-weight: 500; 
+            border: 2px solid #2ecc71; 
+            overflow: hidden; 
+            flex-shrink: 0; 
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #2ecc71; }
+        .username-display { font-weight: 600; color: var(--text); word-break: break-word; text-shadow: 0 0 5px #00ff41; }
+        .online-status { font-size: 10px; color: #2ecc71; text-transform: uppercase; margin-left: 5px; }
+        .offline-status { font-size: 10px; color: #ff6b6b; text-transform: uppercase; margin-left: 5px; }
+        .star-balance { display: flex; align-items: center; gap: 4px; color: #f1c40f; font-weight: 600; margin-top: 4px; }
+        .search-add { padding: 12px; border-bottom: 2px solid #2ecc71; display: flex; gap: 8px; }
+        .search-add input { 
+            flex: 1; 
+            background: #0f1a0f; 
+            border: 2px solid #2ecc71; 
+            border-radius: 8px; 
+            padding: 10px 15px; 
+            color: var(--text); 
+            outline: none; 
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 0 5px #00ff41;
+        }
+        .icon-btn { 
+            background: #1f3a1f; 
+            border: 2px solid #2ecc71; 
+            color: var(--text); 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 8px; 
+            font-size: 20px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.1s; 
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .icon-btn:hover { background: #2ecc71; color: #0a0f0a; }
+        .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .chat-item { 
+            padding: 12px 16px; 
+            border-radius: 8px; 
+            margin-bottom: 4px; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            cursor: pointer; 
+            color: var(--text); 
+            background: var(--bg-panel); 
+            border: 2px solid transparent; 
+            transition: 0.1s; 
+            position: relative;
+        }
+        .chat-item:hover { background: var(--soft); border-color: #2ecc71; box-shadow: 0 0 10px #00ff41; }
+        .chat-item.active { background: #1f3a1f; border-color: #2ecc71; color: white; box-shadow: 0 0 15px #00ff41; }
+        .chat-item.pinned { border-left: 6px solid #f1c40f; }
+        .chat-avatar { 
+            width: 40px; 
+            height: 40px; 
+            background: #1f3a1f; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px; 
+            overflow: hidden; 
+            flex-shrink: 0; 
+            border: 2px solid #2ecc71;
+            cursor: pointer;
+            box-shadow: 0 0 5px #00ff41;
+        }
+        .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .pin-icon { margin-left: auto; color: #f1c40f; font-size: 14px; cursor: pointer; }
+        .delete-chat-icon { margin-left: 5px; color: #ff6b6b; font-size: 14px; cursor: pointer; }
+
+        .chat-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: var(--bg); 
+            position: relative;
+            z-index: 2;
+        }
+        .chat-header { 
+            padding: 16px 20px; 
+            background: var(--header); 
+            border-bottom: 2px solid #2ecc71; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: var(--text); 
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .chat-header-info { display: flex; align-items: center; gap: 10px; }
+        .online-status-header { font-size: 12px; color: #2ecc71; }
+        .offline-status-header { font-size: 12px; color: #ff6b6b; }
+        .chat-actions { display: flex; gap: 10px; }
+        .tiny-btn { 
+            background: #1f3a1f; 
+            border: 2px solid #2ecc71; 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 13px; 
+            color: var(--text); 
+            transition: 0.1s; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 5px #00ff41;
+        }
+        .tiny-btn:hover { background: #2ecc71; color: #0a0f0a; }
+        .messages-container { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            background: repeating-linear-gradient(0deg, rgba(0,255,0,0.02) 0px, rgba(0,0,0,0.5) 1px, transparent 2px);
+        }
+        .message { 
+            max-width: 70%; 
+            padding: 10px 16px; 
+            border-radius: 16px; 
+            background: var(--message-other); 
+            color: var(--text); 
+            align-self: flex-start; 
+            word-break: break-word; 
+            border: 2px solid #2ecc71; 
+            box-shadow: 0 0 10px #00ff41;
+            position: relative;
+        }
+        .message.me { align-self: flex-end; background: var(--message-me); }
+        .message .time { 
+            font-size: 11px; 
+            opacity: 0.6; 
+            margin-top: 4px; 
+            text-align: right; 
+            color: #2ecc71; 
+        }
+        .gift-message { animation: glow 1.5s infinite; }
+        @keyframes glow {
+            0% { text-shadow: 0 0 5px #00ff41; }
+            50% { text-shadow: 0 0 20px #ffd700, 0 0 30px #ff69b4; }
+            100% { text-shadow: 0 0 5px #00ff41; }
+        }
+        .game-message { background: #1f3a1f; border-color: #f1c40f; }
+        .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+        .msg-actions button { 
+            background: none; 
+            border: none; 
+            color: #2ecc71; 
+            cursor: pointer; 
+            font-size: 12px; 
+            text-decoration: underline; 
+            padding: 2px 5px; 
+            text-shadow: 0 0 5px #00ff41;
+        }
+        .media-preview { max-width: 200px; max-height: 200px; border-radius: 8px; margin-top: 4px; border: 2px solid #2ecc71; }
+        .inline-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+        .inline-btn { 
+            background: #1f3a1f; 
+            border: 2px solid #2ecc71; 
+            padding: 6px 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            color: var(--text); 
+            font-size: 13px; 
+            box-shadow: 0 0 5px #00ff41;
+        }
+        .inline-btn:hover { background: #2ecc71; color: #0a0f0a; }
+
+        .input-area { 
+            display: flex; 
+            gap: 8px; 
+            padding: 16px; 
+            background: var(--bg-panel); 
+            border-top: 2px solid #2ecc71; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            box-shadow: 0 -5px 15px #00ff41;
+            z-index: 2;
+        }
+        .input-area input[type="text"] { 
+            flex: 2; 
+            min-width: 150px; 
+            background: #0f1a0f; 
+            border: 2px solid #2ecc71; 
+            border-radius: 8px; 
+            padding: 12px 18px; 
+            color: var(--text); 
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 0 5px #00ff41;
+        }
+        .input-area input[type="file"] { display: none; }
+        .file-label { 
+            background: #1f3a1f; 
+            border: 2px solid #2ecc71; 
+            padding: 10px 16px; 
+            border-radius: 8px; 
+            color: var(--text); 
+            cursor: pointer; 
+            transition: 0.1s; 
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .file-label:hover { background: #2ecc71; color: #0a0f0a; }
+
+        .modal-overlay { 
+            position: fixed; 
+            top:0; 
+            left:0; 
+            width:100%; 
+            height:100%; 
+            background: rgba(0,20,0,0.95); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 3000; 
+            backdrop-filter: blur(2px);
+        }
+        .profile-modal { 
+            background: #0f1a0f; 
+            border-radius: 16px; 
+            width: 500px; 
+            max-width: 95%; 
+            padding: 30px; 
+            box-shadow: 0 0 50px #00ff41; 
+            border: 2px solid #2ecc71; 
+            color: #b3ffb3; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+            position: relative;
+        }
+        .profile-modal::before {
+            content: ">";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #2ecc71;
+            font-size: 20px;
+            opacity: 0.3;
+        }
+        .profile-modal h3 { 
+            font-size: 26px; 
+            margin-bottom: 20px; 
+            color: #2ecc71; 
+            font-weight: 600; 
+            border-bottom: 2px solid #2ecc71; 
+            padding-bottom: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px #00ff41;
+        }
+        .profile-avatar-section { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 16px; 
+            margin-bottom: 24px; 
+            padding: 15px;
+            background: #1a2a1a;
+            border-radius: 16px;
+            border: 2px solid #2ecc71;
+        }
+        .profile-avatar-preview { 
+            width: 120px; 
+            height: 120px; 
+            border-radius: 50%; 
+            background: #1f3a1f; 
+            border: 4px solid #2ecc71; 
+            object-fit: cover; 
+            box-shadow: 0 0 20px #00ff41;
+            cursor: pointer;
+        }
+        .profile-input-group { margin-bottom: 20px; }
+        .profile-input-group label { 
+            display: block; 
+            margin-bottom: 8px; 
+            color: #b3ffb3; 
+            font-weight: 500; 
+            font-size: 14px; 
+            letter-spacing: 1px;
+        }
+        .profile-input-group input, 
+        .profile-input-group textarea,
+        .profile-password-row { 
+            width: 100%; 
+            padding: 12px 16px; 
+            background: #1a2a1a; 
+            border: 2px solid #2ecc71; 
+            border-radius: 8px; 
+            color: #b3ffb3; 
+            font-size: 15px; 
+            outline: none; 
+            font-family: 'Courier New', monospace;
+            box-shadow: inset 0 0 5px #00ff41;
+        }
+        .profile-input-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .profile-input-group input:focus, 
+        .profile-input-group textarea:focus { border-color: #00ff41; box-shadow: 0 0 15px #00ff41; }
+        .profile-input-group input[disabled] { background: #0f1a0f; color: #2ecc71; border-color: #2ecc71; }
+        .profile-password-row { font-family: 'Courier New', monospace; font-size: 16px; background: #1a2a1a; }
+        .star-balance-large { 
+            font-size: 28px; 
+            color: #f1c40f; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            background: #1a2a1a; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+            justify-content: center; 
+            border: 2px solid #2ecc71; 
+            text-shadow: 0 0 10px #f1c40f;
+        }
+        
+        .gifts-collection { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 12px; 
+            margin: 20px 0; 
+            padding: 15px; 
+            background: #1a2a1a; 
+            border-radius: 16px; 
+            justify-content: center; 
+            border: 2px solid #2ecc71;
+        }
+        .gift-item { 
+            font-size: 32px; 
+            background: #0f1a0f; 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 2px solid #2ecc71; 
+            min-width: 70px; 
+            text-align: center;
+            box-shadow: 0 0 10px #00ff41;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+        .gift-item:hover { background: #2ecc71; transform: scale(1.1); }
+        
+        .shop-section { 
+            background: #1a2a1a; 
+            border-radius: 16px; 
+            padding: 20px; 
+            margin: 20px 0; 
+            border: 2px solid #2ecc71;
+        }
+        .shop-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: #0f1a0f; 
+            padding: 12px 18px; 
+            border-radius: 8px; 
+            margin-bottom: 10px; 
+            border: 2px solid #2ecc71; 
+        }
+        .shop-item-left { display: flex; align-items: center; gap: 15px; font-size: 28px; }
+        .shop-item button { 
+            background: #1f3a1f; 
+            border: 2px solid #2ecc71; 
+            color: #b3ffb3; 
+            padding: 8px 20px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            box-shadow: 0 0 5px #00ff41;
+        }
+        .shop-item button:hover { background: #2ecc71; color: #0a0f0a; }
+        .promo-section { display: flex; gap: 10px; margin: 15px 0; }
+        .promo-section input { 
+            flex: 1; 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 2px solid #2ecc71; 
+            background: #0f1a0f; 
+            color: #b3ffb3; 
+            font-family: 'Courier New', monospace;
+        }
+        .profile-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .profile-btn { 
+            background: #1f3a1f; 
+            border: 2px solid #2ecc71; 
+            color: #b3ffb3; 
+            padding: 14px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            flex: 1; 
+            cursor: pointer; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 0 10px #00ff41;
+        }
+        .profile-btn.secondary { background: #0f1a0f; }
+        .profile-btn:hover { background: #2ecc71; color: #0a0f0a; }
+        .tabs { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            border: 2px solid #2ecc71; 
+            padding: 5px; 
+            border-radius: 8px;
+            background: #0f1a0f;
+        }
+        .tab { 
+            flex: 1; 
+            text-align: center; 
+            padding: 12px; 
+            background: #1a2a1a; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            border: 2px solid transparent; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .tab.active { 
+            background: #1f3a1f; 
+            border-color: #2ecc71; 
+            color: #b3ffb3; 
+            box-shadow: 0 0 10px #00ff41;
+        }
+
+        .hidden { display: none; }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: #0f1a0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2ecc71;
+            border-radius: 4px;
+            box-shadow: 0 0 10px #00ff41;
+        }
+    </style>
+</head>
+<body>
+<div class="code-overlay" id="codeOverlay"></div>
+<div id="app"></div>
+<script>
+    function initCodeEffect() {
+        const overlay = document.getElementById('codeOverlay');
+        if (!overlay) return;
+        const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        let text = '';
+        for (let i = 0; i < 1000; i++) {
+            text += chars[Math.floor(Math.random() * chars.length)] + ' ';
+            if (i % 50 === 0) text += '\n';
+        }
+        overlay.innerText = text;
+        setInterval(() => {
+            let newText = '';
+            for (let i = 0; i < 1000; i++) {
+                newText += chars[Math.floor(Math.random() * chars.length)] + ' ';
+                if (i % 50 === 0) newText += '\n';
+            }
+            overlay.innerText = newText;
+        }, 3000);
+    }
+
+    (function() {
+        const App = {
+            users: JSON.parse(localStorage.getItem('imp_users')) || {},
+            currentUser: localStorage.getItem('imp_current_user') || null,
+            chats: JSON.parse(localStorage.getItem('imp_chats')) || {},
+            activeChat: localStorage.getItem('imp_active_chat') || null,
+            blocked: JSON.parse(localStorage.getItem('imp_blocked')) || {},
+            channels: JSON.parse(localStorage.getItem('imp_channels')) || {},
+            pinnedChats: JSON.parse(localStorage.getItem('imp_pinned')) || [],
+            userOnline: {},
+            botState: {},
+            promoCodes: { 'durovcrow': 1000 }
+        };
+
+        App.systemBots = ['@game_bot', '@ggsuw'];
+
+        function saveUsers() { localStorage.setItem('imp_users', JSON.stringify(App.users)); }
+        function saveChats() { localStorage.setItem('imp_chats', JSON.stringify(App.chats)); }
+        function saveBlocked() { localStorage.setItem('imp_blocked', JSON.stringify(App.blocked)); }
+        function saveChannels() { localStorage.setItem('imp_channels', JSON.stringify(App.channels)); }
+        function savePinned() { localStorage.setItem('imp_pinned', JSON.stringify(App.pinnedChats)); }
+        function saveSession() {
+            if (App.currentUser) localStorage.setItem('imp_current_user', App.currentUser);
+            else localStorage.removeItem('imp_current_user');
+            if (App.activeChat) localStorage.setItem('imp_active_chat', App.activeChat);
+            else localStorage.removeItem('imp_active_chat');
+        }
+
+        function ensureChat(userA, userB) {
+            if (!userA || !userB || userA === userB) return;
+            const id1 = [userA, userB].sort().join('_');
+            if (!App.chats[id1]) {
+                App.chats[id1] = { user1: userA, user2: userB, messages: [] };
+                saveChats();
+            }
+        }
+
+        function isValidUsername(str) {
+            return /^[a-zA-Z]{4,}$/.test(str);
+        }
+
+        function initUserStars(user) {
+            if (App.users[user].stars === undefined) App.users[user].stars = 0;
+            if (!App.users[user].gifts) App.users[user].gifts = [];
+            if (App.users[user].bio === undefined) App.users[user].bio = '';
+        }
+
+        function isBot(username) {
+            return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot);
+        }
+
+        function isOnline(username) {
+            return App.userOnline[username] || false;
+        }
+
+        function updateOnlineStatus() {
+            if (App.currentUser) {
+                App.userOnline[App.currentUser] = true;
+                setTimeout(() => {
+                    App.userOnline[App.currentUser] = false;
+                    render();
+                }, 30000);
+            }
+        }
+
+        function render() {
+            const root = document.getElementById('app');
+            if (!App.currentUser) {
+                root.innerHTML = renderAuth();
+                attachAuthEvents();
+            } else {
+                initUserStars(App.currentUser);
+                updateOnlineStatus();
+                root.innerHTML = renderMain();
+                attachMainEvents();
+            }
+        }
+
+        function renderAuth() {
+            return `<div class="auth-container">
+                <div class="auth-box">
+                    <h2>✈️ IMPORTANT SMS</h2>
+                    <div id="authForms">
+                        <div id="loginForm">
+                            <div class="input-group"><label>> ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4" value=""></div>
+                            <div class="input-group"><label>> ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div>
+                            <button class="btn" id="loginBtn">ВОЙТИ</button>
+                        </div>
+                        <div class="auth-switch">
+                            <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ АККАУНТ</button>
+                        </div>
+                    </div>
+                    <div id="registerForm" style="display: none;">
+                        <div class="input-group"><label>> ЮЗЕРНЕЙМ (англ буквы, 4+)</label><input id="regUsername" type="text" placeholder="jake"></div>
+                        <div class="input-group"><label>> ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="••••••"></div>
+                        <button class="btn" id="registerBtn">ЗАРЕГИСТРИРОВАТЬСЯ</button>
+                        <div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div>
+                    </div>
+                    <div id="authError" class="auth-error"></div>
+                </div>
+            </div>`;
+        }
+
+        function attachAuthEvents() {
+            const loginForm = document.getElementById('loginForm');
+            const regForm = document.getElementById('registerForm');
+            const errorDiv = document.getElementById('authError');
+
+            document.getElementById('showRegisterBtn')?.addEventListener('click', () => {
+                loginForm.style.display = 'none';
+                regForm.style.display = 'block';
+            });
+            document.getElementById('showLoginBtn')?.addEventListener('click', () => {
+                regForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+
+            document.getElementById('loginBtn')?.addEventListener('click', () => {
+                let username = document.getElementById('loginUsername').value.trim();
+                const pass = document.getElementById('loginPassword').value.trim();
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
+                const clean = '@' + username;
+                if (!App.users[clean] || App.users[clean].password !== pass) {
+                    errorDiv.innerText = '! НЕВЕРНЫЙ ЮЗЕРНЕЙМ ИЛИ ПАРОЛЬ';
+                    return;
+                }
+                App.currentUser = clean;
+                App.userOnline[clean] = true;
+                saveSession();
+                render();
+            });
+
+            document.getElementById('registerBtn')?.addEventListener('click', () => {
+                let username = document.getElementById('regUsername').value.trim();
+                const pass = document.getElementById('regPassword').value.trim();
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ТОЛЬКО АНГЛ БУКВЫ (A-Z), МИНИМУМ 4'; return; }
+                if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
+                const clean = '@' + username;
+                if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! ЮЗЕРНЕЙМ ЗАНЯТ'; return; }
+                App.users[clean] = { password: pass, avatar: null, stars: 100, gifts: ['🔥'], bio: '' };
+                App.currentUser = clean;
+                App.userOnline[clean] = true;
+                if (!App.chats[clean + '_saved']) {
+                    App.chats[clean + '_saved'] = { user1: clean, user2: 'saved', messages: [] };
+                }
+                if (!App.blocked[clean]) App.blocked[clean] = [];
+                saveUsers(); saveChats(); saveBlocked(); saveSession();
+                render();
+            });
+        }
+
+        function renderMain() {
+            const user = App.currentUser;
+            let chatsList = getChatListForUser(user);
+            if (!chatsList.includes('saved')) chatsList.unshift('saved');
+            
+            Object.keys(App.channels).forEach(channelName => {
+                if (!chatsList.includes(channelName)) chatsList.push(channelName);
+            });
+            
+            const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
+            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved');
+            const saved = chatsList.includes('saved') ? ['saved'] : [];
+            chatsList = [...saved, ...pinned, ...unpinned];
+            
+            let chatPartner = App.activeChat || (chatsList.length > 1 ? chatsList[1] : 'saved');
+            if (!chatsList.includes(chatPartner)) chatPartner = 'saved';
+            App.activeChat = chatPartner;
+            saveSession();
+            
+            const messages = getMessages(user, chatPartner);
+            const userData = App.users[user] || {};
+            const isBlocked = App.blocked[user]?.includes(chatPartner) || false;
+            const isChatBot = isBot(chatPartner);
+            const isChannel = App.channels[chatPartner] ? true : false;
+
+            return `<div class="main-container">
+                <div class="sidebar">
+                    <div class="user-profile" id="openProfileBtn">
+                        <div class="avatar" id="sidebarAvatar">
+                            ${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}
+                        </div>
+                        <div>
+                            <span class="username-display">${user}</span>
+                            <div class="star-balance">⭐️ ${userData.stars || 0}</div>
+                            <small style="opacity:0.7">▼ ПРОФИЛЬ</small>
+                        </div>
+                    </div>
+                    <div class="search-add">
+                        <input type="text" placeholder="ПОИСК ЮЗЕРА/БОТА/КАНАЛА (НАЧНИТЕ С @)" id="searchUserInput" value="">
+                        <button class="icon-btn" id="addUserBtn">+</button>
+                    </div>
+                    <div class="chats-list" id="chatsList">
+                        ${chatsList.map(u => renderChatItem(u, u === chatPartner, user)).join('')}
+                    </div>
+                </div>
+                <div class="chat-area">
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : chatPartner}</strong>
+                            ${!isChannel && chatPartner !== 'saved' && !isChatBot ? 
+                                (isOnline(chatPartner) ? '<span class="online-status-header">[В СЕТИ]</span>' : '<span class="offline-status-header">[НЕ В СЕТИ]</span>') : ''}
+                            ${isChannel ? `<small style="color:#2ecc71;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
+                        </div>
+                        <div class="chat-actions">
+                            ${isChannel && chatPartner !== 'saved' ? 
+                                `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕 ОТПИСАТЬСЯ' : '🔔 ПОДПИСАТЬСЯ'}</button>` : ''}
+                            ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
+                                `<button class="tiny-btn" id="giftBtn">🎁 ПОДАРИТЬ</button>` : ''}
+                            ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
+                                `<button class="tiny-btn" id="blockToggleBtn">${isBlocked ? '🔓 РАЗБЛОКИРОВАТЬ' : '⛔ БЛОКИРОВАТЬ'}</button>` : ''}
+                            <button class="tiny-btn" id="logoutBtn">🚪 ВЫЙТИ</button>
+                        </div>
+                    </div>
+                    <div class="messages-container" id="messageList">
+                        ${messages.map((msg, idx) => renderMessage(msg, idx, user, chatPartner)).join('')}
+                        ${isChatBot && messages.length === 0 ? renderBotStart(chatPartner) : ''}
+                    </div>
+                    <div class="input-area">
+                        ${!isChatBot && !(isChannel && App.channels[chatPartner]?.owner !== user && chatPartner !== 'saved') ? `
+                            <input type="text" id="messageText" placeholder="${isChannel ? 'ВВЕДИТЕ ПОСТ' : 'ВВЕДИТЕ СООБЩЕНИЕ'}..." value="" autofocus>
+                            <label for="fileUpload" class="file-label">📷 ФОТО</label>
+                            <input type="file" id="fileUpload" accept="image/*">
+                            <button class="icon-btn" id="sendVoiceBtn" style="width:auto; padding:0 12px;">🎤 ГС</button>
+                            <button class="icon-btn" id="sendMsgBtn" style="width:auto; padding:0 24px;">${isChannel ? '📢 ОПУБЛИКОВАТЬ' : '➤'}</button>
+                        ` : (isChatBot ? '<div style="color:#2ecc71; padding:12px;">> ЭТО БОТ, ИСПОЛЬЗУЙТЕ КНОПКИ В ЧАТЕ</div>' : '')}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function renderBotStart(botName) {
+            if (botName === '@game_bot') {
+                return `<div class="message" style="align-self:center; background:#1f3a1f;">
+                    <div>> ВЫБЕРИТЕ МИНИ-ИГРУ:</div>
+                    <div class="inline-buttons">
+                        <button class="inline-btn" onclick="handleBotCommand('${botName}', 'case')">📦 КЕЙС (10⭐️)</button>
+                        <button class="inline-btn" onclick="handleBotCommand('${botName}', 'slots')">🎰 СЛОТЫ (5⭐️)</button>
+                    </div>
+                </div>`;
+            }
+            return `<div class="message" style="align-self:center; background:#1f3a1f;">
+                <div>> НАЖМИТЕ /start</div>
+                <div class="inline-buttons">
+                    <button class="inline-btn" onclick="handleBotCommand('${botName}', '/start')">/start</button>
+                </div>
+            </div>`;
+        }
+
+        function getChatListForUser(user) {
+            let set = new Set(['saved']);
+            Object.keys(App.chats).forEach(key => {
+                const c = App.chats[key];
+                if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2);
+                if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1);
+            });
+            return Array.from(set);
+        }
+
+        function getMessages(user, partner) {
+            if (partner === 'saved') {
+                const savedChat = App.chats[user + '_saved'] || { messages: [] };
+                return (savedChat.messages || []).filter(m => !m.deletedFor?.includes(user));
+            }
+            if (App.channels[partner]) {
+                return App.channels[partner].messages || [];
+            }
+            const chatId = [user, partner].sort().join('_');
+            const chat = App.chats[chatId];
+            return chat ? chat.messages.filter(m => !m.deletedFor?.includes(user)) : [];
+        }
+
+        function renderChatItem(u, active, currentUser) {
+            const name = u === 'saved' ? '📎 ИЗБРАННОЕ' : u;
+            const isPinned = App.pinnedChats.includes(u);
+            let avatarHtml = '<div class="chat-avatar">📁</div>';
+            if (u !== 'saved') {
+                if (App.channels[u]) {
+                    avatarHtml = `<div class="chat-avatar" onclick="openChannelProfile('${u}')">📢</div>`;
+                } else {
+                    const avatarUrl = App.users[u]?.avatar;
+                    avatarHtml = avatarUrl ? 
+                        `<div class="chat-avatar" onclick="openOtherUserProfile('${u}')"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
+                        `<div class="chat-avatar" onclick="openOtherUserProfile('${u}')">${u[1] || '@'}</div>`;
+                }
+            }
+            return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
+                ${avatarHtml}
+                <div style="flex:1;">
+                    ${name}
+                    ${!App.channels[u] && u !== 'saved' && !isBot(u) ? 
+                        (isOnline(u) ? '<span class="online-status">[ON]</span>' : '<span class="offline-status">[OFF]</span>') : ''}
+                </div>
+                ${u !== 'saved' ? `
+                    <span class="pin-icon" onclick="togglePinChat('${u}', event)">📌</span>
+                    <span class="delete-chat-icon" onclick="deleteChat('${u}', event)">🗑️</span>
+                ` : ''}
+            </div>`;
+        }
+
+        function renderMessage(msg, idx, currentUser, chatPartner) {
+            const isMe = msg.from === currentUser;
+            const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview" />` : '';
+            const voiceHtml = msg.voice ? `<audio controls src="${msg.voice}" style="width:200px; height:30px; filter:invert(0.8);"></audio>` : '';
+            const isGift = msg.gift ? true : false;
+            const isGame = msg.game ? true : false;
+            const canDelete = (isMe || (App.channels[chatPartner] && App.channels[chatPartner]?.owner === currentUser));
+            
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}" data-msg-idx="${idx}">
+                <div>${msg.text || ''}${mediaHtml}${voiceHtml}</div>
+                <div class="time">${new Date(msg.time).toLocaleTimeString()}</div>
+                ${canDelete ? `<div class="msg-actions"><button class="delete-all">🗑 У ВСЕХ</button></div>` : ''}
+            </div>`;
+        }
+
+        function attachMainEvents() {
+            document.querySelectorAll('.chat-item').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon') || e.target.closest('.chat-avatar')) return;
+                    App.activeChat = e.currentTarget.dataset.chat;
+                    render();
+                });
+            });
+
+            document.getElementById('openProfileBtn').addEventListener('click', () => openProfileModal(App.currentUser));
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                App.userOnline[App.currentUser] = false;
+                App.currentUser = null;
+                App.activeChat = null;
+                saveSession();
+                render();
+            });
+            
+            if (document.getElementById('giftBtn')) {
+                document.getElementById('giftBtn').addEventListener('click', openGiftMenu);
+            }
+            if (document.getElementById('blockToggleBtn')) {
+                document.getElementById('blockToggleBtn').addEventListener('click', toggleBlock);
+            }
+            if (document.getElementById('subscribeBtn')) {
+                document.getElementById('subscribeBtn').addEventListener('click', toggleSubscribe);
+            }
+            
+            document.getElementById('sendMsgBtn')?.addEventListener('click', sendMessage);
+            document.getElementById('sendVoiceBtn')?.addEventListener('click', sendVoiceMessage);
+            document.getElementById('fileUpload')?.addEventListener('change', sendPhoto);
+            document.getElementById('addUserBtn').addEventListener('click', addUserBySearch);
+
+            document.querySelectorAll('.delete-all').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const msgDiv = e.target.closest('.message');
+                    const idx = msgDiv.dataset.msgIdx;
+                    deleteMessage(parseInt(idx), true);
+                });
+            });
+        }
+
+        function openGiftMenu() {
+            const user = App.currentUser;
+            const target = App.activeChat;
+            const gifts = App.users[user].gifts || [];
+            
+            if (gifts.length === 0) {
+                alert('! У ВАС НЕТ ПОДАРКОВ. КУПИТЕ В МАГАЗИНЕ');
+                return;
+            }
+            
+            const giftList = gifts.map((g, index) => 
+                `<div class="gift-item" onclick="sendGiftToUser('${target}', '${g}')">${g}</div>`
+            ).join('');
+            
+            const modalHtml = `<div class="modal-overlay" id="giftModalOverlay">
+                <div class="profile-modal" style="width: 400px;">
+                    <h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3>
+                    <div class="gifts-collection">
+                        ${giftList}
+                    </div>
+                    <div class="profile-actions">
+                        <button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            document.getElementById('closeGiftModal').addEventListener('click', () => {
+                document.getElementById('giftModalOverlay').remove();
+            });
+            
+            document.getElementById('giftModalOverlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('giftModalOverlay')) {
+                    document.getElementById('giftModalOverlay').remove();
+                }
+            });
+        }
+
+        window.sendGiftToUser = function(toUser, giftEmoji) {
+            document.getElementById('giftModalOverlay')?.remove();
+            
+            const fromUser = App.currentUser;
+            const userGifts = App.users[fromUser].gifts || [];
+            
+            // Удаляем подарок у отправителя
+            App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
+            
+            // Добавляем подарок получателю
+            if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
+            App.users[toUser].gifts.push(giftEmoji);
+            
+            // Отправляем сообщение в чат
+            const chatId = [fromUser, toUser].sort().join('_');
+            ensureChat(fromUser, toUser);
+            App.chats[chatId].messages.push({
+                from: fromUser,
+                text: `🎁 ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
+                time: Date.now(),
+                gift: true
+            });
+            
+            saveUsers();
+            saveChats();
+            alert(`> ПОДАРОК ${giftEmoji} ОТПРАВЛЕН!`);
+            if (App.activeChat === toUser) render();
+        };
+
+        function togglePinChat(chat, event) {
+            event.stopPropagation();
+            if (App.pinnedChats.includes(chat)) {
+                App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
+            } else {
+                if (App.pinnedChats.length >= 3) {
+                    alert('! МАКСИМУМ 3 ЗАКРЕПЛЕННЫХ ЧАТА');
+                    return;
+                }
+                App.pinnedChats.push(chat);
+            }
+            savePinned();
+            render();
+        }
+
+        function deleteChat(chat, event) {
+            event.stopPropagation();
+            if (!confirm(`> УДАЛИТЬ ЧАТ ${chat}? ЭТО УДАЛИТ ЕГО У ВАС И У СОБЕСЕДНИКА`)) return;
+            
+            const user = App.currentUser;
+            const chatId = [user, chat].sort().join('_');
+            if (App.chats[chatId]) {
+                delete App.chats[chatId];
+            }
+            
+            const otherChatId = [chat, user].sort().join('_');
+            if (App.chats[otherChatId]) {
+                delete App.chats[otherChatId];
+            }
+            
+            if (App.pinnedChats.includes(chat)) {
+                App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
+            }
+            
+            if (App.activeChat === chat) {
+                App.activeChat = 'saved';
+            }
+            
+            saveChats();
+            savePinned();
+            render();
+        }
+
+        function sendMessage() {
+            const text = document.getElementById('messageText')?.value.trim() || '';
+            if (!text && !window._tempPhoto && !window._tempVoice) return;
+            const from = App.currentUser;
+            const to = App.activeChat;
+            
+            if (to === 'saved') {
+                const saved = App.chats[from + '_saved'];
+                saved.messages.push({ from: from, text, time: Date.now(), photo: window._tempPhoto || null, voice: window._tempVoice || null });
+                saveChats(); render(); window._tempPhoto = null; window._tempVoice = null; return;
+            }
+            
+            if (App.channels[to]) {
+                if (App.channels[to].owner !== from) return;
+                if (!App.channels[to].messages) App.channels[to].messages = [];
+                App.channels[to].messages.push({ from: to, text, time: Date.now(), photo: window._tempPhoto || null, voice: window._tempVoice || null });
+                saveChannels(); render(); window._tempPhoto = null; window._tempVoice = null; return;
+            }
+            
+            const chatId = [from, to].sort().join('_');
+            ensureChat(from, to);
+            App.chats[chatId].messages.push({ from, text, time: Date.now(), photo: window._tempPhoto || null, voice: window._tempVoice || null });
+            saveChats(); render(); window._tempPhoto = null; window._tempVoice = null;
+        }
+
+        function sendVoiceMessage() {
+            window._tempVoice = 'data:audio/wav;base64,UklGRlwAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVAAAAA8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
+            sendMessage();
+        }
+
+        function sendPhoto(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                window._tempPhoto = ev.target.result;
+                sendMessage();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function deleteMessage(idx, forAll) {
+            const from = App.currentUser; 
+            const to = App.activeChat;
+            let msgArray;
+            
+            if (to === 'saved') {
+                msgArray = App.chats[from+'_saved'].messages;
+            } else if (App.channels[to]) {
+                if (App.channels[to].owner !== from) return;
+                msgArray = App.channels[to].messages;
+            } else {
+                const chatId = [from, to].sort().join('_');
+                msgArray = App.chats[chatId].messages;
+            }
+            
+            if (!msgArray || idx>=msgArray.length) return;
+            msgArray.splice(idx, 1);
+            
+            if (App.channels[to]) saveChannels();
+            else saveChats();
+            render();
+        }
+
+        function addUserBySearch() {
+            let query = document.getElementById('searchUserInput').value.trim();
+            if (!query) return;
+            
+            // Требуем @ в начале
+            if (!query.startsWith('@')) {
+                alert('! ПОИСК ТОЛЬКО ПО @ЮЗЕРНЕЙМ');
+                return;
+            }
+            
+            // Проверка на бота
+            if (App.systemBots.includes(query) || (App.users[query] && App.users[query].isBot)) {
+                App.activeChat = query;
+                ensureChat(App.currentUser, query);
+                render();
+                return;
+            }
+            
+            // Проверка на канал
+            if (App.channels[query]) {
+                App.activeChat = query;
+                render();
+                return;
+            }
+            
+            // Проверка на пользователя
+            if (!App.users[query]) { 
+                alert('! ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН'); 
+                return; 
+            }
+            if (query === App.currentUser) { alert('! ЭТО ВЫ'); return; }
+            
+            ensureChat(App.currentUser, query);
+            App.activeChat = query;
+            render();
+        }
+
+        function toggleBlock() {
+            const user = App.currentUser;
+            const target = App.activeChat;
+            if (!App.blocked[user]) App.blocked[user] = [];
+            const idx = App.blocked[user].indexOf(target);
+            if (idx === -1) {
+                App.blocked[user].push(target);
+            } else {
+                App.blocked[user].splice(idx, 1);
+            }
+            saveBlocked();
+            render();
+        }
+
+        function toggleSubscribe() {
+            const user = App.currentUser;
+            const channel = App.activeChat;
+            if (!App.channels[channel]) return;
+            
+            if (!App.channels[channel].subscribers) App.channels[channel].subscribers = [];
+            if (!App.channels[channel].subscribers.includes(user)) {
+                App.channels[channel].subscribers.push(user);
+            } else {
+                App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user);
+            }
+            saveChannels();
+            render();
+        }
+
+        function handleBotCommand(botName, cmd) {
+            if (botName === '@game_bot') {
+                const chatId = [App.currentUser, botName].sort().join('_');
+                ensureChat(App.currentUser, botName);
+                
+                let responseText = '';
+                let gameResult = '';
+                
+                if (cmd === 'case') {
+                    const price = 10;
+                    if (App.users[App.currentUser].stars < price) {
+                        responseText = '> НЕДОСТАТОЧНО ⭐️ ДЛЯ КЕЙСА (НУЖНО 10)';
+                    } else {
+                        App.users[App.currentUser].stars -= price;
+                        const prizes = ['🔥', '🌊', '🍭', '🍬', '10⭐️', '20⭐️', '5⭐️', '👻'];
+                        const prize = prizes[Math.floor(Math.random() * prizes.length)];
+                        
+                        if (prize === '🔥' || prize === '🌊' || prize === '🍭' || prize === '🍬' || prize === '👻') {
+                            if (!App.users[App.currentUser].gifts) App.users[App.currentUser].gifts = [];
+                            App.users[App.currentUser].gifts.push(prize);
+                            gameResult = `> ВЫ ВЫИГРАЛИ ПОДАРОК: ${prize}`;
+                        } else {
+                            const starWin = parseInt(prize);
+                            App.users[App.currentUser].stars += starWin;
+                            gameResult = `> ВЫ ВЫИГРАЛИ ${starWin}⭐️`;
+                        }
+                        
+                        responseText = `> ОТКРЫТИЕ КЕЙСА...\n${gameResult}`;
+                        saveUsers();
+                    }
+                } else if (cmd === 'slots') {
+                    const price = 5;
+                    if (App.users[App.currentUser].stars < price) {
+                        responseText = '> НЕДОСТАТОЧНО ⭐️ ДЛЯ СЛОТОВ (НУЖНО 5)';
+                    } else {
+                        App.users[App.currentUser].stars -= price;
+                        const symbols = ['🔥', '🌊', '🍭', '🍬', '⭐️', '7'];
+                        const roll1 = symbols[Math.floor(Math.random() * symbols.length)];
+                        const roll2 = symbols[Math.floor(Math.random() * symbols.length)];
+                        const roll3 = symbols[Math.floor(Math.random() * symbols.length)];
+                        
+                        let win = 0;
+                        if (roll1 === roll2 && roll2 === roll3) {
+                            win = 50;
+                        } else if (roll1 === roll2 || roll2 === roll3 || roll1 === roll3) {
+                            win = 10;
+                        }
+                        
+                        if (win > 0) {
+                            App.users[App.currentUser].stars += win;
+                            gameResult = `> ВЫ ВЫИГРАЛИ ${win}⭐️!`;
+                        } else {
+                            gameResult = '> НИЧЕГО НЕ ВЫИГРАЛИ. ПОПРОБУЙТЕ СНОВА!';
+                        }
+                        
+                        responseText = `> СЛОТЫ: [ ${roll1} | ${roll2} | ${roll3} ]\n${gameResult}`;
+                        saveUsers();
+                    }
+                }
+                
+                App.chats[chatId].messages.push({
+                    from: botName,
+                    text: responseText,
+                    time: Date.now(),
+                    game: true
+                });
+                saveChats();
+                render();
+            }
+        }
+
+        function openChannelViewModal(channelName) {
+            const channel = App.channels[channelName];
+            if (!channel) return;
+            
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
+                <div class="profile-modal">
+                    <h3>📢 КАНАЛ ${channelName}</h3>
+                    
+                    <div class="profile-avatar-section">
+                        <img src="${channel.avatar || 'https://via.placeholder.com/120?text=📢'}" class="profile-avatar-preview">
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>> ВЛАДЕЛЕЦ</label>
+                        <input type="text" value="${channel.owner}" disabled>
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>> ОПИСАНИЕ</label>
+                        <div class="profile-password-row">${channel.description || '—'}</div>
+                    </div>
+                    
+                    <div class="star-balance-large">
+                        <span>👥</span> <span>${channel.subscribers?.length || 0} ПОДПИСЧИКОВ</span>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
+                document.getElementById('profileModalOverlay').remove();
+            });
+            
+            document.getElementById('profileModalOverlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('profileModalOverlay')) {
+                    document.getElementById('profileModalOverlay').remove();
+                }
+            });
+        }
+
+        window.openOtherUserProfile = function(username) {
+            openProfileModal(username);
+        };
+
+        window.openChannelProfile = function(channelName) {
+            openChannelViewModal(channelName);
+        };
+
+        window.handleBotCommand = handleBotCommand;
+
+        function openProfileModal(username) {
+            const userData = App.users[username] || { avatar: null, password: '', stars: 0, gifts: [], bio: '' };
+            const isOwn = (username === App.currentUser);
+            const isBotUser = App.systemBots.includes(username);
+            
+            const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join('');
+            
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
+                <div class="profile-modal">
+                    <h3>${isOwn ? '> МОЙ ПРОФИЛЬ' : (isBotUser ? '> БОТ ' + username : '> ПРОФИЛЬ ' + username)}</h3>
+                    
+                    <div class="profile-avatar-section">
+                        <img src="${userData.avatar || 'https://via.placeholder.com/120?text='+username[1]}" class="profile-avatar-preview" id="modalAvatarPreview">
+                        ${isOwn && !isBotUser ? `
+                        <div class="profile-input-group" style="width: 100%;">
+                            <label>> ССЫЛКА НА АВАТАР</label>
+                            <input type="text" id="modalAvatarInput" value="${userData.avatar || ''}" placeholder="https://...">
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>> ЮЗЕРНЕЙМ</label>
+                        <input type="text" value="${username}" disabled>
+                    </div>
+
+                    ${!isBotUser ? `
+                    <div class="profile-input-group">
+                        <label>> ОПИСАНИЕ</label>
+                        ${isOwn ? 
+                            `<textarea id="modalBioInput" maxlength="50" placeholder="Введите описание...">${userData.bio || ''}</textarea>` :
+                            `<div class="profile-password-row">${userData.bio || '—'}</div>`
+                        }
+                    </div>
+
+                    <div class="star-balance-large">
+                        <span>⭐️</span> <span>${userData.stars || 0} ЗВЕЗД</span>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="tab active" data-tab="gifts">🎁 ПОДАРКИ</div>
+                        ${isOwn ? '<div class="tab" data-tab="shop">🛒 МАГАЗИН</div>' : ''}
+                        ${isOwn ? '<div class="tab" data-tab="channel">📢 КАНАЛ</div>' : ''}
+                    </div>
+
+                    <div id="tabGifts" class="tab-content">
+                        <div class="gifts-collection">
+                            ${giftsList || '<p style="color:#888;">> НЕТ ПОДАРКОВ</p>'}
+                        </div>
+                    </div>
+
+                    ${isOwn ? `
+                    <div id="tabShop" class="tab-content hidden">
+                        <div class="shop-section">
+                            <h4>КУПИТЬ ПОДАРКИ</h4>
+                            ${[
+                                { emoji: '🔥', price: 15 },
+                                { emoji: '🌊', price: 15 },
+                                { emoji: '🍭', price: 25 },
+                                { emoji: '🍬', price: 25 }
+                            ].map(item => `
+                                <div class="shop-item">
+                                    <div class="shop-item-left"><span>${item.emoji}</span> <span>${item.price}⭐️</span></div>
+                                    <button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button>
+                                </div>
+                            `).join('')}
+                            
+                            <h4 style="margin-top:20px;">🎫 ПРОМОКОД</h4>
+                            <div class="promo-section">
+                                <input type="text" id="promoCodeInput" placeholder="ВВЕДИТЕ ПРОМОКОД">
+                                <button class="profile-btn" id="activatePromoBtn">АКТИВИРОВАТЬ</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="tabChannel" class="tab-content hidden">
+                        <div class="shop-section">
+                            <h4>СОЗДАТЬ КАНАЛ (450⭐️)</h4>
+                            <div class="profile-input-group">
+                                <label>> НАЗВАНИЕ КАНАЛА</label>
+                                <input type="text" id="channelNameInput" placeholder="@channel">
+                            </div>
+                            <div class="profile-input-group">
+                                <label>> ОПИСАНИЕ</label>
+                                <textarea id="channelDescInput" maxlength="100" placeholder="Описание канала..."></textarea>
+                            </div>
+                            <button class="profile-btn" id="createChannelBtn">СОЗДАТЬ КАНАЛ</button>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ` : ''}
+
+                    <div class="profile-actions">
+                        ${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}
+                        <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            if (isOwn && !isBotUser) {
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                        if (e.target.dataset.tab === 'gifts') document.getElementById('tabGifts').classList.remove('hidden');
+                        if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden');
+                        if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden');
+                    });
+                });
+
+                document.querySelectorAll('.buy-gift-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const gift = e.target.dataset.gift;
+                        const price = parseInt(e.target.dataset.price);
+                        const user = App.currentUser;
+                        if (App.users[user].stars >= price) {
+                            App.users[user].stars -= price;
+                            if (!App.users[user].gifts) App.users[user].gifts = [];
+                            App.users[user].gifts.push(gift);
+                            saveUsers();
+                            alert(`> ВЫ КУПИЛИ ${gift}`);
+                            document.getElementById('profileModalOverlay').remove();
+                            openProfileModal(user);
+                        } else {
+                            alert('! НЕДОСТАТОЧНО ⭐️');
+                        }
+                    });
+                });
+
+                document.getElementById('activatePromoBtn').addEventListener('click', () => {
+                    const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
+                    if (App.promoCodes[code] !== undefined) {
+                        App.users[App.currentUser].stars += App.promoCodes[code];
+                        saveUsers();
+                        alert(`> ПРОМОКОД АКТИВИРОВАН! +${App.promoCodes[code]}⭐️`);
+                        document.getElementById('profileModalOverlay').remove();
+                        openProfileModal(App.currentUser);
+                    } else {
+                        alert('! НЕВЕРНЫЙ ПРОМОКОД');
+                    }
+                });
+
+                document.getElementById('createChannelBtn').addEventListener('click', () => {
+                    const channelName = document.getElementById('channelNameInput').value.trim();
+                    const channelDesc = document.getElementById('channelDescInput').value.trim();
+                    
+                    if (!channelName) { alert('! ВВЕДИТЕ НАЗВАНИЕ КАНАЛА'); return; }
+                    if (App.users[channelName] || App.channels[channelName] || App.systemBots.includes(channelName)) { 
+                        alert('! ИМЯ КАНАЛА ЗАНЯТО'); 
+                        return; 
+                    }
+                    
+                    if (App.users[App.currentUser].stars < 450) {
+                        alert('! НЕДОСТАТОЧНО ⭐️ (НУЖНО 450)');
+                        return;
+                    }
+                    
+                    App.users[App.currentUser].stars -= 450;
+                    App.channels[channelName] = {
+                        name: channelName,
+                        owner: App.currentUser,
+                        description: channelDesc,
+                        avatar: null,
+                        subscribers: [App.currentUser],
+                        messages: [],
+                        createdAt: Date.now()
+                    };
+                    
+                    saveUsers();
+                    saveChannels();
+                    alert(`> КАНАЛ ${channelName} УСПЕШНО СОЗДАН!`);
+                    document.getElementById('profileModalOverlay').remove();
+                    App.activeChat = channelName;
+                    render();
+                });
+
+                document.getElementById('saveProfileModalBtn').addEventListener('click', () => {
+                    const newAvatar = document.getElementById('modalAvatarInput')?.value.trim();
+                    const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
+                    
+                    if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
+                    if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
+                    
+                    saveUsers();
+                    document.getElementById('profileModalOverlay').remove();
+                    render();
+                });
+            }
+            
+            document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
+                document.getElementById('profileModalOverlay').remove();
+            });
+            
+            document.getElementById('profileModalOverlay').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('profileModalOverlay')) {
+                    document.getElementById('profileModalOverlay').remove();
+                }
+            });
+        }
+
+        function initBots() {
+            App.systemBots.forEach(bot => {
+                if (!App.users[bot]) {
+                    App.users[bot] = { 
+                        password: 'bot', 
+                        avatar: null, 
+                        stars: 0, 
+                        gifts: [], 
+                        bio: 'Я бот',
+                        isBot: true 
+                    };
+                }
+            });
+            saveUsers();
+        }
+
+        window.addEventListener('load', () => {
+            initBots();
+            initCodeEffect();
+            
+            if (Object.keys(App.users).length === 0) {
+                App.users = { 
+                    '@test': { 
+                        password: 'test111', 
+                        avatar: null, 
+                        stars: 200, 
+                        gifts: ['🔥', '🌊'],
+                        bio: 'Хакер в мире IMPORTANT SMS'
+                    } 
+                };
+                saveUsers();
+            }
+            if (App.currentUser && !App.blocked[App.currentUser]) App.blocked[App.currentUser] = [];
+            
+            if (!App.pinnedChats) App.pinnedChats = [];
+            
+            render();
+        });
+
+        window.openProfileModal = openProfileModal;
+        window.togglePinChat = togglePinChat;
+        window.deleteChat = deleteChat;
+    })();
+</script>
+</body>
+</html>
