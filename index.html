@@ -319,6 +319,7 @@
             box-shadow: 0 0 5px #00ff41;
         }
         .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .chat-avatar[onclick] { cursor: pointer; }
         .pin-icon { margin-left: auto; color: #f1c40f; font-size: 14px; cursor: pointer; }
         .delete-chat-icon { margin-left: 5px; color: #ff6b6b; font-size: 14px; cursor: pointer; }
 
@@ -379,11 +380,15 @@
             text-align: right; 
             color: #2ecc71; 
         }
-        .gift-message { animation: glow 1.5s infinite; }
-        @keyframes glow {
-            0% { text-shadow: 0 0 5px #00ff41; }
-            50% { text-shadow: 0 0 20px #ffd700, 0 0 30px #ff69b4; }
-            100% { text-shadow: 0 0 5px #00ff41; }
+        .gift-message { 
+            animation: giftGlow 1.5s infinite;
+            background: #1a3a1a;
+            border-color: #ffaa00;
+        }
+        @keyframes giftGlow {
+            0% { box-shadow: 0 0 5px #ffaa00, 0 0 10px #ffaa00; }
+            50% { box-shadow: 0 0 20px #ffaa00, 0 0 30px #ffaa00; }
+            100% { box-shadow: 0 0 5px #ffaa00, 0 0 10px #ffaa00; }
         }
         .game-message { background: #1f3a1f; border-color: #f1c40f; }
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
@@ -410,6 +415,17 @@
             box-shadow: 0 0 5px #00ff41;
         }
         .inline-btn:hover { background: #2ecc71; color: #0a0f0a; }
+        .message-username {
+            cursor: pointer;
+            color: #2ecc71;
+            text-decoration: underline;
+            text-decoration-color: #2ecc71;
+            text-underline-offset: 2px;
+        }
+        .message-username:hover {
+            color: #00ff41;
+            text-shadow: 0 0 5px #00ff41;
+        }
 
         .input-area { 
             display: flex; 
@@ -1143,7 +1159,7 @@
             let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
             
             return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}">
-                ${!isMe ? `<small style="color:#2ecc71;">${senderName}${verifiedBadge}</small><br>` : ''}
+                ${!isMe ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${senderName}${verifiedBadge}</span></small><br>` : ''}
                 <div>${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 ${canDelete ? `<div class="msg-actions"><button class="delete-all" data-idx="${idx}">🗑</button></div>` : ''}
@@ -1168,8 +1184,14 @@
                     
                     const chatId = e.currentTarget.dataset.chat;
                     
-                    // Если кликнули на тот же чат - не делаем ничего
-                    if (App.activeChat === chatId) return;
+                    // Если кликнули на тот же чат - просто закрываем сайдбар на мобилке
+                    if (App.activeChat === chatId) {
+                        if (window.innerWidth < 768) {
+                            App.sidebarOpen = false;
+                            document.querySelector('.sidebar').classList.remove('open');
+                        }
+                        return;
+                    }
                     
                     App.activeChat = chatId;
                     
@@ -1530,7 +1552,7 @@
             ensureChat(fromUser, toUser);
             App.chats[chatId].messages.push({
                 from: fromUser,
-                text: `🎁 ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
+                text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
                 time: Date.now(),
                 gift: true
             });
