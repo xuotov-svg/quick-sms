@@ -722,8 +722,8 @@
     (function() {
         const App = {
             users: {},
-            currentUser: null,
             chats: {},
+            currentUser: null,
             activeChat: null,
             blocked: {},
             channels: {},
@@ -731,7 +731,8 @@
             userOnline: {},
             botState: {},
             promoCodes: { 'durovcrow': 1000 },
-            sidebarOpen: false
+            sidebarOpen: false,
+            dataLoaded: false
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
@@ -747,12 +748,24 @@
                     if (data.channels) App.channels = data.channels;
                     if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
                 }
+                
+                // Восстанавливаем сессию
+                const savedUser = localStorage.getItem('quick_current_user');
+                const savedChat = localStorage.getItem('quick_active_chat');
+                
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = savedChat;
+                }
+                
+                App.dataLoaded = true;
                 render();
             });
         }
 
         // Сохранение в Firebase
         function saveToFirebase() {
+            if (!App.dataLoaded) return;
             database.ref().set({
                 users: App.users,
                 chats: App.chats,
@@ -760,6 +773,17 @@
                 channels: App.channels,
                 pinnedChats: App.pinnedChats
             });
+        }
+
+        // Сохранение сессии
+        function saveSession() {
+            if (App.currentUser) {
+                localStorage.setItem('quick_current_user', App.currentUser);
+                localStorage.setItem('quick_active_chat', App.activeChat || '');
+            } else {
+                localStorage.removeItem('quick_current_user');
+                localStorage.removeItem('quick_active_chat');
+            }
         }
 
         function ensureChat(userA, userB) {
@@ -806,6 +830,11 @@
 
         function render() {
             const root = document.getElementById('app');
+            if (!App.dataLoaded) {
+                root.innerHTML = '<div style="color:#2ecc71; text-align:center; margin-top:50vh;">ЗАГРУЗКА...</div>';
+                return;
+            }
+            
             if (!App.currentUser) {
                 root.innerHTML = renderAuth();
                 attachAuthEvents();
@@ -867,6 +896,7 @@
                 }
                 App.currentUser = clean;
                 App.userOnline[clean] = true;
+                saveSession();
                 render();
             });
 
@@ -888,6 +918,7 @@
                 if (!App.blocked[clean]) App.blocked[clean] = [];
                 
                 saveToFirebase();
+                saveSession();
                 render();
             });
         }
@@ -909,6 +940,7 @@
             let chatPartner = App.activeChat || (chatsList.length > 1 ? chatsList[1] : 'saved');
             if (!chatsList.includes(chatPartner)) chatPartner = 'saved';
             App.activeChat = chatPartner;
+            saveSession();
             
             const messages = getMessages(user, chatPartner);
             const userData = App.users[user] || {};
@@ -1058,6 +1090,7 @@
                     if (window.innerWidth < 768) {
                         App.sidebarOpen = false;
                     }
+                    saveSession();
                     render();
                 });
             });
@@ -1073,6 +1106,7 @@
                 App.userOnline[App.currentUser] = false;
                 App.currentUser = null;
                 App.activeChat = null;
+                saveSession();
                 render();
             });
             
@@ -1200,6 +1234,7 @@
                 if (window.innerWidth < 768) {
                     App.sidebarOpen = false;
                 }
+                saveSession();
                 document.getElementById('searchUserInput').value = '';
                 render();
                 return;
@@ -1210,6 +1245,7 @@
                 if (window.innerWidth < 768) {
                     App.sidebarOpen = false;
                 }
+                saveSession();
                 document.getElementById('searchUserInput').value = '';
                 render();
                 return;
@@ -1226,6 +1262,7 @@
             if (window.innerWidth < 768) {
                 App.sidebarOpen = false;
             }
+            saveSession();
             document.getElementById('searchUserInput').value = '';
             render();
         }
@@ -1290,6 +1327,7 @@
             
             if (App.activeChat === chat) {
                 App.activeChat = 'saved';
+                saveSession();
             }
             
             saveToFirebase();
@@ -1571,6 +1609,7 @@
                     alert(`> КАНАЛ ${channelName} УСПЕШНО СОЗДАН!`);
                     document.getElementById('profileModalOverlay').remove();
                     App.activeChat = channelName;
+                    saveSession();
                     render();
                 });
 
@@ -1661,22 +1700,8 @@
 
         window.addEventListener('load', () => {
             initCodeEffect();
+            initBots();
             loadFromFirebase();
-            
-            if (Object.keys(App.users).length === 0) {
-                App.users = { 
-                    '@test': { 
-                        password: 'test111', 
-                        avatar: null, 
-                        stars: 100,
-                        gifts: [],
-                        bio: 'Тестовый пользователь'
-                    } 
-                };
-                saveToFirebase();
-            }
-            if (App.currentUser && !App.blocked[App.currentUser]) App.blocked[App.currentUser] = [];
-            if (!App.pinnedChats) App.pinnedChats = [];
         });
     })();
 </script>
