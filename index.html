@@ -391,7 +391,6 @@
             100% { text-shadow: 0 0 5px #00ff41; }
         }
         .game-message { background: #1f3a1f; border-color: #f1c40f; }
-        .voice-message { background: #1a2a1a; border-color: #2ecc71; }
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
         .msg-actions button { 
             background: none; 
@@ -404,22 +403,6 @@
             text-shadow: 0 0 5px #00ff41;
         }
         .media-preview { max-width: 150px; max-height: 150px; border-radius: 8px; margin-top: 4px; border: 2px solid #2ecc71; }
-        .voice-preview { 
-            width: 180px; 
-            height: 40px; 
-            background: #0f1a0f; 
-            border-radius: 20px; 
-            display: flex; 
-            align-items: center; 
-            padding: 0 10px; 
-            gap: 5px; 
-            border: 2px solid #2ecc71;
-        }
-        .voice-wave { 
-            flex: 1; 
-            height: 20px; 
-            background: repeating-linear-gradient(90deg, #2ecc71 0px, #2ecc71 2px, transparent 2px, transparent 4px); 
-        }
         .inline-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
         .inline-btn { 
             background: #1f3a1f; 
@@ -468,33 +451,6 @@
             font-size: 14px;
         }
         .file-label:hover { background: #2ecc71; color: #0a0f0a; }
-        .voice-record-btn { 
-            background: #1f3a1f; 
-            border: 2px solid #2ecc71; 
-            width: 44px; 
-            height: 44px; 
-            border-radius: 50%; 
-            color: var(--text); 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            transition: 0.1s; 
-            box-shadow: 0 0 10px #00ff41;
-            font-size: 20px;
-            user-select: none;
-        }
-        .voice-record-btn.recording { 
-            background: #ff4444; 
-            border-color: #ff0000; 
-            box-shadow: 0 0 20px #ff0000;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
         .send-btn { 
             background: #1f3a1f; 
             border: 2px solid #2ecc71; 
@@ -510,7 +466,7 @@
             box-shadow: 0 0 10px #00ff41;
             font-size: 20px;
         }
-        .send-btn:hover, .voice-record-btn:hover { background: #2ecc71; color: #0a0f0a; }
+        .send-btn:hover { background: #2ecc71; color: #0a0f0a; }
 
         .modal-overlay { 
             position: fixed; 
@@ -755,9 +711,7 @@
             userOnline: {},
             botState: {},
             promoCodes: { 'durovcrow': 1000 },
-            sidebarOpen: false,
-            recordingVoice: false,
-            voiceData: null
+            sidebarOpen: false
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
@@ -976,12 +930,6 @@
                             <input type="text" id="messageText" placeholder="${isChannel ? 'ВВЕДИТЕ ПОСТ' : 'СМС...'}" value="" autofocus>
                             <label for="fileUpload" class="file-label">📷</label>
                             <input type="file" id="fileUpload" accept="image/*">
-                            <div class="voice-record-btn ${App.recordingVoice ? 'recording' : ''}" 
-                                 id="voiceRecordBtn"
-                                 onmousedown="startRecording()"
-                                 onmouseup="stopRecording()"
-                                 ontouchstart="startRecording()"
-                                 ontouchend="stopRecording()">🎤</div>
                             <button class="send-btn" id="sendMsgBtn">➤</button>
                         ` : (isChatBot ? '<div style="color:#2ecc71; padding:12px;">> ИСПОЛЬЗУЙТЕ КНОПКИ В ЧАТЕ</div>' : '')}
                     </div>
@@ -1034,18 +982,12 @@
         function renderMessage(msg, idx, currentUser, chatPartner) {
             const isMe = msg.from === currentUser;
             const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview" />` : '';
-            const voiceHtml = msg.voice ? 
-                `<div class="voice-preview">
-                    <span>🎤</span>
-                    <div class="voice-wave"></div>
-                    <span>${Math.floor(msg.voice.duration)}с</span>
-                </div>` : '';
             const isGift = msg.gift ? true : false;
             const isGame = msg.game ? true : false;
             const canDelete = (isMe || (App.channels[chatPartner] && App.channels[chatPartner]?.owner === currentUser));
             
-            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''} ${msg.voice ? 'voice-message' : ''}" data-msg-idx="${idx}">
-                <div>${msg.text || ''}${mediaHtml}${voiceHtml}</div>
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}" data-msg-idx="${idx}">
+                <div>${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 ${canDelete ? `<div class="msg-actions"><button class="delete-all">🗑</button></div>` : ''}
             </div>`;
@@ -1073,36 +1015,6 @@
             const chat = App.chats[chatId];
             return chat ? chat.messages.filter(m => !m.deletedFor?.includes(user)) : [];
         }
-
-        // Глобальные функции для обработки голосовых сообщений
-        window.startRecording = function() {
-            App.recordingVoice = true;
-            // Симулируем запись (в реальности нужно использовать MediaRecorder)
-            App.voiceData = {
-                duration: 0,
-                blob: null
-            };
-            const interval = setInterval(() => {
-                if (App.voiceData) {
-                    App.voiceData.duration += 1;
-                }
-            }, 1000);
-            window.voiceInterval = interval;
-            render();
-        };
-
-        window.stopRecording = function() {
-            App.recordingVoice = false;
-            if (window.voiceInterval) {
-                clearInterval(window.voiceInterval);
-            }
-            // Сохраняем демо-голосовое сообщение
-            App.voiceData = {
-                duration: App.voiceData?.duration || 3,
-                data: 'voice_demo_' + Date.now()
-            };
-            render();
-        };
 
         function attachMainEvents() {
             document.querySelectorAll('.chat-item').forEach(el => {
@@ -1156,10 +1068,7 @@
 
         function sendMessage() {
             const text = document.getElementById('messageText')?.value.trim() || '';
-            const voice = App.voiceData;
-            App.voiceData = null;
-            
-            if (!text && !window._tempPhoto && !voice) return;
+            if (!text && !window._tempPhoto) return;
             
             const from = App.currentUser;
             const to = App.activeChat;
@@ -1170,11 +1079,11 @@
                     from: from, 
                     text, 
                     time: Date.now(), 
-                    photo: window._tempPhoto || null,
-                    voice: voice || null
+                    photo: window._tempPhoto || null
                 });
                 saveChats(); 
                 window._tempPhoto = null;
+                document.getElementById('messageText').value = '';
                 render(); 
                 return;
             }
@@ -1186,11 +1095,11 @@
                     from: to, 
                     text, 
                     time: Date.now(), 
-                    photo: window._tempPhoto || null,
-                    voice: voice || null
+                    photo: window._tempPhoto || null
                 });
                 saveChannels(); 
                 window._tempPhoto = null;
+                document.getElementById('messageText').value = '';
                 render(); 
                 return;
             }
@@ -1201,11 +1110,11 @@
                 from, 
                 text, 
                 time: Date.now(), 
-                photo: window._tempPhoto || null,
-                voice: voice || null
+                photo: window._tempPhoto || null
             });
             saveChats(); 
             window._tempPhoto = null;
+            document.getElementById('messageText').value = '';
             render();
         }
 
@@ -1252,25 +1161,30 @@
                 return;
             }
             
+            // Проверка на бота
             if (App.systemBots.includes(query) || (App.users[query] && App.users[query].isBot)) {
                 App.activeChat = query;
                 ensureChat(App.currentUser, query);
                 if (window.innerWidth < 768) {
                     App.sidebarOpen = false;
                 }
+                document.getElementById('searchUserInput').value = '';
                 render();
                 return;
             }
             
+            // Проверка на канал
             if (App.channels[query]) {
                 App.activeChat = query;
                 if (window.innerWidth < 768) {
                     App.sidebarOpen = false;
                 }
+                document.getElementById('searchUserInput').value = '';
                 render();
                 return;
             }
             
+            // Проверка на пользователя
             if (!App.users[query]) { 
                 alert('! ПОЛЬЗОВАТЕЛЬ НЕ НАЙДЕН'); 
                 return; 
@@ -1282,6 +1196,7 @@
             if (window.innerWidth < 768) {
                 App.sidebarOpen = false;
             }
+            document.getElementById('searchUserInput').value = '';
             render();
         }
 
