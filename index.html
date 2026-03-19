@@ -46,7 +46,6 @@
             z-index: 1;
         }
 
-        /* Анимации */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -134,7 +133,6 @@
             font-weight: 500;
         }
 
-        /* 2FA экран */
         .two-factor-screen {
             position: fixed;
             top: 0;
@@ -820,10 +818,11 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Инициализация EmailJS с вашим публичным ключом
+    // Инициализация EmailJS
     emailjs.init("8oO0zcryCZDxWODG2");
 
     (function() {
+        // Основное состояние приложения
         const App = {
             users: {},
             chats: {},
@@ -839,43 +838,224 @@
             tempPhoto: null,
             pending2FA: null,
             pendingPasswordReset: null,
-            savedMessages: {} // Локальное хранилище для избранного
+            pendingEmailVerification: null,
+            savedMessages: {}
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
 
-        // Генерация случайного кода
+        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function generateCode() {
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
 
-        // Отправка кода на email через EmailJS
+        function isValidUsername(str) {
+            return /^[a-zA-Z]{4,}$/.test(str);
+        }
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function isBot(username) {
+            return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot);
+        }
+
+        function initUserStars(user) {
+            if (!App.users[user]) return;
+            if (App.users[user].stars === undefined) App.users[user].stars = 0;
+            if (!App.users[user].gifts) App.users[user].gifts = [];
+            if (App.users[user].bio === undefined) App.users[user].bio = '';
+            if (App.users[user].verified === undefined) App.users[user].verified = false;
+            if (App.users[user].email === undefined) App.users[user].email = '';
+            if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
+            if (App.users[user].age === undefined) App.users[user].age = 14;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'notification' + (type === 'error' ? ' error' : '');
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-screen';
+            loadingDiv.id = 'loadingScreen';
+            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>quick-sms</div>';
+            document.body.appendChild(loadingDiv);
+        }
+
+        function hideLoading() {
+            const loading = document.getElementById('loadingScreen');
+            if (loading) loading.remove();
+        }
+
+        // ========== РАБОТА С ДАННЫМИ ==========
+        function loadSavedMessages() {
+            if (!App.currentUser) return;
+            const saved = localStorage.getItem('quick_saved_' + App.currentUser);
+            if (saved) {
+                try {
+                    App.savedMessages[App.currentUser] = JSON.parse(saved);
+                } catch(e) {
+                    App.savedMessages[App.currentUser] = [];
+                }
+            } else {
+                App.savedMessages[App.currentUser] = [];
+            }
+        }
+
+        function saveSavedMessages() {
+            if (App.currentUser) {
+                localStorage.setItem('quick_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || []));
+            }
+        }
+
+        async function loadFromFirebase() {
+            console.log('🔄 Загружаем данные...');
+            
+            try {
+                const snapshot = await database.ref().get();
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    if (data.users) App.users = data.users;
+                    if (data.chats) App.chats = data.chats;
+                    if (data.blocked) App.blocked = data.blocked;
+                    if (data.channels) App.channels = data.channels;
+                    if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
+                    
+                    // Кэшируем
+                    localStorage.setItem('quick_cache', JSON.stringify({
+                        users: App.users,
+                        chats: App.chats,
+                        blocked: App.blocked,
+                        channels: App.channels,
+                        pinnedChats: App.pinnedChats
+                    }));
+                }
+                
+                // Восстанавливаем сессию
+                const savedUser = localStorage.getItem('quick_current_user');
+                const savedChat = localStorage.getItem('quick_active_chat');
+                
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = savedChat && (savedChat === 'saved' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
+                    loadSavedMessages();
+                }
+                
+                App.dataLoaded = true;
+                render();
+                
+            } catch (error) {
+                console.error('❌ Ошибка Firebase:', error);
+                
+                // Пробуем загрузить из кэша
+                const cachedData = localStorage.getItem('quick_cache');
+                if (cachedData) {
+                    try {
+                        const cache = JSON.parse(cachedData);
+                        if (cache.users) App.users = cache.users;
+                        if (cache.chats) App.chats = cache.chats;
+                        if (cache.blocked) App.blocked = cache.blocked;
+                        if (cache.channels) App.channels = cache.channels;
+                        if (cache.pinnedChats) App.pinnedChats = cache.pinnedChats;
+                    } catch(e) {}
+                }
+                
+                const savedUser = localStorage.getItem('quick_current_user');
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = localStorage.getItem('quick_active_chat') || 'saved';
+                    loadSavedMessages();
+                }
+                
+                App.dataLoaded = true;
+                render();
+            }
+        }
+
+        function saveToFirebase() {
+            if (!App.dataLoaded) return;
+            
+            const firebaseData = {
+                users: App.users,
+                chats: App.chats,
+                blocked: App.blocked,
+                channels: App.channels,
+                pinnedChats: App.pinnedChats
+            };
+            
+            database.ref().set(firebaseData)
+                .then(() => {
+                    console.log('💾 Сохранено в Firebase');
+                    localStorage.setItem('quick_cache', JSON.stringify(firebaseData));
+                })
+                .catch(error => {
+                    console.error('❌ Ошибка сохранения:', error);
+                });
+        }
+
+        function ensureChat(userA, userB) {
+            if (!userA || !userB || userA === userB || userB === 'saved') return;
+            const chatId = [userA, userB].sort().join('_');
+            if (!App.chats[chatId]) {
+                App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
+                saveToFirebase();
+            }
+            return chatId;
+        }
+
+        function getChatListForUser(user) {
+            let set = new Set(['saved']);
+            
+            // Чаты с пользователями
+            Object.keys(App.chats || {}).forEach(key => {
+                const c = App.chats[key];
+                if (c) {
+                    if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2);
+                    if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1);
+                }
+            });
+            
+            // Каналы, на которые подписан
+            Object.keys(App.channels || {}).forEach(channel => {
+                if (App.channels[channel].subscribers?.includes(user)) {
+                    set.add(channel);
+                }
+            });
+            
+            return Array.from(set);
+        }
+
+        // ========== EMAIL ФУНКЦИИ ==========
         async function sendEmailCode(email, code, username, type = 'login') {
             try {
                 const templateParams = {
                     to_email: email,
                     to_name: username,
                     verification_code: code,
-                    message: type === 'reset' ? 'Код для сброса пароля' : 'Код для входа'
+                    message: type === 'reset' ? 'Код для сброса пароля' : 'Код подтверждения'
                 };
 
-                const response = await emailjs.send(
-                    'service_lw2cbjm',
-                    'template_7o2x9ji',
-                    templateParams
-                );
-
-                console.log('Email отправлен:', response);
-                showNotification(`Код подтверждения отправлен на ${email}`, 'success');
+                await emailjs.send('service_lw2cbjm', 'template_7o2x9ji', templateParams);
+                showNotification(`Код отправлен на ${email}`, 'success');
                 return true;
             } catch (error) {
                 console.error('Ошибка отправки email:', error);
-                showNotification('Ошибка отправки кода. Попробуйте позже.', 'error');
+                showNotification('Ошибка отправки кода', 'error');
                 return false;
             }
         }
 
-        // Функция для показа 2FA экрана
         function show2FAScreen(email, username, onSuccess) {
             const code = generateCode();
             
@@ -883,8 +1063,7 @@
                 email: email,
                 code: code,
                 username: username,
-                timestamp: Date.now(),
-                onSuccess: onSuccess
+                timestamp: Date.now()
             };
 
             sendEmailCode(email, code, username, 'login');
@@ -927,7 +1106,6 @@
                     App.pending2FA.code = newCode;
                     App.pending2FA.timestamp = Date.now();
                     sendEmailCode(App.pending2FA.email, newCode, App.pending2FA.username, 'login');
-                    showNotification('Новый код отправлен', 'success');
                 }
             });
 
@@ -938,345 +1116,10 @@
             });
         }
 
-        // Функция для сброса пароля
-        function showPasswordResetScreen() {
-            const modalHtml = `
-                <div class="two-factor-screen" id="passwordResetScreen">
-                    <div class="two-factor-box">
-                        <h3>🔐 Сброс пароля</h3>
-                        <p>Введите email, привязанный к аккаунту</p>
-                        <input type="email" class="code-input" id="resetEmailInput" placeholder="your@email.com" style="letter-spacing:normal;">
-                        <button class="btn" id="sendResetCodeBtn">ОТПРАВИТЬ КОД</button>
-                        <div class="resend-link" id="backToLogin">← Вернуться к входу</div>
-                        <div id="resetError" class="auth-error"></div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            document.getElementById('sendResetCodeBtn').addEventListener('click', async () => {
-                const email = document.getElementById('resetEmailInput').value.trim();
-                
-                if (!email) {
-                    document.getElementById('resetError').textContent = 'Введите email';
-                    return;
-                }
-
-                let foundUser = null;
-                for (let username in App.users) {
-                    if (App.users[username].email === email && App.users[username].emailVerified) {
-                        foundUser = username;
-                        break;
-                    }
-                }
-
-                if (!foundUser) {
-                    document.getElementById('resetError').textContent = 'Email не найден или не подтвержден';
-                    return;
-                }
-
-                const code = generateCode();
-                
-                App.pendingPasswordReset = {
-                    email: email,
-                    code: code,
-                    username: foundUser,
-                    timestamp: Date.now()
-                };
-
-                await sendEmailCode(email, code, foundUser, 'reset');
-                
-                document.getElementById('passwordResetScreen').innerHTML = `
-                    <div class="two-factor-box">
-                        <h3>🔐 Сброс пароля</h3>
-                        <p>Код отправлен на<br><strong>${email}</strong></p>
-                        <input type="text" class="code-input" id="resetCodeInput" maxlength="6" placeholder="------" autofocus>
-                        <input type="password" class="code-input" id="newPasswordInput" placeholder="Новый пароль" style="letter-spacing:normal; margin-top:10px;">
-                        <button class="btn" id="verifyResetCodeBtn">СБРОСИТЬ ПАРОЛЬ</button>
-                        <div class="resend-link" id="resendResetCode">Отправить код повторно</div>
-                        <div id="resetError" class="auth-error"></div>
-                    </div>
-                `;
-
-                document.getElementById('verifyResetCodeBtn').addEventListener('click', () => {
-                    const inputCode = document.getElementById('resetCodeInput').value.trim();
-                    const newPassword = document.getElementById('newPasswordInput').value.trim();
-                    
-                    if (!inputCode || !newPassword) {
-                        document.getElementById('resetError').textContent = 'Заполните все поля';
-                        return;
-                    }
-
-                    if (inputCode === App.pendingPasswordReset.code && (Date.now() - App.pendingPasswordReset.timestamp) < 600000) {
-                        App.users[App.pendingPasswordReset.username].password = newPassword;
-                        saveToFirebase();
-                        
-                        document.getElementById('passwordResetScreen').remove();
-                        App.pendingPasswordReset = null;
-                        showNotification('Пароль успешно изменен!', 'success');
-                    } else {
-                        document.getElementById('resetError').textContent = 'Неверный или истекший код';
-                    }
-                });
-
-                document.getElementById('resendResetCode').addEventListener('click', async () => {
-                    if (App.pendingPasswordReset) {
-                        const newCode = generateCode();
-                        App.pendingPasswordReset.code = newCode;
-                        App.pendingPasswordReset.timestamp = Date.now();
-                        await sendEmailCode(App.pendingPasswordReset.email, newCode, App.pendingPasswordReset.username, 'reset');
-                        showNotification('Новый код отправлен', 'success');
-                    }
-                });
-            });
-
-            document.getElementById('backToLogin').addEventListener('click', () => {
-                document.getElementById('passwordResetScreen').remove();
-            });
-        }
-
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = 'notification' + (type === 'error' ? ' error' : '');
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
-        }
-
-        function showLoading() {
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading-screen';
-            loadingDiv.id = 'loadingScreen';
-            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>quick-sms</div>';
-            document.body.appendChild(loadingDiv);
-        }
-
-        function hideLoading() {
-            const loading = document.getElementById('loadingScreen');
-            if (loading) loading.remove();
-        }
-
-        function loadSavedMessages() {
-            const saved = localStorage.getItem('quick_saved_' + App.currentUser);
-            if (saved) {
-                try {
-                    App.savedMessages[App.currentUser] = JSON.parse(saved);
-                } catch(e) {
-                    App.savedMessages[App.currentUser] = [];
-                }
-            } else {
-                App.savedMessages[App.currentUser] = [];
-            }
-        }
-
-        function saveSavedMessages() {
-            if (App.currentUser) {
-                localStorage.setItem('quick_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || []));
-            }
-        }
-
-        function loadFromFirebase() {
-            console.log('🔄 Загружаем данные...');
-            
-            App.dataLoaded = true;
-            
-            const savedUser = localStorage.getItem('quick_current_user');
-            const savedChat = localStorage.getItem('quick_active_chat');
-            
-            const cachedData = localStorage.getItem('quick_cache');
-            if (cachedData) {
-                try {
-                    const cache = JSON.parse(cachedData);
-                    if (cache.users) App.users = cache.users;
-                    if (cache.chats) App.chats = cache.chats;
-                    console.log('📦 Загружено из кэша');
-                } catch(e) {}
-            }
-            
-            database.ref().get()
-                .then((snapshot) => {
-                    console.log('✅ Получены свежие данные из Firebase');
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        
-                        if (data.users) {
-                            App.users = { ...App.users, ...data.users };
-                        }
-                        if (data.chats) {
-                            App.chats = { ...App.chats, ...data.chats };
-                        }
-                        if (data.blocked) App.blocked = data.blocked;
-                        if (data.channels) App.channels = data.channels;
-                        if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
-                        
-                        localStorage.setItem('quick_cache', JSON.stringify({
-                            users: App.users,
-                            chats: App.chats,
-                            blocked: App.blocked,
-                            channels: App.channels,
-                            pinnedChats: App.pinnedChats
-                        }));
-                        
-                        if (savedUser && App.users[savedUser]) {
-                            App.currentUser = savedUser;
-                            App.activeChat = savedChat;
-                            loadSavedMessages();
-                            render();
-                        } else if (savedUser) {
-                            localStorage.removeItem('quick_current_user');
-                            render();
-                        } else {
-                            render();
-                        }
-                    } else {
-                        if (savedUser && App.users[savedUser]) {
-                            App.currentUser = savedUser;
-                            App.activeChat = savedChat;
-                            loadSavedMessages();
-                            render();
-                        } else {
-                            render();
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Ошибка Firebase:', error);
-                    if (savedUser && App.users[savedUser]) {
-                        App.currentUser = savedUser;
-                        App.activeChat = savedChat;
-                        loadSavedMessages();
-                        render();
-                    } else {
-                        render();
-                    }
-                });
-        }
-
-        function saveToFirebase() {
-            if (!App.dataLoaded) return;
-            
-            const firebaseData = {
-                users: App.users,
-                chats: App.chats,
-                blocked: App.blocked,
-                channels: App.channels,
-                pinnedChats: App.pinnedChats
-            };
-            
-            database.ref().set(firebaseData)
-                .then(() => {
-                    console.log('💾 Сохранено в Firebase');
-                    localStorage.setItem('quick_cache', JSON.stringify(firebaseData));
-                })
-                .catch(error => {
-                    console.error('❌ Ошибка сохранения:', error);
-                    showNotification('Ошибка сохранения', 'error');
-                });
-        }
-
-        function ensureChat(userA, userB) {
-            if (!userA || !userB || userA === userB) return;
-            const chatId = [userA, userB].sort().join('_');
-            if (!App.chats[chatId]) {
-                App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
-                saveToFirebase();
-            }
-            return chatId;
-        }
-
-        function isValidUsername(str) {
-            return /^[a-zA-Z]{4,}$/.test(str);
-        }
-
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-        }
-
-        function initUserStars(user) {
-            if (App.users[user].stars === undefined) App.users[user].stars = 0;
-            if (!App.users[user].gifts) App.users[user].gifts = [];
-            if (App.users[user].bio === undefined) App.users[user].bio = '';
-            if (App.users[user].verified === undefined) App.users[user].verified = false;
-            if (App.users[user].email === undefined) App.users[user].email = '';
-            if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
-            if (App.users[user].age === undefined) App.users[user].age = 14;
-        }
-
-        function isBot(username) {
-            return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot);
-        }
-
-        function getChatListForUser(user) {
-            let set = new Set(['saved']);
-            Object.keys(App.chats || {}).forEach(key => {
-                const c = App.chats[key];
-                if (c) {
-                    if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2);
-                    if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1);
-                }
-            });
-            Object.keys(App.channels || {}).forEach(channel => {
-                set.add(channel);
-            });
-            return Array.from(set);
-        }
-
-        function updateChatList() {
-            const chatsContainer = document.getElementById('chatsList');
-            if (!chatsContainer || !App.currentUser) return;
-            
-            let chatsList = getChatListForUser(App.currentUser);
-            
-            const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
-            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved');
-            const saved = chatsList.includes('saved') ? ['saved'] : [];
-            chatsList = [...saved, ...pinned, ...unpinned];
-            
-            let html = '';
-            chatsList.forEach(chat => {
-                html += renderChatItem(chat, chat === App.activeChat, App.currentUser);
-            });
-            chatsContainer.innerHTML = html;
-        }
-
-        function loadMessages(chatPartner) {
-            const messagesContainer = document.getElementById('messageList');
-            if (!messagesContainer) return;
-            
-            let messages = [];
-            
-            if (chatPartner === 'saved') {
-                messages = App.savedMessages[App.currentUser] || [];
-            } else if (App.channels[chatPartner]) {
-                messages = App.channels[chatPartner].messages || [];
-            } else {
-                const chatId = [App.currentUser, chatPartner].sort().join('_');
-                const chat = App.chats[chatId];
-                messages = chat ? chat.messages : [];
-            }
-            
-            let html = '';
-            if (messages && messages.length > 0) {
-                messages.forEach((msg, idx) => {
-                    html += renderMessage(msg, idx, App.currentUser, chatPartner);
-                });
-            } else {
-                html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
-            }
-            
-            messagesContainer.innerHTML = html;
-            
-            setTimeout(() => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }, 100);
-        }
-
+        // ========== ОСНОВНОЙ РЕНДЕР ==========
         function render() {
             const root = document.getElementById('app');
+            
             if (!App.dataLoaded) {
                 root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>';
                 return;
@@ -1288,14 +1131,17 @@
             } else {
                 initUserStars(App.currentUser);
                 root.innerHTML = renderMain();
-                attachMainEvents();
-                
-                if (App.activeChat) {
-                    setTimeout(() => loadMessages(App.activeChat), 200);
-                }
+                setTimeout(() => {
+                    attachMainEvents();
+                    if (App.activeChat) {
+                        loadMessages(App.activeChat);
+                    }
+                    updateChatList();
+                }, 100);
             }
         }
 
+        // ========== АВТОРИЗАЦИЯ ==========
         function renderAuth() {
             return `<div class="auth-container">
                 <div class="auth-box">
@@ -1361,18 +1207,17 @@
 
                 const user = App.users[clean];
                 
-                if (user.email && user.emailVerified) {
-                    show2FAScreen(user.email, clean, () => {
-                        App.currentUser = clean;
-                        localStorage.setItem('quick_current_user', clean);
-                        loadSavedMessages();
-                        render();
-                    });
-                } else {
+                function loginSuccess() {
                     App.currentUser = clean;
                     localStorage.setItem('quick_current_user', clean);
                     loadSavedMessages();
                     render();
+                }
+                
+                if (user.email && user.emailVerified) {
+                    show2FAScreen(user.email, clean, loginSuccess);
+                } else {
+                    loginSuccess();
                 }
             });
 
@@ -1410,7 +1255,6 @@
                 };
                 
                 App.currentUser = clean;
-                
                 App.savedMessages[clean] = [];
                 saveSavedMessages();
                 
@@ -1420,29 +1264,18 @@
             });
         }
 
+        // ========== ОСНОВНОЙ ИНТЕРФЕЙС ==========
         function renderMain() {
             const user = App.currentUser;
-            let chatsList = getChatListForUser(user);
-            
-            const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
-            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved');
-            const saved = chatsList.includes('saved') ? ['saved'] : [];
-            chatsList = [...saved, ...pinned, ...unpinned];
-            
-            let chatPartner = App.activeChat || (chatsList.length > 1 ? chatsList[1] : 'saved');
-            if (!chatsList.includes(chatPartner)) chatPartner = 'saved';
-            App.activeChat = chatPartner;
-            localStorage.setItem('quick_active_chat', chatPartner);
-            
             const userData = App.users[user] || {};
-            const isChatBot = isBot(chatPartner);
+            const chatPartner = App.activeChat || 'saved';
             const isChannel = App.channels[chatPartner] ? true : false;
-            const canWrite = chatPartner !== 'saved' || (isChannel && App.channels[chatPartner]?.owner === user);
+            const canWrite = chatPartner === 'saved' || (isChannel && App.channels[chatPartner]?.owner === user) || (!isChannel && chatPartner !== 'saved');
 
             return `<div class="main-container">
                 <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                     <div class="user-profile" id="openProfileBtn">
-                        <div class="avatar" id="sidebarAvatar">
+                        <div class="avatar">
                             ${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}
                         </div>
                         <div>
@@ -1471,7 +1304,7 @@
                             ` : ''}
                             ${isChannel && chatPartner !== 'saved' ? 
                                 `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
-                            ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
+                            ${chatPartner !== 'saved' && !isChannel && !isBot(chatPartner) ? 
                                 `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
                         </div>
                     </div>
@@ -1518,11 +1351,11 @@
         }
 
         function renderMessage(msg, idx, currentUser, chatPartner) {
-            const isMe = msg.from === currentUser;
+            const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
             const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview">` : '';
             const isGift = msg.gift ? true : false;
             const isGame = msg.game ? true : false;
-            const canDelete = (isMe || (App.channels[chatPartner] && App.channels[chatPartner]?.owner === currentUser));
+            const canDelete = isMe || (App.channels[chatPartner] && App.channels[chatPartner]?.owner === currentUser);
             
             let senderName = msg.from;
             let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
@@ -1533,16 +1366,33 @@
                 ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}${ageBadge}</span></small><br>` : ''}
                 <div style="color:#000000;">${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
-                ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage(${idx}, '${chatPartner}')">УДАЛИТЬ</button></div>` : ''}
+                ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
             </div>`;
         }
 
-        function attachMainEvents() {
+        function updateChatList() {
+            const chatsContainer = document.getElementById('chatsList');
+            if (!chatsContainer || !App.currentUser) return;
+            
+            let chatsList = getChatListForUser(App.currentUser);
+            
+            const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
+            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved');
+            const saved = chatsList.includes('saved') ? ['saved'] : [];
+            const orderedList = [...saved, ...pinned, ...unpinned];
+            
+            let html = '';
+            orderedList.forEach(chat => {
+                html += renderChatItem(chat, chat === App.activeChat, App.currentUser);
+            });
+            chatsContainer.innerHTML = html;
+            
+            // Вешаем обработчики на новые элементы
             document.querySelectorAll('.chat-item').forEach(el => {
                 el.addEventListener('click', (e) => {
                     if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
                     
-                    const chatId = e.currentTarget.dataset.chat;
+                    const chatId = el.dataset.chat;
                     
                     if (App.activeChat === chatId) {
                         if (window.innerWidth < 768) {
@@ -1553,22 +1403,55 @@
                     }
                     
                     App.activeChat = chatId;
+                    localStorage.setItem('quick_active_chat', chatId);
                     
                     if (window.innerWidth < 768) {
                         App.sidebarOpen = false;
                         document.querySelector('.sidebar').classList.remove('open');
                     }
                     
-                    localStorage.setItem('quick_active_chat', App.activeChat);
-                    
                     document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
-                    e.currentTarget.classList.add('active');
+                    el.classList.add('active');
                     
-                    loadMessages(App.activeChat);
-                    renderMain();
+                    render(); // Перерендериваем для обновления шапки
                 });
             });
+        }
 
+        function loadMessages(chatPartner) {
+            const messagesContainer = document.getElementById('messageList');
+            if (!messagesContainer) return;
+            
+            let messages = [];
+            
+            if (chatPartner === 'saved') {
+                messages = App.savedMessages[App.currentUser] || [];
+            } else if (App.channels[chatPartner]) {
+                messages = App.channels[chatPartner].messages || [];
+            } else {
+                const chatId = [App.currentUser, chatPartner].sort().join('_');
+                const chat = App.chats[chatId];
+                messages = chat ? chat.messages : [];
+            }
+            
+            let html = '';
+            if (messages && messages.length > 0) {
+                messages.forEach((msg, idx) => {
+                    html += renderMessage(msg, idx, App.currentUser, chatPartner);
+                });
+            } else {
+                html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
+            }
+            
+            messagesContainer.innerHTML = html;
+            
+            setTimeout(() => {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 100);
+        }
+
+        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
+        function attachMainEvents() {
             const backBtn = document.getElementById('backBtn');
             if (backBtn) {
                 backBtn.addEventListener('click', () => {
@@ -1656,8 +1539,6 @@
                 return;
             }
             
-            console.log('Отправка сообщения:', { from, to, text, photo: App.tempPhoto });
-            
             try {
                 const message = { 
                     from, 
@@ -1672,7 +1553,7 @@
                     if (!App.savedMessages[from]) App.savedMessages[from] = [];
                     App.savedMessages[from].push(message);
                     saveSavedMessages();
-                    console.log('✅ Сохранено в избранное (локально)');
+                    showNotification('Сохранено в избранное');
                 } else if (App.channels[to]) {
                     if (App.channels[to].owner !== from) {
                         showNotification('Только владелец может писать в канал', 'error');
@@ -1680,7 +1561,6 @@
                     }
                     if (!App.channels[to].messages) App.channels[to].messages = [];
                     App.channels[to].messages.push({ ...message, from: to });
-                    console.log('✅ Сохранено в канал');
                     saveToFirebase();
                 } else {
                     const chatId = [from, to].sort().join('_');
@@ -1688,7 +1568,6 @@
                         App.chats[chatId] = { user1: from, user2: to, messages: [] };
                     }
                     App.chats[chatId].messages.push(message);
-                    console.log('✅ Сохранено в чат');
                     saveToFirebase();
                 }
                 
@@ -1700,47 +1579,45 @@
                 loadMessages(to);
                 updateChatList();
                 
-                showNotification('Сообщение отправлено');
-                
             } catch (error) {
                 console.error('❌ Ошибка отправки:', error);
-                showNotification('Ошибка отправки: ' + error.message, 'error');
+                showNotification('Ошибка отправки', 'error');
             }
         }
 
-        window.deleteMessage = function(idx, chatPartner) {
-            const from = App.currentUser; 
-            const to = chatPartner;
-            let msgArray;
+        window.deleteMessage = function(chatPartner, idx) {
+            const from = App.currentUser;
             
             try {
-                if (to === 'saved') {
-                    msgArray = App.savedMessages[from];
-                    if (msgArray && msgArray[idx]) {
-                        msgArray.splice(idx, 1);
+                if (chatPartner === 'saved') {
+                    const msgs = App.savedMessages[from];
+                    if (msgs && msgs[idx]) {
+                        msgs.splice(idx, 1);
                         saveSavedMessages();
+                        showNotification('Удалено');
                     }
-                } else if (App.channels[to]) {
-                    if (App.channels[to].owner !== from) {
-                        showNotification('Только владелец может удалять сообщения', 'error');
+                } else if (App.channels[chatPartner]) {
+                    if (App.channels[chatPartner].owner !== from) {
+                        showNotification('Только владелец может удалять', 'error');
                         return;
                     }
-                    msgArray = App.channels[to].messages;
-                    if (msgArray && msgArray[idx]) {
-                        msgArray.splice(idx, 1);
+                    const msgs = App.channels[chatPartner].messages;
+                    if (msgs && msgs[idx]) {
+                        msgs.splice(idx, 1);
                         saveToFirebase();
+                        showNotification('Удалено');
                     }
                 } else {
-                    const chatId = [from, to].sort().join('_');
-                    msgArray = App.chats[chatId]?.messages;
-                    if (msgArray && msgArray[idx]) {
-                        msgArray.splice(idx, 1);
+                    const chatId = [from, chatPartner].sort().join('_');
+                    const msgs = App.chats[chatId]?.messages;
+                    if (msgs && msgs[idx]) {
+                        msgs.splice(idx, 1);
                         saveToFirebase();
+                        showNotification('Удалено');
                     }
                 }
                 
-                loadMessages(to);
-                showNotification('Сообщение удалено');
+                loadMessages(chatPartner);
                 
             } catch (error) {
                 console.error('Ошибка удаления:', error);
@@ -1759,30 +1636,30 @@
                 query = '@' + query;
             }
             
-            console.log('Поиск пользователя:', query);
-            
             if (App.systemBots.includes(query)) {
+                ensureChat(App.currentUser, query);
                 App.activeChat = query;
                 localStorage.setItem('quick_active_chat', query);
                 
-                ensureChat(App.currentUser, query);
-                
                 if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
-                updateChatList();
-                loadMessages(query);
-                showNotification(`Чат с ${query} открыт`);
+                render();
                 return;
             }
             
             if (App.channels[query]) {
+                if (!App.channels[query].subscribers) App.channels[query].subscribers = [];
+                if (!App.channels[query].subscribers.includes(App.currentUser)) {
+                    App.channels[query].subscribers.push(App.currentUser);
+                    saveToFirebase();
+                }
+                
                 App.activeChat = query;
                 localStorage.setItem('quick_active_chat', query);
+                
                 if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
-                updateChatList();
-                loadMessages(query);
-                showNotification(`Канал ${query} открыт`);
+                render();
                 return;
             }
             
@@ -1804,9 +1681,7 @@
             }
             
             document.getElementById('searchUserInput').value = '';
-            updateChatList();
-            loadMessages(query);
-            saveToFirebase();
+            render();
             showNotification(`Чат с ${query} создан`);
         }
 
@@ -1816,6 +1691,7 @@
             if (!App.channels[channel]) return;
             
             if (!App.channels[channel].subscribers) App.channels[channel].subscribers = [];
+            
             if (!App.channels[channel].subscribers.includes(user)) {
                 App.channels[channel].subscribers.push(user);
                 showNotification('Вы подписались на канал');
@@ -1824,7 +1700,7 @@
                 showNotification('Вы отписались от канала');
             }
             saveToFirebase();
-            updateChatList();
+            render();
         }
 
         window.togglePinChat = function(chat, event) {
@@ -1849,23 +1725,30 @@
             if (!confirm(`Удалить чат ${chat}?`)) return;
             
             const user = App.currentUser;
+            
+            // Удаляем из pinned
+            if (App.pinnedChats.includes(chat)) {
+                App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
+            }
+            
+            // Удаляем чат
             const chatId = [user, chat].sort().join('_');
             if (App.chats[chatId]) {
                 delete App.chats[chatId];
             }
             
-            if (App.pinnedChats.includes(chat)) {
-                App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
+            // Если это канал - отписываемся
+            if (App.channels[chat] && App.channels[chat].subscribers) {
+                App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user);
             }
             
             if (App.activeChat === chat) {
                 App.activeChat = 'saved';
                 localStorage.setItem('quick_active_chat', 'saved');
-                loadMessages('saved');
             }
             
             saveToFirebase();
-            updateChatList();
+            render();
             showNotification('Чат удален');
         };
 
@@ -1913,14 +1796,16 @@
                 return;
             }
             
+            // Забираем подарок у отправителя
             App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
             
+            // Добавляем получателю
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
             
+            // Создаем сообщение
             const chatId = ensureChat(fromUser, toUser);
-            
-            if (App.chats[chatId]) {
+            if (chatId && App.chats[chatId]) {
                 App.chats[chatId].messages.push({
                     from: fromUser,
                     text: `🎁 ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
@@ -1936,6 +1821,7 @@
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
+        // ========== ПРОФИЛЬ ==========
         window.openProfileModal = function(username) {
             const userData = App.users[username] || { 
                 avatar: null, 
@@ -2105,13 +1991,8 @@
                 document.getElementById('sendVerificationCodeBtn')?.addEventListener('click', () => {
                     const email = document.getElementById('modalEmailInput').value.trim();
                     
-                    if (!email) {
-                        showNotification('Введите email', 'error');
-                        return;
-                    }
-                    
-                    if (!isValidEmail(email)) {
-                        showNotification('Неверный формат email', 'error');
+                    if (!email || !isValidEmail(email)) {
+                        showNotification('Введите корректный email', 'error');
                         return;
                     }
                     
@@ -2124,7 +2005,6 @@
                     };
                     
                     sendEmailCode(email, code, App.currentUser, 'verify');
-                    
                     document.getElementById('verificationSection').classList.remove('hidden');
                 });
 
@@ -2132,13 +2012,8 @@
                     const email = document.getElementById('modalEmailInput').value.trim();
                     const code = document.getElementById('verificationCodeInput').value.trim();
                     
-                    if (!App.pendingEmailVerification) {
+                    if (!App.pendingEmailVerification || App.pendingEmailVerification.email !== email) {
                         showNotification('Сначала запросите код', 'error');
-                        return;
-                    }
-                    
-                    if (App.pendingEmailVerification.email !== email) {
-                        showNotification('Email не совпадает', 'error');
                         return;
                     }
                     
@@ -2150,7 +2025,6 @@
                         saveToFirebase();
                         
                         showNotification('Email подтвержден! 2FA активирована');
-                        document.getElementById('verificationSection').classList.add('hidden');
                         document.getElementById('profileModalOverlay').remove();
                         openProfileModal(App.currentUser);
                         
@@ -2204,20 +2078,26 @@
                     const channelName = document.getElementById('channelNameInput').value.trim();
                     const channelDesc = document.getElementById('channelDescInput').value.trim();
                     
-                    if (!channelName) { showNotification('! ВВЕДИТЕ НАЗВАНИЕ', 'error'); return; }
-                    if (App.users[channelName] || App.channels[channelName]) { 
-                        showNotification('! ЗАНЯТО', 'error');
+                    if (!channelName) { 
+                        showNotification('Введите название канала', 'error'); 
+                        return; 
+                    }
+                    
+                    const cleanName = channelName.startsWith('@') ? channelName : '@' + channelName;
+                    
+                    if (App.users[cleanName] || App.channels[cleanName]) { 
+                        showNotification('Такое имя уже занято', 'error');
                         return; 
                     }
                     
                     if (App.users[App.currentUser].stars < 450) {
-                        showNotification('! НУЖНО 450⭐️', 'error');
+                        showNotification('Нужно 450⭐️', 'error');
                         return;
                     }
                     
                     App.users[App.currentUser].stars -= 450;
-                    App.channels[channelName] = {
-                        name: channelName,
+                    App.channels[cleanName] = {
+                        name: cleanName,
                         owner: App.currentUser,
                         description: channelDesc,
                         avatar: null,
@@ -2226,10 +2106,10 @@
                     };
                     
                     saveToFirebase();
-                    showNotification(`✅ КАНАЛ ${channelName} СОЗДАН`);
+                    showNotification(`✅ КАНАЛ ${cleanName} СОЗДАН`);
                     document.getElementById('profileModalOverlay').remove();
-                    App.activeChat = channelName;
-                    localStorage.setItem('quick_active_chat', channelName);
+                    App.activeChat = cleanName;
+                    localStorage.setItem('quick_active_chat', cleanName);
                     render();
                 });
 
@@ -2262,6 +2142,105 @@
             });
         };
 
+        // ========== СБРОС ПАРОЛЯ ==========
+        function showPasswordResetScreen() {
+            const modalHtml = `
+                <div class="two-factor-screen" id="passwordResetScreen">
+                    <div class="two-factor-box">
+                        <h3>🔐 Сброс пароля</h3>
+                        <p>Введите email, привязанный к аккаунту</p>
+                        <input type="email" class="code-input" id="resetEmailInput" placeholder="your@email.com" style="letter-spacing:normal;">
+                        <button class="btn" id="sendResetCodeBtn">ОТПРАВИТЬ КОД</button>
+                        <div class="resend-link" id="backToLogin">← Вернуться к входу</div>
+                        <div id="resetError" class="auth-error"></div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('sendResetCodeBtn').addEventListener('click', async () => {
+                const email = document.getElementById('resetEmailInput').value.trim();
+                
+                if (!email) {
+                    document.getElementById('resetError').textContent = 'Введите email';
+                    return;
+                }
+
+                let foundUser = null;
+                for (let username in App.users) {
+                    if (App.users[username].email === email && App.users[username].emailVerified) {
+                        foundUser = username;
+                        break;
+                    }
+                }
+
+                if (!foundUser) {
+                    document.getElementById('resetError').textContent = 'Email не найден или не подтвержден';
+                    return;
+                }
+
+                const code = generateCode();
+                
+                App.pendingPasswordReset = {
+                    email: email,
+                    code: code,
+                    username: foundUser,
+                    timestamp: Date.now()
+                };
+
+                await sendEmailCode(email, code, foundUser, 'reset');
+                
+                document.getElementById('passwordResetScreen').innerHTML = `
+                    <div class="two-factor-box">
+                        <h3>🔐 Сброс пароля</h3>
+                        <p>Код отправлен на<br><strong>${email}</strong></p>
+                        <input type="text" class="code-input" id="resetCodeInput" maxlength="6" placeholder="------" autofocus>
+                        <input type="password" class="code-input" id="newPasswordInput" placeholder="Новый пароль" style="letter-spacing:normal; margin-top:10px;">
+                        <button class="btn" id="verifyResetCodeBtn">СБРОСИТЬ ПАРОЛЬ</button>
+                        <div class="resend-link" id="resendResetCode">Отправить код повторно</div>
+                        <div id="resetError" class="auth-error"></div>
+                    </div>
+                `;
+
+                document.getElementById('verifyResetCodeBtn').addEventListener('click', () => {
+                    const inputCode = document.getElementById('resetCodeInput').value.trim();
+                    const newPassword = document.getElementById('newPasswordInput').value.trim();
+                    
+                    if (!inputCode || !newPassword) {
+                        document.getElementById('resetError').textContent = 'Заполните все поля';
+                        return;
+                    }
+
+                    if (inputCode === App.pendingPasswordReset.code && (Date.now() - App.pendingPasswordReset.timestamp) < 600000) {
+                        App.users[App.pendingPasswordReset.username].password = newPassword;
+                        saveToFirebase();
+                        
+                        document.getElementById('passwordResetScreen').remove();
+                        App.pendingPasswordReset = null;
+                        showNotification('Пароль успешно изменен!', 'success');
+                    } else {
+                        document.getElementById('resetError').textContent = 'Неверный или истекший код';
+                    }
+                });
+
+                document.getElementById('resendResetCode').addEventListener('click', async () => {
+                    if (App.pendingPasswordReset) {
+                        const newCode = generateCode();
+                        App.pendingPasswordReset.code = newCode;
+                        App.pendingPasswordReset.timestamp = Date.now();
+                        await sendEmailCode(App.pendingPasswordReset.email, newCode, App.pendingPasswordReset.username, 'reset');
+                        showNotification('Новый код отправлен', 'success');
+                    }
+                });
+            });
+
+            document.getElementById('backToLogin').addEventListener('click', () => {
+                document.getElementById('passwordResetScreen').remove();
+            });
+        }
+
+        // ========== ИНИЦИАЛИЗАЦИЯ ==========
         function initBots() {
             App.systemBots.forEach(bot => {
                 if (!App.users[bot]) {
@@ -2283,10 +2262,13 @@
         }
 
         // Глобальные функции
-        window.openProfileModal = openProfileModal;
-        window.togglePinChat = togglePinChat;
-        window.deleteChat = deleteChat;
+        window.togglePinChat = window.togglePinChat || function() {};
+        window.deleteChat = window.deleteChat || function() {};
+        window.openProfileModal = window.openProfileModal || function() {};
+        window.deleteMessage = window.deleteMessage || function() {};
+        window.sendGiftToUser = window.sendGiftToUser || function() {};
 
+        // Запуск
         window.addEventListener('load', () => {
             showLoading();
             initBots();
