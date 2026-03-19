@@ -123,6 +123,16 @@
         .auth-error { color: #ff0000; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-success { color: #00aa00; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .forgot-password a {
+            color: #d4af37;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 500;
+        }
 
         /* 2FA экран */
         .two-factor-screen {
@@ -246,6 +256,7 @@
             border-bottom: 1px solid #000000; 
             background: #f0f0f0; 
             cursor: pointer; 
+            position: relative;
         }
         .avatar { 
             width: 48px; 
@@ -672,6 +683,11 @@
             cursor: pointer; 
         }
         .profile-btn.secondary { background: #e0e0e0; color: #000000; border: 1px solid #000000; }
+        .profile-btn.logout { 
+            background: #ff4444; 
+            color: white; 
+            border: 1px solid #000000;
+        }
         .tabs { 
             display: flex; 
             gap: 8px; 
@@ -804,8 +820,8 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Инициализация EmailJS
-    emailjs.init("YOUR_PUBLIC_KEY"); // Замените на ваш публичный ключ EmailJS
+    // Инициализация EmailJS с вашим публичным ключом
+    emailjs.init("8oO0zcryCZDxWODG2");
 
     (function() {
         const App = {
@@ -821,7 +837,8 @@
             sidebarOpen: false,
             dataLoaded: false,
             tempPhoto: null,
-            pending2FA: null // Для хранения данных 2FA при входе
+            pending2FA: null,
+            pendingPasswordReset: null
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
@@ -832,20 +849,19 @@
         }
 
         // Отправка кода на email через EmailJS
-        async function sendEmailCode(email, code, username) {
+        async function sendEmailCode(email, code, username, type = 'login') {
             try {
-                // Настройте шаблон в EmailJS
                 const templateParams = {
                     to_email: email,
                     to_name: username,
                     verification_code: code,
-                    message: `Ваш код подтверждения для входа в quick-sms: ${code}`
+                    message: type === 'reset' ? 'Код для сброса пароля' : 'Код для входа'
                 };
 
-                // Отправка через EmailJS (замените на свои ID)
+                // Используем ваш Service ID и Template ID
                 const response = await emailjs.send(
-                    'YOUR_SERVICE_ID',     // Service ID из EmailJS
-                    'YOUR_TEMPLATE_ID',    // Template ID из EmailJS
+                    'service_lw2cbjm',     // Service ID
+                    'template_7o2x9ji',    // Template ID
                     templateParams
                 );
 
@@ -863,7 +879,6 @@
         function show2FAScreen(email, username, onSuccess) {
             const code = generateCode();
             
-            // Сохраняем код и email для проверки
             App.pending2FA = {
                 email: email,
                 code: code,
@@ -872,10 +887,8 @@
                 onSuccess: onSuccess
             };
 
-            // Отправляем код на email
-            sendEmailCode(email, code, username);
+            sendEmailCode(email, code, username, 'login');
 
-            // Создаем и показываем модальное окно
             const modalHtml = `
                 <div class="two-factor-screen" id="twoFactorScreen">
                     <div class="two-factor-box">
@@ -891,7 +904,6 @@
 
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            // Обработчик ввода кода
             document.getElementById('verify2FABtn').addEventListener('click', () => {
                 const inputCode = document.getElementById('twoFactorCode').value.trim();
                 
@@ -901,7 +913,6 @@
                 }
 
                 if (inputCode === App.pending2FA.code && (Date.now() - App.pending2FA.timestamp) < 600000) {
-                    // Код верный и не истек (10 минут)
                     document.getElementById('twoFactorScreen').remove();
                     App.pending2FA = null;
                     onSuccess();
@@ -910,22 +921,121 @@
                 }
             });
 
-            // Повторная отправка кода
             document.getElementById('resend2FACode').addEventListener('click', () => {
                 if (App.pending2FA) {
                     const newCode = generateCode();
                     App.pending2FA.code = newCode;
                     App.pending2FA.timestamp = Date.now();
-                    sendEmailCode(App.pending2FA.email, newCode, App.pending2FA.username);
+                    sendEmailCode(App.pending2FA.email, newCode, App.pending2FA.username, 'login');
                     showNotification('Новый код отправлен', 'success');
                 }
             });
 
-            // Enter для отправки
             document.getElementById('twoFactorCode').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     document.getElementById('verify2FABtn').click();
                 }
+            });
+        }
+
+        // Функция для сброса пароля
+        function showPasswordResetScreen() {
+            const modalHtml = `
+                <div class="two-factor-screen" id="passwordResetScreen">
+                    <div class="two-factor-box">
+                        <h3>🔐 Сброс пароля</h3>
+                        <p>Введите email, привязанный к аккаунту</p>
+                        <input type="email" class="code-input" id="resetEmailInput" placeholder="your@email.com" style="letter-spacing:normal;">
+                        <button class="btn" id="sendResetCodeBtn">ОТПРАВИТЬ КОД</button>
+                        <div class="resend-link" id="backToLogin">← Вернуться к входу</div>
+                        <div id="resetError" class="auth-error"></div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            document.getElementById('sendResetCodeBtn').addEventListener('click', async () => {
+                const email = document.getElementById('resetEmailInput').value.trim();
+                
+                if (!email) {
+                    document.getElementById('resetError').textContent = 'Введите email';
+                    return;
+                }
+
+                // Ищем пользователя с таким email
+                let foundUser = null;
+                for (let username in App.users) {
+                    if (App.users[username].email === email && App.users[username].emailVerified) {
+                        foundUser = username;
+                        break;
+                    }
+                }
+
+                if (!foundUser) {
+                    document.getElementById('resetError').textContent = 'Email не найден или не подтвержден';
+                    return;
+                }
+
+                const code = generateCode();
+                
+                App.pendingPasswordReset = {
+                    email: email,
+                    code: code,
+                    username: foundUser,
+                    timestamp: Date.now()
+                };
+
+                await sendEmailCode(email, code, foundUser, 'reset');
+                
+                // Показываем поле для ввода кода
+                document.getElementById('passwordResetScreen').innerHTML = `
+                    <div class="two-factor-box">
+                        <h3>🔐 Сброс пароля</h3>
+                        <p>Код отправлен на<br><strong>${email}</strong></p>
+                        <input type="text" class="code-input" id="resetCodeInput" maxlength="6" placeholder="------" autofocus>
+                        <input type="text" class="code-input" id="newPasswordInput" placeholder="Новый пароль" style="letter-spacing:normal; margin-top:10px;">
+                        <button class="btn" id="verifyResetCodeBtn">СБРОСИТЬ ПАРОЛЬ</button>
+                        <div class="resend-link" id="resendResetCode">Отправить код повторно</div>
+                        <div id="resetError" class="auth-error"></div>
+                    </div>
+                `;
+
+                document.getElementById('verifyResetCodeBtn').addEventListener('click', () => {
+                    const inputCode = document.getElementById('resetCodeInput').value.trim();
+                    const newPassword = document.getElementById('newPasswordInput').value.trim();
+                    
+                    if (!inputCode || !newPassword) {
+                        document.getElementById('resetError').textContent = 'Заполните все поля';
+                        return;
+                    }
+
+                    if (inputCode === App.pendingPasswordReset.code && (Date.now() - App.pendingPasswordReset.timestamp) < 600000) {
+                        // Меняем пароль
+                        App.users[App.pendingPasswordReset.username].password = newPassword;
+                        saveToFirebase();
+                        
+                        document.getElementById('passwordResetScreen').remove();
+                        App.pendingPasswordReset = null;
+                        showNotification('Пароль успешно изменен!', 'success');
+                    } else {
+                        document.getElementById('resetError').textContent = 'Неверный или истекший код';
+                    }
+                });
+
+                document.getElementById('resendResetCode').addEventListener('click', async () => {
+                    if (App.pendingPasswordReset) {
+                        const newCode = generateCode();
+                        App.pendingPasswordReset.code = newCode;
+                        App.pendingPasswordReset.timestamp = Date.now();
+                        await sendEmailCode(App.pendingPasswordReset.email, newCode, App.pendingPasswordReset.username, 'reset');
+                        showNotification('Новый код отправлен', 'success');
+                    }
+                });
+            });
+
+            document.getElementById('backToLogin').addEventListener('click', () => {
+                document.getElementById('passwordResetScreen').remove();
             });
         }
 
@@ -1068,7 +1178,7 @@
             if (App.users[user].verified === undefined) App.users[user].verified = false;
             if (App.users[user].email === undefined) App.users[user].email = '';
             if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
-            if (App.users[user].age === undefined) App.users[user].age = 14; // Возраст по умолчанию 14
+            if (App.users[user].age === undefined) App.users[user].age = 14;
         }
 
         function isBot(username) {
@@ -1114,7 +1224,6 @@
             
             messagesContainer.innerHTML = html;
             
-            // Прокрутка вниз
             setTimeout(() => {
                 messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }, 100);
@@ -1149,6 +1258,9 @@
                             <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div>
                             <div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div>
                             <button class="btn" id="loginBtn">ВОЙТИ</button>
+                            <div class="forgot-password">
+                                <a id="forgotPasswordBtn">Забыли пароль?</a>
+                            </div>
                         </div>
                         <div class="auth-switch">
                             <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button>
@@ -1180,6 +1292,10 @@
                 loginForm.style.display = 'block';
             });
 
+            document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
+                showPasswordResetScreen();
+            });
+
             document.getElementById('loginBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('loginUsername').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim();
@@ -1198,17 +1314,13 @@
 
                 const user = App.users[clean];
                 
-                // Проверяем, привязана ли почта и подтверждена ли
                 if (user.email && user.emailVerified) {
-                    // Показываем 2FA экран
                     show2FAScreen(user.email, clean, () => {
-                        // Успешный вход после 2FA
                         App.currentUser = clean;
                         localStorage.setItem('quick_current_user', clean);
                         render();
                     });
                 } else {
-                    // Обычный вход без 2FA
                     App.currentUser = clean;
                     localStorage.setItem('quick_current_user', clean);
                     render();
@@ -1245,12 +1357,11 @@
                     verified: false,
                     email: '',
                     emailVerified: false,
-                    age: 14 // Возраст по умолчанию
+                    age: 14
                 };
                 
                 App.currentUser = clean;
                 
-                // Создаем папку "Избранное"
                 if (!App.chats[clean + '_saved']) {
                     App.chats[clean + '_saved'] = { user1: clean, user2: 'saved', messages: [] };
                 }
@@ -1320,7 +1431,6 @@
                                 `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
                             ${chatPartner !== 'saved' && !isChannel && !isChatBot ? 
                                 `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
-                            <button class="tiny-btn" id="logoutBtn">🚪</button>
                         </div>
                     </div>
                     <div class="messages-container" id="messageList"></div>
@@ -1398,7 +1508,6 @@
         }
 
         function attachMainEvents() {
-            // Прикрепляем события ко всем элементам чата
             document.querySelectorAll('.chat-item').forEach(el => {
                 el.addEventListener('click', (e) => {
                     if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
@@ -1440,17 +1549,6 @@
             const openProfileBtn = document.getElementById('openProfileBtn');
             if (openProfileBtn) {
                 openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
-            }
-            
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', () => {
-                    App.currentUser = null;
-                    App.activeChat = null;
-                    localStorage.removeItem('quick_current_user');
-                    localStorage.removeItem('quick_active_chat');
-                    render();
-                });
             }
             
             const giftBtn = document.getElementById('giftBtn');
@@ -1521,7 +1619,6 @@
             console.log('Отправка сообщения:', { from, to, text, photo: App.tempPhoto });
             
             try {
-                // Создаем сообщение
                 const message = { 
                     from, 
                     text: text || '', 
@@ -1555,13 +1652,11 @@
                     console.log('✅ Сохранено в чат');
                 }
                 
-                // Очищаем поля
                 if (textInput) textInput.value = '';
                 App.tempPhoto = null;
                 const fileInput = document.getElementById('fileUpload');
                 if (fileInput) fileInput.value = '';
                 
-                // Сохраняем и обновляем
                 saveToFirebase();
                 loadMessages(to);
                 updateChatList();
@@ -1817,20 +1912,16 @@
             const fromUser = App.currentUser;
             const userGifts = App.users[fromUser].gifts || [];
             
-            // Проверяем, есть ли еще подарок
             if (!userGifts.includes(giftEmoji)) {
                 showNotification('Подарок не найден', 'error');
                 return;
             }
             
-            // Удаляем подарок у отправителя
             App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
             
-            // Добавляем подарок получателю
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
             
-            // Создаем сообщение о подарке
             const chatId = ensureChat(fromUser, toUser);
             
             App.chats[chatId].messages.push({
@@ -1840,10 +1931,8 @@
                 gift: true
             });
             
-            // Сохраняем изменения
             saveToFirebase();
             
-            // Обновляем отображение
             if (App.activeChat === toUser) loadMessages(toUser);
             
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
@@ -1915,6 +2004,10 @@
                     <div class="profile-input-group">
                         <label>ВОЗРАСТ</label>
                         <input type="number" id="modalAgeInput" min="1" max="120" value="${userData.age || 14}">
+                    </div>
+
+                    <div class="profile-actions" style="margin-bottom: 10px;">
+                        <button class="profile-btn logout" id="logoutFromProfileBtn">🚪 ВЫЙТИ</button>
                     </div>
                     ` : ''}
 
@@ -1990,7 +2083,16 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
             if (isOwn && !isBotUser) {
-                // Обработчики вкладок
+                // Кнопка выхода из профиля
+                document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => {
+                    document.getElementById('profileModalOverlay').remove();
+                    App.currentUser = null;
+                    App.activeChat = null;
+                    localStorage.removeItem('quick_current_user');
+                    localStorage.removeItem('quick_active_chat');
+                    render();
+                });
+
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', (e) => {
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -2002,7 +2104,6 @@
                     });
                 });
 
-                // Обработчик отправки кода на email
                 document.getElementById('sendVerificationCodeBtn')?.addEventListener('click', () => {
                     const email = document.getElementById('modalEmailInput').value.trim();
                     
@@ -2018,21 +2119,17 @@
                     
                     const code = generateCode();
                     
-                    // Сохраняем код для проверки
                     App.pendingEmailVerification = {
                         email: email,
                         code: code,
                         timestamp: Date.now()
                     };
                     
-                    // Отправляем код
-                    sendEmailCode(email, code, App.currentUser);
+                    sendEmailCode(email, code, App.currentUser, 'verify');
                     
-                    // Показываем поле для ввода кода
                     document.getElementById('verificationSection').classList.remove('hidden');
                 });
 
-                // Обработчик проверки кода
                 document.getElementById('verifyCodeBtn')?.addEventListener('click', () => {
                     const email = document.getElementById('modalEmailInput').value.trim();
                     const code = document.getElementById('verificationCodeInput').value.trim();
@@ -2065,7 +2162,6 @@
                     }
                 });
 
-                // Обработчики покупки подарков
                 document.querySelectorAll('.buy-gift-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const gift = e.target.dataset.gift;
@@ -2086,7 +2182,6 @@
                     });
                 });
 
-                // Обработчик промокодов
                 document.getElementById('activatePromoBtn')?.addEventListener('click', () => {
                     const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
                     
@@ -2107,7 +2202,6 @@
                     }
                 });
 
-                // Обработчик создания канала
                 document.getElementById('createChannelBtn')?.addEventListener('click', () => {
                     const channelName = document.getElementById('channelNameInput').value.trim();
                     const channelDesc = document.getElementById('channelDescInput').value.trim();
@@ -2141,7 +2235,6 @@
                     render();
                 });
 
-                // Обработчик сохранения профиля
                 document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => {
                     const newAvatar = document.getElementById('modalAvatarInput')?.value.trim();
                     const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
@@ -2154,7 +2247,6 @@
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
                     if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge;
                     
-                    // Если email изменился, сбрасываем подтверждение
                     if (newEmail && newEmail !== App.users[App.currentUser].email) {
                         App.users[App.currentUser].email = newEmail;
                         App.users[App.currentUser].emailVerified = false;
@@ -2171,50 +2263,6 @@
                 document.getElementById('profileModalOverlay').remove();
             });
         }
-
-        function openChannelViewModal(channelName) {
-            const channel = App.channels[channelName];
-            if (!channel) return;
-            
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
-                <div class="profile-modal">
-                    <h3>📢 КАНАЛ ${channelName}</h3>
-                    
-                    <div class="profile-avatar-section">
-                        <img src="${channel.avatar || 'https://via.placeholder.com/100?text=📢'}" class="profile-avatar-preview">
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>ВЛАДЕЛЕЦ</label>
-                        <input type="text" value="${channel.owner}" disabled>
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>ОПИСАНИЕ</label>
-                        <div class="profile-password-row">${channel.description || '—'}</div>
-                    </div>
-                    
-                    <div class="star-balance-large">👥 ${channel.subscribers?.length || 0} ПОДПИСЧИКОВ</div>
-
-                    <div class="profile-actions">
-                        <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
-                    </div>
-                </div>
-            </div>`;
-            
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
-                document.getElementById('profileModalOverlay').remove();
-            });
-        }
-
-        window.openProfileModal = openProfileModal;
-        window.openChannelProfile = openChannelViewModal;
-        window.handleBotCommand = handleBotCommand;
-        window.togglePinChat = togglePinChat;
-        window.deleteChat = deleteChat;
-        window.deleteMessage = deleteMessage;
 
         function initBots() {
             App.systemBots.forEach(bot => {
