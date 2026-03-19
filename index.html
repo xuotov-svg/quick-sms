@@ -351,6 +351,10 @@
             cursor: pointer;
             color: #000000;
         }
+        .chat-avatar:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
         .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #000000; }
         .pin-icon { margin-left: auto; color: #000000; font-size: 14px; cursor: pointer; }
         .delete-chat-icon { margin-left: 5px; color: #ff0000; font-size: 14px; cursor: pointer; }
@@ -838,10 +842,34 @@
             dataLoaded: false,
             tempPhoto: null,
             pending2FA: null,
-            pendingPasswordReset: null
+            pendingPasswordReset: null,
+            pendingEmailVerification: null
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
+
+        // Глобальные функции для открытия профиля
+        window.openProfileModal = function(username) {
+            if (!username) return;
+            
+            // Если это saved или channel, обрабатываем по-другому
+            if (username === 'saved') {
+                showNotification('Это ваше избранное', 'info');
+                return;
+            }
+            
+            if (App.channels[username]) {
+                openChannelViewModal(username);
+                return;
+            }
+            
+            // Открываем профиль пользователя
+            openUserProfileModal(username);
+        };
+
+        window.openChannelProfile = function(channelName) {
+            openChannelViewModal(channelName);
+        };
 
         // Генерация случайного кода
         function generateCode() {
@@ -858,7 +886,8 @@
                     message: type === 'reset' ? 'Код для сброса пароля' : 'Код для входа'
                 };
 
-                // Используем ваш Service ID и Template ID
+                console.log('Отправка email с параметрами:', templateParams);
+
                 const response = await emailjs.send(
                     'service_lw2cbjm',     // Service ID
                     'template_7o2x9ji',    // Template ID
@@ -866,7 +895,7 @@
                 );
 
                 console.log('Email отправлен:', response);
-                showNotification(`Код подтверждения отправлен на ${email}`, 'success');
+                showNotification(`Код отправлен на ${email}`, 'success');
                 return true;
             } catch (error) {
                 console.error('Ошибка отправки email:', error);
@@ -1449,24 +1478,25 @@
         function renderChatItem(u, active, currentUser) {
             const name = u === 'saved' ? '📎 ИЗБРАННОЕ' : u;
             const isPinned = App.pinnedChats.includes(u);
-            let avatarHtml = '<div class="chat-avatar" onclick="openProfileModal(\'' + u + '\')">📁</div>';
             
-            if (u !== 'saved') {
-                if (App.channels[u]) {
-                    avatarHtml = '<div class="chat-avatar">📢</div>';
-                } else {
-                    const avatarUrl = App.users[u]?.avatar;
-                    avatarHtml = avatarUrl ? 
-                        `<div class="chat-avatar" onclick="openProfileModal('${u}')"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
-                        `<div class="chat-avatar" onclick="openProfileModal('${u}')">${u[1] || '@'}</div>`;
-                }
+            let avatarHtml = '';
+            
+            if (u === 'saved') {
+                avatarHtml = '<div class="chat-avatar">📁</div>';
+            } else if (App.channels[u]) {
+                avatarHtml = '<div class="chat-avatar">📢</div>';
+            } else {
+                const avatarUrl = App.users[u]?.avatar;
+                avatarHtml = avatarUrl ? 
+                    `<div class="chat-avatar" onclick="window.openProfileModal('${u}')"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
+                    `<div class="chat-avatar" onclick="window.openProfileModal('${u}')">${u[1] || '@'}</div>`;
             }
             
             const userData = App.users[u] || {};
             
             return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
                 ${avatarHtml}
-                <div style="flex:1; color:#000000;">
+                <div style="flex:1; color:#000000;" onclick="window.openProfileModal('${u}')">
                     <div>${name}${userData.verified ? ' ✅' : ''}</div>
                     ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                 </div>
@@ -1490,7 +1520,7 @@
             let ageBadge = App.users[msg.from]?.age ? ` (${App.users[msg.from].age})` : '';
             
             return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}">
-                ${!isMe ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}${ageBadge}</span></small><br>` : ''}
+                ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}${ageBadge}</span></small><br>` : ''}
                 <div style="color:#000000;">${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 ${canDelete ? `<div class="msg-actions"><button onclick="deleteMessage(${idx})">УДАЛИТЬ</button></div>` : ''}
@@ -1510,7 +1540,7 @@
         function attachMainEvents() {
             document.querySelectorAll('.chat-item').forEach(el => {
                 el.addEventListener('click', (e) => {
-                    if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
+                    if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon') || e.target.closest('.chat-avatar')) return;
                     
                     const chatId = e.currentTarget.dataset.chat;
                     
@@ -1548,7 +1578,7 @@
 
             const openProfileBtn = document.getElementById('openProfileBtn');
             if (openProfileBtn) {
-                openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
+                openProfileBtn.addEventListener('click', () => openUserProfileModal(App.currentUser));
             }
             
             const giftBtn = document.getElementById('giftBtn');
@@ -1826,7 +1856,7 @@
             showNotification('Чат удален');
         }
 
-        function handleBotCommand(botName, cmd) {
+        window.handleBotCommand = function(botName, cmd) {
             if (botName === '@game_bot' && cmd === 'slots') {
                 const chatId = ensureChat(App.currentUser, botName);
                 
@@ -1871,7 +1901,7 @@
                 saveToFirebase();
                 loadMessages(botName);
             }
-        }
+        };
 
         function openGiftMenu() {
             const user = App.currentUser;
@@ -1938,7 +1968,7 @@
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
-        function openProfileModal(username) {
+        function openUserProfileModal(username) {
             const userData = App.users[username] || { 
                 avatar: null, 
                 password: '', 
@@ -2154,7 +2184,7 @@
                         showNotification('Email подтвержден! 2FA активирована');
                         document.getElementById('verificationSection').classList.add('hidden');
                         document.getElementById('profileModalOverlay').remove();
-                        openProfileModal(App.currentUser);
+                        openUserProfileModal(App.currentUser);
                         
                         App.pendingEmailVerification = null;
                     } else {
@@ -2174,7 +2204,7 @@
                             App.users[user].gifts.push(gift);
                             saveToFirebase();
                             document.getElementById('profileModalOverlay').remove();
-                            openProfileModal(user);
+                            openUserProfileModal(user);
                             showNotification(`Куплен подарок ${gift}`);
                         } else {
                             showNotification('Недостаточно ⭐️', 'error');
@@ -2196,7 +2226,7 @@
                         
                         saveToFirebase();
                         document.getElementById('profileModalOverlay').remove();
-                        openProfileModal(App.currentUser);
+                        openUserProfileModal(App.currentUser);
                     } else {
                         showNotification('! НЕВЕРНЫЙ КОД', 'error');
                     }
@@ -2263,6 +2293,55 @@
                 document.getElementById('profileModalOverlay').remove();
             });
         }
+
+        function openChannelViewModal(channelName) {
+            const channel = App.channels[channelName];
+            if (!channel) return;
+            
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
+                <div class="profile-modal">
+                    <h3>📢 КАНАЛ ${channelName}</h3>
+                    
+                    <div class="profile-avatar-section">
+                        <img src="${channel.avatar || 'https://via.placeholder.com/100?text=📢'}" class="profile-avatar-preview">
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>ВЛАДЕЛЕЦ</label>
+                        <input type="text" value="${channel.owner}" disabled>
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>ОПИСАНИЕ</label>
+                        <div class="profile-password-row">${channel.description || '—'}</div>
+                    </div>
+                    
+                    <div class="star-balance-large">👥 ${channel.subscribers?.length || 0} ПОДПИСЧИКОВ</div>
+
+                    <div class="profile-actions">
+                        <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
+                document.getElementById('profileModalOverlay').remove();
+            });
+        }
+
+        window.togglePinChat = function(chat, event) {
+            togglePinChat(chat, event);
+        };
+
+        window.deleteChat = function(chat, event) {
+            deleteChat(chat, event);
+        };
+
+        window.deleteMessage = function(idx) {
+            deleteMessage(idx);
+        };
 
         function initBots() {
             App.systemBots.forEach(bot => {
