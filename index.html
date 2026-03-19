@@ -124,6 +124,55 @@
         .auth-success { color: #00aa00; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
 
+        /* 2FA экран */
+        .two-factor-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        .two-factor-box {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px solid #000000;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .two-factor-box h3 {
+            color: #d4af37;
+            margin-bottom: 20px;
+        }
+        .two-factor-box p {
+            margin-bottom: 20px;
+            color: #000000;
+        }
+        .code-input {
+            font-size: 24px;
+            letter-spacing: 10px;
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #000000;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        .resend-link {
+            color: #d4af37;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
         .main-container { 
             flex-direction: row;
             position: relative;
@@ -225,6 +274,12 @@
             display: inline-block;
             margin-left: 5px;
             color: #4CAF50;
+            font-size: 12px;
+        }
+        .age-badge {
+            display: inline-block;
+            margin-left: 5px;
+            color: #666;
             font-size: 12px;
         }
         .star-balance { display: flex; align-items: center; gap: 4px; color: #000000; font-weight: 600; margin-top: 4px; }
@@ -519,6 +574,14 @@
             background: #f0f0f0;
             cursor: not-allowed;
         }
+        .profile-input-group input[type="number"] {
+            -moz-appearance: textfield;
+        }
+        .profile-input-group input[type="number"]::-webkit-inner-spin-button,
+        .profile-input-group input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
         .star-balance-large { 
             font-size: 24px; 
             color: #000000; 
@@ -714,6 +777,8 @@
             letter-spacing: 5px;
         }
     </style>
+    <!-- EmailJS для отправки писем -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -739,6 +804,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // Инициализация EmailJS
+    emailjs.init("YOUR_PUBLIC_KEY"); // Замените на ваш публичный ключ EmailJS
+
     (function() {
         const App = {
             users: {},
@@ -753,7 +821,7 @@
             sidebarOpen: false,
             dataLoaded: false,
             tempPhoto: null,
-            emailCodes: {} // Хранилище кодов подтверждения email
+            pending2FA: null // Для хранения данных 2FA при входе
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
@@ -763,43 +831,102 @@
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
 
-        // Отправка кода на email (имитация)
-        function sendEmailCode(email, code) {
-            console.log(`📧 Код подтверждения для ${email}: ${code}`);
-            showNotification(`Код отправлен на ${email} (в консоли: ${code})`, 'success');
-            
-            // В реальном проекте здесь был бы запрос к серверу для отправки email
-            // Сейчас просто сохраняем код в App.emailCodes
-            App.emailCodes[email] = {
-                code: code,
-                timestamp: Date.now(),
-                verified: false
-            };
-            
-            // Автоматически удаляем код через 10 минут
-            setTimeout(() => {
-                if (App.emailCodes[email] && !App.emailCodes[email].verified) {
-                    delete App.emailCodes[email];
-                }
-            }, 600000);
-        }
+        // Отправка кода на email через EmailJS
+        async function sendEmailCode(email, code, username) {
+            try {
+                // Настройте шаблон в EmailJS
+                const templateParams = {
+                    to_email: email,
+                    to_name: username,
+                    verification_code: code,
+                    message: `Ваш код подтверждения для входа в quick-sms: ${code}`
+                };
 
-        // Проверка кода
-        function verifyEmailCode(email, code) {
-            const data = App.emailCodes[email];
-            if (!data) {
-                showNotification('Код не найден или истек', 'error');
+                // Отправка через EmailJS (замените на свои ID)
+                const response = await emailjs.send(
+                    'YOUR_SERVICE_ID',     // Service ID из EmailJS
+                    'YOUR_TEMPLATE_ID',    // Template ID из EmailJS
+                    templateParams
+                );
+
+                console.log('Email отправлен:', response);
+                showNotification(`Код подтверждения отправлен на ${email}`, 'success');
+                return true;
+            } catch (error) {
+                console.error('Ошибка отправки email:', error);
+                showNotification('Ошибка отправки кода. Попробуйте позже.', 'error');
                 return false;
             }
+        }
+
+        // Функция для показа 2FA экрана
+        function show2FAScreen(email, username, onSuccess) {
+            const code = generateCode();
             
-            if (data.code === code && (Date.now() - data.timestamp) < 600000) {
-                data.verified = true;
-                delete App.emailCodes[email]; // Очищаем после успешной верификации
-                return true;
-            }
-            
-            showNotification('Неверный код', 'error');
-            return false;
+            // Сохраняем код и email для проверки
+            App.pending2FA = {
+                email: email,
+                code: code,
+                username: username,
+                timestamp: Date.now(),
+                onSuccess: onSuccess
+            };
+
+            // Отправляем код на email
+            sendEmailCode(email, code, username);
+
+            // Создаем и показываем модальное окно
+            const modalHtml = `
+                <div class="two-factor-screen" id="twoFactorScreen">
+                    <div class="two-factor-box">
+                        <h3>🔐 Двухфакторная аутентификация</h3>
+                        <p>Код подтверждения отправлен на<br><strong>${email}</strong></p>
+                        <input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus>
+                        <button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button>
+                        <div class="resend-link" id="resend2FACode">Отправить код повторно</div>
+                        <div id="twoFactorError" class="auth-error"></div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Обработчик ввода кода
+            document.getElementById('verify2FABtn').addEventListener('click', () => {
+                const inputCode = document.getElementById('twoFactorCode').value.trim();
+                
+                if (!inputCode) {
+                    document.getElementById('twoFactorError').textContent = 'Введите код';
+                    return;
+                }
+
+                if (inputCode === App.pending2FA.code && (Date.now() - App.pending2FA.timestamp) < 600000) {
+                    // Код верный и не истек (10 минут)
+                    document.getElementById('twoFactorScreen').remove();
+                    App.pending2FA = null;
+                    onSuccess();
+                } else {
+                    document.getElementById('twoFactorError').textContent = 'Неверный или истекший код';
+                }
+            });
+
+            // Повторная отправка кода
+            document.getElementById('resend2FACode').addEventListener('click', () => {
+                if (App.pending2FA) {
+                    const newCode = generateCode();
+                    App.pending2FA.code = newCode;
+                    App.pending2FA.timestamp = Date.now();
+                    sendEmailCode(App.pending2FA.email, newCode, App.pending2FA.username);
+                    showNotification('Новый код отправлен', 'success');
+                }
+            });
+
+            // Enter для отправки
+            document.getElementById('twoFactorCode').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    document.getElementById('verify2FABtn').click();
+                }
+            });
         }
 
         function showNotification(message, type = 'success') {
@@ -918,11 +1045,12 @@
 
         function ensureChat(userA, userB) {
             if (!userA || !userB || userA === userB) return;
-            const id1 = [userA, userB].sort().join('_');
-            if (!App.chats[id1]) {
-                App.chats[id1] = { user1: userA, user2: userB, messages: [] };
+            const chatId = [userA, userB].sort().join('_');
+            if (!App.chats[chatId]) {
+                App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
                 saveToFirebase();
             }
+            return chatId;
         }
 
         function isValidUsername(str) {
@@ -940,6 +1068,7 @@
             if (App.users[user].verified === undefined) App.users[user].verified = false;
             if (App.users[user].email === undefined) App.users[user].email = '';
             if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
+            if (App.users[user].age === undefined) App.users[user].age = 14; // Возраст по умолчанию 14
         }
 
         function isBot(username) {
@@ -1054,24 +1183,58 @@
             document.getElementById('loginBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('loginUsername').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim();
-                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
+                
+                if (!isValidUsername(username)) { 
+                    errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; 
+                    return; 
+                }
+                
                 const clean = '@' + username;
+                
                 if (!App.users[clean] || App.users[clean].password !== pass) {
                     errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ';
                     return;
                 }
-                App.currentUser = clean;
-                localStorage.setItem('quick_current_user', clean);
-                render();
+
+                const user = App.users[clean];
+                
+                // Проверяем, привязана ли почта и подтверждена ли
+                if (user.email && user.emailVerified) {
+                    // Показываем 2FA экран
+                    show2FAScreen(user.email, clean, () => {
+                        // Успешный вход после 2FA
+                        App.currentUser = clean;
+                        localStorage.setItem('quick_current_user', clean);
+                        render();
+                    });
+                } else {
+                    // Обычный вход без 2FA
+                    App.currentUser = clean;
+                    localStorage.setItem('quick_current_user', clean);
+                    render();
+                }
             });
 
             document.getElementById('registerBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('regUsername').value.trim();
                 const pass = document.getElementById('regPassword').value.trim();
-                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
-                if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
+                
+                if (!isValidUsername(username)) { 
+                    errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; 
+                    return; 
+                }
+                
+                if (!pass) { 
+                    errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; 
+                    return; 
+                }
+                
                 const clean = '@' + username;
-                if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
+                
+                if (App.users[clean] || App.systemBots.includes(clean)) { 
+                    errorDiv.innerText = '! УЖЕ ЕСТЬ'; 
+                    return; 
+                }
                 
                 App.users[clean] = { 
                     password: pass, 
@@ -1081,13 +1244,17 @@
                     bio: '', 
                     verified: false,
                     email: '',
-                    emailVerified: false
+                    emailVerified: false,
+                    age: 14 // Возраст по умолчанию
                 };
+                
                 App.currentUser = clean;
                 
+                // Создаем папку "Избранное"
                 if (!App.chats[clean + '_saved']) {
                     App.chats[clean + '_saved'] = { user1: clean, user2: 'saved', messages: [] };
                 }
+                
                 if (!App.blocked[clean]) App.blocked[clean] = [];
                 
                 localStorage.setItem('quick_current_user', clean);
@@ -1129,6 +1296,7 @@
                         <div>
                             <span class="username-display">${user}${userData.verified ? ' ✅' : ''}</span>
                             ${userData.emailVerified ? '<div class="email-badge">📧 подтвержден</div>' : ''}
+                            ${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}
                             <div class="star-balance">⭐️ ${userData.stars || 0}</div>
                         </div>
                     </div>
@@ -1184,11 +1352,13 @@
                 }
             }
             
+            const userData = App.users[u] || {};
+            
             return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
                 ${avatarHtml}
                 <div style="flex:1; color:#000000;">
-                    ${name}${App.users[u]?.verified ? ' ✅' : ''}
-                    ${App.users[u]?.emailVerified ? ' 📧' : ''}
+                    <div>${name}${userData.verified ? ' ✅' : ''}</div>
+                    ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                 </div>
                 ${u !== 'saved' ? `
                     <span class="pin-icon" onclick="togglePinChat('${u}', event)">📌</span>
@@ -1207,9 +1377,10 @@
             let senderName = msg.from;
             let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
             let emailBadge = App.users[msg.from]?.emailVerified ? ' 📧' : '';
+            let ageBadge = App.users[msg.from]?.age ? ` (${App.users[msg.from].age})` : '';
             
             return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}">
-                ${!isMe ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}</span></small><br>` : ''}
+                ${!isMe ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}${ageBadge}</span></small><br>` : ''}
                 <div style="color:#000000;">${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 ${canDelete ? `<div class="msg-actions"><button onclick="deleteMessage(${idx})">УДАЛИТЬ</button></div>` : ''}
@@ -1255,7 +1426,6 @@
                     e.currentTarget.classList.add('active');
                     
                     loadMessages(App.activeChat);
-                    render(); // Перерендерим чтобы обновить поле ввода
                 });
             });
 
@@ -1367,7 +1537,7 @@
                         App.chats[chatKey] = { user1: from, user2: 'saved', messages: [] };
                     }
                     App.chats[chatKey].messages.push(message);
-                    console.log('Сохранено в избранное');
+                    console.log('✅ Сохранено в избранное');
                 } else if (App.channels[to]) {
                     if (App.channels[to].owner !== from) {
                         showNotification('Только владелец может писать в канал', 'error');
@@ -1375,14 +1545,14 @@
                     }
                     if (!App.channels[to].messages) App.channels[to].messages = [];
                     App.channels[to].messages.push({ ...message, from: to });
-                    console.log('Сохранено в канал');
+                    console.log('✅ Сохранено в канал');
                 } else {
                     const chatId = [from, to].sort().join('_');
                     if (!App.chats[chatId]) {
                         App.chats[chatId] = { user1: from, user2: to, messages: [] };
                     }
                     App.chats[chatId].messages.push(message);
-                    console.log('Сохранено в чат');
+                    console.log('✅ Сохранено в чат');
                 }
                 
                 // Очищаем поля
@@ -1399,7 +1569,7 @@
                 showNotification('Сообщение отправлено');
                 
             } catch (error) {
-                console.error('Ошибка отправки:', error);
+                console.error('❌ Ошибка отправки:', error);
                 showNotification('Ошибка отправки: ' + error.message, 'error');
             }
         }
@@ -1457,17 +1627,12 @@
                 App.activeChat = query;
                 localStorage.setItem('quick_active_chat', query);
                 
-                const chatId = [App.currentUser, query].sort().join('_');
-                if (!App.chats[chatId]) {
-                    App.chats[chatId] = { user1: App.currentUser, user2: query, messages: [] };
-                    saveToFirebase();
-                }
+                ensureChat(App.currentUser, query);
                 
                 if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
                 updateChatList();
                 loadMessages(query);
-                render();
                 showNotification(`Чат с ${query} открыт`);
                 return;
             }
@@ -1479,7 +1644,6 @@
                 document.getElementById('searchUserInput').value = '';
                 updateChatList();
                 loadMessages(query);
-                render();
                 showNotification(`Канал ${query} открыт`);
                 return;
             }
@@ -1493,16 +1657,7 @@
                 return; 
             }
             
-            const chatId = [App.currentUser, query].sort().join('_');
-            
-            if (!App.chats[chatId]) {
-                App.chats[chatId] = { 
-                    user1: App.currentUser, 
-                    user2: query, 
-                    messages: [] 
-                };
-            }
-            
+            ensureChat(App.currentUser, query);
             App.activeChat = query;
             localStorage.setItem('quick_active_chat', query);
             
@@ -1514,7 +1669,6 @@
             updateChatList();
             loadMessages(query);
             saveToFirebase();
-            render();
             showNotification(`Чат с ${query} создан`);
         }
 
@@ -1533,7 +1687,6 @@
             }
             saveToFirebase();
             updateChatList();
-            render();
         }
 
         function togglePinChat(chat, event) {
@@ -1575,14 +1728,12 @@
             
             saveToFirebase();
             updateChatList();
-            render();
             showNotification('Чат удален');
         }
 
         function handleBotCommand(botName, cmd) {
             if (botName === '@game_bot' && cmd === 'slots') {
-                const chatId = [App.currentUser, botName].sort().join('_');
-                ensureChat(App.currentUser, botName);
+                const chatId = ensureChat(App.currentUser, botName);
                 
                 const price = 5;
                 if (App.users[App.currentUser].stars < price) {
@@ -1680,10 +1831,7 @@
             App.users[toUser].gifts.push(giftEmoji);
             
             // Создаем сообщение о подарке
-            const chatId = [fromUser, toUser].sort().join('_');
-            if (!App.chats[chatId]) {
-                App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] };
-            }
+            const chatId = ensureChat(fromUser, toUser);
             
             App.chats[chatId].messages.push({
                 from: fromUser,
@@ -1710,7 +1858,8 @@
                 bio: '', 
                 verified: false,
                 email: '',
-                emailVerified: false 
+                emailVerified: false,
+                age: 14
             };
             const isOwn = (username === App.currentUser);
             const isBotUser = App.systemBots.includes(username);
@@ -1742,16 +1891,16 @@
                     </div>
                     
                     <div class="profile-input-group">
-                        <label>EMAIL</label>
+                        <label>EMAIL (для 2FA)</label>
                         <div style="display: flex; gap: 10px;">
                             <input type="email" id="modalEmailInput" value="${userData.email || ''}" placeholder="your@email.com">
-                            ${!userData.emailVerified ? `
+                            ${!userData.emailVerified && userData.email ? `
                                 <button class="tiny-btn" id="sendVerificationCodeBtn" style="white-space: nowrap;">📧 КОД</button>
                             ` : ''}
                         </div>
                         ${userData.emailVerified ? 
-                            '<div class="email-verified">✓ EMAIL ПОДТВЕРЖДЕН</div>' : 
-                            userData.email ? '<div class="email-unverified">✗ НЕ ПОДТВЕРЖДЕН</div>' : ''
+                            '<div class="email-verified">✓ EMAIL ПОДТВЕРЖДЕН (2FA активна)</div>' : 
+                            userData.email ? '<div class="email-unverified">✗ НЕ ПОДТВЕРЖДЕН (2FA не активна)</div>' : ''
                         }
                     </div>
 
@@ -1761,6 +1910,11 @@
                             <input type="text" id="verificationCodeInput" maxlength="6" placeholder="000000">
                             <button class="tiny-btn" id="verifyCodeBtn">✓</button>
                         </div>
+                    </div>
+
+                    <div class="profile-input-group">
+                        <label>ВОЗРАСТ</label>
+                        <input type="number" id="modalAgeInput" min="1" max="120" value="${userData.age || 14}">
                     </div>
                     ` : ''}
 
@@ -1863,7 +2017,16 @@
                     }
                     
                     const code = generateCode();
-                    sendEmailCode(email, code);
+                    
+                    // Сохраняем код для проверки
+                    App.pendingEmailVerification = {
+                        email: email,
+                        code: code,
+                        timestamp: Date.now()
+                    };
+                    
+                    // Отправляем код
+                    sendEmailCode(email, code, App.currentUser);
                     
                     // Показываем поле для ввода кода
                     document.getElementById('verificationSection').classList.remove('hidden');
@@ -1874,12 +2037,31 @@
                     const email = document.getElementById('modalEmailInput').value.trim();
                     const code = document.getElementById('verificationCodeInput').value.trim();
                     
-                    if (verifyEmailCode(email, code)) {
+                    if (!App.pendingEmailVerification) {
+                        showNotification('Сначала запросите код', 'error');
+                        return;
+                    }
+                    
+                    if (App.pendingEmailVerification.email !== email) {
+                        showNotification('Email не совпадает', 'error');
+                        return;
+                    }
+                    
+                    if (App.pendingEmailVerification.code === code && 
+                        (Date.now() - App.pendingEmailVerification.timestamp) < 600000) {
+                        
+                        App.users[App.currentUser].email = email;
                         App.users[App.currentUser].emailVerified = true;
-                        showNotification('Email подтвержден!');
+                        saveToFirebase();
+                        
+                        showNotification('Email подтвержден! 2FA активирована');
                         document.getElementById('verificationSection').classList.add('hidden');
                         document.getElementById('profileModalOverlay').remove();
                         openProfileModal(App.currentUser);
+                        
+                        App.pendingEmailVerification = null;
+                    } else {
+                        showNotification('Неверный или истекший код', 'error');
                     }
                 });
 
@@ -1965,10 +2147,12 @@
                     const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
                     const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
                     const newEmail = document.getElementById('modalEmailInput')?.value.trim();
+                    const newAge = parseInt(document.getElementById('modalAgeInput')?.value);
                     
                     if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
                     if (newPassword) App.users[App.currentUser].password = newPassword;
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
+                    if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge;
                     
                     // Если email изменился, сбрасываем подтверждение
                     if (newEmail && newEmail !== App.users[App.currentUser].email) {
@@ -2031,7 +2215,6 @@
         window.togglePinChat = togglePinChat;
         window.deleteChat = deleteChat;
         window.deleteMessage = deleteMessage;
-        window.sendGiftToUser = sendGiftToUser;
 
         function initBots() {
             App.systemBots.forEach(bot => {
@@ -2045,7 +2228,8 @@
                         isBot: true,
                         verified: true,
                         email: 'bot@quick-sms.com',
-                        emailVerified: true
+                        emailVerified: true,
+                        age: 99
                     };
                 }
             });
