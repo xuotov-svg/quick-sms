@@ -46,6 +46,22 @@
             z-index: 1;
         }
 
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .app-header { 
             background: var(--header); 
             padding: 8px 16px; 
@@ -69,14 +85,15 @@
             background: white; 
             padding: 30px 24px; 
             border-radius: 16px; 
-            border: 1px solid var(--border); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            border: 1px solid #000000; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
             width: 90%; 
+            animation: fadeIn 0.3s ease;
         }
         h2 { color: #000000; margin-bottom: 16px; font-weight: 500; letter-spacing: 0.5px; }
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; margin-bottom: 6px; color: #000000; font-size: 14px; font-weight: 500; }
-        .input-group input { 
+        .input-group input, .input-group select { 
             width: 100%; 
             padding: 12px 16px; 
             background: #ffffff; 
@@ -86,7 +103,7 @@
             font-size: 15px; 
             outline: none; 
         }
-        .input-group input:focus { border-color: var(--accent); border-width: 2px; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent); border-width: 2px; }
         .btn { 
             background: var(--accent); 
             color: #000000; 
@@ -101,8 +118,10 @@
             margin-top: 8px; 
         }
         .btn-secondary { background: #e0e0e0; color: #000000; border: 1px solid #000000; }
-        .btn:hover { opacity: 0.9; }
+        .btn:hover { opacity: 0.9; transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .auth-error { color: #ff0000; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
+        .auth-success { color: #00aa00; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
 
         .main-container { 
@@ -201,6 +220,12 @@
             margin-left: 5px; 
             color: #1da1f2; 
             font-size: 14px;
+        }
+        .email-badge {
+            display: inline-block;
+            margin-left: 5px;
+            color: #4CAF50;
+            font-size: 12px;
         }
         .star-balance { display: flex; align-items: center; gap: 4px; color: #000000; font-weight: 600; margin-top: 4px; }
         .search-add { padding: 12px; border-bottom: 1px solid #000000; display: flex; gap: 8px; }
@@ -310,6 +335,7 @@
             border: 1px solid #000000; 
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
             position: relative;
+            animation: fadeIn 0.2s ease;
         }
         .message.me { 
             align-self: flex-end; 
@@ -428,6 +454,7 @@
             align-items: center; 
             justify-content: center; 
             z-index: 3000; 
+            animation: fadeIn 0.2s ease;
         }
         .profile-modal { 
             background: white; 
@@ -440,6 +467,7 @@
             color: #000000; 
             max-height: 80vh; 
             overflow-y: auto; 
+            animation: fadeIn 0.2s ease;
         }
         .profile-modal h3 { 
             font-size: 22px; 
@@ -487,6 +515,10 @@
             font-size: 14px; 
             outline: none; 
         }
+        .profile-input-group input:disabled {
+            background: #f0f0f0;
+            cursor: not-allowed;
+        }
         .star-balance-large { 
             font-size: 24px; 
             color: #000000; 
@@ -522,6 +554,7 @@
             text-align: center;
             cursor: pointer;
             color: #000000;
+            transition: all 0.1s ease;
         }
         .gift-item:hover { background: var(--accent-soft); transform: scale(1.1); }
         
@@ -638,10 +671,6 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
 
         .notification {
             position: fixed;
@@ -659,9 +688,30 @@
         .notification.error {
             background: #ff4444;
         }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+
+        .email-verified {
+            color: #4CAF50;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        .email-unverified {
+            color: #ff4444;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        .verification-code-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .verification-code-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #000000;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 20px;
+            letter-spacing: 5px;
         }
     </style>
 </head>
@@ -702,10 +752,55 @@
             promoCodes: { 'durovcrow': 1000, 'durovsnow': 'verified' },
             sidebarOpen: false,
             dataLoaded: false,
-            tempPhoto: null
+            tempPhoto: null,
+            emailCodes: {} // Хранилище кодов подтверждения email
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
+
+        // Генерация случайного кода
+        function generateCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Отправка кода на email (имитация)
+        function sendEmailCode(email, code) {
+            console.log(`📧 Код подтверждения для ${email}: ${code}`);
+            showNotification(`Код отправлен на ${email} (в консоли: ${code})`, 'success');
+            
+            // В реальном проекте здесь был бы запрос к серверу для отправки email
+            // Сейчас просто сохраняем код в App.emailCodes
+            App.emailCodes[email] = {
+                code: code,
+                timestamp: Date.now(),
+                verified: false
+            };
+            
+            // Автоматически удаляем код через 10 минут
+            setTimeout(() => {
+                if (App.emailCodes[email] && !App.emailCodes[email].verified) {
+                    delete App.emailCodes[email];
+                }
+            }, 600000);
+        }
+
+        // Проверка кода
+        function verifyEmailCode(email, code) {
+            const data = App.emailCodes[email];
+            if (!data) {
+                showNotification('Код не найден или истек', 'error');
+                return false;
+            }
+            
+            if (data.code === code && (Date.now() - data.timestamp) < 600000) {
+                data.verified = true;
+                delete App.emailCodes[email]; // Очищаем после успешной верификации
+                return true;
+            }
+            
+            showNotification('Неверный код', 'error');
+            return false;
+        }
 
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
@@ -817,6 +912,7 @@
                 }));
             }).catch(error => {
                 console.error('❌ Ошибка сохранения:', error);
+                showNotification('Ошибка сохранения', 'error');
             });
         }
 
@@ -833,11 +929,17 @@
             return /^[a-zA-Z]{4,}$/.test(str);
         }
 
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
         function initUserStars(user) {
             if (App.users[user].stars === undefined) App.users[user].stars = 0;
             if (!App.users[user].gifts) App.users[user].gifts = [];
             if (App.users[user].bio === undefined) App.users[user].bio = '';
             if (App.users[user].verified === undefined) App.users[user].verified = false;
+            if (App.users[user].email === undefined) App.users[user].email = '';
+            if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
         }
 
         function isBot(username) {
@@ -878,7 +980,7 @@
                     html += renderMessage(msg, idx, App.currentUser, chatPartner);
                 });
             } else {
-                html = '<div style="text-align:center; color:#000000; margin-top:20px;">Нет сообщений</div>';
+                html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
             }
             
             messagesContainer.innerHTML = html;
@@ -971,7 +1073,16 @@
                 const clean = '@' + username;
                 if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
                 
-                App.users[clean] = { password: pass, avatar: null, stars: 0, gifts: [], bio: '', verified: false };
+                App.users[clean] = { 
+                    password: pass, 
+                    avatar: null, 
+                    stars: 0, 
+                    gifts: [], 
+                    bio: '', 
+                    verified: false,
+                    email: '',
+                    emailVerified: false
+                };
                 App.currentUser = clean;
                 
                 if (!App.chats[clean + '_saved']) {
@@ -1017,6 +1128,7 @@
                         </div>
                         <div>
                             <span class="username-display">${user}${userData.verified ? ' ✅' : ''}</span>
+                            ${userData.emailVerified ? '<div class="email-badge">📧 подтвержден</div>' : ''}
                             <div class="star-balance">⭐️ ${userData.stars || 0}</div>
                         </div>
                     </div>
@@ -1076,6 +1188,7 @@
                 ${avatarHtml}
                 <div style="flex:1; color:#000000;">
                     ${name}${App.users[u]?.verified ? ' ✅' : ''}
+                    ${App.users[u]?.emailVerified ? ' 📧' : ''}
                 </div>
                 ${u !== 'saved' ? `
                     <span class="pin-icon" onclick="togglePinChat('${u}', event)">📌</span>
@@ -1093,9 +1206,10 @@
             
             let senderName = msg.from;
             let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
+            let emailBadge = App.users[msg.from]?.emailVerified ? ' 📧' : '';
             
             return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}">
-                ${!isMe ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${senderName}${verifiedBadge}</span></small><br>` : ''}
+                ${!isMe ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}</span></small><br>` : ''}
                 <div style="color:#000000;">${msg.text || ''}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 ${canDelete ? `<div class="msg-actions"><button onclick="deleteMessage(${idx})">УДАЛИТЬ</button></div>` : ''}
@@ -1237,40 +1351,38 @@
             console.log('Отправка сообщения:', { from, to, text, photo: App.tempPhoto });
             
             try {
+                // Создаем сообщение
+                const message = { 
+                    from, 
+                    text: text || '', 
+                    time: Date.now(), 
+                    photo: App.tempPhoto || null,
+                    gift: false,
+                    game: false
+                };
+                
                 if (to === 'saved') {
                     const chatKey = from + '_saved';
                     if (!App.chats[chatKey]) {
                         App.chats[chatKey] = { user1: from, user2: 'saved', messages: [] };
                     }
-                    App.chats[chatKey].messages.push({ 
-                        from, 
-                        text, 
-                        time: Date.now(), 
-                        photo: App.tempPhoto || null
-                    });
+                    App.chats[chatKey].messages.push(message);
+                    console.log('Сохранено в избранное');
                 } else if (App.channels[to]) {
                     if (App.channels[to].owner !== from) {
                         showNotification('Только владелец может писать в канал', 'error');
                         return;
                     }
                     if (!App.channels[to].messages) App.channels[to].messages = [];
-                    App.channels[to].messages.push({ 
-                        from: to, 
-                        text, 
-                        time: Date.now(), 
-                        photo: App.tempPhoto || null
-                    });
+                    App.channels[to].messages.push({ ...message, from: to });
+                    console.log('Сохранено в канал');
                 } else {
                     const chatId = [from, to].sort().join('_');
                     if (!App.chats[chatId]) {
                         App.chats[chatId] = { user1: from, user2: to, messages: [] };
                     }
-                    App.chats[chatId].messages.push({ 
-                        from, 
-                        text, 
-                        time: Date.now(), 
-                        photo: App.tempPhoto || null
-                    });
+                    App.chats[chatId].messages.push(message);
+                    console.log('Сохранено в чат');
                 }
                 
                 // Очищаем поля
@@ -1288,7 +1400,7 @@
                 
             } catch (error) {
                 console.error('Ошибка отправки:', error);
-                showNotification('Ошибка отправки', 'error');
+                showNotification('Ошибка отправки: ' + error.message, 'error');
             }
         }
 
@@ -1311,7 +1423,11 @@
                     msgArray = App.chats[chatId].messages;
                 }
                 
-                if (!msgArray || idx >= msgArray.length) return;
+                if (!msgArray || idx >= msgArray.length) {
+                    showNotification('Сообщение не найдено', 'error');
+                    return;
+                }
+                
                 msgArray.splice(idx, 1);
                 
                 saveToFirebase();
@@ -1344,6 +1460,7 @@
                 const chatId = [App.currentUser, query].sort().join('_');
                 if (!App.chats[chatId]) {
                     App.chats[chatId] = { user1: App.currentUser, user2: query, messages: [] };
+                    saveToFirebase();
                 }
                 
                 if (window.innerWidth < 768) App.sidebarOpen = false;
@@ -1549,27 +1666,52 @@
             const fromUser = App.currentUser;
             const userGifts = App.users[fromUser].gifts || [];
             
+            // Проверяем, есть ли еще подарок
+            if (!userGifts.includes(giftEmoji)) {
+                showNotification('Подарок не найден', 'error');
+                return;
+            }
+            
+            // Удаляем подарок у отправителя
             App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
             
+            // Добавляем подарок получателю
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
             
+            // Создаем сообщение о подарке
             const chatId = [fromUser, toUser].sort().join('_');
-            ensureChat(fromUser, toUser);
+            if (!App.chats[chatId]) {
+                App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] };
+            }
+            
             App.chats[chatId].messages.push({
                 from: fromUser,
-                text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
+                text: `🎁 ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
                 time: Date.now(),
                 gift: true
             });
             
+            // Сохраняем изменения
             saveToFirebase();
+            
+            // Обновляем отображение
             if (App.activeChat === toUser) loadMessages(toUser);
-            showNotification(`Подарок ${giftEmoji} отправлен!`);
+            
+            showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
         function openProfileModal(username) {
-            const userData = App.users[username] || { avatar: null, password: '', stars: 0, gifts: [], bio: '', verified: false };
+            const userData = App.users[username] || { 
+                avatar: null, 
+                password: '', 
+                stars: 0, 
+                gifts: [], 
+                bio: '', 
+                verified: false,
+                email: '',
+                emailVerified: false 
+            };
             const isOwn = (username === App.currentUser);
             const isBotUser = App.systemBots.includes(username);
             
@@ -1597,6 +1739,28 @@
                     <div class="profile-input-group">
                         <label>ПАРОЛЬ</label>
                         <input type="text" id="modalPasswordInput" value="${userData.password || ''}">
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>EMAIL</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="email" id="modalEmailInput" value="${userData.email || ''}" placeholder="your@email.com">
+                            ${!userData.emailVerified ? `
+                                <button class="tiny-btn" id="sendVerificationCodeBtn" style="white-space: nowrap;">📧 КОД</button>
+                            ` : ''}
+                        </div>
+                        ${userData.emailVerified ? 
+                            '<div class="email-verified">✓ EMAIL ПОДТВЕРЖДЕН</div>' : 
+                            userData.email ? '<div class="email-unverified">✗ НЕ ПОДТВЕРЖДЕН</div>' : ''
+                        }
+                    </div>
+
+                    <div id="verificationSection" class="profile-input-group hidden">
+                        <label>ВВЕДИТЕ КОД</label>
+                        <div class="verification-code-input">
+                            <input type="text" id="verificationCodeInput" maxlength="6" placeholder="000000">
+                            <button class="tiny-btn" id="verifyCodeBtn">✓</button>
+                        </div>
                     </div>
                     ` : ''}
 
@@ -1672,6 +1836,7 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
             if (isOwn && !isBotUser) {
+                // Обработчики вкладок
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', (e) => {
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1683,11 +1848,48 @@
                     });
                 });
 
+                // Обработчик отправки кода на email
+                document.getElementById('sendVerificationCodeBtn')?.addEventListener('click', () => {
+                    const email = document.getElementById('modalEmailInput').value.trim();
+                    
+                    if (!email) {
+                        showNotification('Введите email', 'error');
+                        return;
+                    }
+                    
+                    if (!isValidEmail(email)) {
+                        showNotification('Неверный формат email', 'error');
+                        return;
+                    }
+                    
+                    const code = generateCode();
+                    sendEmailCode(email, code);
+                    
+                    // Показываем поле для ввода кода
+                    document.getElementById('verificationSection').classList.remove('hidden');
+                });
+
+                // Обработчик проверки кода
+                document.getElementById('verifyCodeBtn')?.addEventListener('click', () => {
+                    const email = document.getElementById('modalEmailInput').value.trim();
+                    const code = document.getElementById('verificationCodeInput').value.trim();
+                    
+                    if (verifyEmailCode(email, code)) {
+                        App.users[App.currentUser].emailVerified = true;
+                        showNotification('Email подтвержден!');
+                        document.getElementById('verificationSection').classList.add('hidden');
+                        document.getElementById('profileModalOverlay').remove();
+                        openProfileModal(App.currentUser);
+                    }
+                });
+
+                // Обработчики покупки подарков
                 document.querySelectorAll('.buy-gift-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const gift = e.target.dataset.gift;
                         const price = parseInt(e.target.dataset.price);
                         const user = App.currentUser;
+                        
                         if (App.users[user].stars >= price) {
                             App.users[user].stars -= price;
                             if (!App.users[user].gifts) App.users[user].gifts = [];
@@ -1702,6 +1904,7 @@
                     });
                 });
 
+                // Обработчик промокодов
                 document.getElementById('activatePromoBtn')?.addEventListener('click', () => {
                     const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
                     
@@ -1722,6 +1925,7 @@
                     }
                 });
 
+                // Обработчик создания канала
                 document.getElementById('createChannelBtn')?.addEventListener('click', () => {
                     const channelName = document.getElementById('channelNameInput').value.trim();
                     const channelDesc = document.getElementById('channelDescInput').value.trim();
@@ -1755,14 +1959,22 @@
                     render();
                 });
 
+                // Обработчик сохранения профиля
                 document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => {
                     const newAvatar = document.getElementById('modalAvatarInput')?.value.trim();
                     const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
                     const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
+                    const newEmail = document.getElementById('modalEmailInput')?.value.trim();
                     
                     if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
                     if (newPassword) App.users[App.currentUser].password = newPassword;
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
+                    
+                    // Если email изменился, сбрасываем подтверждение
+                    if (newEmail && newEmail !== App.users[App.currentUser].email) {
+                        App.users[App.currentUser].email = newEmail;
+                        App.users[App.currentUser].emailVerified = false;
+                    }
                     
                     saveToFirebase();
                     document.getElementById('profileModalOverlay').remove();
@@ -1819,6 +2031,7 @@
         window.togglePinChat = togglePinChat;
         window.deleteChat = deleteChat;
         window.deleteMessage = deleteMessage;
+        window.sendGiftToUser = sendGiftToUser;
 
         function initBots() {
             App.systemBots.forEach(bot => {
@@ -1830,7 +2043,9 @@
                         gifts: [], 
                         bio: 'Я бот',
                         isBot: true,
-                        verified: true
+                        verified: true,
+                        email: 'bot@quick-sms.com',
+                        emailVerified: true
                     };
                 }
             });
