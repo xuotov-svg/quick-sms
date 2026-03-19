@@ -600,7 +600,7 @@
             background: #f0f0f0; 
             padding: 12px; 
             border-radius: 8px; 
-            margin: 16px 0; 
+            margin-bottom: 16px; 
             justify-content: center; 
             border: 1px solid #000000; 
         }
@@ -668,7 +668,7 @@
             background: white; 
             color: #000000; 
         }
-        .profile-actions { display: flex; gap: 12px; margin-top: 20px; }
+        .profile-actions { display: flex; gap: 12px; margin-top: 16px; }
         .profile-btn { 
             background: var(--accent); 
             border: 1px solid #000000; 
@@ -689,7 +689,7 @@
         .tabs { 
             display: flex; 
             gap: 8px; 
-            margin: 16px 0 8px; 
+            margin-bottom: 16px; 
             border: 1px solid #000000; 
             padding: 4px; 
             border-radius: 8px;
@@ -789,14 +789,6 @@
             text-align: center;
             font-size: 20px;
             letter-spacing: 5px;
-        }
-        
-        .password-section {
-            border-top: 2px solid #000000;
-            border-bottom: 2px solid #000000;
-            padding: 16px 0;
-            margin: 16px 0;
-            background: #f9f9f9;
         }
     </style>
     <!-- EmailJS для отправки писем -->
@@ -1013,7 +1005,7 @@
         }
 
         function ensureChat(userA, userB) {
-            if (!userA || !userB || userA === userB) return null; // Убрал проверку на 'saved'
+            if (!userA || !userB || userA === userB || userB === 'saved') return;
             const chatId = [userA, userB].sort().join('_');
             if (!App.chats[chatId]) {
                 App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
@@ -1458,7 +1450,78 @@
             }, 100);
         }
 
-        // ========== ИСПРАВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ ==========
+        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
+        function attachMainEvents() {
+            const backBtn = document.getElementById('backBtn');
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    App.sidebarOpen = true;
+                    document.querySelector('.sidebar').classList.add('open');
+                });
+            }
+
+            const openProfileBtn = document.getElementById('openProfileBtn');
+            if (openProfileBtn) {
+                openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
+            }
+            
+            const viewProfileBtn = document.getElementById('viewProfileBtn');
+            if (viewProfileBtn) {
+                viewProfileBtn.addEventListener('click', () => {
+                    if (App.activeChat && App.activeChat !== 'saved') {
+                        openProfileModal(App.activeChat);
+                    }
+                });
+            }
+            
+            const giftBtn = document.getElementById('giftBtn');
+            if (giftBtn) {
+                giftBtn.addEventListener('click', openGiftMenu);
+            }
+            
+            const subscribeBtn = document.getElementById('subscribeBtn');
+            if (subscribeBtn) {
+                subscribeBtn.addEventListener('click', toggleSubscribe);
+            }
+            
+            const sendBtn = document.getElementById('sendMsgBtn');
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendMessage);
+            }
+            
+            const fileUpload = document.getElementById('fileUpload');
+            if (fileUpload) {
+                fileUpload.addEventListener('change', handleFileSelect);
+            }
+            
+            const addUserBtn = document.getElementById('addUserBtn');
+            if (addUserBtn) {
+                addUserBtn.addEventListener('click', addUserBySearch);
+            }
+            
+            const messageText = document.getElementById('messageText');
+            if (messageText) {
+                messageText.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                App.tempPhoto = ev.target.result;
+                sendMessage();
+            };
+            reader.readAsDataURL(file);
+        }
+
         function sendMessage() {
             const textInput = document.getElementById('messageText');
             const text = textInput ? textInput.value.trim() : '';
@@ -1486,27 +1549,20 @@
                     game: false
                 };
                 
-                // ИЗБРАННОЕ - только localStorage
                 if (to === 'saved') {
                     if (!App.savedMessages[from]) App.savedMessages[from] = [];
                     App.savedMessages[from].push(message);
                     saveSavedMessages();
                     showNotification('Сохранено в избранное');
-                } 
-                // КАНАЛ - в Firebase
-                else if (App.channels[to]) {
+                } else if (App.channels[to]) {
                     if (App.channels[to].owner !== from) {
                         showNotification('Только владелец может писать в канал', 'error');
                         return;
                     }
                     if (!App.channels[to].messages) App.channels[to].messages = [];
-                    // В канале сообщения от имени канала
                     App.channels[to].messages.push({ ...message, from: to });
                     saveToFirebase();
-                } 
-                // ОБЫЧНЫЙ ЧАТ - в Firebase
-                else {
-                    // СОЗДАЕМ ЧАТ ЕСЛИ ЕГО НЕТ (ВАЖНО!)
+                } else {
                     const chatId = [from, to].sort().join('_');
                     if (!App.chats[chatId]) {
                         App.chats[chatId] = { user1: from, user2: to, messages: [] };
@@ -1515,19 +1571,17 @@
                     saveToFirebase();
                 }
                 
-                // Очищаем поля ввода
                 if (textInput) textInput.value = '';
                 App.tempPhoto = null;
                 const fileInput = document.getElementById('fileUpload');
                 if (fileInput) fileInput.value = '';
                 
-                // Обновляем сообщения и список чатов
                 loadMessages(to);
                 updateChatList();
                 
             } catch (error) {
                 console.error('❌ Ошибка отправки:', error);
-                showNotification('Ошибка отправки: ' + error.message, 'error');
+                showNotification('Ошибка отправки', 'error');
             }
         }
 
@@ -1767,7 +1821,7 @@
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
-        // ========== ПРОФИЛЬ С НОВОЙ СТРУКТУРОЙ ==========
+        // ========== ПРОФИЛЬ ==========
         window.openProfileModal = function(username) {
             const userData = App.users[username] || { 
                 avatar: null, 
@@ -1789,7 +1843,6 @@
                 <div class="profile-modal">
                     <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? ' ✅' : ''}</h3>
                     
-                    <!-- АВАТАР (всегда сверху) -->
                     <div class="profile-avatar-section">
                         <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview">
                         ${isOwn && !isBotUser ? `
@@ -1799,80 +1852,72 @@
                         </div>` : ''}
                     </div>
                     
-                    <!-- ЮЗЕРНЕЙМ (всегда второй) -->
                     <div class="profile-input-group">
                         <label>ЮЗЕРНЕЙМ</label>
                         <input type="text" value="${username}" disabled>
                     </div>
 
-                    <!-- ОПИСАНИЕ (третье) -->
+                    ${!isBotUser ? `
                     <div class="profile-input-group">
                         <label>ОПИСАНИЕ</label>
                         ${isOwn ? 
-                            `<textarea id="modalBioInput" maxlength="50" placeholder="О себе...">${userData.bio || ''}</textarea>` :
+                            `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` :
                             `<div class="profile-password-row">${userData.bio || '—'}</div>`
                         }
                     </div>
 
-                    <!-- ВОЗРАСТ (четвертый) -->
                     <div class="profile-input-group">
                         <label>ВОЗРАСТ</label>
                         ${isOwn ? 
                             `<input type="number" id="modalAgeInput" min="1" max="120" value="${userData.age || 14}">` :
-                            `<div class="profile-password-row">${userData.age || '—'} лет</div>`
+                            `<div class="profile-password-row">${userData.age || 14} лет</div>`
                         }
                     </div>
 
-                    <!-- ПАРОЛЬ И EMAIL (пятые, только для своего профиля) -->
-                    ${isOwn && !isBotUser ? `
-                    <div class="password-section">
-                        <div class="profile-input-group">
-                            <label>ПАРОЛЬ</label>
-                            <input type="text" id="modalPasswordInput" value="${userData.password || ''}">
+                    ${isOwn ? `
+                    <div class="profile-input-group">
+                        <label>ПАРОЛЬ</label>
+                        <input type="text" id="modalPasswordInput" value="${userData.password || ''}">
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>EMAIL (для 2FA)</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="email" id="modalEmailInput" value="${userData.email || ''}" placeholder="your@email.com">
+                            ${!userData.emailVerified && userData.email ? `
+                                <button class="tiny-btn" id="sendVerificationCodeBtn" style="white-space: nowrap;">📧 КОД</button>
+                            ` : ''}
                         </div>
-                        
-                        <div class="profile-input-group">
-                            <label>EMAIL (для 2FA)</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="email" id="modalEmailInput" value="${userData.email || ''}" placeholder="your@email.com">
-                                ${!userData.emailVerified && userData.email ? `
-                                    <button class="tiny-btn" id="sendVerificationCodeBtn" style="white-space: nowrap;">📧 КОД</button>
-                                ` : ''}
-                            </div>
-                            ${userData.emailVerified ? 
-                                '<div class="email-verified">✓ EMAIL ПОДТВЕРЖДЕН (2FA активна)</div>' : 
-                                userData.email ? '<div class="email-unverified">✗ НЕ ПОДТВЕРЖДЕН (2FA не активна)</div>' : ''
-                            }
-                        </div>
+                        ${userData.emailVerified ? 
+                            '<div class="email-verified">✓ EMAIL ПОДТВЕРЖДЕН (2FA активна)</div>' : 
+                            userData.email ? '<div class="email-unverified">✗ НЕ ПОДТВЕРЖДЕН (2FA не активна)</div>' : ''
+                        }
+                    </div>
 
-                        <div id="verificationSection" class="profile-input-group hidden">
-                            <label>ВВЕДИТЕ КОД</label>
-                            <div class="verification-code-input">
-                                <input type="text" id="verificationCodeInput" maxlength="6" placeholder="000000">
-                                <button class="tiny-btn" id="verifyCodeBtn">✓</button>
-                            </div>
+                    <div id="verificationSection" class="profile-input-group hidden">
+                        <label>ВВЕДИТЕ КОД</label>
+                        <div class="verification-code-input">
+                            <input type="text" id="verificationCodeInput" maxlength="6" placeholder="000000">
+                            <button class="tiny-btn" id="verifyCodeBtn">✓</button>
                         </div>
                     </div>
                     ` : ''}
 
-                    <!-- БАЛАНС ЗВЕЗД (шестой) -->
                     <div class="star-balance-large">⭐️ ${userData.stars || 0} ЗВЕЗД</div>
 
-                    <!-- ТАБЫ (седьмые) -->
+                    ${isOwn ? `
                     <div class="tabs">
                         <div class="tab active" data-tab="gifts">ПОДАРКИ</div>
-                        ${isOwn ? '<div class="tab" data-tab="shop">МАГАЗИН</div>' : ''}
-                        ${isOwn ? '<div class="tab" data-tab="channel">КАНАЛ</div>' : ''}
+                        <div class="tab" data-tab="shop">МАГАЗИН</div>
+                        <div class="tab" data-tab="channel">КАНАЛ</div>
                     </div>
 
-                    <!-- КОНТЕНТ ТАБОВ -->
                     <div id="tabGifts" class="tab-content">
                         <div class="gifts-collection">
                             ${giftsList || 'НЕТ ПОДАРКОВ'}
                         </div>
                     </div>
 
-                    ${isOwn ? `
                     <div id="tabShop" class="tab-content hidden">
                         <div class="shop-section">
                             <h4>КУПИТЬ ПОДАРКИ</h4>
@@ -1909,9 +1954,9 @@
                         </div>
                     </div>
                     ` : ''}
+                    ` : ''}
 
-                    <!-- КНОПКИ (в самом низу) -->
-                    <div class="profile-actions">
+                    <div class="profile-actions" style="margin-top: 20px;">
                         ${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}
                         <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
                         ${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">🚪 ВЫЙТИ</button>' : ''}
