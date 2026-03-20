@@ -428,6 +428,10 @@
             background: #f0f8ff; 
             border: 2px solid #d4af37;
         }
+        .bot-message {
+            background: #f5f5dc;
+            border: 2px solid #d4af37;
+        }
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
         .msg-actions button { 
             background: none; 
@@ -822,6 +826,16 @@
             font-size: 20px;
             letter-spacing: 5px;
         }
+        
+        .slot-machine {
+            display: inline-block;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 24px;
+            letter-spacing: 10px;
+            margin: 10px 0;
+        }
     </style>
     <!-- EmailJS для отправки писем -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -872,10 +886,12 @@
             pendingPasswordReset: null,
             pendingEmailVerification: null,
             savedMessages: {},
-            globalMessages: [] // Глобальный чат
+            globalMessages: [], // Глобальный чат
+            tapBalances: {} // Внутренняя валюта для tap_bot
         };
 
-        App.systemBots = ['@game_bot', '@ggsuw'];
+        App.systemBots = ['@game_bot', '@tap_bot'];
+        App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function generateCode() {
@@ -969,6 +985,30 @@
 
         function saveGlobalMessages() {
             localStorage.setItem('yolk_global', JSON.stringify(App.globalMessages));
+            // Синхронизируем с Firebase для других устройств
+            if (App.dataLoaded) {
+                database.ref('globalMessages').set(App.globalMessages).catch(e => console.error('Sync error:', e));
+            }
+        }
+
+        function loadTapBalances() {
+            const balances = localStorage.getItem('yolk_tap_balances');
+            if (balances) {
+                try {
+                    App.tapBalances = JSON.parse(balances);
+                } catch(e) {
+                    App.tapBalances = {};
+                }
+            } else {
+                App.tapBalances = {};
+            }
+        }
+
+        function saveTapBalances() {
+            localStorage.setItem('yolk_tap_balances', JSON.stringify(App.tapBalances));
+            if (App.dataLoaded) {
+                database.ref('tapBalances').set(App.tapBalances).catch(e => console.error('Sync error:', e));
+            }
         }
 
         async function loadFromFirebase() {
@@ -985,6 +1025,8 @@
                     if (data.blocked) App.blocked = data.blocked;
                     if (data.channels) App.channels = data.channels;
                     if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
+                    if (data.globalMessages) App.globalMessages = data.globalMessages;
+                    if (data.tapBalances) App.tapBalances = data.tapBalances;
                     
                     // Кэшируем
                     localStorage.setItem('yolk_cache', JSON.stringify({
@@ -994,6 +1036,9 @@
                         channels: App.channels,
                         pinnedChats: App.pinnedChats
                     }));
+                    
+                    if (data.globalMessages) saveGlobalMessages();
+                    if (data.tapBalances) saveTapBalances();
                 }
                 
                 // Восстанавливаем сессию
@@ -1005,6 +1050,7 @@
                     App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'global' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
                     loadSavedMessages();
                     loadGlobalMessages();
+                    loadTapBalances();
                 }
                 
                 App.dataLoaded = true;
@@ -1032,6 +1078,7 @@
                     App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
                     loadSavedMessages();
                     loadGlobalMessages();
+                    loadTapBalances();
                 }
                 
                 App.dataLoaded = true;
@@ -1047,7 +1094,9 @@
                 chats: App.chats,
                 blocked: App.blocked,
                 channels: App.channels,
-                pinnedChats: App.pinnedChats
+                pinnedChats: App.pinnedChats,
+                globalMessages: App.globalMessages,
+                tapBalances: App.tapBalances
             };
             
             database.ref().set(firebaseData)
@@ -1102,12 +1151,13 @@
                     message: type === 'reset' ? 'Код для сброса пароля' : 'Код подтверждения'
                 };
 
-                await emailjs.send('service_lw2cbjm', 'template_7o2x9ji', templateParams);
+                const result = await emailjs.send('service_lw2cbjm', 'template_7o2x9ji', templateParams);
+                console.log('EmailJS result:', result);
                 showNotification(`Код отправлен на ${email}`, 'success');
                 return true;
             } catch (error) {
                 console.error('Ошибка отправки email:', error);
-                showNotification('Ошибка отправки кода', 'error');
+                showNotification('Ошибка отправки кода. Проверьте EmailJS настройки', 'error');
                 return false;
             }
         }
@@ -1170,6 +1220,52 @@
                     document.getElementById('verify2FABtn').click();
                 }
             });
+        }
+
+        // ========== БОТЫ ==========
+        function handleGameBot(message, fromUser) {
+            if (message.text && message.text.includes('КРУТИТЬ')) {
+                if (App.users[fromUser].stars < 5) {
+                    return { text: `❌ Недостаточно 🐣! Нужно 5 🐣 для игры.`, buttons: [] };
+                }
+                
+                App.users[fromUser].stars -= 5;
+                
+                const results = [];
+                for (let i = 0; i < 3; i++) {
+                    results.push(App.gameSymbols[Math.floor(Math.random() * App.gameSymbols.length)]);
+                }
+                
+                let win = 0;
+                if (results[0] === results[1] && results[1] === results[2]) {
+                    win = 15;
+                    App.users[fromUser].stars += win;
+                }
+                
+                saveToFirebase();
+                
+                const resultText = results.join(' ');
+                if (win > 0) {
+                    return { text: `🎰 РЕЗУЛЬТАТ: ${resultText}\n\n✨ ПОБЕДА! +${win} 🐣 ✨\nВаш баланс: ${App.users[fromUser].stars} 🐣`, buttons: [] };
+                } else {
+                    return { text: `🎰 РЕЗУЛЬТАТ: ${resultText}\n\n😢 Нет совпадений...\nВаш баланс: ${App.users[fromUser].stars} 🐣`, buttons: [] };
+                }
+            }
+            
+            return { text: `🎰 ДОБРО ПОЖАЛОВАТЬ В ИГРОВОЙ АВТОМАТ!\n\nПравила: нажми "КРУТИТЬ (5🐣)" и выиграй 15🐣 если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\nВаш баланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
+        }
+        
+        function handleTapBot(message, fromUser) {
+            if (!App.tapBalances[fromUser]) App.tapBalances[fromUser] = 0;
+            
+            if (message.text && message.text.includes('ТАПНУТЬ')) {
+                const increase = Math.floor(Math.random() * 10) + 1;
+                App.tapBalances[fromUser] += increase;
+                saveTapBalances();
+                return { text: `👆 Вы тапнули и получили +${increase} 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲`, buttons: ['ТАПНУТЬ (👆)'] };
+            }
+            
+            return { text: `🤖 TAP БОТ\n\nПросто тапай и зарабатывай 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲\n\nНажми на кнопку ниже, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)'] };
         }
 
         // ========== ОСНОВНОЙ РЕНДЕР ==========
@@ -1268,6 +1364,7 @@
                     localStorage.setItem('yolk_current_user', clean);
                     loadSavedMessages();
                     loadGlobalMessages();
+                    loadTapBalances();
                     render();
                 }
                 
@@ -1328,7 +1425,7 @@
             const chatPartner = App.activeChat || 'saved';
             const isChannel = App.channels[chatPartner] ? true : false;
             const isGlobal = chatPartner === 'global';
-            const canWrite = chatPartner === 'saved' || chatPartner === 'global' || (isChannel && App.channels[chatPartner]?.owner === user) || (!isChannel && chatPartner !== 'saved');
+            const isBotChat = App.systemBots.includes(chatPartner);
 
             return `<div class="main-container">
                 <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
@@ -1387,6 +1484,10 @@
             } else if (u !== 'saved') {
                 if (App.channels[u]) {
                     avatarHtml = '<div class="chat-avatar">📢</div>';
+                } else if (App.systemBots.includes(u)) {
+                    if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>';
+                    else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>';
+                    else avatarHtml = '<div class="chat-avatar">🤖</div>';
                 } else {
                     const avatarUrl = App.users[u]?.avatar;
                     avatarHtml = avatarUrl ? 
@@ -1414,15 +1515,17 @@
             const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
             const isGlobal = chatPartner === 'global';
             const isGift = msg.gift ? true : false;
+            const isBotMsg = App.systemBots.includes(msg.from);
             
             let canDelete = false;
             if (isGlobal) {
-                // В глобальном чате: свой пост может удалить только автор или верифицированный пользователь
                 canDelete = (msg.from === currentUser) || hasVerifiedBadge(currentUser);
             } else if (chatPartner === 'saved') {
                 canDelete = true;
             } else if (App.channels[chatPartner]) {
                 canDelete = App.channels[chatPartner]?.owner === currentUser;
+            } else if (App.systemBots.includes(chatPartner)) {
+                canDelete = false;
             } else {
                 canDelete = isMe;
             }
@@ -1435,14 +1538,19 @@
             let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
             
             let messageText = msg.text || '';
-            // Убираем эмодзи 🎁 из текста подарка если он там есть
             if (isGift && messageText.startsWith('🎁 ')) {
                 messageText = messageText.substring(2);
             }
             
-            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''}">
+            let buttonsHtml = '';
+            if (isBotMsg && msg.buttons && msg.buttons.length > 0) {
+                buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
+            }
+            
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''}">
                 ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${verifiedBadge}</span></small><br>` : ''}
                 <div style="color:#000000;">${messageText}${mediaHtml}</div>
+                ${buttonsHtml}
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                     ${isGlobal ? `
@@ -1473,7 +1581,6 @@
             });
             chatsContainer.innerHTML = html;
             
-            // Вешаем обработчики на новые элементы
             document.querySelectorAll('.chat-item').forEach(el => {
                 el.addEventListener('click', (e) => {
                     if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
@@ -1499,7 +1606,7 @@
                     document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
                     el.classList.add('active');
                     
-                    render(); // Перерендериваем для обновления шапки
+                    render();
                 });
             });
         }
@@ -1528,7 +1635,16 @@
                     html += renderMessage(msg, idx, App.currentUser, chatPartner);
                 });
             } else {
-                html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
+                // Приветственное сообщение для ботов
+                if (chatPartner === '@game_bot') {
+                    const botMsg = handleGameBot({ text: '' }, App.currentUser);
+                    html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
+                } else if (chatPartner === '@tap_bot') {
+                    const botMsg = handleTapBot({ text: '' }, App.currentUser);
+                    html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
+                } else {
+                    html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
+                }
             }
             
             messagesContainer.innerHTML = html;
@@ -1553,7 +1669,36 @@
             }
             
             saveGlobalMessages();
+            saveToFirebase();
             loadMessages('global');
+        };
+
+        // ========== КОМАНДЫ БОТОВ ==========
+        window.sendBotCommand = function(botName, command) {
+            let response;
+            
+            if (botName === '@game_bot') {
+                response = handleGameBot({ text: command }, App.currentUser);
+            } else if (botName === '@tap_bot') {
+                response = handleTapBot({ text: command }, App.currentUser);
+            }
+            
+            if (response) {
+                const botMessage = {
+                    from: botName,
+                    text: response.text,
+                    time: Date.now(),
+                    buttons: response.buttons
+                };
+                
+                const chatId = [App.currentUser, botName].sort().join('_');
+                if (!App.chats[chatId]) {
+                    App.chats[chatId] = { user1: App.currentUser, user2: botName, messages: [] };
+                }
+                App.chats[chatId].messages.push(botMessage);
+                saveToFirebase();
+                loadMessages(botName);
+            }
         };
 
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
@@ -1574,7 +1719,7 @@
             const viewProfileBtn = document.getElementById('viewProfileBtn');
             if (viewProfileBtn) {
                 viewProfileBtn.addEventListener('click', () => {
-                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global') {
+                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && !App.systemBots.includes(App.activeChat)) {
                         openProfileModal(App.activeChat);
                     }
                 });
@@ -1662,6 +1807,8 @@
                 } else if (to === 'global') {
                     App.globalMessages.push(message);
                     saveGlobalMessages();
+                    saveToFirebase();
+                    showNotification('Сообщение отправлено в глобальный чат');
                 } else if (App.channels[to]) {
                     if (App.channels[to].owner !== from) {
                         showNotification('Только владелец может писать в канал', 'error');
@@ -1670,6 +1817,31 @@
                     if (!App.channels[to].messages) App.channels[to].messages = [];
                     App.channels[to].messages.push({ ...message, from: to });
                     saveToFirebase();
+                } else if (App.systemBots.includes(to)) {
+                    // Обработка команд ботов
+                    let response;
+                    if (to === '@game_bot') {
+                        response = handleGameBot({ text: text }, from);
+                    } else if (to === '@tap_bot') {
+                        response = handleTapBot({ text: text }, from);
+                    }
+                    
+                    if (response) {
+                        const botMessage = {
+                            from: to,
+                            text: response.text,
+                            time: Date.now(),
+                            buttons: response.buttons
+                        };
+                        
+                        const chatId = [from, to].sort().join('_');
+                        if (!App.chats[chatId]) {
+                            App.chats[chatId] = { user1: from, user2: to, messages: [] };
+                        }
+                        App.chats[chatId].messages.push(botMessage);
+                        saveToFirebase();
+                        loadMessages(to);
+                    }
                 } else {
                     const chatId = [from, to].sort().join('_');
                     if (!App.chats[chatId]) {
@@ -1684,7 +1856,9 @@
                 const fileInput = document.getElementById('fileUpload');
                 if (fileInput) fileInput.value = '';
                 
-                loadMessages(to);
+                if (!App.systemBots.includes(to)) {
+                    loadMessages(to);
+                }
                 updateChatList();
                 
             } catch (error) {
@@ -1707,10 +1881,10 @@
                 } else if (chatPartner === 'global') {
                     const msgs = App.globalMessages;
                     if (msgs && msgs[idx]) {
-                        // В глобальном чате: удалить может автор или верифицированный пользователь
                         if (msgs[idx].from === from || hasVerifiedBadge(from)) {
                             msgs.splice(idx, 1);
                             saveGlobalMessages();
+                            saveToFirebase();
                             showNotification('Удалено');
                         } else {
                             showNotification('Нет прав на удаление', 'error');
@@ -1847,18 +2021,15 @@
             
             const user = App.currentUser;
             
-            // Удаляем из pinned
             if (App.pinnedChats.includes(chat)) {
                 App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
             }
             
-            // Удаляем чат
             const chatId = [user, chat].sort().join('_');
             if (App.chats[chatId]) {
                 delete App.chats[chatId];
             }
             
-            // Если это канал - отписываемся
             if (App.channels[chat] && App.channels[chat].subscribers) {
                 App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user);
             }
@@ -1917,14 +2088,11 @@
                 return;
             }
             
-            // Забираем подарок у отправителя
             App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
             
-            // Добавляем получателю
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
             
-            // Создаем сообщение (без 🎁 в начале)
             const chatId = ensureChat(fromUser, toUser);
             if (chatId && App.chats[chatId]) {
                 App.chats[chatId].messages.push({
@@ -2088,7 +2256,6 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
             if (isOwn && !isBotUser) {
-                // Загрузка аватара из галереи
                 document.getElementById('profileAvatarUpload')?.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
@@ -2383,10 +2550,10 @@
                         avatar: null, 
                         stars: 0, 
                         gifts: [], 
-                        bio: 'Я бот',
+                        bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : '👆 Тапай и зарабатывай 💲!',
                         isBot: true,
                         verified: true,
-                        email: 'bot@yolk.com',
+                        email: `${bot}@yolk.com`,
                         emailVerified: true,
                         age: 99
                     };
@@ -2402,6 +2569,7 @@
         window.deleteMessage = window.deleteMessage || function() {};
         window.sendGiftToUser = window.sendGiftToUser || function() {};
         window.toggleLike = window.toggleLike || function() {};
+        window.sendBotCommand = window.sendBotCommand || function() {};
 
         // Запуск
         window.addEventListener('load', () => {
