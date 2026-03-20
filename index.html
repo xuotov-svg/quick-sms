@@ -276,7 +276,7 @@
         .verified-badge { 
             display: inline-block; 
             margin-left: 5px; 
-            color: #1da1f2; 
+            color: #00aa00; 
             font-size: 14px;
         }
         .email-badge {
@@ -365,7 +365,7 @@
         }
         .chat-header-info { display: flex; align-items: center; gap: 10px; }
         .chat-header-info strong { color: #000000; font-size: 16px; }
-        .verified-badge-header { color: #1da1f2; margin-left: 5px; font-size: 16px; }
+        .verified-badge-header { color: #00aa00; margin-left: 5px; font-size: 16px; }
         .chat-actions { display: flex; gap: 10px; }
         .tiny-btn { 
             background: #f0f0f0; 
@@ -595,7 +595,7 @@
             cursor: pointer;
             font-weight: 500;
         }
-        .profile-input-group { margin-bottom: 16px; }
+        .profile-input-group { margin-bottom: 16px; position: relative; }
         .profile-input-group label { 
             display: block; 
             margin-bottom: 6px; 
@@ -614,6 +614,23 @@
             color: #000000; 
             font-size: 14px; 
             outline: none; 
+        }
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .password-wrapper input {
+            flex: 1;
+            padding-right: 40px;
+        }
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            background: none;
+            border: none;
         }
         .profile-input-group input:disabled {
             background: #f0f0f0;
@@ -864,7 +881,7 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Инициализация EmailJS
+    // Инициализация EmailJS с публичным ключом
     emailjs.init("8oO0zcryCZDxWODG2");
 
     (function() {
@@ -878,7 +895,7 @@
             channels: {},
             pinnedChats: [],
             botState: {},
-            promoCodes: { 'durovcrow': 1000, 'durovsnow': 'verified' },
+            promoCodes: { 'yolk100': 100, 'yolk500': 500, 'yolkgold': 'verified' },
             sidebarOpen: false,
             dataLoaded: false,
             tempPhoto: null,
@@ -886,8 +903,8 @@
             pendingPasswordReset: null,
             pendingEmailVerification: null,
             savedMessages: {},
-            globalMessages: [], // Глобальный чат
-            tapBalances: {} // Внутренняя валюта для tap_bot
+            globalMessages: [],
+            tapBalances: {}
         };
 
         App.systemBots = ['@game_bot', '@tap_bot'];
@@ -899,6 +916,10 @@
         }
 
         function isValidUsername(str) {
+            return /^[a-zA-Z]{4,}$/.test(str);
+        }
+
+        function isValidChannelName(str) {
             return /^[a-zA-Z]{4,}$/.test(str);
         }
 
@@ -985,7 +1006,6 @@
 
         function saveGlobalMessages() {
             localStorage.setItem('yolk_global', JSON.stringify(App.globalMessages));
-            // Синхронизируем с Firebase для других устройств
             if (App.dataLoaded) {
                 database.ref('globalMessages').set(App.globalMessages).catch(e => console.error('Sync error:', e));
             }
@@ -1028,7 +1048,6 @@
                     if (data.globalMessages) App.globalMessages = data.globalMessages;
                     if (data.tapBalances) App.tapBalances = data.tapBalances;
                     
-                    // Кэшируем
                     localStorage.setItem('yolk_cache', JSON.stringify({
                         users: App.users,
                         chats: App.chats,
@@ -1041,7 +1060,6 @@
                     if (data.tapBalances) saveTapBalances();
                 }
                 
-                // Восстанавливаем сессию
                 const savedUser = localStorage.getItem('yolk_current_user');
                 const savedChat = localStorage.getItem('yolk_active_chat');
                 
@@ -1059,7 +1077,6 @@
             } catch (error) {
                 console.error('❌ Ошибка Firebase:', error);
                 
-                // Пробуем загрузить из кэша
                 const cachedData = localStorage.getItem('yolk_cache');
                 if (cachedData) {
                     try {
@@ -1122,7 +1139,6 @@
         function getChatListForUser(user) {
             let set = new Set(['saved', 'global']);
             
-            // Чаты с пользователями
             Object.keys(App.chats || {}).forEach(key => {
                 const c = App.chats[key];
                 if (c) {
@@ -1131,7 +1147,6 @@
                 }
             });
             
-            // Каналы, на которые подписан
             Object.keys(App.channels || {}).forEach(channel => {
                 if (App.channels[channel].subscribers?.includes(user)) {
                     set.add(channel);
@@ -1157,7 +1172,7 @@
                 return true;
             } catch (error) {
                 console.error('Ошибка отправки email:', error);
-                showNotification('Ошибка отправки кода. Проверьте EmailJS настройки', 'error');
+                showNotification('Ошибка отправки кода. Проверьте настройки EmailJS', 'error');
                 return false;
             }
         }
@@ -1226,7 +1241,7 @@
         function handleGameBot(message, fromUser) {
             if (message.text && message.text.includes('КРУТИТЬ')) {
                 if (App.users[fromUser].stars < 5) {
-                    return { text: `❌ Недостаточно 🐣! Нужно 5 🐣 для игры.`, buttons: [] };
+                    return { text: `❌ Недостаточно 🐣! Нужно 5 🐣 для игры.`, buttons: ['КРУТИТЬ (5🐣)'] };
                 }
                 
                 App.users[fromUser].stars -= 5;
@@ -1244,15 +1259,15 @@
                 
                 saveToFirebase();
                 
-                const resultText = results.join(' ');
+                const resultText = `[${results[0]}] [${results[1]}] [${results[2]}]`;
                 if (win > 0) {
-                    return { text: `🎰 РЕЗУЛЬТАТ: ${resultText}\n\n✨ ПОБЕДА! +${win} 🐣 ✨\nВаш баланс: ${App.users[fromUser].stars} 🐣`, buttons: [] };
+                    return { text: `${resultText}\n\n✨ ПОБЕДА! +${win} 🐣 ✨\nБаланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
                 } else {
-                    return { text: `🎰 РЕЗУЛЬТАТ: ${resultText}\n\n😢 Нет совпадений...\nВаш баланс: ${App.users[fromUser].stars} 🐣`, buttons: [] };
+                    return { text: `${resultText}\n\n😢 Нет совпадений...\nБаланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
                 }
             }
             
-            return { text: `🎰 ДОБРО ПОЖАЛОВАТЬ В ИГРОВОЙ АВТОМАТ!\n\nПравила: нажми "КРУТИТЬ (5🐣)" и выиграй 15🐣 если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\nВаш баланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
+            return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\nПравила: нажми "КРУТИТЬ (5🐣)" и выиграй 15🐣 если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\n🐣 Баланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
         }
         
         function handleTapBot(message, fromUser) {
@@ -1265,7 +1280,7 @@
                 return { text: `👆 Вы тапнули и получили +${increase} 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲`, buttons: ['ТАПНУТЬ (👆)'] };
             }
             
-            return { text: `🤖 TAP БОТ\n\nПросто тапай и зарабатывай 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲\n\nНажми на кнопку ниже, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)'] };
+            return { text: `🤖 TAP БОТ 🤖\n\nПросто тапай и зарабатывай 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲\n\nНажми на кнопку ниже, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)'] };
         }
 
         // ========== ОСНОВНОЙ РЕНДЕР ==========
@@ -1434,7 +1449,7 @@
                             ${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}
                         </div>
                         <div>
-                            <span class="username-display">${user}${userData.verified ? ' ✅' : ''}</span>
+                            <span class="username-display">${user}${userData.verified ? ' ✔️' : ''}</span>
                             ${userData.emailVerified ? '<div class="email-badge">📧 подтвержден</div>' : ''}
                             ${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}
                             <div class="star-balance">🐣 ${userData.stars || 0}</div>
@@ -1450,11 +1465,11 @@
                     <div class="chat-header">
                         <div class="chat-header-info">
                             <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
-                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : chatPartner)}${App.users[chatPartner]?.verified ? ' ✅' : ''}</strong>
+                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : chatPartner)}${App.users[chatPartner]?.verified ? ' ✔️' : ''}</strong>
                             ${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                         </div>
                         <div class="chat-actions">
-                            ${chatPartner !== 'saved' && chatPartner !== 'global' ? `
+                            ${chatPartner !== 'saved' && chatPartner !== 'global' && !isBotChat ? `
                                 <button class="tiny-btn" id="viewProfileBtn">👤</button>
                             ` : ''}
                             ${isChannel && chatPartner !== 'saved' ? 
@@ -1483,7 +1498,10 @@
                 avatarHtml = '<div class="chat-avatar">🌍</div>';
             } else if (u !== 'saved') {
                 if (App.channels[u]) {
-                    avatarHtml = '<div class="chat-avatar">📢</div>';
+                    const channelAvatar = App.channels[u]?.avatar;
+                    avatarHtml = channelAvatar ? 
+                        `<div class="chat-avatar"><img src="${channelAvatar}" class="chat-avatar-img"></div>` : 
+                        '<div class="chat-avatar">📢</div>';
                 } else if (App.systemBots.includes(u)) {
                     if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>';
                     else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>';
@@ -1501,7 +1519,7 @@
             return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
                 ${avatarHtml}
                 <div style="flex:1; color:#000000;">
-                    <div>${name}${userData.verified ? ' ✅' : ''}</div>
+                    <div>${name}${userData.verified ? ' ✔️' : ''}</div>
                     ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                 </div>
                 ${u !== 'saved' && u !== 'global' ? `
@@ -1514,16 +1532,17 @@
         function renderMessage(msg, idx, currentUser, chatPartner) {
             const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
             const isGlobal = chatPartner === 'global';
+            const isChannel = App.channels[chatPartner] ? true : false;
             const isGift = msg.gift ? true : false;
             const isBotMsg = App.systemBots.includes(msg.from);
             
             let canDelete = false;
             if (isGlobal) {
                 canDelete = (msg.from === currentUser) || hasVerifiedBadge(currentUser);
+            } else if (isChannel) {
+                canDelete = App.channels[chatPartner]?.owner === currentUser;
             } else if (chatPartner === 'saved') {
                 canDelete = true;
-            } else if (App.channels[chatPartner]) {
-                canDelete = App.channels[chatPartner]?.owner === currentUser;
             } else if (App.systemBots.includes(chatPartner)) {
                 canDelete = false;
             } else {
@@ -1535,7 +1554,7 @@
             const userLiked = msg.likes && msg.likes[currentUser];
             
             let senderName = msg.from;
-            let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
+            let verifiedBadge = App.users[msg.from]?.verified ? ' ✔️' : '';
             
             let messageText = msg.text || '';
             if (isGift && messageText.startsWith('🎁 ')) {
@@ -1553,8 +1572,8 @@
                 ${buttonsHtml}
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-                    ${isGlobal ? `
-                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${idx}', event)">
+                    ${(isGlobal || isChannel) ? `
+                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">
                             ❤️ <span>${likesCount}</span>
                         </button>
                     ` : '<div></div>'}
@@ -1635,7 +1654,6 @@
                     html += renderMessage(msg, idx, App.currentUser, chatPartner);
                 });
             } else {
-                // Приветственное сообщение для ботов
                 if (chatPartner === '@game_bot') {
                     const botMsg = handleGameBot({ text: '' }, App.currentUser);
                     html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
@@ -1655,22 +1673,37 @@
         }
 
         // ========== ЛАЙКИ ==========
-        window.toggleLike = function(messageIdx, event) {
+        window.toggleLike = function(chatPartner, messageIdx, event) {
             event.stopPropagation();
-            if (!App.globalMessages[messageIdx]) return;
             
-            const msg = App.globalMessages[messageIdx];
-            if (!msg.likes) msg.likes = {};
-            
-            if (msg.likes[App.currentUser]) {
-                delete msg.likes[App.currentUser];
-            } else {
-                msg.likes[App.currentUser] = true;
+            if (chatPartner === 'global') {
+                if (!App.globalMessages[messageIdx]) return;
+                const msg = App.globalMessages[messageIdx];
+                if (!msg.likes) msg.likes = {};
+                
+                if (msg.likes[App.currentUser]) {
+                    delete msg.likes[App.currentUser];
+                } else {
+                    msg.likes[App.currentUser] = true;
+                }
+                
+                saveGlobalMessages();
+                saveToFirebase();
+                loadMessages('global');
+            } else if (App.channels[chatPartner]) {
+                if (!App.channels[chatPartner].messages[messageIdx]) return;
+                const msg = App.channels[chatPartner].messages[messageIdx];
+                if (!msg.likes) msg.likes = {};
+                
+                if (msg.likes[App.currentUser]) {
+                    delete msg.likes[App.currentUser];
+                } else {
+                    msg.likes[App.currentUser] = true;
+                }
+                
+                saveToFirebase();
+                loadMessages(chatPartner);
             }
-            
-            saveGlobalMessages();
-            saveToFirebase();
-            loadMessages('global');
         };
 
         // ========== КОМАНДЫ БОТОВ ==========
@@ -1720,7 +1753,11 @@
             if (viewProfileBtn) {
                 viewProfileBtn.addEventListener('click', () => {
                     if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && !App.systemBots.includes(App.activeChat)) {
-                        openProfileModal(App.activeChat);
+                        if (App.channels[App.activeChat]) {
+                            openChannelModal(App.activeChat);
+                        } else {
+                            openProfileModal(App.activeChat);
+                        }
                     }
                 });
             }
@@ -1815,10 +1852,9 @@
                         return;
                     }
                     if (!App.channels[to].messages) App.channels[to].messages = [];
-                    App.channels[to].messages.push({ ...message, from: to });
+                    App.channels[to].messages.push(message);
                     saveToFirebase();
                 } else if (App.systemBots.includes(to)) {
-                    // Обработка команд ботов
                     let response;
                     if (to === '@game_bot') {
                         response = handleGameBot({ text: text }, from);
@@ -2110,6 +2146,88 @@
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
+        // ========== МОДАЛЬНОЕ ОКНО КАНАЛА ==========
+        function openChannelModal(channelName) {
+            const channel = App.channels[channelName];
+            if (!channel) return;
+            
+            const isOwner = channel.owner === App.currentUser;
+            
+            const modalHtml = `<div class="modal-overlay" id="channelModalOverlay">
+                <div class="profile-modal">
+                    <h3>📢 КАНАЛ ${channelName}</h3>
+                    
+                    <div class="profile-avatar-section">
+                        <img src="${channel.avatar || 'https://via.placeholder.com/100?text=📢'}" class="profile-avatar-preview" id="channelAvatarPreview">
+                        ${isOwner ? `
+                        <div class="profile-avatar-upload">
+                            <input type="file" id="channelAvatarUpload" accept="image/*">
+                            <label for="channelAvatarUpload">📷 ЗАГРУЗИТЬ АВАТАР</label>
+                        </div>` : ''}
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>НАЗВАНИЕ КАНАЛА</label>
+                        <input type="text" value="${channelName}" disabled>
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>ВЛАДЕЛЕЦ</label>
+                        <input type="text" value="${channel.owner}" disabled>
+                    </div>
+                    
+                    <div class="profile-input-group">
+                        <label>ОПИСАНИЕ</label>
+                        ${isOwner ? 
+                            `<textarea id="channelDescInput" maxlength="200">${channel.description || ''}</textarea>` :
+                            `<div class="profile-password-row">${channel.description || '—'}</div>`
+                        }
+                    </div>
+                    
+                    <div class="star-balance-large">👥 ПОДПИСЧИКОВ: ${channel.subscribers?.length || 0}</div>
+                    
+                    <div class="profile-actions">
+                        ${isOwner ? '<button class="profile-btn" id="saveChannelBtn">СОХРАНИТЬ</button>' : ''}
+                        <button class="profile-btn secondary" id="closeChannelModalBtn">ЗАКРЫТЬ</button>
+                    </div>
+                </div>
+            </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            if (isOwner) {
+                let tempAvatar = null;
+                
+                document.getElementById('channelAvatarUpload')?.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        document.getElementById('channelAvatarPreview').src = ev.target.result;
+                        tempAvatar = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                document.getElementById('saveChannelBtn')?.addEventListener('click', () => {
+                    const newDesc = document.getElementById('channelDescInput')?.value.trim();
+                    
+                    if (tempAvatar) App.channels[channelName].avatar = tempAvatar;
+                    if (newDesc !== undefined) App.channels[channelName].description = newDesc;
+                    
+                    saveToFirebase();
+                    document.getElementById('channelModalOverlay').remove();
+                    render();
+                    showNotification('Канал обновлен');
+                });
+            }
+            
+            document.getElementById('closeChannelModalBtn').addEventListener('click', () => {
+                document.getElementById('channelModalOverlay').remove();
+            });
+        }
+
         // ========== ПРОФИЛЬ ==========
         window.openProfileModal = function(username) {
             const userData = App.users[username] || { 
@@ -2130,7 +2248,7 @@
             
             const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
                 <div class="profile-modal">
-                    <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? ' ✅' : ''}</h3>
+                    <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? ' ✔️' : ''}</h3>
                     
                     <div class="profile-avatar-section">
                         <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview" id="profileAvatarPreview">
@@ -2166,7 +2284,10 @@
                     ${isOwn ? `
                     <div class="profile-input-group">
                         <label>ПАРОЛЬ</label>
-                        <input type="text" id="modalPasswordInput" value="${userData.password || ''}">
+                        <div class="password-wrapper">
+                            <input type="password" id="modalPasswordInput" value="${userData.password || ''}">
+                            <button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button>
+                        </div>
                     </div>
                     
                     <div class="profile-input-group">
@@ -2193,21 +2314,21 @@
                     ` : ''}
 
                     <div class="star-balance-large">🐣 ${userData.stars || 0} ЯИЦ</div>
-
-                    ${isOwn ? `
-                    <div class="tabs">
-                        <div class="tab active" data-tab="gifts">ПОДАРКИ</div>
-                        <div class="tab" data-tab="shop">МАГАЗИН</div>
-                        <div class="tab" data-tab="channel">КАНАЛ</div>
-                    </div>
-
-                    <div id="tabGifts" class="tab-content">
+                    
+                    <div class="profile-input-group">
+                        <label>ПОДАРКИ</label>
                         <div class="gifts-collection">
                             ${giftsList || 'НЕТ ПОДАРКОВ'}
                         </div>
                     </div>
 
-                    <div id="tabShop" class="tab-content hidden">
+                    ${isOwn ? `
+                    <div class="tabs">
+                        <div class="tab active" data-tab="shop">МАГАЗИН</div>
+                        <div class="tab" data-tab="channel">КАНАЛ</div>
+                    </div>
+
+                    <div id="tabShop" class="tab-content">
                         <div class="shop-section">
                             <h4>КУПИТЬ ПОДАРКИ</h4>
                             ${[
@@ -2234,7 +2355,7 @@
                         <div class="shop-section">
                             <h4>СОЗДАТЬ КАНАЛ (450🐣)</h4>
                             <div class="profile-input-group">
-                                <input type="text" id="channelNameInput" placeholder="@channel">
+                                <input type="text" id="channelNameInput" placeholder="название (только англ буквы, минимум 4)">
                             </div>
                             <div class="profile-input-group">
                                 <textarea id="channelDescInput" placeholder="Описание..."></textarea>
@@ -2254,6 +2375,18 @@
             </div>`;
             
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            window.togglePasswordVisibility = function() {
+                const passInput = document.getElementById('modalPasswordInput');
+                const btn = document.querySelector('.toggle-password');
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    btn.textContent = '🙈';
+                } else {
+                    passInput.type = 'password';
+                    btn.textContent = '👁️';
+                }
+            };
             
             if (isOwn && !isBotUser) {
                 document.getElementById('profileAvatarUpload')?.addEventListener('change', (e) => {
@@ -2283,7 +2416,6 @@
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                         e.target.classList.add('active');
                         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                        if (e.target.dataset.tab === 'gifts') document.getElementById('tabGifts').classList.remove('hidden');
                         if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden');
                         if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden');
                     });
@@ -2359,9 +2491,9 @@
                     const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
                     
                     if (App.promoCodes[code] !== undefined) {
-                        if (code === 'durovsnow') {
+                        if (code === 'yolkgold') {
                             App.users[App.currentUser].verified = true;
-                            showNotification('✅ ВЫ ПОЛУЧИЛИ СИНЮЮ ГАЛОЧКУ!');
+                            showNotification('✔️ ВЫ ПОЛУЧИЛИ ОФИЦИАЛЬНУЮ ГАЛОЧКУ!');
                         } else {
                             App.users[App.currentUser].stars += App.promoCodes[code];
                             showNotification(`+${App.promoCodes[code]}🐣`);
@@ -2376,7 +2508,7 @@
                 });
 
                 document.getElementById('createChannelBtn')?.addEventListener('click', () => {
-                    const channelName = document.getElementById('channelNameInput').value.trim();
+                    let channelName = document.getElementById('channelNameInput').value.trim();
                     const channelDesc = document.getElementById('channelDescInput').value.trim();
                     
                     if (!channelName) { 
@@ -2384,7 +2516,12 @@
                         return; 
                     }
                     
-                    const cleanName = channelName.startsWith('@') ? channelName : '@' + channelName;
+                    if (!isValidChannelName(channelName)) {
+                        showNotification('Название канала: только англ буквы, минимум 4', 'error');
+                        return;
+                    }
+                    
+                    const cleanName = '@' + channelName;
                     
                     if (App.users[cleanName] || App.channels[cleanName]) { 
                         showNotification('Такое имя уже занято', 'error');
