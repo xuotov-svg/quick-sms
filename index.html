@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>quick-sms · messenger</title>
+    <title>Yolk · messenger</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         body { 
@@ -424,7 +424,10 @@
             50% { box-shadow: 0 0 15px #d4af37; }
             100% { box-shadow: 0 0 5px #d4af37; }
         }
-        .game-message { background: #f0f0f0; border: 2px solid #d4af37; }
+        .global-message { 
+            background: #f0f8ff; 
+            border: 2px solid #d4af37;
+        }
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
         .msg-actions button { 
             background: none; 
@@ -437,6 +440,19 @@
             font-weight: 500;
         }
         .msg-actions button:hover { background: #ff0000; color: white; border-color: #ff0000; }
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .like-btn.liked {
+            color: #ff4444;
+        }
         .media-preview { max-width: 150px; max-height: 150px; border-radius: 8px; margin-top: 4px; border: 1px solid #000000; }
         .inline-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
         .inline-btn { 
@@ -558,6 +574,22 @@
             background: #e6d5a8; 
             border: 4px solid #000000; 
             object-fit: cover; 
+        }
+        .profile-avatar-upload {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .profile-avatar-upload input[type="file"] {
+            display: none;
+        }
+        .profile-avatar-upload label {
+            background: var(--accent);
+            border: 1px solid #000000;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
         }
         .profile-input-group { margin-bottom: 16px; }
         .profile-input-group label { 
@@ -839,7 +871,8 @@
             pending2FA: null,
             pendingPasswordReset: null,
             pendingEmailVerification: null,
-            savedMessages: {}
+            savedMessages: {},
+            globalMessages: [] // Глобальный чат
         };
 
         App.systemBots = ['@game_bot', '@ggsuw'];
@@ -859,6 +892,10 @@
 
         function isBot(username) {
             return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot);
+        }
+
+        function hasVerifiedBadge(username) {
+            return App.users[username] && App.users[username].verified;
         }
 
         function initUserStars(user) {
@@ -887,7 +924,7 @@
             const loadingDiv = document.createElement('div');
             loadingDiv.className = 'loading-screen';
             loadingDiv.id = 'loadingScreen';
-            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>quick-sms</div>';
+            loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>Yolk</div>';
             document.body.appendChild(loadingDiv);
         }
 
@@ -899,7 +936,7 @@
         // ========== РАБОТА С ДАННЫМИ ==========
         function loadSavedMessages() {
             if (!App.currentUser) return;
-            const saved = localStorage.getItem('quick_saved_' + App.currentUser);
+            const saved = localStorage.getItem('yolk_saved_' + App.currentUser);
             if (saved) {
                 try {
                     App.savedMessages[App.currentUser] = JSON.parse(saved);
@@ -913,8 +950,25 @@
 
         function saveSavedMessages() {
             if (App.currentUser) {
-                localStorage.setItem('quick_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || []));
+                localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || []));
             }
+        }
+
+        function loadGlobalMessages() {
+            const global = localStorage.getItem('yolk_global');
+            if (global) {
+                try {
+                    App.globalMessages = JSON.parse(global);
+                } catch(e) {
+                    App.globalMessages = [];
+                }
+            } else {
+                App.globalMessages = [];
+            }
+        }
+
+        function saveGlobalMessages() {
+            localStorage.setItem('yolk_global', JSON.stringify(App.globalMessages));
         }
 
         async function loadFromFirebase() {
@@ -933,7 +987,7 @@
                     if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
                     
                     // Кэшируем
-                    localStorage.setItem('quick_cache', JSON.stringify({
+                    localStorage.setItem('yolk_cache', JSON.stringify({
                         users: App.users,
                         chats: App.chats,
                         blocked: App.blocked,
@@ -943,13 +997,14 @@
                 }
                 
                 // Восстанавливаем сессию
-                const savedUser = localStorage.getItem('quick_current_user');
-                const savedChat = localStorage.getItem('quick_active_chat');
+                const savedUser = localStorage.getItem('yolk_current_user');
+                const savedChat = localStorage.getItem('yolk_active_chat');
                 
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
-                    App.activeChat = savedChat && (savedChat === 'saved' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
+                    App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'global' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
                     loadSavedMessages();
+                    loadGlobalMessages();
                 }
                 
                 App.dataLoaded = true;
@@ -959,7 +1014,7 @@
                 console.error('❌ Ошибка Firebase:', error);
                 
                 // Пробуем загрузить из кэша
-                const cachedData = localStorage.getItem('quick_cache');
+                const cachedData = localStorage.getItem('yolk_cache');
                 if (cachedData) {
                     try {
                         const cache = JSON.parse(cachedData);
@@ -971,11 +1026,12 @@
                     } catch(e) {}
                 }
                 
-                const savedUser = localStorage.getItem('quick_current_user');
+                const savedUser = localStorage.getItem('yolk_current_user');
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
-                    App.activeChat = localStorage.getItem('quick_active_chat') || 'saved';
+                    App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
                     loadSavedMessages();
+                    loadGlobalMessages();
                 }
                 
                 App.dataLoaded = true;
@@ -997,7 +1053,7 @@
             database.ref().set(firebaseData)
                 .then(() => {
                     console.log('💾 Сохранено в Firebase');
-                    localStorage.setItem('quick_cache', JSON.stringify(firebaseData));
+                    localStorage.setItem('yolk_cache', JSON.stringify(firebaseData));
                 })
                 .catch(error => {
                     console.error('❌ Ошибка сохранения:', error);
@@ -1005,7 +1061,7 @@
         }
 
         function ensureChat(userA, userB) {
-            if (!userA || !userB || userA === userB || userB === 'saved') return;
+            if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'global') return;
             const chatId = [userA, userB].sort().join('_');
             if (!App.chats[chatId]) {
                 App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
@@ -1015,7 +1071,7 @@
         }
 
         function getChatListForUser(user) {
-            let set = new Set(['saved']);
+            let set = new Set(['saved', 'global']);
             
             // Чаты с пользователями
             Object.keys(App.chats || {}).forEach(key => {
@@ -1145,7 +1201,7 @@
         function renderAuth() {
             return `<div class="auth-container">
                 <div class="auth-box">
-                    <h2>quick-sms</h2>
+                    <h2>Yolk</h2>
                     <div id="authForms">
                         <div id="loginForm">
                             <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div>
@@ -1209,8 +1265,9 @@
                 
                 function loginSuccess() {
                     App.currentUser = clean;
-                    localStorage.setItem('quick_current_user', clean);
+                    localStorage.setItem('yolk_current_user', clean);
                     loadSavedMessages();
+                    loadGlobalMessages();
                     render();
                 }
                 
@@ -1258,7 +1315,7 @@
                 App.savedMessages[clean] = [];
                 saveSavedMessages();
                 
-                localStorage.setItem('quick_current_user', clean);
+                localStorage.setItem('yolk_current_user', clean);
                 saveToFirebase();
                 render();
             });
@@ -1270,7 +1327,8 @@
             const userData = App.users[user] || {};
             const chatPartner = App.activeChat || 'saved';
             const isChannel = App.channels[chatPartner] ? true : false;
-            const canWrite = chatPartner === 'saved' || (isChannel && App.channels[chatPartner]?.owner === user) || (!isChannel && chatPartner !== 'saved');
+            const isGlobal = chatPartner === 'global';
+            const canWrite = chatPartner === 'saved' || chatPartner === 'global' || (isChannel && App.channels[chatPartner]?.owner === user) || (!isChannel && chatPartner !== 'saved');
 
             return `<div class="main-container">
                 <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
@@ -1282,7 +1340,7 @@
                             <span class="username-display">${user}${userData.verified ? ' ✅' : ''}</span>
                             ${userData.emailVerified ? '<div class="email-badge">📧 подтвержден</div>' : ''}
                             ${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}
-                            <div class="star-balance">⭐️ ${userData.stars || 0}</div>
+                            <div class="star-balance">🐣 ${userData.stars || 0}</div>
                         </div>
                     </div>
                     <div class="search-add">
@@ -1295,22 +1353,22 @@
                     <div class="chat-header">
                         <div class="chat-header-info">
                             <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
-                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : chatPartner}${App.users[chatPartner]?.verified ? ' ✅' : ''}</strong>
+                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : chatPartner)}${App.users[chatPartner]?.verified ? ' ✅' : ''}</strong>
                             ${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                         </div>
                         <div class="chat-actions">
-                            ${chatPartner !== 'saved' ? `
+                            ${chatPartner !== 'saved' && chatPartner !== 'global' ? `
                                 <button class="tiny-btn" id="viewProfileBtn">👤</button>
                             ` : ''}
                             ${isChannel && chatPartner !== 'saved' ? 
                                 `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
-                            ${chatPartner !== 'saved' && !isChannel && !isBot(chatPartner) ? 
+                            ${chatPartner !== 'saved' && chatPartner !== 'global' && !isChannel && !isBot(chatPartner) ? 
                                 `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
                         </div>
                     </div>
                     <div class="messages-container" id="messageList"></div>
                     <div class="input-area">
-                        <input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus>
+                        <input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (chatPartner === 'global' ? 'СООБЩЕНИЕ ВСЕМ...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...'))}" autofocus>
                         <label for="fileUpload" class="file-label">📷</label>
                         <input type="file" id="fileUpload" accept="image/*">
                         <button class="send-btn" id="sendMsgBtn">➤</button>
@@ -1320,11 +1378,13 @@
         }
 
         function renderChatItem(u, active, currentUser) {
-            const name = u === 'saved' ? '📎 ИЗБРАННОЕ' : u;
+            let name = u === 'saved' ? '📎 ИЗБРАННОЕ' : (u === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : u);
             const isPinned = App.pinnedChats.includes(u);
             let avatarHtml = '<div class="chat-avatar">📁</div>';
             
-            if (u !== 'saved') {
+            if (u === 'global') {
+                avatarHtml = '<div class="chat-avatar">🌍</div>';
+            } else if (u !== 'saved') {
                 if (App.channels[u]) {
                     avatarHtml = '<div class="chat-avatar">📢</div>';
                 } else {
@@ -1343,7 +1403,7 @@
                     <div>${name}${userData.verified ? ' ✅' : ''}</div>
                     ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                 </div>
-                ${u !== 'saved' ? `
+                ${u !== 'saved' && u !== 'global' ? `
                     <span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span>
                     <span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>
                 ` : ''}
@@ -1352,21 +1412,46 @@
 
         function renderMessage(msg, idx, currentUser, chatPartner) {
             const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
-            const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview">` : '';
+            const isGlobal = chatPartner === 'global';
             const isGift = msg.gift ? true : false;
-            const isGame = msg.game ? true : false;
-            const canDelete = isMe || (App.channels[chatPartner] && App.channels[chatPartner]?.owner === currentUser);
+            
+            let canDelete = false;
+            if (isGlobal) {
+                // В глобальном чате: свой пост может удалить только автор или верифицированный пользователь
+                canDelete = (msg.from === currentUser) || hasVerifiedBadge(currentUser);
+            } else if (chatPartner === 'saved') {
+                canDelete = true;
+            } else if (App.channels[chatPartner]) {
+                canDelete = App.channels[chatPartner]?.owner === currentUser;
+            } else {
+                canDelete = isMe;
+            }
+            
+            const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview">` : '';
+            const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
+            const userLiked = msg.likes && msg.likes[currentUser];
             
             let senderName = msg.from;
             let verifiedBadge = App.users[msg.from]?.verified ? ' ✅' : '';
-            let emailBadge = App.users[msg.from]?.emailVerified ? ' 📧' : '';
-            let ageBadge = App.users[msg.from]?.age ? ` (${App.users[msg.from].age})` : '';
             
-            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGame ? 'game-message' : ''}">
-                ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${verifiedBadge}${emailBadge}${ageBadge}</span></small><br>` : ''}
-                <div style="color:#000000;">${msg.text || ''}${mediaHtml}</div>
+            let messageText = msg.text || '';
+            // Убираем эмодзи 🎁 из текста подарка если он там есть
+            if (isGift && messageText.startsWith('🎁 ')) {
+                messageText = messageText.substring(2);
+            }
+            
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''}">
+                ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${verifiedBadge}</span></small><br>` : ''}
+                <div style="color:#000000;">${messageText}${mediaHtml}</div>
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
-                ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                    ${isGlobal ? `
+                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${idx}', event)">
+                            ❤️ <span>${likesCount}</span>
+                        </button>
+                    ` : '<div></div>'}
+                    ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
+                </div>
             </div>`;
         }
 
@@ -1377,9 +1462,10 @@
             let chatsList = getChatListForUser(App.currentUser);
             
             const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
-            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved');
+            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'global');
             const saved = chatsList.includes('saved') ? ['saved'] : [];
-            const orderedList = [...saved, ...pinned, ...unpinned];
+            const global = chatsList.includes('global') ? ['global'] : [];
+            const orderedList = [...saved, ...global, ...pinned, ...unpinned];
             
             let html = '';
             orderedList.forEach(chat => {
@@ -1403,7 +1489,7 @@
                     }
                     
                     App.activeChat = chatId;
-                    localStorage.setItem('quick_active_chat', chatId);
+                    localStorage.setItem('yolk_active_chat', chatId);
                     
                     if (window.innerWidth < 768) {
                         App.sidebarOpen = false;
@@ -1426,6 +1512,8 @@
             
             if (chatPartner === 'saved') {
                 messages = App.savedMessages[App.currentUser] || [];
+            } else if (chatPartner === 'global') {
+                messages = App.globalMessages || [];
             } else if (App.channels[chatPartner]) {
                 messages = App.channels[chatPartner].messages || [];
             } else {
@@ -1450,6 +1538,24 @@
             }, 100);
         }
 
+        // ========== ЛАЙКИ ==========
+        window.toggleLike = function(messageIdx, event) {
+            event.stopPropagation();
+            if (!App.globalMessages[messageIdx]) return;
+            
+            const msg = App.globalMessages[messageIdx];
+            if (!msg.likes) msg.likes = {};
+            
+            if (msg.likes[App.currentUser]) {
+                delete msg.likes[App.currentUser];
+            } else {
+                msg.likes[App.currentUser] = true;
+            }
+            
+            saveGlobalMessages();
+            loadMessages('global');
+        };
+
         // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
         function attachMainEvents() {
             const backBtn = document.getElementById('backBtn');
@@ -1468,7 +1574,7 @@
             const viewProfileBtn = document.getElementById('viewProfileBtn');
             if (viewProfileBtn) {
                 viewProfileBtn.addEventListener('click', () => {
-                    if (App.activeChat && App.activeChat !== 'saved') {
+                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global') {
                         openProfileModal(App.activeChat);
                     }
                 });
@@ -1545,8 +1651,7 @@
                     text: text || '', 
                     time: Date.now(), 
                     photo: App.tempPhoto || null,
-                    gift: false,
-                    game: false
+                    gift: false
                 };
                 
                 if (to === 'saved') {
@@ -1554,6 +1659,9 @@
                     App.savedMessages[from].push(message);
                     saveSavedMessages();
                     showNotification('Сохранено в избранное');
+                } else if (to === 'global') {
+                    App.globalMessages.push(message);
+                    saveGlobalMessages();
                 } else if (App.channels[to]) {
                     if (App.channels[to].owner !== from) {
                         showNotification('Только владелец может писать в канал', 'error');
@@ -1595,6 +1703,19 @@
                         msgs.splice(idx, 1);
                         saveSavedMessages();
                         showNotification('Удалено');
+                    }
+                } else if (chatPartner === 'global') {
+                    const msgs = App.globalMessages;
+                    if (msgs && msgs[idx]) {
+                        // В глобальном чате: удалить может автор или верифицированный пользователь
+                        if (msgs[idx].from === from || hasVerifiedBadge(from)) {
+                            msgs.splice(idx, 1);
+                            saveGlobalMessages();
+                            showNotification('Удалено');
+                        } else {
+                            showNotification('Нет прав на удаление', 'error');
+                            return;
+                        }
                     }
                 } else if (App.channels[chatPartner]) {
                     if (App.channels[chatPartner].owner !== from) {
@@ -1639,7 +1760,7 @@
             if (App.systemBots.includes(query)) {
                 ensureChat(App.currentUser, query);
                 App.activeChat = query;
-                localStorage.setItem('quick_active_chat', query);
+                localStorage.setItem('yolk_active_chat', query);
                 
                 if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
@@ -1655,7 +1776,7 @@
                 }
                 
                 App.activeChat = query;
-                localStorage.setItem('quick_active_chat', query);
+                localStorage.setItem('yolk_active_chat', query);
                 
                 if (window.innerWidth < 768) App.sidebarOpen = false;
                 document.getElementById('searchUserInput').value = '';
@@ -1674,7 +1795,7 @@
             
             ensureChat(App.currentUser, query);
             App.activeChat = query;
-            localStorage.setItem('quick_active_chat', query);
+            localStorage.setItem('yolk_active_chat', query);
             
             if (window.innerWidth < 768) {
                 App.sidebarOpen = false;
@@ -1744,7 +1865,7 @@
             
             if (App.activeChat === chat) {
                 App.activeChat = 'saved';
-                localStorage.setItem('quick_active_chat', 'saved');
+                localStorage.setItem('yolk_active_chat', 'saved');
             }
             
             saveToFirebase();
@@ -1803,12 +1924,12 @@
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
             
-            // Создаем сообщение
+            // Создаем сообщение (без 🎁 в начале)
             const chatId = ensureChat(fromUser, toUser);
             if (chatId && App.chats[chatId]) {
                 App.chats[chatId].messages.push({
                     from: fromUser,
-                    text: `🎁 ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
+                    text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
                     time: Date.now(),
                     gift: true
                 });
@@ -1844,11 +1965,11 @@
                     <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? ' ✅' : ''}</h3>
                     
                     <div class="profile-avatar-section">
-                        <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview">
+                        <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview" id="profileAvatarPreview">
                         ${isOwn && !isBotUser ? `
-                        <div class="profile-input-group">
-                            <label>ССЫЛКА НА АВАТАР</label>
-                            <input type="text" id="modalAvatarInput" value="${userData.avatar || ''}">
+                        <div class="profile-avatar-upload">
+                            <input type="file" id="profileAvatarUpload" accept="image/*">
+                            <label for="profileAvatarUpload">📷 ЗАГРУЗИТЬ ФОТО</label>
                         </div>` : ''}
                     </div>
                     
@@ -1903,7 +2024,7 @@
                     </div>
                     ` : ''}
 
-                    <div class="star-balance-large">⭐️ ${userData.stars || 0} ЗВЕЗД</div>
+                    <div class="star-balance-large">🐣 ${userData.stars || 0} ЯИЦ</div>
 
                     ${isOwn ? `
                     <div class="tabs">
@@ -1928,7 +2049,7 @@
                                 { emoji: '🍬', price: 25 }
                             ].map(item => `
                                 <div class="shop-item">
-                                    <span>${item.emoji} ${item.price}⭐️</span>
+                                    <span>${item.emoji} ${item.price}🐣</span>
                                     <button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button>
                                 </div>
                             `).join('')}
@@ -1943,7 +2064,7 @@
                     
                     <div id="tabChannel" class="tab-content hidden">
                         <div class="shop-section">
-                            <h4>СОЗДАТЬ КАНАЛ (450⭐️)</h4>
+                            <h4>СОЗДАТЬ КАНАЛ (450🐣)</h4>
                             <div class="profile-input-group">
                                 <input type="text" id="channelNameInput" placeholder="@channel">
                             </div>
@@ -1959,7 +2080,7 @@
                     <div class="profile-actions" style="margin-top: 20px;">
                         ${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}
                         <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
-                        ${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">🚪 ВЫЙТИ</button>' : ''}
+                        ${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}
                     </div>
                 </div>
             </div>`;
@@ -1967,13 +2088,26 @@
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
             if (isOwn && !isBotUser) {
+                // Загрузка аватара из галереи
+                document.getElementById('profileAvatarUpload')?.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        document.getElementById('profileAvatarPreview').src = ev.target.result;
+                        App.tempAvatar = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+
                 document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
                     App.currentUser = null;
                     App.activeChat = null;
                     App.savedMessages = {};
-                    localStorage.removeItem('quick_current_user');
-                    localStorage.removeItem('quick_active_chat');
+                    localStorage.removeItem('yolk_current_user');
+                    localStorage.removeItem('yolk_active_chat');
                     render();
                 });
 
@@ -2049,7 +2183,7 @@
                             openProfileModal(user);
                             showNotification(`Куплен подарок ${gift}`);
                         } else {
-                            showNotification('Недостаточно ⭐️', 'error');
+                            showNotification('Недостаточно 🐣', 'error');
                         }
                     });
                 });
@@ -2063,7 +2197,7 @@
                             showNotification('✅ ВЫ ПОЛУЧИЛИ СИНЮЮ ГАЛОЧКУ!');
                         } else {
                             App.users[App.currentUser].stars += App.promoCodes[code];
-                            showNotification(`+${App.promoCodes[code]}⭐️`);
+                            showNotification(`+${App.promoCodes[code]}🐣`);
                         }
                         
                         saveToFirebase();
@@ -2091,7 +2225,7 @@
                     }
                     
                     if (App.users[App.currentUser].stars < 450) {
-                        showNotification('Нужно 450⭐️', 'error');
+                        showNotification('Нужно 450🐣', 'error');
                         return;
                     }
                     
@@ -2109,12 +2243,12 @@
                     showNotification(`✅ КАНАЛ ${cleanName} СОЗДАН`);
                     document.getElementById('profileModalOverlay').remove();
                     App.activeChat = cleanName;
-                    localStorage.setItem('quick_active_chat', cleanName);
+                    localStorage.setItem('yolk_active_chat', cleanName);
                     render();
                 });
 
                 document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => {
-                    const newAvatar = document.getElementById('modalAvatarInput')?.value.trim();
+                    const newAvatar = App.tempAvatar;
                     const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
                     const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
                     const newEmail = document.getElementById('modalEmailInput')?.value.trim();
@@ -2252,7 +2386,7 @@
                         bio: 'Я бот',
                         isBot: true,
                         verified: true,
-                        email: 'bot@quick-sms.com',
+                        email: 'bot@yolk.com',
                         emailVerified: true,
                         age: 99
                     };
@@ -2267,6 +2401,7 @@
         window.openProfileModal = window.openProfileModal || function() {};
         window.deleteMessage = window.deleteMessage || function() {};
         window.sendGiftToUser = window.sendGiftToUser || function() {};
+        window.toggleLike = window.toggleLike || function() {};
 
         // Запуск
         window.addEventListener('load', () => {
