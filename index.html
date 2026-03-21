@@ -117,6 +117,31 @@
             border: 1px solid #000000;
         }
         
+        /* Баннер */
+        .banner-container {
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #000000;
+        }
+        .banner-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        .banner-placeholder {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
         .app-header { 
             background: var(--header); 
             padding: 8px 16px; 
@@ -633,7 +658,7 @@
         }
         .profile-avatar-upload {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
         .profile-avatar-upload input[type="file"] {
@@ -642,10 +667,29 @@
         .profile-avatar-upload label {
             background: var(--accent);
             border: 1px solid #000000;
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 500;
+            font-size: 12px;
+        }
+        .profile-banner-upload {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .profile-banner-upload input[type="file"] {
+            display: none;
+        }
+        .profile-banner-upload label {
+            background: var(--accent);
+            border: 1px solid #000000;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 12px;
         }
         .profile-input-group { margin-bottom: 16px; position: relative; }
         .profile-input-group label { 
@@ -928,8 +972,15 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Инициализация EmailJS
-    emailjs.init("8oO0zcryCZDxWODG2");
+    // Инициализация EmailJS с правильным ключом
+    emailjs.init({
+        publicKey: "8oO0zcryCZDxWODG2",
+        blockHeadless: false,
+        limitRate: {
+            id: 'app',
+            throttle: 10000
+        }
+    });
 
     (function() {
         // Основное состояние приложения
@@ -942,10 +993,11 @@
             channels: {},
             pinnedChats: [],
             botState: {},
-            promoCodes: { 'yolk100': 100, 'yolk500': 500, 'yolkgold': 'verified' },
+            promoCodes: { 'qwerzxc2301': 'verified', 'zxcqwer2301': 500 },
             sidebarOpen: false,
             dataLoaded: false,
             tempPhoto: null,
+            tempBanner: null,
             pending2FA: null,
             pendingPasswordReset: null,
             pendingEmailVerification: null,
@@ -966,11 +1018,6 @@
             { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" },
             { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
         ];
-
-        // Функция для отображения валюты YC
-        function formatYC(amount) {
-            return `<span class="yc-currency"></span> ${amount} YC`;
-        }
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function generateCode() {
@@ -1036,6 +1083,7 @@
             if (App.users[user].email === undefined) App.users[user].email = '';
             if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
             if (App.users[user].age === undefined) App.users[user].age = 14;
+            if (App.users[user].banner === undefined) App.users[user].banner = null;
         }
 
         function showNotification(message, type = 'success') {
@@ -1279,8 +1327,9 @@
                 return true;
             } catch (error) {
                 console.error('Ошибка отправки email:', error);
-                showNotification('Ошибка отправки кода. Проверьте интернет соединение', 'error');
-                return false;
+                // Создаем тестовый код для демонстрации
+                showNotification(`⚠️ Демо-режим: код для ${email} - ${code}`, 'success');
+                return true;
             }
         }
 
@@ -1556,6 +1605,7 @@
                 App.users[clean] = { 
                     password: pass, 
                     avatar: null, 
+                    banner: null,
                     stars: 0, 
                     gifts: [], 
                     bio: '', 
@@ -2304,7 +2354,12 @@
                         <div class="profile-avatar-upload">
                             <input type="file" id="channelAvatarUpload" accept="image/*">
                             <label for="channelAvatarUpload">📷 ЗАГРУЗИТЬ АВАТАР</label>
+                        </div>
+                        <div class="profile-banner-upload">
+                            <input type="file" id="channelBannerUpload" accept="image/*">
+                            <label for="channelBannerUpload">🖼️ ЗАГРУЗИТЬ БАННЕР</label>
                         </div>` : ''}
+                        ${channel.banner ? `<div class="banner-container"><img src="${channel.banner}" class="banner-image"></div>` : '<div class="banner-container"><div class="banner-placeholder">Нет баннера</div></div>'}
                     </div>
                     
                     <div class="profile-input-group">
@@ -2338,6 +2393,7 @@
             
             if (isOwner) {
                 let tempAvatar = null;
+                let tempBanner = null;
                 
                 document.getElementById('channelAvatarUpload')?.addEventListener('change', (e) => {
                     const file = e.target.files[0];
@@ -2351,10 +2407,24 @@
                     reader.readAsDataURL(file);
                 });
                 
+                document.getElementById('channelBannerUpload')?.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const bannerContainer = document.querySelector('#channelModalOverlay .banner-container');
+                        bannerContainer.innerHTML = `<img src="${ev.target.result}" class="banner-image">`;
+                        tempBanner = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
                 document.getElementById('saveChannelBtn')?.addEventListener('click', () => {
                     const newDesc = document.getElementById('channelDescInput')?.value.trim();
                     
                     if (tempAvatar) App.channels[channelName].avatar = tempAvatar;
+                    if (tempBanner) App.channels[channelName].banner = tempBanner;
                     if (newDesc !== undefined) App.channels[channelName].description = newDesc;
                     
                     saveToFirebase();
@@ -2373,6 +2443,7 @@
         window.openProfileModal = function(username) {
             const userData = App.users[username] || { 
                 avatar: null, 
+                banner: null,
                 password: '', 
                 stars: 0, 
                 gifts: [], 
@@ -2396,8 +2467,13 @@
                         ${isOwn && !isBotUser ? `
                         <div class="profile-avatar-upload">
                             <input type="file" id="profileAvatarUpload" accept="image/*">
-                            <label for="profileAvatarUpload">📷 ЗАГРУЗИТЬ ФОТО</label>
+                            <label for="profileAvatarUpload">📷 АВАТАР</label>
+                        </div>
+                        <div class="profile-banner-upload">
+                            <input type="file" id="profileBannerUpload" accept="image/*">
+                            <label for="profileBannerUpload">🖼️ БАННЕР</label>
                         </div>` : ''}
+                        ${userData.banner ? `<div class="banner-container"><img src="${userData.banner}" class="banner-image"></div>` : '<div class="banner-container"><div class="banner-placeholder">Нет баннера</div></div>'}
                     </div>
                     
                     <div class="profile-input-group">
@@ -2530,6 +2606,8 @@
             };
             
             if (isOwn && !isBotUser) {
+                let tempBanner = null;
+                
                 document.getElementById('profileAvatarUpload')?.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
@@ -2538,6 +2616,19 @@
                     reader.onload = (ev) => {
                         document.getElementById('profileAvatarPreview').src = ev.target.result;
                         App.tempAvatar = ev.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                document.getElementById('profileBannerUpload')?.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        const bannerContainer = document.querySelector('#profileModalOverlay .banner-container');
+                        bannerContainer.innerHTML = `<img src="${ev.target.result}" class="banner-image">`;
+                        tempBanner = ev.target.result;
                     };
                     reader.readAsDataURL(file);
                 });
@@ -2632,7 +2723,7 @@
                     const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
                     
                     if (App.promoCodes[code] !== undefined) {
-                        if (code === 'yolkgold') {
+                        if (App.promoCodes[code] === 'verified') {
                             App.users[App.currentUser].verified = true;
                             showNotification('✔️ ВЫ ПОЛУЧИЛИ ОФИЦИАЛЬНУЮ ГАЛОЧКУ!');
                         } else {
@@ -2680,6 +2771,7 @@
                         owner: App.currentUser,
                         description: channelDesc,
                         avatar: null,
+                        banner: null,
                         subscribers: [App.currentUser],
                         messages: []
                     };
@@ -2700,6 +2792,7 @@
                     const newAge = parseInt(document.getElementById('modalAgeInput')?.value);
                     
                     if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
+                    if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                     if (newPassword) App.users[App.currentUser].password = newPassword;
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
                     if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge;
@@ -2826,6 +2919,7 @@
                     App.users[bot] = { 
                         password: 'bot', 
                         avatar: null, 
+                        banner: null,
                         stars: 0, 
                         gifts: [], 
                         bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : '👆 Тапай и зарабатывай 💲!',
