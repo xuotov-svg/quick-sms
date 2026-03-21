@@ -61,6 +61,17 @@
             100% { transform: rotate(360deg); }
         }
 
+        .verified-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23389df2"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        
         .app-header { 
             background: var(--header); 
             padding: 8px 16px; 
@@ -272,13 +283,7 @@
             flex-shrink: 0; 
         }
         .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #000000; }
-        .username-display { font-weight: 600; color: #000000; }
-        .verified-badge { 
-            display: inline-block; 
-            margin-left: 5px; 
-            color: #00aa00; 
-            font-size: 14px;
-        }
+        .username-display { font-weight: 600; color: #000000; display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
         .email-badge {
             display: inline-block;
             margin-left: 5px;
@@ -363,9 +368,8 @@
             color: #000000; 
             box-shadow: 0 1px 4px rgba(0,0,0,0.1);
         }
-        .chat-header-info { display: flex; align-items: center; gap: 10px; }
-        .chat-header-info strong { color: #000000; font-size: 16px; }
-        .verified-badge-header { color: #00aa00; margin-left: 5px; font-size: 16px; }
+        .chat-header-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .chat-header-info strong { color: #000000; font-size: 16px; display: flex; align-items: center; gap: 4px; }
         .chat-actions { display: flex; gap: 10px; }
         .tiny-btn { 
             background: #f0f0f0; 
@@ -474,6 +478,9 @@
             cursor: pointer;
             color: #d4af37;
             font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
         }
         .message-username:hover {
             text-decoration: underline;
@@ -853,6 +860,14 @@
             letter-spacing: 10px;
             margin: 10px 0;
         }
+        
+        .tap-stats {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+        }
     </style>
     <!-- EmailJS для отправки писем -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
@@ -881,7 +896,7 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Инициализация EmailJS с публичным ключом
+    // Инициализация EmailJS
     emailjs.init("8oO0zcryCZDxWODG2");
 
     (function() {
@@ -904,11 +919,21 @@
             pendingEmailVerification: null,
             savedMessages: {},
             globalMessages: [],
-            tapBalances: {}
+            tapBalances: {},
+            tapUpgrades: {} // Уровень прокачки: 0-базовый, 1-2x, 2-4x, 3-8x, 4-500x
         };
 
         App.systemBots = ['@game_bot', '@tap_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
+
+        // Уровни прокачки для tap_bot
+        const tapUpgradeLevels = [
+            { cost: 0, reward: 1, nextCost: 10, name: "Базовый" },
+            { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" },
+            { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" },
+            { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" },
+            { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
+        ];
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function generateCode() {
@@ -933,6 +958,36 @@
 
         function hasVerifiedBadge(username) {
             return App.users[username] && App.users[username].verified;
+        }
+
+        function getTapReward(username) {
+            const level = App.tapUpgrades[username] || 0;
+            return tapUpgradeLevels[level].reward;
+        }
+
+        function getNextUpgradeCost(username) {
+            const level = App.tapUpgrades[username] || 0;
+            return tapUpgradeLevels[level].nextCost;
+        }
+
+        function canUpgradeTap(username) {
+            const level = App.tapUpgrades[username] || 0;
+            const cost = tapUpgradeLevels[level].nextCost;
+            if (cost === null) return false;
+            return (App.tapBalances[username] || 0) >= cost;
+        }
+
+        function upgradeTap(username) {
+            const level = App.tapUpgrades[username] || 0;
+            const cost = tapUpgradeLevels[level].nextCost;
+            if (cost === null) return false;
+            if ((App.tapBalances[username] || 0) >= cost) {
+                App.tapBalances[username] -= cost;
+                App.tapUpgrades[username] = level + 1;
+                saveTapBalances();
+                return true;
+            }
+            return false;
         }
 
         function initUserStars(user) {
@@ -1022,12 +1077,25 @@
             } else {
                 App.tapBalances = {};
             }
+            
+            const upgrades = localStorage.getItem('yolk_tap_upgrades');
+            if (upgrades) {
+                try {
+                    App.tapUpgrades = JSON.parse(upgrades);
+                } catch(e) {
+                    App.tapUpgrades = {};
+                }
+            } else {
+                App.tapUpgrades = {};
+            }
         }
 
         function saveTapBalances() {
             localStorage.setItem('yolk_tap_balances', JSON.stringify(App.tapBalances));
+            localStorage.setItem('yolk_tap_upgrades', JSON.stringify(App.tapUpgrades));
             if (App.dataLoaded) {
                 database.ref('tapBalances').set(App.tapBalances).catch(e => console.error('Sync error:', e));
+                database.ref('tapUpgrades').set(App.tapUpgrades).catch(e => console.error('Sync error:', e));
             }
         }
 
@@ -1047,6 +1115,7 @@
                     if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
                     if (data.globalMessages) App.globalMessages = data.globalMessages;
                     if (data.tapBalances) App.tapBalances = data.tapBalances;
+                    if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
                     
                     localStorage.setItem('yolk_cache', JSON.stringify({
                         users: App.users,
@@ -1057,7 +1126,7 @@
                     }));
                     
                     if (data.globalMessages) saveGlobalMessages();
-                    if (data.tapBalances) saveTapBalances();
+                    if (data.tapBalances || data.tapUpgrades) saveTapBalances();
                 }
                 
                 const savedUser = localStorage.getItem('yolk_current_user');
@@ -1113,7 +1182,8 @@
                 channels: App.channels,
                 pinnedChats: App.pinnedChats,
                 globalMessages: App.globalMessages,
-                tapBalances: App.tapBalances
+                tapBalances: App.tapBalances,
+                tapUpgrades: App.tapUpgrades
             };
             
             database.ref().set(firebaseData)
@@ -1172,7 +1242,7 @@
                 return true;
             } catch (error) {
                 console.error('Ошибка отправки email:', error);
-                showNotification('Ошибка отправки кода. Проверьте настройки EmailJS', 'error');
+                showNotification('Ошибка отправки кода. Проверьте интернет соединение', 'error');
                 return false;
             }
         }
@@ -1239,9 +1309,12 @@
 
         // ========== БОТЫ ==========
         function handleGameBot(message, fromUser) {
-            if (message.text && message.text.includes('КРУТИТЬ')) {
+            // Проверяем, есть ли текст и содержит ли он команду
+            const isSpin = message.text && message.text.includes('КРУТИТЬ');
+            
+            if (isSpin) {
                 if (App.users[fromUser].stars < 5) {
-                    return { text: `❌ Недостаточно 🐣! Нужно 5 🐣 для игры.`, buttons: ['КРУТИТЬ (5🐣)'] };
+                    return { text: `❌ Недостаточно 🐣! Нужно 5 🐣 для игры.\n\n[?][?][?]`, buttons: ['КРУТИТЬ (5🐣)'] };
                 }
                 
                 App.users[fromUser].stars -= 5;
@@ -1253,7 +1326,7 @@
                 
                 let win = 0;
                 if (results[0] === results[1] && results[1] === results[2]) {
-                    win = 15;
+                    win = 10;
                     App.users[fromUser].stars += win;
                 }
                 
@@ -1261,26 +1334,59 @@
                 
                 const resultText = `[${results[0]}] [${results[1]}] [${results[2]}]`;
                 if (win > 0) {
-                    return { text: `${resultText}\n\n✨ ПОБЕДА! +${win} 🐣 ✨\nБаланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
+                    return { text: `${resultText}\n\n✨ ВЫИГРЫШ! +${win} 🐣 ✨\nБаланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
                 } else {
-                    return { text: `${resultText}\n\n😢 Нет совпадений...\nБаланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
+                    return { text: `${resultText}\n\n😢 ПРОИГРЫШ...\nБаланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
                 }
             }
             
-            return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\nПравила: нажми "КРУТИТЬ (5🐣)" и выиграй 15🐣 если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\n🐣 Баланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
+            return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\n[?][?][?]\n\nПравила: нажми "КРУТИТЬ (5🐣)" и выиграй 10🐣 если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\n🐣 Баланс: ${App.users[fromUser].stars} 🐣`, buttons: ['КРУТИТЬ (5🐣)'] };
         }
         
         function handleTapBot(message, fromUser) {
             if (!App.tapBalances[fromUser]) App.tapBalances[fromUser] = 0;
+            if (!App.tapUpgrades[fromUser]) App.tapUpgrades[fromUser] = 0;
+            
+            const currentLevel = App.tapUpgrades[fromUser] || 0;
+            const currentReward = getTapReward(fromUser);
+            const nextCost = getNextUpgradeCost(fromUser);
+            const nextReward = currentLevel < 4 ? tapUpgradeLevels[currentLevel + 1].reward : null;
             
             if (message.text && message.text.includes('ТАПНУТЬ')) {
-                const increase = Math.floor(Math.random() * 10) + 1;
+                const increase = currentReward;
                 App.tapBalances[fromUser] += increase;
                 saveTapBalances();
-                return { text: `👆 Вы тапнули и получили +${increase} 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲`, buttons: ['ТАПНУТЬ (👆)'] };
+                return { 
+                    text: `👆 ВЫ ТАПНУЛИ! +${increase} 💲\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, 
+                    buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
+                };
             }
             
-            return { text: `🤖 TAP БОТ 🤖\n\nПросто тапай и зарабатывай 💲!\n\n💰 Ваш баланс: ${App.tapBalances[fromUser]} 💲\n\nНажми на кнопку ниже, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)'] };
+            if (message.text && message.text.includes('ПРОКАЧАТЬ')) {
+                if (canUpgradeTap(fromUser)) {
+                    upgradeTap(fromUser);
+                    const newLevel = App.tapUpgrades[fromUser] || 0;
+                    const newReward = getTapReward(fromUser);
+                    const newNextCost = getNextUpgradeCost(fromUser);
+                    const newNextReward = newLevel < 4 ? tapUpgradeLevels[newLevel + 1].reward : null;
+                    saveTapBalances();
+                    return { 
+                        text: `✨ ПРОКАЧКА УСПЕШНА! ✨\n\nТеперь за клик: +${newReward} 💲\n💰 Баланс: ${App.tapBalances[fromUser]} 💲`, 
+                        buttons: ['ТАПНУТЬ (👆)', newNextCost !== null ? `ПРОКАЧАТЬ (${newNextCost}💲 → ${newNextReward}💲/клик)` : 'МАКСИМУМ!']
+                    };
+                } else {
+                    const needed = nextCost - (App.tapBalances[fromUser] || 0);
+                    return { 
+                        text: `❌ НЕДОСТАТОЧНО 💲!\nНужно еще ${needed} 💲 для прокачки\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, 
+                        buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
+                    };
+                }
+            }
+            
+            return { 
+                text: `🤖 TAP БОТ 🤖\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲\n\n${nextCost !== null ? `⬆️ Следующий уровень: ${nextCost} 💲 → +${nextReward} 💲/клик` : '🏆 МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ!'}\n\nНажми на кнопку, чтобы тапнуть!`, 
+                buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
+            };
         }
 
         // ========== ОСНОВНОЙ РЕНДЕР ==========
@@ -1449,7 +1555,7 @@
                             ${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}
                         </div>
                         <div>
-                            <span class="username-display">${user}${userData.verified ? ' ✔️' : ''}</span>
+                            <div class="username-display">${user}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                             ${userData.emailVerified ? '<div class="email-badge">📧 подтвержден</div>' : ''}
                             ${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}
                             <div class="star-balance">🐣 ${userData.stars || 0}</div>
@@ -1465,7 +1571,7 @@
                     <div class="chat-header">
                         <div class="chat-header-info">
                             <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
-                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : chatPartner)}${App.users[chatPartner]?.verified ? ' ✔️' : ''}</strong>
+                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>
                             ${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                         </div>
                         <div class="chat-actions">
@@ -1519,7 +1625,7 @@
             return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
                 ${avatarHtml}
                 <div style="flex:1; color:#000000;">
-                    <div>${name}${userData.verified ? ' ✔️' : ''}</div>
+                    <div class="username-display" style="display: flex; align-items: center; gap: 2px;">${name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                     ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                 </div>
                 ${u !== 'saved' && u !== 'global' ? `
@@ -1554,7 +1660,6 @@
             const userLiked = msg.likes && msg.likes[currentUser];
             
             let senderName = msg.from;
-            let verifiedBadge = App.users[msg.from]?.verified ? ' ✔️' : '';
             
             let messageText = msg.text || '';
             if (isGift && messageText.startsWith('🎁 ')) {
@@ -1567,7 +1672,7 @@
             }
             
             return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''}">
-                ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${verifiedBadge}</span></small><br>` : ''}
+                ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
                 <div style="color:#000000;">${messageText}${mediaHtml}</div>
                 ${buttonsHtml}
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
@@ -2124,11 +2229,14 @@
                 return;
             }
             
+            // Забираем подарок у отправителя
             App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
             
+            // Добавляем получателю
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
             
+            // Создаем сообщение
             const chatId = ensureChat(fromUser, toUser);
             if (chatId && App.chats[chatId]) {
                 App.chats[chatId].messages.push({
@@ -2248,7 +2356,7 @@
             
             const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
                 <div class="profile-modal">
-                    <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? ' ✔️' : ''}</h3>
+                    <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3>
                     
                     <div class="profile-avatar-section">
                         <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview" id="profileAvatarPreview">
