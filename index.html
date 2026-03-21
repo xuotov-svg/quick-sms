@@ -1246,11 +1246,15 @@
             }
 
             function isValidUsername(str) {
-                return /^[a-zA-Z]{4,}$/.test(str);
+                return /^[a-zA-Z0-9]{4,}$/.test(str);
             }
 
             function isValidChannelName(str) {
-                return /^[a-zA-Z]{4,}$/.test(str);
+                return /^[a-zA-Z0-9]{4,}$/.test(str);
+            }
+
+            function isValidPassword(str) {
+                return /^[a-zA-Z0-9]+$/.test(str);
             }
 
             function isBot(username) {
@@ -1352,7 +1356,7 @@
 
             // Работа с localStorage и Firebase
             function loadYolkChatMessages() {
-                const saved = localStorage.getItem('yolk_chat_messages');
+                const saved = localStorage.getItem('yolk_chat_messages_' + (App.currentUser || ''));
                 if (saved) {
                     try {
                         App.yolkChatMessages = JSON.parse(saved);
@@ -1365,9 +1369,11 @@
             }
 
             function saveYolkChatMessages() {
-                localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages));
-                if (App.dataLoaded) {
-                    database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error('Sync error:', e));
+                if (App.currentUser) {
+                    localStorage.setItem('yolk_chat_messages_' + App.currentUser, JSON.stringify(App.yolkChatMessages));
+                }
+                if (App.dataLoaded && App.currentUser) {
+                    database.ref('yolkChatMessages/' + App.currentUser).set(App.yolkChatMessages).catch(e => console.error('Sync error:', e));
                 }
             }
 
@@ -1461,7 +1467,6 @@
                         if (data.globalMessages) App.globalMessages = data.globalMessages;
                         if (data.tapBalances) App.tapBalances = data.tapBalances;
                         if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
-                        if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
 
                         localStorage.setItem('yolk_cache', JSON.stringify({
                             users: App.users,
@@ -1473,7 +1478,6 @@
 
                         if (data.globalMessages) saveGlobalMessages();
                         if (data.tapBalances || data.tapUpgrades) saveTapBalances();
-                        if (data.yolkChatMessages) saveYolkChatMessages();
                     }
 
                     const savedUser = localStorage.getItem('yolk_current_user');
@@ -1532,8 +1536,7 @@
                     pinnedChats: App.pinnedChats,
                     globalMessages: App.globalMessages,
                     tapBalances: App.tapBalances,
-                    tapUpgrades: App.tapUpgrades,
-                    yolkChatMessages: App.yolkChatMessages
+                    tapUpgrades: App.tapUpgrades
                 };
 
                 database.ref().set(firebaseData)
@@ -1688,8 +1691,8 @@
                         <h2>Yolk</h2>
                         <div id="authForms">
                             <div id="loginForm">
-                                <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div>
-                                <div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div>
+                                <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, минимум 4"></div>
+                                <div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div>
                                 <button class="btn" id="loginBtn">ВОЙТИ</button>
                             </div>
                             <div class="auth-switch">
@@ -1697,8 +1700,8 @@
                             </div>
                         </div>
                         <div id="registerForm" style="display: none;">
-                            <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="jake"></div>
-                            <div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="••••••"></div>
+                            <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, минимум 4"></div>
+                            <div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div>
                             <button class="btn" id="registerBtn">СОЗДАТЬ</button>
                             <div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div>
                         </div>
@@ -1727,7 +1730,7 @@
                     const pass = document.getElementById('loginPassword').value.trim();
 
                     if (!isValidUsername(username)) {
-                        errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4';
+                        errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, МИНИМУМ 4';
                         return;
                     }
 
@@ -1757,7 +1760,7 @@
                             <div class="two-factor-screen" id="twoFactorScreen">
                                 <div class="two-factor-box">
                                     <h3>🔐 Двухфакторная аутентификация</h3>
-                                    <p>Код подтверждения отправлен в чат <strong>YOLK</strong></p>
+                                    <p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p>
                                     <input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus>
                                     <button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button>
                                     <div class="resend-link" id="resend2FACode">Отправить код повторно</div>
@@ -1786,7 +1789,7 @@
 
                         document.getElementById('resend2FACode').addEventListener('click', () => {
                             send2FACode(clean);
-                            showNotification('Новый код отправлен в чат YOLK', 'success');
+                            showNotification('Новый код отправлен в ваш личный чат YOLK', 'success');
                         });
 
                         document.getElementById('twoFactorCode').addEventListener('keypress', (e) => {
@@ -1804,7 +1807,12 @@
                     const pass = document.getElementById('regPassword').value.trim();
 
                     if (!isValidUsername(username)) {
-                        errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4';
+                        errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, МИНИМУМ 4';
+                        return;
+                    }
+
+                    if (!isValidPassword(pass)) {
+                        errorDiv.innerText = '! ПАРОЛЬ ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ';
                         return;
                     }
 
@@ -2548,11 +2556,14 @@
                     return;
                 }
 
+                // Удаляем подарок у отправителя
                 App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
 
+                // Добавляем подарок получателю
                 if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
                 App.users[toUser].gifts.push(giftEmoji);
 
+                // Создаем сообщение о подарке
                 const chatId = ensureChat(fromUser, toUser);
                 if (chatId && App.chats[chatId]) {
                     App.chats[chatId].messages.push({
@@ -2752,7 +2763,7 @@
                                 <div class="toggle-checkbox"></div>
                                 <span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span>
                             </div>
-                            <small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в чат YOLK</small>
+                            <small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small>
                         </div>
                         ` : ''}
                         
@@ -2801,7 +2812,7 @@
                             <div class="shop-section">
                                 <h4>СОЗДАТЬ КАНАЛ (450 YC)</h4>
                                 <div class="profile-input-group">
-                                    <input type="text" id="channelNameInput" placeholder="название (только англ буквы, минимум 4)">
+                                    <input type="text" id="channelNameInput" placeholder="название (только англ буквы и цифры, минимум 4)">
                                 </div>
                                 <div class="profile-input-group">
                                     <textarea id="channelDescInput" placeholder="Описание..."></textarea>
@@ -2870,7 +2881,7 @@
                             const labelSpan = twoFAToggle.querySelector('.toggle-label');
                             labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
                             saveToFirebase();
-                            showNotification(newState ? '2FA включена. Коды будут приходить в чат YOLK' : '2FA выключена');
+                            showNotification(newState ? '2FA включена. Коды будут приходить в ваш личный чат YOLK' : '2FA выключена');
                         });
                     }
 
@@ -2944,7 +2955,7 @@
                         }
 
                         if (!isValidChannelName(channelName)) {
-                            showNotification('Название канала: только англ буквы, минимум 4', 'error');
+                            showNotification('Название канала: только англ буквы и цифры, минимум 4', 'error');
                             return;
                         }
 
