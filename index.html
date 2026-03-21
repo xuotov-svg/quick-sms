@@ -117,29 +117,64 @@
             border: 1px solid #000000;
         }
         
-        /* Баннер */
+        /* Баннер с аватаркой внутри */
+        .profile-banner-wrapper {
+            position: relative;
+            width: 100%;
+            margin-bottom: 20px;
+        }
         .banner-container {
             width: 100%;
-            margin-top: 10px;
-            border-radius: 12px;
+            height: 150px;
+            border-radius: 16px;
             overflow: hidden;
-            border: 1px solid #000000;
+            border: 2px solid #000000;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
         .banner-image {
             width: 100%;
-            height: 120px;
+            height: 100%;
             object-fit: cover;
-            display: block;
         }
         .banner-placeholder {
             width: 100%;
-            height: 120px;
-            background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #666;
+            color: white;
             font-size: 14px;
+        }
+        .profile-avatar-overlay {
+            position: absolute;
+            bottom: -40px;
+            left: 20px;
+            z-index: 10;
+        }
+        .profile-avatar-overlay .avatar-large {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid white;
+            background: var(--accent-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #000000;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .profile-avatar-overlay .avatar-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-name-section {
+            margin-top: 50px;
+            padding-left: 20px;
+            margin-bottom: 20px;
         }
         
         /* Чат YOLK в списке */
@@ -670,28 +705,17 @@
             padding-bottom: 10px; 
         }
         .profile-avatar-section { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            gap: 16px; 
-            margin-bottom: 20px; 
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 16px;
-            border: 1px solid #000000;
-        }
-        .profile-avatar-preview { 
-            width: 100px; 
-            height: 100px; 
-            border-radius: 50%; 
-            background: #e6d5a8; 
-            border: 4px solid #000000; 
-            object-fit: cover; 
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
         }
         .profile-avatar-upload {
             display: flex;
             gap: 8px;
             align-items: center;
+            justify-content: center;
+            margin-top: 10px;
         }
         .profile-avatar-upload input[type="file"] {
             display: none;
@@ -709,6 +733,7 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            justify-content: center;
             margin-top: 8px;
         }
         .profile-banner-upload input[type="file"] {
@@ -932,6 +957,13 @@
         .notification.error {
             background: #ff4444;
         }
+        
+        .currency-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -942,7 +974,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
 <script>
-    // 🔥 ВАШ КОНФИГ FIREBASE
+    // Firebase конфиг
     const firebaseConfig = {
         apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4",
         authDomain: "quick-sms-772c4.firebaseapp.com",
@@ -954,12 +986,10 @@
         measurementId: "G-WH8RF3FK57"
     };
 
-    // Инициализация Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
     (function() {
-        // Основное состояние приложения
         const App = {
             users: {},
             chats: {},
@@ -979,13 +1009,12 @@
             globalMessages: [],
             tapBalances: {},
             tapUpgrades: {},
-            yolkChatMessages: [] // Чат YOLK для кодов
+            yolkChatMessages: []
         };
 
         App.systemBots = ['@game_bot', '@tap_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
 
-        // Уровни прокачки для tap_bot
         const tapUpgradeLevels = [
             { cost: 0, reward: 1, nextCost: 10, name: "Базовый" },
             { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" },
@@ -994,43 +1023,15 @@
             { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
         ];
 
-        function generateCode() {
-            return Math.floor(100000 + Math.random() * 900000).toString();
-        }
-
-        function isValidUsername(str) {
-            return /^[a-zA-Z]{4,}$/.test(str);
-        }
-
-        function isValidChannelName(str) {
-            return /^[a-zA-Z]{4,}$/.test(str);
-        }
-
-        function isBot(username) {
-            return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot);
-        }
-
-        function hasVerifiedBadge(username) {
-            return App.users[username] && App.users[username].verified;
-        }
-
-        function getTapReward(username) {
-            const level = App.tapUpgrades[username] || 0;
-            return tapUpgradeLevels[level].reward;
-        }
-
-        function getNextUpgradeCost(username) {
-            const level = App.tapUpgrades[username] || 0;
-            return tapUpgradeLevels[level].nextCost;
-        }
-
-        function canUpgradeTap(username) {
-            const level = App.tapUpgrades[username] || 0;
-            const cost = tapUpgradeLevels[level].nextCost;
-            if (cost === null) return false;
-            return (App.tapBalances[username] || 0) >= cost;
-        }
-
+        function generateCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
+        function isValidUsername(str) { return /^[a-zA-Z]{4,}$/.test(str); }
+        function isValidChannelName(str) { return /^[a-zA-Z]{4,}$/.test(str); }
+        function isBot(username) { return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot); }
+        function hasVerifiedBadge(username) { return App.users[username] && App.users[username].verified; }
+        function getTapReward(username) { const level = App.tapUpgrades[username] || 0; return tapUpgradeLevels[level].reward; }
+        function getNextUpgradeCost(username) { const level = App.tapUpgrades[username] || 0; return tapUpgradeLevels[level].nextCost; }
+        function canUpgradeTap(username) { const level = App.tapUpgrades[username] || 0; const cost = tapUpgradeLevels[level].nextCost; if (cost === null) return false; return (App.tapBalances[username] || 0) >= cost; }
+        
         function upgradeTap(username) {
             const level = App.tapUpgrades[username] || 0;
             const cost = tapUpgradeLevels[level].nextCost;
@@ -1057,38 +1058,20 @@
 
         function send2FACode(username) {
             const code = generateCode();
-            const pendingCode = {
-                code: code,
-                username: username,
-                timestamp: Date.now()
-            };
-            
-            // Сохраняем код в ожидании
-            const pendingKey = 'pending_2fa_' + username;
-            localStorage.setItem(pendingKey, JSON.stringify(pendingCode));
-            
-            // Отправляем сообщение в чат YOLK
-            const yolkMessage = {
-                from: 'SYSTEM',
-                text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`,
-                time: Date.now(),
-                isCode: true
-            };
-            
+            const pendingCode = { code: code, username: username, timestamp: Date.now() };
+            localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode));
+            const yolkMessage = { from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true };
             App.yolkChatMessages.push(yolkMessage);
             saveYolkChatMessages();
-            
             return pendingCode;
         }
 
         function verify2FACode(username, inputCode) {
-            const pendingKey = 'pending_2fa_' + username;
-            const saved = localStorage.getItem(pendingKey);
+            const saved = localStorage.getItem('pending_2fa_' + username);
             if (!saved) return false;
-            
             const pending = JSON.parse(saved);
             if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) {
-                localStorage.removeItem(pendingKey);
+                localStorage.removeItem('pending_2fa_' + username);
                 return true;
             }
             return false;
@@ -1110,95 +1093,39 @@
             document.body.appendChild(loadingDiv);
         }
 
-        function hideLoading() {
-            const loading = document.getElementById('loadingScreen');
-            if (loading) loading.remove();
-        }
+        function hideLoading() { const loading = document.getElementById('loadingScreen'); if (loading) loading.remove(); }
 
         function loadYolkChatMessages() {
             const saved = localStorage.getItem('yolk_chat_messages');
-            if (saved) {
-                try {
-                    App.yolkChatMessages = JSON.parse(saved);
-                } catch(e) {
-                    App.yolkChatMessages = [];
-                }
-            } else {
-                App.yolkChatMessages = [];
-            }
+            if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = []; } } 
+            else { App.yolkChatMessages = []; }
         }
-
         function saveYolkChatMessages() {
             localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages));
-            if (App.dataLoaded) {
-                database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error('Sync error:', e));
-            }
+            if (App.dataLoaded) { database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error('Sync error:', e)); }
         }
-
         function loadSavedMessages() {
             if (!App.currentUser) return;
             const saved = localStorage.getItem('yolk_saved_' + App.currentUser);
-            if (saved) {
-                try {
-                    App.savedMessages[App.currentUser] = JSON.parse(saved);
-                } catch(e) {
-                    App.savedMessages[App.currentUser] = [];
-                }
-            } else {
-                App.savedMessages[App.currentUser] = [];
-            }
+            if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } 
+            else { App.savedMessages[App.currentUser] = []; }
         }
-
-        function saveSavedMessages() {
-            if (App.currentUser) {
-                localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || []));
-            }
-        }
-
+        function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
         function loadGlobalMessages() {
             const global = localStorage.getItem('yolk_global');
-            if (global) {
-                try {
-                    App.globalMessages = JSON.parse(global);
-                } catch(e) {
-                    App.globalMessages = [];
-                }
-            } else {
-                App.globalMessages = [];
-            }
+            if (global) { try { App.globalMessages = JSON.parse(global); } catch(e) { App.globalMessages = []; } } 
+            else { App.globalMessages = []; }
         }
-
         function saveGlobalMessages() {
             localStorage.setItem('yolk_global', JSON.stringify(App.globalMessages));
-            if (App.dataLoaded) {
-                database.ref('globalMessages').set(App.globalMessages).catch(e => console.error('Sync error:', e));
-            }
+            if (App.dataLoaded) { database.ref('globalMessages').set(App.globalMessages).catch(e => console.error('Sync error:', e)); }
         }
-
         function loadTapBalances() {
             const balances = localStorage.getItem('yolk_tap_balances');
-            if (balances) {
-                try {
-                    App.tapBalances = JSON.parse(balances);
-                } catch(e) {
-                    App.tapBalances = {};
-                }
-            } else {
-                App.tapBalances = {};
-            }
-            
+            if (balances) { try { App.tapBalances = JSON.parse(balances); } catch(e) { App.tapBalances = {}; } } else { App.tapBalances = {}; }
             const upgrades = localStorage.getItem('yolk_tap_upgrades');
-            if (upgrades) {
-                try {
-                    App.tapUpgrades = JSON.parse(upgrades);
-                } catch(e) {
-                    App.tapUpgrades = {};
-                }
-            } else {
-                App.tapUpgrades = {};
-            }
+            if (upgrades) { try { App.tapUpgrades = JSON.parse(upgrades); } catch(e) { App.tapUpgrades = {}; } } else { App.tapUpgrades = {}; }
         }
-
         function saveTapBalances() {
             localStorage.setItem('yolk_tap_balances', JSON.stringify(App.tapBalances));
             localStorage.setItem('yolk_tap_upgrades', JSON.stringify(App.tapUpgrades));
@@ -1210,13 +1137,10 @@
 
         async function loadFromFirebase() {
             console.log('🔄 Загружаем данные...');
-            
             try {
                 const snapshot = await database.ref().get();
-                
                 if (snapshot.exists()) {
                     const data = snapshot.val();
-                    
                     if (data.users) App.users = data.users;
                     if (data.chats) App.chats = data.chats;
                     if (data.blocked) App.blocked = data.blocked;
@@ -1226,23 +1150,13 @@
                     if (data.tapBalances) App.tapBalances = data.tapBalances;
                     if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
                     if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
-                    
-                    localStorage.setItem('yolk_cache', JSON.stringify({
-                        users: App.users,
-                        chats: App.chats,
-                        blocked: App.blocked,
-                        channels: App.channels,
-                        pinnedChats: App.pinnedChats
-                    }));
-                    
+                    localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats }));
                     if (data.globalMessages) saveGlobalMessages();
                     if (data.tapBalances || data.tapUpgrades) saveTapBalances();
                     if (data.yolkChatMessages) saveYolkChatMessages();
                 }
-                
                 const savedUser = localStorage.getItem('yolk_current_user');
                 const savedChat = localStorage.getItem('yolk_active_chat');
-                
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
                     App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'global' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
@@ -1251,13 +1165,10 @@
                     loadTapBalances();
                     loadYolkChatMessages();
                 }
-                
                 App.dataLoaded = true;
                 render();
-                
             } catch (error) {
                 console.error('❌ Ошибка Firebase:', error);
-                
                 const cachedData = localStorage.getItem('yolk_cache');
                 if (cachedData) {
                     try {
@@ -1269,7 +1180,6 @@
                         if (cache.pinnedChats) App.pinnedChats = cache.pinnedChats;
                     } catch(e) {}
                 }
-                
                 const savedUser = localStorage.getItem('yolk_current_user');
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
@@ -1279,7 +1189,6 @@
                     loadTapBalances();
                     loadYolkChatMessages();
                 }
-                
                 App.dataLoaded = true;
                 render();
             }
@@ -1287,42 +1196,26 @@
 
         function saveToFirebase() {
             if (!App.dataLoaded) return;
-            
             const firebaseData = {
-                users: App.users,
-                chats: App.chats,
-                blocked: App.blocked,
-                channels: App.channels,
-                pinnedChats: App.pinnedChats,
-                globalMessages: App.globalMessages,
-                tapBalances: App.tapBalances,
-                tapUpgrades: App.tapUpgrades,
-                yolkChatMessages: App.yolkChatMessages
+                users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels,
+                pinnedChats: App.pinnedChats, globalMessages: App.globalMessages,
+                tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages
             };
-            
-            database.ref().set(firebaseData)
-                .then(() => {
-                    console.log('💾 Сохранено в Firebase');
-                    localStorage.setItem('yolk_cache', JSON.stringify(firebaseData));
-                })
-                .catch(error => {
-                    console.error('❌ Ошибка сохранения:', error);
-                });
+            database.ref().set(firebaseData).then(() => {
+                console.log('💾 Сохранено в Firebase');
+                localStorage.setItem('yolk_cache', JSON.stringify(firebaseData));
+            }).catch(error => { console.error('❌ Ошибка сохранения:', error); });
         }
 
         function ensureChat(userA, userB) {
             if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'global' || userB === 'yolk') return;
             const chatId = [userA, userB].sort().join('_');
-            if (!App.chats[chatId]) {
-                App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
-                saveToFirebase();
-            }
+            if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); }
             return chatId;
         }
 
         function getChatListForUser(user) {
             let set = new Set(['saved', 'global', 'yolk']);
-            
             Object.keys(App.chats || {}).forEach(key => {
                 const c = App.chats[key];
                 if (c) {
@@ -1330,40 +1223,24 @@
                     if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1);
                 }
             });
-            
             Object.keys(App.channels || {}).forEach(channel => {
-                if (App.channels[channel].subscribers?.includes(user)) {
-                    set.add(channel);
-                }
+                if (App.channels[channel].subscribers?.includes(user)) set.add(channel);
             });
-            
             return Array.from(set);
         }
 
-        // ========== БОТЫ ==========
         function handleGameBot(message, fromUser) {
             const isSpin = message.text && message.text.includes('КРУТИТЬ');
-            
             if (isSpin) {
                 if (App.users[fromUser].stars < 5) {
                     return { text: `❌ Недостаточно YC! Нужно 5 YC для игры.\n\n[?][?][?]`, buttons: ['КРУТИТЬ (5 YC)'] };
                 }
-                
                 App.users[fromUser].stars -= 5;
-                
                 const results = [];
-                for (let i = 0; i < 3; i++) {
-                    results.push(App.gameSymbols[Math.floor(Math.random() * App.gameSymbols.length)]);
-                }
-                
+                for (let i = 0; i < 3; i++) results.push(App.gameSymbols[Math.floor(Math.random() * App.gameSymbols.length)]);
                 let win = 0;
-                if (results[0] === results[1] && results[1] === results[2]) {
-                    win = 10;
-                    App.users[fromUser].stars += win;
-                }
-                
+                if (results[0] === results[1] && results[1] === results[2]) { win = 10; App.users[fromUser].stars += win; }
                 saveToFirebase();
-                
                 const resultText = `[${results[0]}] [${results[1]}] [${results[2]}]`;
                 if (win > 0) {
                     return { text: `${resultText}\n\n✨ ВЫИГРЫШ! +${win} YC ✨\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
@@ -1371,29 +1248,22 @@
                     return { text: `${resultText}\n\n😢 ПРОИГРЫШ...\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
                 }
             }
-            
             return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\n[?][?][?]\n\nПравила: нажми "КРУТИТЬ (5 YC)" и выиграй 10 YC если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\nYC Баланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
         }
         
         function handleTapBot(message, fromUser) {
             if (!App.tapBalances[fromUser]) App.tapBalances[fromUser] = 0;
             if (!App.tapUpgrades[fromUser]) App.tapUpgrades[fromUser] = 0;
-            
             const currentLevel = App.tapUpgrades[fromUser] || 0;
             const currentReward = getTapReward(fromUser);
             const nextCost = getNextUpgradeCost(fromUser);
             const nextReward = currentLevel < 4 ? tapUpgradeLevels[currentLevel + 1].reward : null;
-            
             if (message.text && message.text.includes('ТАПНУТЬ')) {
                 const increase = currentReward;
                 App.tapBalances[fromUser] += increase;
                 saveTapBalances();
-                return { 
-                    text: `👆 ВЫ ТАПНУЛИ! +${increase} 💲\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, 
-                    buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
-                };
+                return { text: `👆 ВЫ ТАПНУЛИ! +${increase} 💲\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!'] };
             }
-            
             if (message.text && message.text.includes('ПРОКАЧАТЬ')) {
                 if (canUpgradeTap(fromUser)) {
                     upgradeTap(fromUser);
@@ -1402,206 +1272,65 @@
                     const newNextCost = getNextUpgradeCost(fromUser);
                     const newNextReward = newLevel < 4 ? tapUpgradeLevels[newLevel + 1].reward : null;
                     saveTapBalances();
-                    return { 
-                        text: `✨ ПРОКАЧКА УСПЕШНА! ✨\n\nТеперь за клик: +${newReward} 💲\n💰 Баланс: ${App.tapBalances[fromUser]} 💲`, 
-                        buttons: ['ТАПНУТЬ (👆)', newNextCost !== null ? `ПРОКАЧАТЬ (${newNextCost}💲 → ${newNextReward}💲/клик)` : 'МАКСИМУМ!']
-                    };
+                    return { text: `✨ ПРОКАЧКА УСПЕШНА! ✨\n\nТеперь за клик: +${newReward} 💲\n💰 Баланс: ${App.tapBalances[fromUser]} 💲`, buttons: ['ТАПНУТЬ (👆)', newNextCost !== null ? `ПРОКАЧАТЬ (${newNextCost}💲 → ${newNextReward}💲/клик)` : 'МАКСИМУМ!'] };
                 } else {
                     const needed = nextCost - (App.tapBalances[fromUser] || 0);
-                    return { 
-                        text: `❌ НЕДОСТАТОЧНО 💲!\nНужно еще ${needed} 💲 для прокачки\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, 
-                        buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
-                    };
+                    return { text: `❌ НЕДОСТАТОЧНО 💲!\nНужно еще ${needed} 💲 для прокачки\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!'] };
                 }
             }
-            
-            return { 
-                text: `🤖 TAP БОТ 🤖\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲\n\n${nextCost !== null ? `⬆️ Следующий уровень: ${nextCost} 💲 → +${nextReward} 💲/клик` : '🏆 МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ!'}\n\nНажми на кнопку, чтобы тапнуть!`, 
-                buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
-            };
+            return { text: `🤖 TAP БОТ 🤖\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲\n\n${nextCost !== null ? `⬆️ Следующий уровень: ${nextCost} 💲 → +${nextReward} 💲/клик` : '🏆 МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ!'}\n\nНажми на кнопку, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!'] };
         }
 
-        // ========== ОСНОВНОЙ РЕНДЕР ==========
         function render() {
             const root = document.getElementById('app');
-            
-            if (!App.dataLoaded) {
-                root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>';
-                return;
-            }
-            
-            if (!App.currentUser) {
-                root.innerHTML = renderAuth();
-                attachAuthEvents();
-            } else {
-                initUserStars(App.currentUser);
-                root.innerHTML = renderMain();
-                setTimeout(() => {
-                    attachMainEvents();
-                    if (App.activeChat) {
-                        loadMessages(App.activeChat);
-                    }
-                    updateChatList();
-                }, 100);
-            }
+            if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; }
+            if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
+            else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); }, 100); }
         }
 
         function renderAuth() {
-            return `<div class="auth-container">
-                <div class="auth-box">
-                    <h2>Yolk</h2>
-                    <div id="authForms">
-                        <div id="loginForm">
-                            <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div>
-                            <div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div>
-                            <button class="btn" id="loginBtn">ВОЙТИ</button>
-                        </div>
-                        <div class="auth-switch">
-                            <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button>
-                        </div>
-                    </div>
-                    <div id="registerForm" style="display: none;">
-                        <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="jake"></div>
-                        <div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="••••••"></div>
-                        <button class="btn" id="registerBtn">СОЗДАТЬ</button>
-                        <div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div>
-                    </div>
-                    <div id="authError" class="auth-error"></div>
-                </div>
-            </div>`;
+            return `<div class="auth-container"><div class="auth-box"><h2>Yolk</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="jake"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="••••••"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
         }
 
         function attachAuthEvents() {
             const loginForm = document.getElementById('loginForm');
             const regForm = document.getElementById('registerForm');
             const errorDiv = document.getElementById('authError');
-
-            document.getElementById('showRegisterBtn')?.addEventListener('click', () => {
-                loginForm.style.display = 'none';
-                regForm.style.display = 'block';
-            });
-            
-            document.getElementById('showLoginBtn')?.addEventListener('click', () => {
-                regForm.style.display = 'none';
-                loginForm.style.display = 'block';
-            });
-
+            document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; });
+            document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; });
             document.getElementById('loginBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('loginUsername').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim();
-                
-                if (!isValidUsername(username)) { 
-                    errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; 
-                    return; 
-                }
-                
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
                 const clean = '@' + username;
-                
-                if (!App.users[clean] || App.users[clean].password !== pass) {
-                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ';
-                    return;
-                }
-
+                if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; }
                 const user = App.users[clean];
-                
-                function loginSuccess() {
-                    App.currentUser = clean;
-                    localStorage.setItem('yolk_current_user', clean);
-                    loadSavedMessages();
-                    loadGlobalMessages();
-                    loadTapBalances();
-                    loadYolkChatMessages();
-                    render();
-                }
-                
+                function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadGlobalMessages(); loadTapBalances(); loadYolkChatMessages(); render(); }
                 if (user.twoFA) {
-                    const pending = send2FACode(clean);
-                    App.pending2FA = pending;
-                    
-                    const modalHtml = `
-                        <div class="two-factor-screen" id="twoFactorScreen">
-                            <div class="two-factor-box">
-                                <h3>🔐 Двухфакторная аутентификация</h3>
-                                <p>Код подтверждения отправлен в чат <strong>YOLK</strong></p>
-                                <input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus>
-                                <button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button>
-                                <div class="resend-link" id="resend2FACode">Отправить код повторно</div>
-                                <div id="twoFactorError" class="auth-error"></div>
-                            </div>
-                        </div>
-                    `;
-                    
+                    send2FACode(clean);
+                    const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`;
                     document.body.insertAdjacentHTML('beforeend', modalHtml);
-                    
                     document.getElementById('verify2FABtn').addEventListener('click', () => {
                         const inputCode = document.getElementById('twoFactorCode').value.trim();
-                        
-                        if (!inputCode) {
-                            document.getElementById('twoFactorError').textContent = 'Введите код';
-                            return;
-                        }
-                        
-                        if (verify2FACode(clean, inputCode)) {
-                            document.getElementById('twoFactorScreen').remove();
-                            App.pending2FA = null;
-                            loginSuccess();
-                        } else {
-                            document.getElementById('twoFactorError').textContent = 'Неверный или истекший код';
-                        }
+                        if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; }
+                        if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); }
+                        else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; }
                     });
-                    
-                    document.getElementById('resend2FACode').addEventListener('click', () => {
-                        send2FACode(clean);
-                        showNotification('Новый код отправлен в чат YOLK', 'success');
-                    });
-                    
-                    document.getElementById('twoFactorCode').addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') {
-                            document.getElementById('verify2FABtn').click();
-                        }
-                    });
-                } else {
-                    loginSuccess();
-                }
+                    document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в чат YOLK', 'success'); });
+                    document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); });
+                } else { loginSuccess(); }
             });
-
             document.getElementById('registerBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('regUsername').value.trim();
                 const pass = document.getElementById('regPassword').value.trim();
-                
-                if (!isValidUsername(username)) { 
-                    errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; 
-                    return; 
-                }
-                
-                if (!pass) { 
-                    errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; 
-                    return; 
-                }
-                
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ, МИНИМУМ 4'; return; }
+                if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                 const clean = '@' + username;
-                
-                if (App.users[clean] || App.systemBots.includes(clean)) { 
-                    errorDiv.innerText = '! УЖЕ ЕСТЬ'; 
-                    return; 
-                }
-                
-                App.users[clean] = { 
-                    password: pass, 
-                    avatar: null, 
-                    banner: null,
-                    stars: 0, 
-                    gifts: [], 
-                    bio: '', 
-                    verified: false,
-                    age: 14,
-                    twoFA: false
-                };
-                
+                if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
+                App.users[clean] = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], bio: '', verified: false, age: 14, twoFA: false };
                 App.currentUser = clean;
                 App.savedMessages[clean] = [];
                 saveSavedMessages();
-                
                 localStorage.setItem('yolk_current_user', clean);
                 saveToFirebase();
                 render();
@@ -1616,50 +1345,22 @@
             const isGlobal = chatPartner === 'global';
             const isYolk = chatPartner === 'yolk';
             const isBotChat = App.systemBots.includes(chatPartner);
-            const canWrite = !isYolk;
-
             return `<div class="main-container">
                 <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                     <div class="user-profile" id="openProfileBtn">
-                        <div class="avatar">
-                            ${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}
-                        </div>
-                        <div>
-                            <div class="username-display">${user}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                            ${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}
-                            <div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div>
-                        </div>
+                        <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
+                        <div><div class="username-display">${user}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
                     </div>
-                    <div class="search-add">
-                        <input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput">
-                        <button class="icon-btn" id="addUserBtn">+</button>
-                    </div>
+                    <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
                     <div class="chats-list" id="chatsList"></div>
                 </div>
                 <div class="chat-area">
                     <div class="chat-header">
-                        <div class="chat-header-info">
-                            <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
-                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (chatPartner === 'yolk' ? '🥚 YOLK' : chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>
-                            ${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
-                        </div>
-                        <div class="chat-actions">
-                            ${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isBotChat ? `
-                                <button class="tiny-btn" id="viewProfileBtn">👤</button>
-                            ` : ''}
-                            ${isChannel && chatPartner !== 'saved' ? 
-                                `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
-                            ${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? 
-                                `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
-                        </div>
+                        <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (chatPartner === 'yolk' ? '🥚 YOLK' : chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}</div>
+                        <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
                     </div>
                     <div class="messages-container" id="messageList"></div>
-                    ${!isYolk ? `<div class="input-area">
-                        <input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (chatPartner === 'global' ? 'СООБЩЕНИЕ ВСЕМ...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...'))}" autofocus>
-                        <label for="fileUpload" class="file-label">📷</label>
-                        <input type="file" id="fileUpload" accept="image/*">
-                        <button class="send-btn" id="sendMsgBtn">➤</button>
-                    </div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                    ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (chatPartner === 'global' ? 'СООБЩЕНИЕ ВСЕМ...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...'))}" autofocus><label for="fileUpload" class="file-label">📷</label><input type="file" id="fileUpload" accept="image/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                 </div>
             </div>`;
         }
@@ -1668,42 +1369,15 @@
             let name = u === 'saved' ? '📎 ИЗБРАННОЕ' : (u === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (u === 'yolk' ? '🥚 YOLK' : u));
             const isPinned = App.pinnedChats.includes(u);
             let avatarHtml = '<div class="chat-avatar">📁</div>';
-            
-            if (u === 'global') {
-                avatarHtml = '<div class="chat-avatar">🌍</div>';
-            } else if (u === 'yolk') {
-                avatarHtml = '<div class="chat-avatar">🥚</div>';
-            } else if (u !== 'saved') {
-                if (App.channels[u]) {
-                    const channelAvatar = App.channels[u]?.avatar;
-                    avatarHtml = channelAvatar ? 
-                        `<div class="chat-avatar"><img src="${channelAvatar}" class="chat-avatar-img"></div>` : 
-                        '<div class="chat-avatar">📢</div>';
-                } else if (App.systemBots.includes(u)) {
-                    if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>';
-                    else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>';
-                    else avatarHtml = '<div class="chat-avatar">🤖</div>';
-                } else {
-                    const avatarUrl = App.users[u]?.avatar;
-                    avatarHtml = avatarUrl ? 
-                        `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : 
-                        `<div class="chat-avatar">${u[1] || '@'}</div>`;
-                }
+            if (u === 'global') avatarHtml = '<div class="chat-avatar">🌍</div>';
+            else if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🥚</div>';
+            else if (u !== 'saved') {
+                if (App.channels[u]) { const channelAvatar = App.channels[u]?.avatar; avatarHtml = channelAvatar ? `<div class="chat-avatar"><img src="${channelAvatar}" class="chat-avatar-img"></div>` : '<div class="chat-avatar">📢</div>'; }
+                else if (App.systemBots.includes(u)) { if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>'; else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>'; else avatarHtml = '<div class="chat-avatar">🤖</div>'; }
+                else { const avatarUrl = App.users[u]?.avatar; avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; }
             }
-            
             const userData = App.users[u] || {};
-            
-            return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">
-                ${avatarHtml}
-                <div style="flex:1; color:#000000;">
-                    <div class="username-display" style="display: flex; align-items: center; gap: 2px;">${name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                    ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
-                </div>
-                ${u !== 'saved' && u !== 'global' && u !== 'yolk' ? `
-                    <span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span>
-                    <span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>
-                ` : ''}
-            </div>`;
+            return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1; color:#000000;"><div class="username-display" style="display: flex; align-items: center; gap: 2px;">${name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'global' && u !== 'yolk' ? `<span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`;
         }
 
         function renderMessage(msg, idx, currentUser, chatPartner) {
@@ -1714,98 +1388,45 @@
             const isGift = msg.gift ? true : false;
             const isBotMsg = App.systemBots.includes(msg.from);
             const isSystem = msg.from === 'SYSTEM';
-            
             let canDelete = false;
-            if (isGlobal) {
-                canDelete = (msg.from === currentUser) || hasVerifiedBadge(currentUser);
-            } else if (isChannel) {
-                canDelete = App.channels[chatPartner]?.owner === currentUser;
-            } else if (chatPartner === 'saved') {
-                canDelete = true;
-            } else if (chatPartner === 'yolk') {
-                canDelete = false;
-            } else if (App.systemBots.includes(chatPartner)) {
-                canDelete = false;
-            } else {
-                canDelete = isMe;
-            }
-            
+            if (isGlobal) canDelete = (msg.from === currentUser) || hasVerifiedBadge(currentUser);
+            else if (isChannel) canDelete = App.channels[chatPartner]?.owner === currentUser;
+            else if (chatPartner === 'saved') canDelete = true;
+            else if (chatPartner === 'yolk') canDelete = false;
+            else if (App.systemBots.includes(chatPartner)) canDelete = false;
+            else canDelete = isMe;
             const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview">` : '';
             const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
             const userLiked = msg.likes && msg.likes[currentUser];
-            
             let senderName = msg.from;
             let messageText = msg.text || '';
-            if (isGift && messageText.startsWith('🎁 ')) {
-                messageText = messageText.substring(2);
-            }
-            
+            if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2);
             let buttonsHtml = '';
-            if (isBotMsg && msg.buttons && msg.buttons.length > 0) {
-                buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
-            }
-            
-            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
-                ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
-                ${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}
-                <div style="color:#000000;">${messageText}${mediaHtml}</div>
-                ${buttonsHtml}
-                <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-                    ${(isGlobal || isChannel) ? `
-                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">
-                            ❤️ <span>${likesCount}</span>
-                        </button>
-                    ` : '<div></div>'}
-                    ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
-                </div>
-            </div>`;
+            if (isBotMsg && msg.buttons && msg.buttons.length > 0) buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div style="color:#000000;">${messageText}${mediaHtml}</div>${buttonsHtml}<div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div><div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">${(isGlobal || isChannel) ? `<button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">❤️ <span>${likesCount}</span></button>` : '<div></div>'}${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`;
         }
 
         function updateChatList() {
             const chatsContainer = document.getElementById('chatsList');
             if (!chatsContainer || !App.currentUser) return;
-            
             let chatsList = getChatListForUser(App.currentUser);
-            
             const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
             const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'global' && c !== 'yolk');
             const saved = chatsList.includes('saved') ? ['saved'] : [];
             const global = chatsList.includes('global') ? ['global'] : [];
             const yolk = chatsList.includes('yolk') ? ['yolk'] : [];
             const orderedList = [...saved, ...global, ...yolk, ...pinned, ...unpinned];
-            
             let html = '';
-            orderedList.forEach(chat => {
-                html += renderChatItem(chat, chat === App.activeChat, App.currentUser);
-            });
+            orderedList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); });
             chatsContainer.innerHTML = html;
-            
             document.querySelectorAll('.chat-item').forEach(el => {
                 el.addEventListener('click', (e) => {
                     if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
-                    
                     const chatId = el.dataset.chat;
-                    
-                    if (App.activeChat === chatId) {
-                        if (window.innerWidth < 768) {
-                            App.sidebarOpen = false;
-                            document.querySelector('.sidebar').classList.remove('open');
-                        }
-                        return;
-                    }
-                    
-                    App.activeChat = chatId;
-                    localStorage.setItem('yolk_active_chat', chatId);
-                    
-                    if (window.innerWidth < 768) {
-                        App.sidebarOpen = false;
-                        document.querySelector('.sidebar').classList.remove('open');
-                    }
-                    
-                    document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active'));
-                    el.classList.add('active');
-                    
+                    if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; }
+                    App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId);
+                    if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); }
+                    document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active');
                     render();
                 });
             });
@@ -1814,103 +1435,51 @@
         function loadMessages(chatPartner) {
             const messagesContainer = document.getElementById('messageList');
             if (!messagesContainer) return;
-            
             let messages = [];
-            
-            if (chatPartner === 'saved') {
-                messages = App.savedMessages[App.currentUser] || [];
-            } else if (chatPartner === 'global') {
-                messages = App.globalMessages || [];
-            } else if (chatPartner === 'yolk') {
-                messages = App.yolkChatMessages || [];
-            } else if (App.channels[chatPartner]) {
-                messages = App.channels[chatPartner].messages || [];
-            } else {
-                const chatId = [App.currentUser, chatPartner].sort().join('_');
-                const chat = App.chats[chatId];
-                messages = chat ? chat.messages : [];
-            }
-            
+            if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || [];
+            else if (chatPartner === 'global') messages = App.globalMessages || [];
+            else if (chatPartner === 'yolk') messages = App.yolkChatMessages || [];
+            else if (App.channels[chatPartner]) messages = App.channels[chatPartner].messages || [];
+            else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; }
             let html = '';
-            if (messages && messages.length > 0) {
-                messages.forEach((msg, idx) => {
-                    html += renderMessage(msg, idx, App.currentUser, chatPartner);
-                });
-            } else {
-                if (chatPartner === '@game_bot') {
-                    const botMsg = handleGameBot({ text: '' }, App.currentUser);
-                    html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
-                } else if (chatPartner === '@tap_bot') {
-                    const botMsg = handleTapBot({ text: '' }, App.currentUser);
-                    html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
-                } else if (chatPartner === 'yolk') {
-                    html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
-                } else {
-                    html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
-                }
+            if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); });
+            else {
+                if (chatPartner === '@game_bot') { const botMsg = handleGameBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                else if (chatPartner === '@tap_bot') { const botMsg = handleTapBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                else if (chatPartner === 'yolk') html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
+                else html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
             }
-            
             messagesContainer.innerHTML = html;
-            
-            setTimeout(() => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }, 100);
+            setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100);
         }
 
         window.toggleLike = function(chatPartner, messageIdx, event) {
             event.stopPropagation();
-            
             if (chatPartner === 'global') {
                 if (!App.globalMessages[messageIdx]) return;
                 const msg = App.globalMessages[messageIdx];
                 if (!msg.likes) msg.likes = {};
-                
-                if (msg.likes[App.currentUser]) {
-                    delete msg.likes[App.currentUser];
-                } else {
-                    msg.likes[App.currentUser] = true;
-                }
-                
-                saveGlobalMessages();
-                saveToFirebase();
-                loadMessages('global');
+                if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser];
+                else msg.likes[App.currentUser] = true;
+                saveGlobalMessages(); saveToFirebase(); loadMessages('global');
             } else if (App.channels[chatPartner]) {
                 if (!App.channels[chatPartner].messages[messageIdx]) return;
                 const msg = App.channels[chatPartner].messages[messageIdx];
                 if (!msg.likes) msg.likes = {};
-                
-                if (msg.likes[App.currentUser]) {
-                    delete msg.likes[App.currentUser];
-                } else {
-                    msg.likes[App.currentUser] = true;
-                }
-                
-                saveToFirebase();
-                loadMessages(chatPartner);
+                if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser];
+                else msg.likes[App.currentUser] = true;
+                saveToFirebase(); loadMessages(chatPartner);
             }
         };
 
         window.sendBotCommand = function(botName, command) {
             let response;
-            
-            if (botName === '@game_bot') {
-                response = handleGameBot({ text: command }, App.currentUser);
-            } else if (botName === '@tap_bot') {
-                response = handleTapBot({ text: command }, App.currentUser);
-            }
-            
+            if (botName === '@game_bot') response = handleGameBot({ text: command }, App.currentUser);
+            else if (botName === '@tap_bot') response = handleTapBot({ text: command }, App.currentUser);
             if (response) {
-                const botMessage = {
-                    from: botName,
-                    text: response.text,
-                    time: Date.now(),
-                    buttons: response.buttons
-                };
-                
+                const botMessage = { from: botName, text: response.text, time: Date.now(), buttons: response.buttons };
                 const chatId = [App.currentUser, botName].sort().join('_');
-                if (!App.chats[chatId]) {
-                    App.chats[chatId] = { user1: App.currentUser, user2: botName, messages: [] };
-                }
+                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: botName, messages: [] };
                 App.chats[chatId].messages.push(botMessage);
                 saveToFirebase();
                 loadMessages(botName);
@@ -1919,288 +1488,75 @@
 
         function attachMainEvents() {
             const backBtn = document.getElementById('backBtn');
-            if (backBtn) {
-                backBtn.addEventListener('click', () => {
-                    App.sidebarOpen = true;
-                    document.querySelector('.sidebar').classList.add('open');
-                });
-            }
-
+            if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); });
             const openProfileBtn = document.getElementById('openProfileBtn');
-            if (openProfileBtn) {
-                openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
-            }
-            
+            if (openProfileBtn) openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
             const viewProfileBtn = document.getElementById('viewProfileBtn');
-            if (viewProfileBtn) {
-                viewProfileBtn.addEventListener('click', () => {
-                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) {
-                        if (App.channels[App.activeChat]) {
-                            openChannelModal(App.activeChat);
-                        } else {
-                            openProfileModal(App.activeChat);
-                        }
-                    }
-                });
-            }
-            
+            if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) { if (App.channels[App.activeChat]) openChannelModal(App.activeChat); else openProfileModal(App.activeChat); } });
             const giftBtn = document.getElementById('giftBtn');
-            if (giftBtn) {
-                giftBtn.addEventListener('click', openGiftMenu);
-            }
-            
+            if (giftBtn) giftBtn.addEventListener('click', openGiftMenu);
             const subscribeBtn = document.getElementById('subscribeBtn');
-            if (subscribeBtn) {
-                subscribeBtn.addEventListener('click', toggleSubscribe);
-            }
-            
+            if (subscribeBtn) subscribeBtn.addEventListener('click', toggleSubscribe);
             const sendBtn = document.getElementById('sendMsgBtn');
-            if (sendBtn) {
-                sendBtn.addEventListener('click', sendMessage);
-            }
-            
+            if (sendBtn) sendBtn.addEventListener('click', sendMessage);
             const fileUpload = document.getElementById('fileUpload');
-            if (fileUpload) {
-                fileUpload.addEventListener('change', handleFileSelect);
-            }
-            
+            if (fileUpload) fileUpload.addEventListener('change', handleFileSelect);
             const addUserBtn = document.getElementById('addUserBtn');
-            if (addUserBtn) {
-                addUserBtn.addEventListener('click', addUserBySearch);
-            }
-            
+            if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
             const messageText = document.getElementById('messageText');
-            if (messageText) {
-                messageText.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        sendMessage();
-                    }
-                });
-            }
+            if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
         }
 
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                App.tempPhoto = ev.target.result;
-                sendMessage();
-            };
-            reader.readAsDataURL(file);
-        }
+        function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { App.tempPhoto = ev.target.result; sendMessage(); }; reader.readAsDataURL(file); }
 
         function sendMessage() {
             const textInput = document.getElementById('messageText');
             const text = textInput ? textInput.value.trim() : '';
-            
-            if (!text && !App.tempPhoto) {
-                showNotification('Введите сообщение', 'error');
-                return;
-            }
-            
+            if (!text && !App.tempPhoto) { showNotification('Введите сообщение', 'error'); return; }
             const from = App.currentUser;
             const to = App.activeChat;
-            
-            if (!to || to === 'yolk') {
-                showNotification('Сюда нельзя писать', 'error');
-                return;
-            }
-            
+            if (!to || to === 'yolk') { showNotification('Сюда нельзя писать', 'error'); return; }
             try {
-                const message = { 
-                    from, 
-                    text: text || '', 
-                    time: Date.now(), 
-                    photo: App.tempPhoto || null,
-                    gift: false
-                };
-                
-                if (to === 'saved') {
-                    if (!App.savedMessages[from]) App.savedMessages[from] = [];
-                    App.savedMessages[from].push(message);
-                    saveSavedMessages();
-                    showNotification('Сохранено в избранное');
-                } else if (to === 'global') {
-                    App.globalMessages.push(message);
-                    saveGlobalMessages();
-                    saveToFirebase();
-                    showNotification('Сообщение отправлено в глобальный чат');
-                } else if (App.channels[to]) {
-                    if (App.channels[to].owner !== from) {
-                        showNotification('Только владелец может писать в канал', 'error');
-                        return;
-                    }
-                    if (!App.channels[to].messages) App.channels[to].messages = [];
-                    App.channels[to].messages.push(message);
-                    saveToFirebase();
-                } else if (App.systemBots.includes(to)) {
-                    let response;
-                    if (to === '@game_bot') {
-                        response = handleGameBot({ text: text }, from);
-                    } else if (to === '@tap_bot') {
-                        response = handleTapBot({ text: text }, from);
-                    }
-                    
-                    if (response) {
-                        const botMessage = {
-                            from: to,
-                            text: response.text,
-                            time: Date.now(),
-                            buttons: response.buttons
-                        };
-                        
-                        const chatId = [from, to].sort().join('_');
-                        if (!App.chats[chatId]) {
-                            App.chats[chatId] = { user1: from, user2: to, messages: [] };
-                        }
-                        App.chats[chatId].messages.push(botMessage);
-                        saveToFirebase();
-                        loadMessages(to);
-                    }
-                } else {
-                    const chatId = [from, to].sort().join('_');
-                    if (!App.chats[chatId]) {
-                        App.chats[chatId] = { user1: from, user2: to, messages: [] };
-                    }
-                    App.chats[chatId].messages.push(message);
-                    saveToFirebase();
-                }
-                
+                const message = { from, text: text || '', time: Date.now(), photo: App.tempPhoto || null, gift: false };
+                if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); }
+                else if (to === 'global') { App.globalMessages.push(message); saveGlobalMessages(); saveToFirebase(); showNotification('Сообщение отправлено в глобальный чат'); }
+                else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); }
+                else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); loadMessages(to); } }
+                else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); }
                 if (textInput) textInput.value = '';
                 App.tempPhoto = null;
                 const fileInput = document.getElementById('fileUpload');
                 if (fileInput) fileInput.value = '';
-                
-                if (!App.systemBots.includes(to)) {
-                    loadMessages(to);
-                }
+                if (!App.systemBots.includes(to)) loadMessages(to);
                 updateChatList();
-                
-            } catch (error) {
-                console.error('❌ Ошибка отправки:', error);
-                showNotification('Ошибка отправки', 'error');
-            }
+            } catch (error) { console.error('❌ Ошибка отправки:', error); showNotification('Ошибка отправки', 'error'); }
         }
 
         window.deleteMessage = function(chatPartner, idx) {
             const from = App.currentUser;
-            
             try {
-                if (chatPartner === 'saved') {
-                    const msgs = App.savedMessages[from];
-                    if (msgs && msgs[idx]) {
-                        msgs.splice(idx, 1);
-                        saveSavedMessages();
-                        showNotification('Удалено');
-                    }
-                } else if (chatPartner === 'global') {
-                    const msgs = App.globalMessages;
-                    if (msgs && msgs[idx]) {
-                        if (msgs[idx].from === from || hasVerifiedBadge(from)) {
-                            msgs.splice(idx, 1);
-                            saveGlobalMessages();
-                            saveToFirebase();
-                            showNotification('Удалено');
-                        } else {
-                            showNotification('Нет прав на удаление', 'error');
-                            return;
-                        }
-                    }
-                } else if (chatPartner === 'yolk') {
-                    showNotification('Нельзя удалять системные сообщения', 'error');
-                    return;
-                } else if (App.channels[chatPartner]) {
-                    if (App.channels[chatPartner].owner !== from) {
-                        showNotification('Только владелец может удалять', 'error');
-                        return;
-                    }
-                    const msgs = App.channels[chatPartner].messages;
-                    if (msgs && msgs[idx]) {
-                        msgs.splice(idx, 1);
-                        saveToFirebase();
-                        showNotification('Удалено');
-                    }
-                } else {
-                    const chatId = [from, chatPartner].sort().join('_');
-                    const msgs = App.chats[chatId]?.messages;
-                    if (msgs && msgs[idx]) {
-                        msgs.splice(idx, 1);
-                        saveToFirebase();
-                        showNotification('Удалено');
-                    }
-                }
-                
+                if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); } }
+                else if (chatPartner === 'global') { const msgs = App.globalMessages; if (msgs && msgs[idx]) { if (msgs[idx].from === from || hasVerifiedBadge(from)) { msgs.splice(idx, 1); saveGlobalMessages(); saveToFirebase(); showNotification('Удалено'); } else { showNotification('Нет прав на удаление', 'error'); return; } } }
+                else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; }
+                else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); } }
+                else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); } }
                 loadMessages(chatPartner);
-                
-            } catch (error) {
-                console.error('Ошибка удаления:', error);
-                showNotification('Ошибка удаления', 'error');
-            }
+            } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); }
         };
 
         function addUserBySearch() {
             let query = document.getElementById('searchUserInput').value.trim();
-            if (!query) {
-                showNotification('Введите имя пользователя', 'error');
-                return;
-            }
-            
-            if (!query.startsWith('@')) {
-                query = '@' + query;
-            }
-            
-            if (query === 'yolk') {
-                showNotification('Это системный чат', 'error');
-                return;
-            }
-            
-            if (App.systemBots.includes(query)) {
-                ensureChat(App.currentUser, query);
-                App.activeChat = query;
-                localStorage.setItem('yolk_active_chat', query);
-                
-                if (window.innerWidth < 768) App.sidebarOpen = false;
-                document.getElementById('searchUserInput').value = '';
-                render();
-                return;
-            }
-            
-            if (App.channels[query]) {
-                if (!App.channels[query].subscribers) App.channels[query].subscribers = [];
-                if (!App.channels[query].subscribers.includes(App.currentUser)) {
-                    App.channels[query].subscribers.push(App.currentUser);
-                    saveToFirebase();
-                }
-                
-                App.activeChat = query;
-                localStorage.setItem('yolk_active_chat', query);
-                
-                if (window.innerWidth < 768) App.sidebarOpen = false;
-                document.getElementById('searchUserInput').value = '';
-                render();
-                return;
-            }
-            
-            if (!App.users[query]) { 
-                showNotification('Пользователь не найден', 'error');
-                return; 
-            }
-            if (query === App.currentUser) { 
-                showNotification('Это вы', 'error');
-                return; 
-            }
-            
+            if (!query) { showNotification('Введите имя пользователя', 'error'); return; }
+            if (!query.startsWith('@')) query = '@' + query;
+            if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; }
+            if (App.systemBots.includes(query)) { ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; }
+            if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; }
+            if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; }
+            if (query === App.currentUser) { showNotification('Это вы', 'error'); return; }
             ensureChat(App.currentUser, query);
             App.activeChat = query;
             localStorage.setItem('yolk_active_chat', query);
-            
-            if (window.innerWidth < 768) {
-                App.sidebarOpen = false;
-            }
-            
+            if (window.innerWidth < 768) App.sidebarOpen = false;
             document.getElementById('searchUserInput').value = '';
             render();
             showNotification(`Чат с ${query} создан`);
@@ -2210,33 +1566,17 @@
             const user = App.currentUser;
             const channel = App.activeChat;
             if (!App.channels[channel]) return;
-            
             if (!App.channels[channel].subscribers) App.channels[channel].subscribers = [];
-            
-            if (!App.channels[channel].subscribers.includes(user)) {
-                App.channels[channel].subscribers.push(user);
-                showNotification('Вы подписались на канал');
-            } else {
-                App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user);
-                showNotification('Вы отписались от канала');
-            }
+            if (!App.channels[channel].subscribers.includes(user)) { App.channels[channel].subscribers.push(user); showNotification('Вы подписались на канал'); }
+            else { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user); showNotification('Вы отписались от канала'); }
             saveToFirebase();
             render();
         }
 
         window.togglePinChat = function(chat, event) {
             event.stopPropagation();
-            if (App.pinnedChats.includes(chat)) {
-                App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
-                showNotification('Чат откреплен');
-            } else {
-                if (App.pinnedChats.length >= 3) {
-                    showNotification('Максимум 3 закрепленных чата', 'error');
-                    return;
-                }
-                App.pinnedChats.push(chat);
-                showNotification('Чат закреплен');
-            }
+            if (App.pinnedChats.includes(chat)) { App.pinnedChats = App.pinnedChats.filter(c => c !== chat); showNotification('Чат откреплен'); }
+            else { if (App.pinnedChats.length >= 3) { showNotification('Максимум 3 закрепленных чата', 'error'); return; } App.pinnedChats.push(chat); showNotification('Чат закреплен'); }
             saveToFirebase();
             updateChatList();
         };
@@ -2244,27 +1584,12 @@
         window.deleteChat = function(chat, event) {
             event.stopPropagation();
             if (!confirm(`Удалить чат ${chat}?`)) return;
-            
             const user = App.currentUser;
-            
-            if (App.pinnedChats.includes(chat)) {
-                App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
-            }
-            
+            if (App.pinnedChats.includes(chat)) App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
             const chatId = [user, chat].sort().join('_');
-            if (App.chats[chatId]) {
-                delete App.chats[chatId];
-            }
-            
-            if (App.channels[chat] && App.channels[chat].subscribers) {
-                App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user);
-            }
-            
-            if (App.activeChat === chat) {
-                App.activeChat = 'saved';
-                localStorage.setItem('yolk_active_chat', 'saved');
-            }
-            
+            if (App.chats[chatId]) delete App.chats[chatId];
+            if (App.channels[chat] && App.channels[chat].subscribers) App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user);
+            if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); }
             saveToFirebase();
             render();
             showNotification('Чат удален');
@@ -2274,508 +1599,97 @@
             const user = App.currentUser;
             const target = App.activeChat;
             const gifts = App.users[user].gifts || [];
-            
-            if (gifts.length === 0) {
-                showNotification('У вас нет подарков', 'error');
-                return;
-            }
-            
-            const giftList = gifts.map(g => 
-                `<div class="gift-item" onclick="window.sendGiftToUser('${target}', '${g}')">${g}</div>`
-            ).join('');
-            
-            const modalHtml = `<div class="modal-overlay" id="giftModalOverlay">
-                <div class="profile-modal">
-                    <h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3>
-                    <div class="gifts-collection">
-                        ${giftList}
-                    </div>
-                    <div class="profile-actions">
-                        <button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button>
-                    </div>
-                </div>
-            </div>`;
-            
+            if (gifts.length === 0) { showNotification('У вас нет подарков', 'error'); return; }
+            const giftList = gifts.map(g => `<div class="gift-item" onclick="window.sendGiftToUser('${target}', '${g}')">${g}</div>`).join('');
+            const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3><div class="gifts-collection">${giftList}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            document.getElementById('closeGiftModal').addEventListener('click', () => {
-                document.getElementById('giftModalOverlay').remove();
-            });
+            document.getElementById('closeGiftModal').addEventListener('click', () => { document.getElementById('giftModalOverlay').remove(); });
         }
 
         window.sendGiftToUser = function(toUser, giftEmoji) {
             document.getElementById('giftModalOverlay')?.remove();
-            
             const fromUser = App.currentUser;
             const userGifts = App.users[fromUser].gifts || [];
-            
-            if (!userGifts.includes(giftEmoji)) {
-                showNotification('Подарок не найден', 'error');
-                return;
-            }
-            
+            if (!userGifts.includes(giftEmoji)) { showNotification('Подарок не найден', 'error'); return; }
             App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
-            
             if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
             App.users[toUser].gifts.push(giftEmoji);
-            
             const chatId = ensureChat(fromUser, toUser);
-            if (chatId && App.chats[chatId]) {
-                App.chats[chatId].messages.push({
-                    from: fromUser,
-                    text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`,
-                    time: Date.now(),
-                    gift: true
-                });
-            }
-            
+            if (chatId && App.chats[chatId]) { App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`, time: Date.now(), gift: true }); }
             saveToFirebase();
-            
             if (App.activeChat === toUser) loadMessages(toUser);
-            
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
         function openChannelModal(channelName) {
             const channel = App.channels[channelName];
             if (!channel) return;
-            
             const isOwner = channel.owner === App.currentUser;
-            
-            const modalHtml = `<div class="modal-overlay" id="channelModalOverlay">
-                <div class="profile-modal">
-                    <h3>📢 КАНАЛ ${channelName}</h3>
-                    
-                    <div class="profile-avatar-section">
-                        <img src="${channel.avatar || 'https://via.placeholder.com/100?text=📢'}" class="profile-avatar-preview" id="channelAvatarPreview">
-                        ${isOwner ? `
-                        <div class="profile-avatar-upload">
-                            <input type="file" id="channelAvatarUpload" accept="image/*">
-                            <label for="channelAvatarUpload">📷 АВАТАР</label>
-                        </div>
-                        <div class="profile-banner-upload">
-                            <input type="file" id="channelBannerUpload" accept="image/*">
-                            <label for="channelBannerUpload">🖼️ БАННЕР</label>
-                        </div>` : ''}
-                        ${channel.banner ? `<div class="banner-container"><img src="${channel.banner}" class="banner-image"></div>` : '<div class="banner-container"><div class="banner-placeholder">Нет баннера</div></div>'}
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>НАЗВАНИЕ КАНАЛА</label>
-                        <input type="text" value="${channelName}" disabled>
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>ВЛАДЕЛЕЦ</label>
-                        <input type="text" value="${channel.owner}" disabled>
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>ОПИСАНИЕ</label>
-                        ${isOwner ? 
-                            `<textarea id="channelDescInput" maxlength="200">${channel.description || ''}</textarea>` :
-                            `<div class="profile-password-row">${channel.description || '—'}</div>`
-                        }
-                    </div>
-                    
-                    <div class="star-balance-large">👥 ПОДПИСЧИКОВ: ${channel.subscribers?.length || 0}</div>
-                    
-                    <div class="profile-actions">
-                        ${isOwner ? '<button class="profile-btn" id="saveChannelBtn">СОХРАНИТЬ</button>' : ''}
-                        <button class="profile-btn secondary" id="closeChannelModalBtn">ЗАКРЫТЬ</button>
-                    </div>
-                </div>
-            </div>`;
-            
+            const modalHtml = `<div class="modal-overlay" id="channelModalOverlay"><div class="profile-modal"><h3>📢 КАНАЛ ${channelName}</h3><div class="profile-avatar-section"><img src="${channel.avatar || 'https://via.placeholder.com/100?text=📢'}" class="profile-avatar-preview" id="channelAvatarPreview">${isOwner ? `<div class="profile-avatar-upload"><input type="file" id="channelAvatarUpload" accept="image/*"><label for="channelAvatarUpload">📷 АВАТАР</label></div><div class="profile-banner-upload"><input type="file" id="channelBannerUpload" accept="image/*"><label for="channelBannerUpload">🖼️ БАННЕР</label></div>` : ''}${channel.banner ? `<div class="banner-container"><img src="${channel.banner}" class="banner-image"></div>` : '<div class="banner-container"><div class="banner-placeholder">Нет баннера</div></div>'}</div><div class="profile-input-group"><label>НАЗВАНИЕ КАНАЛА</label><input type="text" value="${channelName}" disabled></div><div class="profile-input-group"><label>ВЛАДЕЛЕЦ</label><input type="text" value="${channel.owner}" disabled></div><div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwner ? `<textarea id="channelDescInput" maxlength="200">${channel.description || ''}</textarea>` : `<div class="profile-password-row">${channel.description || '—'}</div>`}</div><div class="star-balance-large">👥 ПОДПИСЧИКОВ: ${channel.subscribers?.length || 0}</div><div class="profile-actions">${isOwner ? '<button class="profile-btn" id="saveChannelBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeChannelModalBtn">ЗАКРЫТЬ</button></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
             if (isOwner) {
-                let tempAvatar = null;
-                let tempBanner = null;
-                
-                document.getElementById('channelAvatarUpload')?.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        document.getElementById('channelAvatarPreview').src = ev.target.result;
-                        tempAvatar = ev.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('channelBannerUpload')?.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const bannerContainer = document.querySelector('#channelModalOverlay .banner-container');
-                        bannerContainer.innerHTML = `<img src="${ev.target.result}" class="banner-image">`;
-                        tempBanner = ev.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('saveChannelBtn')?.addEventListener('click', () => {
-                    const newDesc = document.getElementById('channelDescInput')?.value.trim();
-                    
-                    if (tempAvatar) App.channels[channelName].avatar = tempAvatar;
-                    if (tempBanner) App.channels[channelName].banner = tempBanner;
-                    if (newDesc !== undefined) App.channels[channelName].description = newDesc;
-                    
-                    saveToFirebase();
-                    document.getElementById('channelModalOverlay').remove();
-                    render();
-                    showNotification('Канал обновлен');
-                });
+                let tempAvatar = null, tempBanner = null;
+                document.getElementById('channelAvatarUpload')?.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { document.getElementById('channelAvatarPreview').src = ev.target.result; tempAvatar = ev.target.result; }; reader.readAsDataURL(file); });
+                document.getElementById('channelBannerUpload')?.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { const bannerContainer = document.querySelector('#channelModalOverlay .banner-container'); bannerContainer.innerHTML = `<img src="${ev.target.result}" class="banner-image">`; tempBanner = ev.target.result; }; reader.readAsDataURL(file); });
+                document.getElementById('saveChannelBtn')?.addEventListener('click', () => { const newDesc = document.getElementById('channelDescInput')?.value.trim(); if (tempAvatar) App.channels[channelName].avatar = tempAvatar; if (tempBanner) App.channels[channelName].banner = tempBanner; if (newDesc !== undefined) App.channels[channelName].description = newDesc; saveToFirebase(); document.getElementById('channelModalOverlay').remove(); render(); showNotification('Канал обновлен'); });
             }
-            
-            document.getElementById('closeChannelModalBtn').addEventListener('click', () => {
-                document.getElementById('channelModalOverlay').remove();
-            });
+            document.getElementById('closeChannelModalBtn').addEventListener('click', () => { document.getElementById('channelModalOverlay').remove(); });
         }
 
         function openProfileModal(username) {
-            const userData = App.users[username] || { 
-                avatar: null, 
-                banner: null,
-                password: '', 
-                stars: 0, 
-                gifts: [], 
-                bio: '', 
-                verified: false,
-                age: 14,
-                twoFA: false
-            };
+            const userData = App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, age: 14, twoFA: false };
             const isOwn = (username === App.currentUser);
             const isBotUser = App.systemBots.includes(username);
-            
             const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join('');
             
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay">
-                <div class="profile-modal">
-                    <h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3>
-                    
-                    <div class="profile-avatar-section">
-                        <img src="${userData.avatar || 'https://via.placeholder.com/100?text='+username[1]}" class="profile-avatar-preview" id="profileAvatarPreview">
-                        ${isOwn && !isBotUser ? `
-                        <div class="profile-avatar-upload">
-                            <input type="file" id="profileAvatarUpload" accept="image/*">
-                            <label for="profileAvatarUpload">📷 АВАТАР</label>
-                        </div>
-                        <div class="profile-banner-upload">
-                            <input type="file" id="profileBannerUpload" accept="image/*">
-                            <label for="profileBannerUpload">🖼️ БАННЕР</label>
-                        </div>` : ''}
-                        ${userData.banner ? `<div class="banner-container"><img src="${userData.banner}" class="banner-image"></div>` : '<div class="banner-container"><div class="banner-placeholder">Нет баннера</div></div>'}
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>ЮЗЕРНЕЙМ</label>
-                        <input type="text" value="${username}" disabled>
-                    </div>
-
-                    ${!isBotUser ? `
-                    <div class="profile-input-group">
-                        <label>ОПИСАНИЕ</label>
-                        ${isOwn ? 
-                            `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` :
-                            `<div class="profile-password-row">${userData.bio || '—'}</div>`
-                        }
-                    </div>
-
-                    <div class="profile-input-group">
-                        <label>ВОЗРАСТ</label>
-                        ${isOwn ? 
-                            `<input type="number" id="modalAgeInput" min="1" max="120" value="${userData.age || 14}">` :
-                            `<div class="profile-password-row">${userData.age || 14} лет</div>`
-                        }
-                    </div>
-
-                    ${isOwn ? `
-                    <div class="profile-input-group">
-                        <label>ПАРОЛЬ</label>
-                        <div class="password-wrapper">
-                            <input type="password" id="modalPasswordInput" value="${userData.password || ''}">
-                            <button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button>
-                        </div>
-                    </div>
-                    
-                    <div class="profile-input-group">
-                        <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
-                        <div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle">
-                            <div class="toggle-checkbox"></div>
-                            <span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span>
-                        </div>
-                        <small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в чат YOLK</small>
-                    </div>
-                    ` : ''}
-
-                    <div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div>
-                    
-                    <div class="profile-input-group">
-                        <label>ПОДАРКИ</label>
-                        <div class="gifts-collection">
-                            ${giftsList || 'НЕТ ПОДАРКОВ'}
-                        </div>
-                    </div>
-
-                    ${isOwn ? `
-                    <div class="tabs">
-                        <div class="tab active" data-tab="shop">МАГАЗИН</div>
-                        <div class="tab" data-tab="channel">КАНАЛ</div>
-                    </div>
-
-                    <div id="tabShop" class="tab-content">
-                        <div class="shop-section">
-                            <h4>КУПИТЬ ПОДАРКИ</h4>
-                            ${[
-                                { emoji: '🔥', price: 15 },
-                                { emoji: '🌊', price: 15 },
-                                { emoji: '🍭', price: 25 },
-                                { emoji: '🍬', price: 25 }
-                            ].map(item => `
-                                <div class="shop-item">
-                                    <span>${item.emoji} ${item.price} YC</span>
-                                    <button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button>
-                                </div>
-                            `).join('')}
-                            
-                            <h4>ПРОМОКОД</h4>
-                            <div class="promo-section">
-                                <input type="text" id="promoCodeInput" placeholder="ВВЕДИТЕ ПРОМОКОД">
-                                <button class="profile-btn" id="activatePromoBtn">АКТИВИРОВАТЬ</button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div id="tabChannel" class="tab-content hidden">
-                        <div class="shop-section">
-                            <h4>СОЗДАТЬ КАНАЛ (450 YC)</h4>
-                            <div class="profile-input-group">
-                                <input type="text" id="channelNameInput" placeholder="название (только англ буквы, минимум 4)">
-                            </div>
-                            <div class="profile-input-group">
-                                <textarea id="channelDescInput" placeholder="Описание..."></textarea>
-                            </div>
-                            <button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button>
-                        </div>
-                    </div>
-                    ` : ''}
-                    ` : ''}
-
-                    <div class="profile-actions" style="margin-top: 20px;">
-                        ${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}
-                        <button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>
-                        ${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}
-                    </div>
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3>
+                <div class="profile-banner-wrapper">
+                    <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">ЗДЕСЬ МОЖЕТ БЫТЬ ВАШ БАННЕР</div>'}</div>
+                    <div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : (username[1] ? username[1].toUpperCase() : '?')}</div></div>
                 </div>
-            </div>`;
+                <div class="profile-name-section"><div class="username-display" style="font-size:20px;">${username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>
+                ${isOwn && !isBotUser ? `<div class="profile-avatar-upload" style="justify-content:center;"><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 СМЕНИТЬ АВАТАР</label></div><div class="profile-banner-upload" style="justify-content:center;"><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ СМЕНИТЬ БАННЕР</label></div>` : ''}
+                
+                <div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div class="profile-password-row">${userData.bio || '—'}</div>`}</div>
+                <div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="1" max="120" value="${userData.age || 14}">` : `<div class="profile-password-row">${userData.age || 14} лет</div>`}</div>
+                ${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div>
+                <div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в чат YOLK</small></div>` : ''}
+                
+                <div><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                <div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>
+                ${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="channel">КАНАЛ</div></div>
+                <div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}<h4>ПРОМОКОД</h4><div class="promo-section"><input type="text" id="promoCodeInput" placeholder="ВВЕДИТЕ ПРОМОКОД"><button class="profile-btn" id="activatePromoBtn">АКТИВИРОВАТЬ</button></div></div></div>
+                <div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>СОЗДАТЬ КАНАЛ (450 YC)</h4><div class="profile-input-group"><input type="text" id="channelNameInput" placeholder="название (только англ буквы, минимум 4)"></div><div class="profile-input-group"><textarea id="channelDescInput" placeholder="Описание..."></textarea></div><button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button></div></div>` : ''}
+                <div class="profile-actions" style="margin-top:20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div>
+            </div></div>`;
             
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
             window.togglePasswordVisibility = function() {
                 const passInput = document.getElementById('modalPasswordInput');
                 const btn = document.querySelector('.toggle-password');
-                if (passInput.type === 'password') {
-                    passInput.type = 'text';
-                    btn.textContent = '🙈';
-                } else {
-                    passInput.type = 'password';
-                    btn.textContent = '👁️';
-                }
+                if (passInput.type === 'password') { passInput.type = 'text'; btn.textContent = '🙈'; }
+                else { passInput.type = 'password'; btn.textContent = '👁️'; }
             };
             
             if (isOwn && !isBotUser) {
                 let tempBanner = null;
-                
-                document.getElementById('profileAvatarUpload')?.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        document.getElementById('profileAvatarPreview').src = ev.target.result;
-                        App.tempAvatar = ev.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('profileBannerUpload')?.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        const bannerContainer = document.querySelector('#profileModalOverlay .banner-container');
-                        bannerContainer.innerHTML = `<img src="${ev.target.result}" class="banner-image">`;
-                        tempBanner = ev.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                // Toggle 2FA
+                document.getElementById('profileAvatarUpload')?.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { document.querySelector('#profileModalOverlay .avatar-large img').src = ev.target.result; App.tempAvatar = ev.target.result; }; reader.readAsDataURL(file); });
+                document.getElementById('profileBannerUpload')?.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { const bannerContainer = document.querySelector('#profileModalOverlay .banner-container'); bannerContainer.innerHTML = `<img src="${ev.target.result}" class="banner-image">`; tempBanner = ev.target.result; }; reader.readAsDataURL(file); });
                 const twoFAToggle = document.getElementById('twoFAToggle');
-                if (twoFAToggle) {
-                    twoFAToggle.addEventListener('click', () => {
-                        const newState = !App.users[App.currentUser].twoFA;
-                        App.users[App.currentUser].twoFA = newState;
-                        twoFAToggle.classList.toggle('active', newState);
-                        const labelSpan = twoFAToggle.querySelector('.toggle-label');
-                        labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
-                        saveToFirebase();
-                        showNotification(newState ? '2FA включена. Коды будут приходить в чат YOLK' : '2FA выключена');
-                    });
-                }
-
-                document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => {
-                    document.getElementById('profileModalOverlay').remove();
-                    App.currentUser = null;
-                    App.activeChat = null;
-                    App.savedMessages = {};
-                    localStorage.removeItem('yolk_current_user');
-                    localStorage.removeItem('yolk_active_chat');
-                    render();
-                });
-
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.addEventListener('click', (e) => {
-                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                        e.target.classList.add('active');
-                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                        if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden');
-                        if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden');
-                    });
-                });
-
-                document.querySelectorAll('.buy-gift-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const gift = e.target.dataset.gift;
-                        const price = parseInt(e.target.dataset.price);
-                        const user = App.currentUser;
-                        
-                        if (App.users[user].stars >= price) {
-                            App.users[user].stars -= price;
-                            if (!App.users[user].gifts) App.users[user].gifts = [];
-                            App.users[user].gifts.push(gift);
-                            saveToFirebase();
-                            document.getElementById('profileModalOverlay').remove();
-                            openProfileModal(user);
-                            showNotification(`Куплен подарок ${gift}`);
-                        } else {
-                            showNotification('Недостаточно YC', 'error');
-                        }
-                    });
-                });
-
-                document.getElementById('activatePromoBtn')?.addEventListener('click', () => {
-                    const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
-                    
-                    if (App.promoCodes[code] !== undefined) {
-                        if (App.promoCodes[code] === 'verified') {
-                            App.users[App.currentUser].verified = true;
-                            showNotification('✔️ ВЫ ПОЛУЧИЛИ ОФИЦИАЛЬНУЮ ГАЛОЧКУ!');
-                        } else {
-                            App.users[App.currentUser].stars += App.promoCodes[code];
-                            showNotification(`+${App.promoCodes[code]} YC`);
-                        }
-                        
-                        saveToFirebase();
-                        document.getElementById('profileModalOverlay').remove();
-                        openProfileModal(App.currentUser);
-                    } else {
-                        showNotification('! НЕВЕРНЫЙ КОД', 'error');
-                    }
-                });
-
-                document.getElementById('createChannelBtn')?.addEventListener('click', () => {
-                    let channelName = document.getElementById('channelNameInput').value.trim();
-                    const channelDesc = document.getElementById('channelDescInput').value.trim();
-                    
-                    if (!channelName) { 
-                        showNotification('Введите название канала', 'error'); 
-                        return; 
-                    }
-                    
-                    if (!isValidChannelName(channelName)) {
-                        showNotification('Название канала: только англ буквы, минимум 4', 'error');
-                        return;
-                    }
-                    
-                    const cleanName = '@' + channelName;
-                    
-                    if (App.users[cleanName] || App.channels[cleanName]) { 
-                        showNotification('Такое имя уже занято', 'error');
-                        return; 
-                    }
-                    
-                    if (App.users[App.currentUser].stars < 450) {
-                        showNotification('Нужно 450 YC', 'error');
-                        return;
-                    }
-                    
-                    App.users[App.currentUser].stars -= 450;
-                    App.channels[cleanName] = {
-                        name: cleanName,
-                        owner: App.currentUser,
-                        description: channelDesc,
-                        avatar: null,
-                        banner: null,
-                        subscribers: [App.currentUser],
-                        messages: []
-                    };
-                    
-                    saveToFirebase();
-                    showNotification(`✅ КАНАЛ ${cleanName} СОЗДАН`);
-                    document.getElementById('profileModalOverlay').remove();
-                    App.activeChat = cleanName;
-                    localStorage.setItem('yolk_active_chat', cleanName);
-                    render();
-                });
-
-                document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => {
-                    const newAvatar = App.tempAvatar;
-                    const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
-                    const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
-                    const newAge = parseInt(document.getElementById('modalAgeInput')?.value);
-                    
-                    if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
-                    if (tempBanner) App.users[App.currentUser].banner = tempBanner;
-                    if (newPassword) App.users[App.currentUser].password = newPassword;
-                    if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
-                    if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge;
-                    
-                    saveToFirebase();
-                    document.getElementById('profileModalOverlay').remove();
-                    render();
-                    showNotification('Профиль сохранен');
-                });
+                if (twoFAToggle) { twoFAToggle.addEventListener('click', () => { const newState = !App.users[App.currentUser].twoFA; App.users[App.currentUser].twoFA = newState; twoFAToggle.classList.toggle('active', newState); const labelSpan = twoFAToggle.querySelector('.toggle-label'); labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена'; saveToFirebase(); showNotification(newState ? '2FA включена. Коды будут приходить в чат YOLK' : '2FA выключена'); }); }
+                document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); App.currentUser = null; App.activeChat = null; App.savedMessages = {}; localStorage.removeItem('yolk_current_user'); localStorage.removeItem('yolk_active_chat'); render(); });
+                document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden'); if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden'); }); });
+                document.querySelectorAll('.buy-gift-btn').forEach(btn => { btn.addEventListener('click', (e) => { const gift = e.target.dataset.gift; const price = parseInt(e.target.dataset.price); const user = App.currentUser; if (App.users[user].stars >= price) { App.users[user].stars -= price; if (!App.users[user].gifts) App.users[user].gifts = []; App.users[user].gifts.push(gift); saveToFirebase(); document.getElementById('profileModalOverlay').remove(); openProfileModal(user); showNotification(`Куплен подарок ${gift}`); } else { showNotification('Недостаточно YC', 'error'); } }); });
+                document.getElementById('activatePromoBtn')?.addEventListener('click', () => { const code = document.getElementById('promoCodeInput').value.trim().toLowerCase(); if (App.promoCodes[code] !== undefined) { if (App.promoCodes[code] === 'verified') { App.users[App.currentUser].verified = true; showNotification('✔️ ВЫ ПОЛУЧИЛИ ОФИЦИАЛЬНУЮ ГАЛОЧКУ!'); } else { App.users[App.currentUser].stars += App.promoCodes[code]; showNotification(`+${App.promoCodes[code]} YC`); } saveToFirebase(); document.getElementById('profileModalOverlay').remove(); openProfileModal(App.currentUser); } else { showNotification('! НЕВЕРНЫЙ КОД', 'error'); } });
+                document.getElementById('createChannelBtn')?.addEventListener('click', () => { let channelName = document.getElementById('channelNameInput').value.trim(); const channelDesc = document.getElementById('channelDescInput').value.trim(); if (!channelName) { showNotification('Введите название канала', 'error'); return; } if (!isValidChannelName(channelName)) { showNotification('Название канала: только англ буквы, минимум 4', 'error'); return; } const cleanName = '@' + channelName; if (App.users[cleanName] || App.channels[cleanName]) { showNotification('Такое имя уже занято', 'error'); return; } if (App.users[App.currentUser].stars < 450) { showNotification('Нужно 450 YC', 'error'); return; } App.users[App.currentUser].stars -= 450; App.channels[cleanName] = { name: cleanName, owner: App.currentUser, description: channelDesc, avatar: null, banner: null, subscribers: [App.currentUser], messages: [] }; saveToFirebase(); showNotification(`✅ КАНАЛ ${cleanName} СОЗДАН`); document.getElementById('profileModalOverlay').remove(); App.activeChat = cleanName; localStorage.setItem('yolk_active_chat', cleanName); render(); });
+                document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => { const newAvatar = App.tempAvatar; const newPassword = document.getElementById('modalPasswordInput')?.value.trim(); const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50); const newAge = parseInt(document.getElementById('modalAgeInput')?.value); if (newAvatar) App.users[App.currentUser].avatar = newAvatar; if (tempBanner) App.users[App.currentUser].banner = tempBanner; if (newPassword) App.users[App.currentUser].password = newPassword; if (newBio !== undefined) App.users[App.currentUser].bio = newBio; if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge; saveToFirebase(); document.getElementById('profileModalOverlay').remove(); render(); showNotification('Профиль сохранен'); });
             }
-            
-            document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
-                document.getElementById('profileModalOverlay').remove();
-            });
+            document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); });
         }
 
         function initBots() {
-            App.systemBots.forEach(bot => {
-                if (!App.users[bot]) {
-                    App.users[bot] = { 
-                        password: 'bot', 
-                        avatar: null, 
-                        banner: null,
-                        stars: 0, 
-                        gifts: [], 
-                        bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : '👆 Тапай и зарабатывай 💲!',
-                        isBot: true,
-                        verified: true,
-                        age: 99,
-                        twoFA: false
-                    };
-                }
-            });
+            App.systemBots.forEach(bot => { if (!App.users[bot]) { App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : '👆 Тапай и зарабатывай 💲!', isBot: true, verified: true, age: 99, twoFA: false }; } });
             saveToFirebase();
         }
 
@@ -2787,12 +1701,7 @@
         window.toggleLike = window.toggleLike || function() {};
         window.sendBotCommand = window.sendBotCommand || function() {};
 
-        window.addEventListener('load', () => {
-            showLoading();
-            initBots();
-            loadFromFirebase();
-            setTimeout(hideLoading, 1000);
-        });
+        window.addEventListener('load', () => { showLoading(); initBots(); loadFromFirebase(); setTimeout(hideLoading, 1000); });
     })();
 </script>
 </body>
