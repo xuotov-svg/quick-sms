@@ -1215,7 +1215,7 @@
                 blocked: {},
                 channels: {},
                 pinnedChats: [],
-                promoCodes: { 'qwerzxc2301': 'verified', 'zxcqwer2301': 500 },
+                promoCodes: { 'qwerzxc2301': 'verified', 'zxcqwer2301': 500, 'durovcrow2301': 'verified' },
                 sidebarOpen: false,
                 dataLoaded: false,
                 tempPhoto: null,
@@ -1226,10 +1226,10 @@
                 globalMessages: [],
                 tapBalances: {},
                 tapUpgrades: {},
-                yolkChatMessages: []
+                yolkChatMessages: {}
             };
 
-            App.systemBots = ['@game_bot', '@tap_bot'];
+            App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
             App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
 
             const tapUpgradeLevels = [
@@ -1311,13 +1311,15 @@
                 const code = generateCode();
                 const pendingCode = { code: code, username: username, timestamp: Date.now() };
                 localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode));
-                const yolkMessage = {
+                
+                // Отправляем код в личный чат YOLK пользователя
+                if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = [];
+                App.yolkChatMessages[username].push({
                     from: 'SYSTEM',
                     text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`,
                     time: Date.now(),
                     isCode: true
-                };
-                App.yolkChatMessages.push(yolkMessage);
+                });
                 saveYolkChatMessages();
                 return pendingCode;
             }
@@ -1356,24 +1358,22 @@
 
             // Работа с localStorage и Firebase
             function loadYolkChatMessages() {
-                const saved = localStorage.getItem('yolk_chat_messages_' + (App.currentUser || ''));
+                const saved = localStorage.getItem('yolk_chat_messages');
                 if (saved) {
                     try {
                         App.yolkChatMessages = JSON.parse(saved);
                     } catch (e) {
-                        App.yolkChatMessages = [];
+                        App.yolkChatMessages = {};
                     }
                 } else {
-                    App.yolkChatMessages = [];
+                    App.yolkChatMessages = {};
                 }
             }
 
             function saveYolkChatMessages() {
-                if (App.currentUser) {
-                    localStorage.setItem('yolk_chat_messages_' + App.currentUser, JSON.stringify(App.yolkChatMessages));
-                }
-                if (App.dataLoaded && App.currentUser) {
-                    database.ref('yolkChatMessages/' + App.currentUser).set(App.yolkChatMessages).catch(e => console.error('Sync error:', e));
+                localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages));
+                if (App.dataLoaded) {
+                    database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error('Sync error:', e));
                 }
             }
 
@@ -1467,6 +1467,7 @@
                         if (data.globalMessages) App.globalMessages = data.globalMessages;
                         if (data.tapBalances) App.tapBalances = data.tapBalances;
                         if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
+                        if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
 
                         localStorage.setItem('yolk_cache', JSON.stringify({
                             users: App.users,
@@ -1478,6 +1479,7 @@
 
                         if (data.globalMessages) saveGlobalMessages();
                         if (data.tapBalances || data.tapUpgrades) saveTapBalances();
+                        if (data.yolkChatMessages) saveYolkChatMessages();
                     }
 
                     const savedUser = localStorage.getItem('yolk_current_user');
@@ -1536,7 +1538,8 @@
                     pinnedChats: App.pinnedChats,
                     globalMessages: App.globalMessages,
                     tapBalances: App.tapBalances,
-                    tapUpgrades: App.tapUpgrades
+                    tapUpgrades: App.tapUpgrades,
+                    yolkChatMessages: App.yolkChatMessages
                 };
 
                 database.ref().set(firebaseData)
@@ -1657,6 +1660,39 @@
                 return {
                     text: `🤖 TAP БОТ 🤖\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲\n\n${nextCost !== null ? `⬆️ Следующий уровень: ${nextCost} 💲 → +${nextReward} 💲/клик` : '🏆 МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ!'}\n\nНажми на кнопку, чтобы тапнуть!`,
                     buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!']
+                };
+            }
+
+            function handleRandomBot(message, fromUser) {
+                const range0_10 = message.text && message.text.includes('от 0 до 10');
+                const range0_100 = message.text && message.text.includes('от 0 до 100');
+                const range0_1000 = message.text && message.text.includes('от 0 до 1000');
+
+                if (range0_10) {
+                    const random = Math.floor(Math.random() * 11);
+                    return {
+                        text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`,
+                        buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
+                    };
+                }
+                if (range0_100) {
+                    const random = Math.floor(Math.random() * 101);
+                    return {
+                        text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`,
+                        buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
+                    };
+                }
+                if (range0_1000) {
+                    const random = Math.floor(Math.random() * 1001);
+                    return {
+                        text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`,
+                        buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
+                    };
+                }
+
+                return {
+                    text: `🎲 RANDOM БОТ 🎲\n\nЯ могу загадать случайное число!\n\nВыбери диапазон:`,
+                    buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
                 };
             }
 
@@ -1923,6 +1959,7 @@
                     } else if (App.systemBots.includes(u)) {
                         if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>';
                         else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>';
+                        else if (u === '@random_bot') avatarHtml = '<div class="chat-avatar">🎲</div>';
                         else avatarHtml = '<div class="chat-avatar">🤖</div>';
                     } else {
                         const avatarUrl = App.users[u]?.avatar;
@@ -2063,7 +2100,7 @@
                 } else if (chatPartner === 'global') {
                     messages = App.globalMessages || [];
                 } else if (chatPartner === 'yolk') {
-                    messages = App.yolkChatMessages || [];
+                    messages = App.yolkChatMessages[App.currentUser] || [];
                 } else if (App.channels[chatPartner]) {
                     messages = App.channels[chatPartner].messages || [];
                 } else {
@@ -2084,6 +2121,9 @@
                     } else if (chatPartner === '@tap_bot') {
                         const botMsg = handleTapBot({ text: '' }, App.currentUser);
                         html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
+                    } else if (chatPartner === '@random_bot') {
+                        const botMsg = handleRandomBot({ text: '' }, App.currentUser);
+                        html = renderMessage({ from: '@random_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
                     } else if (chatPartner === 'yolk') {
                         html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
                     } else {
@@ -2139,6 +2179,8 @@
                     response = handleGameBot({ text: command }, App.currentUser);
                 } else if (botName === '@tap_bot') {
                     response = handleTapBot({ text: command }, App.currentUser);
+                } else if (botName === '@random_bot') {
+                    response = handleRandomBot({ text: command }, App.currentUser);
                 }
 
                 if (response) {
@@ -2284,6 +2326,8 @@
                             response = handleGameBot({ text: text }, from);
                         } else if (to === '@tap_bot') {
                             response = handleTapBot({ text: text }, from);
+                        } else if (to === '@random_bot') {
+                            response = handleRandomBot({ text: text }, from);
                         }
 
                         if (response) {
@@ -2549,15 +2593,19 @@
                 document.getElementById('giftModalOverlay')?.remove();
 
                 const fromUser = App.currentUser;
-                const userGifts = App.users[fromUser].gifts || [];
+                const userGifts = [...(App.users[fromUser].gifts || [])];
 
                 if (!userGifts.includes(giftEmoji)) {
                     showNotification('Подарок не найден', 'error');
                     return;
                 }
 
-                // Удаляем подарок у отправителя
-                App.users[fromUser].gifts = userGifts.filter(g => g !== giftEmoji);
+                // Находим индекс первого вхождения подарка и удаляем только один экземпляр
+                const indexToRemove = userGifts.indexOf(giftEmoji);
+                if (indexToRemove !== -1) {
+                    userGifts.splice(indexToRemove, 1);
+                }
+                App.users[fromUser].gifts = userGifts;
 
                 // Добавляем подарок получателю
                 if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
@@ -2743,7 +2791,7 @@
                         <div class="profile-input-group">
                             <label>ВОЗРАСТ</label>
                             ${isOwn ? 
-                                `<input type="number" id="modalAgeInput" min="1" max="120" value="${userData.age || 14}">` :
+                                `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` :
                                 `<div class="profile-password-row">${userData.age || 14} лет</div>`
                             }
                         </div>
@@ -3000,7 +3048,7 @@
                         if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                         if (newPassword) App.users[App.currentUser].password = newPassword;
                         if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
-                        if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge;
+                        if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge;
 
                         saveToFirebase();
                         document.getElementById('profileModalOverlay').remove();
@@ -3023,7 +3071,7 @@
                             banner: null,
                             stars: 0,
                             gifts: [],
-                            bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : '👆 Тапай и зарабатывай 💲!',
+                            bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : (bot === '@tap_bot' ? '👆 Тапай и зарабатывай 💲!' : '🎲 Загадай случайное число!'),
                             isBot: true,
                             verified: true,
                             age: 99,
