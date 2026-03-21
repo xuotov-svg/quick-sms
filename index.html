@@ -61,7 +61,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Синяя галочка с белой галочкой внутри */
+        /* Синяя звезда с белой галочкой внутри */
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -73,7 +73,7 @@
             margin-left: 4px;
         }
         
-        /* Валюта YC - белый круг с желтым внутренним кругом и буквой YC */
+        /* Валюта YC */
         .yc-currency {
             display: inline-flex;
             align-items: center;
@@ -142,6 +142,49 @@
             font-size: 14px;
         }
         
+        /* Чат YOLK в списке */
+        .yolk-chat {
+            background: #f8f9fa;
+        }
+        
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .toggle-switch .toggle-label {
+            font-size: 14px;
+            color: #000000;
+        }
+        .toggle-switch .toggle-checkbox {
+            width: 40px;
+            height: 20px;
+            background: #ccc;
+            border-radius: 20px;
+            position: relative;
+            transition: 0.2s;
+            border: 1px solid #000000;
+        }
+        .toggle-switch .toggle-checkbox::after {
+            content: "";
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            transition: 0.2s;
+            border: 1px solid #000000;
+        }
+        .toggle-switch.active .toggle-checkbox {
+            background: #d4af37;
+        }
+        .toggle-switch.active .toggle-checkbox::after {
+            left: 20px;
+        }
+        
         .app-header { 
             background: var(--header); 
             padding: 8px 16px; 
@@ -201,18 +244,7 @@
         .btn:hover { opacity: 0.9; transform: scale(0.98); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .auth-error { color: #ff0000; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
-        .auth-success { color: #00aa00; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
-        .forgot-password {
-            text-align: center;
-            margin-top: 15px;
-        }
-        .forgot-password a {
-            color: #d4af37;
-            text-decoration: underline;
-            cursor: pointer;
-            font-weight: 500;
-        }
 
         .two-factor-screen {
             position: fixed;
@@ -354,12 +386,6 @@
         }
         .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2px solid #000000; }
         .username-display { font-weight: 600; color: #000000; display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-        .email-badge {
-            display: inline-block;
-            margin-left: 5px;
-            color: #4CAF50;
-            font-size: 12px;
-        }
         .age-badge {
             display: inline-block;
             margin-left: 5px;
@@ -505,6 +531,12 @@
         .bot-message {
             background: #f5f5dc;
             border: 2px solid #d4af37;
+        }
+        .system-message {
+            background: #e8e8e8;
+            border: 1px solid #666;
+            color: #666;
+            font-style: italic;
         }
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
         .msg-actions button { 
@@ -784,7 +816,6 @@
             margin-bottom: 8px; 
             border: 1px solid #000000; 
         }
-        .shop-item-left { display: flex; align-items: center; gap: 15px; font-size: 24px; }
         .shop-item button { 
             background: var(--accent); 
             border: 1px solid #000000; 
@@ -901,52 +932,7 @@
         .notification.error {
             background: #ff4444;
         }
-
-        .email-verified {
-            color: #4CAF50;
-            font-weight: 600;
-            margin-left: 5px;
-        }
-        .email-unverified {
-            color: #ff4444;
-            font-weight: 600;
-            margin-left: 5px;
-        }
-        .verification-code-input {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .verification-code-input input {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #000000;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 20px;
-            letter-spacing: 5px;
-        }
-        
-        .slot-machine {
-            display: inline-block;
-            background: #f0f0f0;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 24px;
-            letter-spacing: 10px;
-            margin: 10px 0;
-        }
-        
-        .tap-stats {
-            background: #f0f0f0;
-            padding: 10px;
-            border-radius: 8px;
-            margin: 10px 0;
-            text-align: center;
-        }
     </style>
-    <!-- EmailJS для отправки писем -->
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -972,16 +958,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // Инициализация EmailJS с правильным ключом
-    emailjs.init({
-        publicKey: "8oO0zcryCZDxWODG2",
-        blockHeadless: false,
-        limitRate: {
-            id: 'app',
-            throttle: 10000
-        }
-    });
-
     (function() {
         // Основное состояние приложения
         const App = {
@@ -999,12 +975,11 @@
             tempPhoto: null,
             tempBanner: null,
             pending2FA: null,
-            pendingPasswordReset: null,
-            pendingEmailVerification: null,
             savedMessages: {},
             globalMessages: [],
             tapBalances: {},
-            tapUpgrades: {}
+            tapUpgrades: {},
+            yolkChatMessages: [] // Чат YOLK для кодов
         };
 
         App.systemBots = ['@game_bot', '@tap_bot'];
@@ -1019,7 +994,6 @@
             { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
         ];
 
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function generateCode() {
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
@@ -1030,10 +1004,6 @@
 
         function isValidChannelName(str) {
             return /^[a-zA-Z]{4,}$/.test(str);
-        }
-
-        function isValidEmail(email) {
-            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         }
 
         function isBot(username) {
@@ -1080,10 +1050,48 @@
             if (!App.users[user].gifts) App.users[user].gifts = [];
             if (App.users[user].bio === undefined) App.users[user].bio = '';
             if (App.users[user].verified === undefined) App.users[user].verified = false;
-            if (App.users[user].email === undefined) App.users[user].email = '';
-            if (App.users[user].emailVerified === undefined) App.users[user].emailVerified = false;
             if (App.users[user].age === undefined) App.users[user].age = 14;
             if (App.users[user].banner === undefined) App.users[user].banner = null;
+            if (App.users[user].twoFA === undefined) App.users[user].twoFA = false;
+        }
+
+        function send2FACode(username) {
+            const code = generateCode();
+            const pendingCode = {
+                code: code,
+                username: username,
+                timestamp: Date.now()
+            };
+            
+            // Сохраняем код в ожидании
+            const pendingKey = 'pending_2fa_' + username;
+            localStorage.setItem(pendingKey, JSON.stringify(pendingCode));
+            
+            // Отправляем сообщение в чат YOLK
+            const yolkMessage = {
+                from: 'SYSTEM',
+                text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`,
+                time: Date.now(),
+                isCode: true
+            };
+            
+            App.yolkChatMessages.push(yolkMessage);
+            saveYolkChatMessages();
+            
+            return pendingCode;
+        }
+
+        function verify2FACode(username, inputCode) {
+            const pendingKey = 'pending_2fa_' + username;
+            const saved = localStorage.getItem(pendingKey);
+            if (!saved) return false;
+            
+            const pending = JSON.parse(saved);
+            if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) {
+                localStorage.removeItem(pendingKey);
+                return true;
+            }
+            return false;
         }
 
         function showNotification(message, type = 'success') {
@@ -1091,10 +1099,7 @@
             notification.className = 'notification' + (type === 'error' ? ' error' : '');
             notification.textContent = message;
             document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+            setTimeout(() => notification.remove(), 3000);
         }
 
         function showLoading() {
@@ -1110,7 +1115,26 @@
             if (loading) loading.remove();
         }
 
-        // ========== РАБОТА С ДАННЫМИ ==========
+        function loadYolkChatMessages() {
+            const saved = localStorage.getItem('yolk_chat_messages');
+            if (saved) {
+                try {
+                    App.yolkChatMessages = JSON.parse(saved);
+                } catch(e) {
+                    App.yolkChatMessages = [];
+                }
+            } else {
+                App.yolkChatMessages = [];
+            }
+        }
+
+        function saveYolkChatMessages() {
+            localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages));
+            if (App.dataLoaded) {
+                database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error('Sync error:', e));
+            }
+        }
+
         function loadSavedMessages() {
             if (!App.currentUser) return;
             const saved = localStorage.getItem('yolk_saved_' + App.currentUser);
@@ -1201,6 +1225,7 @@
                     if (data.globalMessages) App.globalMessages = data.globalMessages;
                     if (data.tapBalances) App.tapBalances = data.tapBalances;
                     if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
+                    if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
                     
                     localStorage.setItem('yolk_cache', JSON.stringify({
                         users: App.users,
@@ -1212,6 +1237,7 @@
                     
                     if (data.globalMessages) saveGlobalMessages();
                     if (data.tapBalances || data.tapUpgrades) saveTapBalances();
+                    if (data.yolkChatMessages) saveYolkChatMessages();
                 }
                 
                 const savedUser = localStorage.getItem('yolk_current_user');
@@ -1219,10 +1245,11 @@
                 
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
-                    App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'global' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
+                    App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'global' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
                     loadSavedMessages();
                     loadGlobalMessages();
                     loadTapBalances();
+                    loadYolkChatMessages();
                 }
                 
                 App.dataLoaded = true;
@@ -1250,6 +1277,7 @@
                     loadSavedMessages();
                     loadGlobalMessages();
                     loadTapBalances();
+                    loadYolkChatMessages();
                 }
                 
                 App.dataLoaded = true;
@@ -1268,7 +1296,8 @@
                 pinnedChats: App.pinnedChats,
                 globalMessages: App.globalMessages,
                 tapBalances: App.tapBalances,
-                tapUpgrades: App.tapUpgrades
+                tapUpgrades: App.tapUpgrades,
+                yolkChatMessages: App.yolkChatMessages
             };
             
             database.ref().set(firebaseData)
@@ -1282,7 +1311,7 @@
         }
 
         function ensureChat(userA, userB) {
-            if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'global') return;
+            if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'global' || userB === 'yolk') return;
             const chatId = [userA, userB].sort().join('_');
             if (!App.chats[chatId]) {
                 App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
@@ -1292,7 +1321,7 @@
         }
 
         function getChatListForUser(user) {
-            let set = new Set(['saved', 'global']);
+            let set = new Set(['saved', 'global', 'yolk']);
             
             Object.keys(App.chats || {}).forEach(key => {
                 const c = App.chats[key];
@@ -1309,88 +1338,6 @@
             });
             
             return Array.from(set);
-        }
-
-        // ========== EMAIL ФУНКЦИИ ==========
-        async function sendEmailCode(email, code, username, type = 'login') {
-            try {
-                const templateParams = {
-                    to_email: email,
-                    to_name: username,
-                    verification_code: code,
-                    message: type === 'reset' ? 'Код для сброса пароля' : 'Код подтверждения'
-                };
-
-                const result = await emailjs.send('service_lw2cbjm', 'template_7o2x9ji', templateParams);
-                console.log('EmailJS result:', result);
-                showNotification(`Код отправлен на ${email}`, 'success');
-                return true;
-            } catch (error) {
-                console.error('Ошибка отправки email:', error);
-                // Создаем тестовый код для демонстрации
-                showNotification(`⚠️ Демо-режим: код для ${email} - ${code}`, 'success');
-                return true;
-            }
-        }
-
-        function show2FAScreen(email, username, onSuccess) {
-            const code = generateCode();
-            
-            App.pending2FA = {
-                email: email,
-                code: code,
-                username: username,
-                timestamp: Date.now()
-            };
-
-            sendEmailCode(email, code, username, 'login');
-
-            const modalHtml = `
-                <div class="two-factor-screen" id="twoFactorScreen">
-                    <div class="two-factor-box">
-                        <h3>🔐 Двухфакторная аутентификация</h3>
-                        <p>Код подтверждения отправлен на<br><strong>${email}</strong></p>
-                        <input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus>
-                        <button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button>
-                        <div class="resend-link" id="resend2FACode">Отправить код повторно</div>
-                        <div id="twoFactorError" class="auth-error"></div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            document.getElementById('verify2FABtn').addEventListener('click', () => {
-                const inputCode = document.getElementById('twoFactorCode').value.trim();
-                
-                if (!inputCode) {
-                    document.getElementById('twoFactorError').textContent = 'Введите код';
-                    return;
-                }
-
-                if (inputCode === App.pending2FA.code && (Date.now() - App.pending2FA.timestamp) < 600000) {
-                    document.getElementById('twoFactorScreen').remove();
-                    App.pending2FA = null;
-                    onSuccess();
-                } else {
-                    document.getElementById('twoFactorError').textContent = 'Неверный или истекший код';
-                }
-            });
-
-            document.getElementById('resend2FACode').addEventListener('click', () => {
-                if (App.pending2FA) {
-                    const newCode = generateCode();
-                    App.pending2FA.code = newCode;
-                    App.pending2FA.timestamp = Date.now();
-                    sendEmailCode(App.pending2FA.email, newCode, App.pending2FA.username, 'login');
-                }
-            });
-
-            document.getElementById('twoFactorCode').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    document.getElementById('verify2FABtn').click();
-                }
-            });
         }
 
         // ========== БОТЫ ==========
@@ -1499,7 +1446,6 @@
             }
         }
 
-        // ========== АВТОРИЗАЦИЯ ==========
         function renderAuth() {
             return `<div class="auth-container">
                 <div class="auth-box">
@@ -1509,9 +1455,6 @@
                             <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы, минимум 4"></div>
                             <div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="••••••"></div>
                             <button class="btn" id="loginBtn">ВОЙТИ</button>
-                            <div class="forgot-password">
-                                <a id="forgotPasswordBtn">Забыли пароль?</a>
-                            </div>
                         </div>
                         <div class="auth-switch">
                             <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button>
@@ -1543,10 +1486,6 @@
                 loginForm.style.display = 'block';
             });
 
-            document.getElementById('forgotPasswordBtn')?.addEventListener('click', () => {
-                showPasswordResetScreen();
-            });
-
             document.getElementById('loginBtn')?.addEventListener('click', () => {
                 let username = document.getElementById('loginUsername').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim();
@@ -1571,11 +1510,56 @@
                     loadSavedMessages();
                     loadGlobalMessages();
                     loadTapBalances();
+                    loadYolkChatMessages();
                     render();
                 }
                 
-                if (user.email && user.emailVerified) {
-                    show2FAScreen(user.email, clean, loginSuccess);
+                if (user.twoFA) {
+                    const pending = send2FACode(clean);
+                    App.pending2FA = pending;
+                    
+                    const modalHtml = `
+                        <div class="two-factor-screen" id="twoFactorScreen">
+                            <div class="two-factor-box">
+                                <h3>🔐 Двухфакторная аутентификация</h3>
+                                <p>Код подтверждения отправлен в чат <strong>YOLK</strong></p>
+                                <input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus>
+                                <button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button>
+                                <div class="resend-link" id="resend2FACode">Отправить код повторно</div>
+                                <div id="twoFactorError" class="auth-error"></div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    
+                    document.getElementById('verify2FABtn').addEventListener('click', () => {
+                        const inputCode = document.getElementById('twoFactorCode').value.trim();
+                        
+                        if (!inputCode) {
+                            document.getElementById('twoFactorError').textContent = 'Введите код';
+                            return;
+                        }
+                        
+                        if (verify2FACode(clean, inputCode)) {
+                            document.getElementById('twoFactorScreen').remove();
+                            App.pending2FA = null;
+                            loginSuccess();
+                        } else {
+                            document.getElementById('twoFactorError').textContent = 'Неверный или истекший код';
+                        }
+                    });
+                    
+                    document.getElementById('resend2FACode').addEventListener('click', () => {
+                        send2FACode(clean);
+                        showNotification('Новый код отправлен в чат YOLK', 'success');
+                    });
+                    
+                    document.getElementById('twoFactorCode').addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            document.getElementById('verify2FABtn').click();
+                        }
+                    });
                 } else {
                     loginSuccess();
                 }
@@ -1610,9 +1594,8 @@
                     gifts: [], 
                     bio: '', 
                     verified: false,
-                    email: '',
-                    emailVerified: false,
-                    age: 14
+                    age: 14,
+                    twoFA: false
                 };
                 
                 App.currentUser = clean;
@@ -1625,14 +1608,15 @@
             });
         }
 
-        // ========== ОСНОВНОЙ ИНТЕРФЕЙС ==========
         function renderMain() {
             const user = App.currentUser;
             const userData = App.users[user] || {};
             const chatPartner = App.activeChat || 'saved';
             const isChannel = App.channels[chatPartner] ? true : false;
             const isGlobal = chatPartner === 'global';
+            const isYolk = chatPartner === 'yolk';
             const isBotChat = App.systemBots.includes(chatPartner);
+            const canWrite = !isYolk;
 
             return `<div class="main-container">
                 <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
@@ -1642,7 +1626,6 @@
                         </div>
                         <div>
                             <div class="username-display">${user}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                            ${userData.emailVerified ? '<div class="email-badge">📧 подтвержден</div>' : ''}
                             ${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}
                             <div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div>
                         </div>
@@ -1657,37 +1640,39 @@
                     <div class="chat-header">
                         <div class="chat-header-info">
                             <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
-                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>
+                            <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (chatPartner === 'yolk' ? '🥚 YOLK' : chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>
                             ${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                         </div>
                         <div class="chat-actions">
-                            ${chatPartner !== 'saved' && chatPartner !== 'global' && !isBotChat ? `
+                            ${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isBotChat ? `
                                 <button class="tiny-btn" id="viewProfileBtn">👤</button>
                             ` : ''}
                             ${isChannel && chatPartner !== 'saved' ? 
                                 `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
-                            ${chatPartner !== 'saved' && chatPartner !== 'global' && !isChannel && !isBot(chatPartner) ? 
+                            ${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? 
                                 `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
                         </div>
                     </div>
                     <div class="messages-container" id="messageList"></div>
-                    <div class="input-area">
+                    ${!isYolk ? `<div class="input-area">
                         <input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (chatPartner === 'global' ? 'СООБЩЕНИЕ ВСЕМ...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...'))}" autofocus>
                         <label for="fileUpload" class="file-label">📷</label>
                         <input type="file" id="fileUpload" accept="image/*">
                         <button class="send-btn" id="sendMsgBtn">➤</button>
-                    </div>
+                    </div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                 </div>
             </div>`;
         }
 
         function renderChatItem(u, active, currentUser) {
-            let name = u === 'saved' ? '📎 ИЗБРАННОЕ' : (u === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : u);
+            let name = u === 'saved' ? '📎 ИЗБРАННОЕ' : (u === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (u === 'yolk' ? '🥚 YOLK' : u));
             const isPinned = App.pinnedChats.includes(u);
             let avatarHtml = '<div class="chat-avatar">📁</div>';
             
             if (u === 'global') {
                 avatarHtml = '<div class="chat-avatar">🌍</div>';
+            } else if (u === 'yolk') {
+                avatarHtml = '<div class="chat-avatar">🥚</div>';
             } else if (u !== 'saved') {
                 if (App.channels[u]) {
                     const channelAvatar = App.channels[u]?.avatar;
@@ -1714,7 +1699,7 @@
                     <div class="username-display" style="display: flex; align-items: center; gap: 2px;">${name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                     ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                 </div>
-                ${u !== 'saved' && u !== 'global' ? `
+                ${u !== 'saved' && u !== 'global' && u !== 'yolk' ? `
                     <span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span>
                     <span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>
                 ` : ''}
@@ -1724,9 +1709,11 @@
         function renderMessage(msg, idx, currentUser, chatPartner) {
             const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
             const isGlobal = chatPartner === 'global';
+            const isYolk = chatPartner === 'yolk';
             const isChannel = App.channels[chatPartner] ? true : false;
             const isGift = msg.gift ? true : false;
             const isBotMsg = App.systemBots.includes(msg.from);
+            const isSystem = msg.from === 'SYSTEM';
             
             let canDelete = false;
             if (isGlobal) {
@@ -1735,6 +1722,8 @@
                 canDelete = App.channels[chatPartner]?.owner === currentUser;
             } else if (chatPartner === 'saved') {
                 canDelete = true;
+            } else if (chatPartner === 'yolk') {
+                canDelete = false;
             } else if (App.systemBots.includes(chatPartner)) {
                 canDelete = false;
             } else {
@@ -1746,7 +1735,6 @@
             const userLiked = msg.likes && msg.likes[currentUser];
             
             let senderName = msg.from;
-            
             let messageText = msg.text || '';
             if (isGift && messageText.startsWith('🎁 ')) {
                 messageText = messageText.substring(2);
@@ -1757,8 +1745,9 @@
                 buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
             }
             
-            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''}">
-                ${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
+            return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
+                ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
+                ${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}
                 <div style="color:#000000;">${messageText}${mediaHtml}</div>
                 ${buttonsHtml}
                 <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
@@ -1780,10 +1769,11 @@
             let chatsList = getChatListForUser(App.currentUser);
             
             const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
-            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'global');
+            const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'global' && c !== 'yolk');
             const saved = chatsList.includes('saved') ? ['saved'] : [];
             const global = chatsList.includes('global') ? ['global'] : [];
-            const orderedList = [...saved, ...global, ...pinned, ...unpinned];
+            const yolk = chatsList.includes('yolk') ? ['yolk'] : [];
+            const orderedList = [...saved, ...global, ...yolk, ...pinned, ...unpinned];
             
             let html = '';
             orderedList.forEach(chat => {
@@ -1831,6 +1821,8 @@
                 messages = App.savedMessages[App.currentUser] || [];
             } else if (chatPartner === 'global') {
                 messages = App.globalMessages || [];
+            } else if (chatPartner === 'yolk') {
+                messages = App.yolkChatMessages || [];
             } else if (App.channels[chatPartner]) {
                 messages = App.channels[chatPartner].messages || [];
             } else {
@@ -1851,6 +1843,8 @@
                 } else if (chatPartner === '@tap_bot') {
                     const botMsg = handleTapBot({ text: '' }, App.currentUser);
                     html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner);
+                } else if (chatPartner === 'yolk') {
+                    html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
                 } else {
                     html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
                 }
@@ -1863,7 +1857,6 @@
             }, 100);
         }
 
-        // ========== ЛАЙКИ ==========
         window.toggleLike = function(chatPartner, messageIdx, event) {
             event.stopPropagation();
             
@@ -1897,7 +1890,6 @@
             }
         };
 
-        // ========== КОМАНДЫ БОТОВ ==========
         window.sendBotCommand = function(botName, command) {
             let response;
             
@@ -1925,7 +1917,6 @@
             }
         };
 
-        // ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
         function attachMainEvents() {
             const backBtn = document.getElementById('backBtn');
             if (backBtn) {
@@ -1943,7 +1934,7 @@
             const viewProfileBtn = document.getElementById('viewProfileBtn');
             if (viewProfileBtn) {
                 viewProfileBtn.addEventListener('click', () => {
-                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && !App.systemBots.includes(App.activeChat)) {
+                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) {
                         if (App.channels[App.activeChat]) {
                             openChannelModal(App.activeChat);
                         } else {
@@ -2013,8 +2004,8 @@
             const from = App.currentUser;
             const to = App.activeChat;
             
-            if (!to) {
-                showNotification('Выберите чат', 'error');
+            if (!to || to === 'yolk') {
+                showNotification('Сюда нельзя писать', 'error');
                 return;
             }
             
@@ -2118,6 +2109,9 @@
                             return;
                         }
                     }
+                } else if (chatPartner === 'yolk') {
+                    showNotification('Нельзя удалять системные сообщения', 'error');
+                    return;
                 } else if (App.channels[chatPartner]) {
                     if (App.channels[chatPartner].owner !== from) {
                         showNotification('Только владелец может удалять', 'error');
@@ -2156,6 +2150,11 @@
             
             if (!query.startsWith('@')) {
                 query = '@' + query;
+            }
+            
+            if (query === 'yolk') {
+                showNotification('Это системный чат', 'error');
+                return;
             }
             
             if (App.systemBots.includes(query)) {
@@ -2337,7 +2336,6 @@
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
         };
 
-        // ========== МОДАЛЬНОЕ ОКНО КАНАЛА ==========
         function openChannelModal(channelName) {
             const channel = App.channels[channelName];
             if (!channel) return;
@@ -2353,11 +2351,11 @@
                         ${isOwner ? `
                         <div class="profile-avatar-upload">
                             <input type="file" id="channelAvatarUpload" accept="image/*">
-                            <label for="channelAvatarUpload">📷 ЗАГРУЗИТЬ АВАТАР</label>
+                            <label for="channelAvatarUpload">📷 АВАТАР</label>
                         </div>
                         <div class="profile-banner-upload">
                             <input type="file" id="channelBannerUpload" accept="image/*">
-                            <label for="channelBannerUpload">🖼️ ЗАГРУЗИТЬ БАННЕР</label>
+                            <label for="channelBannerUpload">🖼️ БАННЕР</label>
                         </div>` : ''}
                         ${channel.banner ? `<div class="banner-container"><img src="${channel.banner}" class="banner-image"></div>` : '<div class="banner-container"><div class="banner-placeholder">Нет баннера</div></div>'}
                     </div>
@@ -2439,8 +2437,7 @@
             });
         }
 
-        // ========== ПРОФИЛЬ ==========
-        window.openProfileModal = function(username) {
+        function openProfileModal(username) {
             const userData = App.users[username] || { 
                 avatar: null, 
                 banner: null,
@@ -2449,9 +2446,8 @@
                 gifts: [], 
                 bio: '', 
                 verified: false,
-                email: '',
-                emailVerified: false,
-                age: 14
+                age: 14,
+                twoFA: false
             };
             const isOwn = (username === App.currentUser);
             const isBotUser = App.systemBots.includes(username);
@@ -2508,25 +2504,12 @@
                     </div>
                     
                     <div class="profile-input-group">
-                        <label>EMAIL (для 2FA)</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="email" id="modalEmailInput" value="${userData.email || ''}" placeholder="your@email.com">
-                            ${!userData.emailVerified && userData.email ? `
-                                <button class="tiny-btn" id="sendVerificationCodeBtn" style="white-space: nowrap;">📧 КОД</button>
-                            ` : ''}
+                        <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
+                        <div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle">
+                            <div class="toggle-checkbox"></div>
+                            <span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span>
                         </div>
-                        ${userData.emailVerified ? 
-                            '<div class="email-verified">✓ EMAIL ПОДТВЕРЖДЕН (2FA активна)</div>' : 
-                            userData.email ? '<div class="email-unverified">✗ НЕ ПОДТВЕРЖДЕН (2FA не активна)</div>' : ''
-                        }
-                    </div>
-
-                    <div id="verificationSection" class="profile-input-group hidden">
-                        <label>ВВЕДИТЕ КОД</label>
-                        <div class="verification-code-input">
-                            <input type="text" id="verificationCodeInput" maxlength="6" placeholder="000000">
-                            <button class="tiny-btn" id="verifyCodeBtn">✓</button>
-                        </div>
+                        <small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в чат YOLK</small>
                     </div>
                     ` : ''}
 
@@ -2632,6 +2615,20 @@
                     };
                     reader.readAsDataURL(file);
                 });
+                
+                // Toggle 2FA
+                const twoFAToggle = document.getElementById('twoFAToggle');
+                if (twoFAToggle) {
+                    twoFAToggle.addEventListener('click', () => {
+                        const newState = !App.users[App.currentUser].twoFA;
+                        App.users[App.currentUser].twoFA = newState;
+                        twoFAToggle.classList.toggle('active', newState);
+                        const labelSpan = twoFAToggle.querySelector('.toggle-label');
+                        labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
+                        saveToFirebase();
+                        showNotification(newState ? '2FA включена. Коды будут приходить в чат YOLK' : '2FA выключена');
+                    });
+                }
 
                 document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
@@ -2651,52 +2648,6 @@
                         if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden');
                         if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden');
                     });
-                });
-
-                document.getElementById('sendVerificationCodeBtn')?.addEventListener('click', () => {
-                    const email = document.getElementById('modalEmailInput').value.trim();
-                    
-                    if (!email || !isValidEmail(email)) {
-                        showNotification('Введите корректный email', 'error');
-                        return;
-                    }
-                    
-                    const code = generateCode();
-                    
-                    App.pendingEmailVerification = {
-                        email: email,
-                        code: code,
-                        timestamp: Date.now()
-                    };
-                    
-                    sendEmailCode(email, code, App.currentUser, 'verify');
-                    document.getElementById('verificationSection').classList.remove('hidden');
-                });
-
-                document.getElementById('verifyCodeBtn')?.addEventListener('click', () => {
-                    const email = document.getElementById('modalEmailInput').value.trim();
-                    const code = document.getElementById('verificationCodeInput').value.trim();
-                    
-                    if (!App.pendingEmailVerification || App.pendingEmailVerification.email !== email) {
-                        showNotification('Сначала запросите код', 'error');
-                        return;
-                    }
-                    
-                    if (App.pendingEmailVerification.code === code && 
-                        (Date.now() - App.pendingEmailVerification.timestamp) < 600000) {
-                        
-                        App.users[App.currentUser].email = email;
-                        App.users[App.currentUser].emailVerified = true;
-                        saveToFirebase();
-                        
-                        showNotification('Email подтвержден! 2FA активирована');
-                        document.getElementById('profileModalOverlay').remove();
-                        openProfileModal(App.currentUser);
-                        
-                        App.pendingEmailVerification = null;
-                    } else {
-                        showNotification('Неверный или истекший код', 'error');
-                    }
                 });
 
                 document.querySelectorAll('.buy-gift-btn').forEach(btn => {
@@ -2788,7 +2739,6 @@
                     const newAvatar = App.tempAvatar;
                     const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
                     const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
-                    const newEmail = document.getElementById('modalEmailInput')?.value.trim();
                     const newAge = parseInt(document.getElementById('modalAgeInput')?.value);
                     
                     if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
@@ -2796,11 +2746,6 @@
                     if (newPassword) App.users[App.currentUser].password = newPassword;
                     if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
                     if (newAge && newAge > 0 && newAge < 120) App.users[App.currentUser].age = newAge;
-                    
-                    if (newEmail && newEmail !== App.users[App.currentUser].email) {
-                        App.users[App.currentUser].email = newEmail;
-                        App.users[App.currentUser].emailVerified = false;
-                    }
                     
                     saveToFirebase();
                     document.getElementById('profileModalOverlay').remove();
@@ -2812,107 +2757,8 @@
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
                 document.getElementById('profileModalOverlay').remove();
             });
-        };
-
-        // ========== СБРОС ПАРОЛЯ ==========
-        function showPasswordResetScreen() {
-            const modalHtml = `
-                <div class="two-factor-screen" id="passwordResetScreen">
-                    <div class="two-factor-box">
-                        <h3>🔐 Сброс пароля</h3>
-                        <p>Введите email, привязанный к аккаунту</p>
-                        <input type="email" class="code-input" id="resetEmailInput" placeholder="your@email.com" style="letter-spacing:normal;">
-                        <button class="btn" id="sendResetCodeBtn">ОТПРАВИТЬ КОД</button>
-                        <div class="resend-link" id="backToLogin">← Вернуться к входу</div>
-                        <div id="resetError" class="auth-error"></div>
-                    </div>
-                </div>
-            `;
-
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-            document.getElementById('sendResetCodeBtn').addEventListener('click', async () => {
-                const email = document.getElementById('resetEmailInput').value.trim();
-                
-                if (!email) {
-                    document.getElementById('resetError').textContent = 'Введите email';
-                    return;
-                }
-
-                let foundUser = null;
-                for (let username in App.users) {
-                    if (App.users[username].email === email && App.users[username].emailVerified) {
-                        foundUser = username;
-                        break;
-                    }
-                }
-
-                if (!foundUser) {
-                    document.getElementById('resetError').textContent = 'Email не найден или не подтвержден';
-                    return;
-                }
-
-                const code = generateCode();
-                
-                App.pendingPasswordReset = {
-                    email: email,
-                    code: code,
-                    username: foundUser,
-                    timestamp: Date.now()
-                };
-
-                await sendEmailCode(email, code, foundUser, 'reset');
-                
-                document.getElementById('passwordResetScreen').innerHTML = `
-                    <div class="two-factor-box">
-                        <h3>🔐 Сброс пароля</h3>
-                        <p>Код отправлен на<br><strong>${email}</strong></p>
-                        <input type="text" class="code-input" id="resetCodeInput" maxlength="6" placeholder="------" autofocus>
-                        <input type="password" class="code-input" id="newPasswordInput" placeholder="Новый пароль" style="letter-spacing:normal; margin-top:10px;">
-                        <button class="btn" id="verifyResetCodeBtn">СБРОСИТЬ ПАРОЛЬ</button>
-                        <div class="resend-link" id="resendResetCode">Отправить код повторно</div>
-                        <div id="resetError" class="auth-error"></div>
-                    </div>
-                `;
-
-                document.getElementById('verifyResetCodeBtn').addEventListener('click', () => {
-                    const inputCode = document.getElementById('resetCodeInput').value.trim();
-                    const newPassword = document.getElementById('newPasswordInput').value.trim();
-                    
-                    if (!inputCode || !newPassword) {
-                        document.getElementById('resetError').textContent = 'Заполните все поля';
-                        return;
-                    }
-
-                    if (inputCode === App.pendingPasswordReset.code && (Date.now() - App.pendingPasswordReset.timestamp) < 600000) {
-                        App.users[App.pendingPasswordReset.username].password = newPassword;
-                        saveToFirebase();
-                        
-                        document.getElementById('passwordResetScreen').remove();
-                        App.pendingPasswordReset = null;
-                        showNotification('Пароль успешно изменен!', 'success');
-                    } else {
-                        document.getElementById('resetError').textContent = 'Неверный или истекший код';
-                    }
-                });
-
-                document.getElementById('resendResetCode').addEventListener('click', async () => {
-                    if (App.pendingPasswordReset) {
-                        const newCode = generateCode();
-                        App.pendingPasswordReset.code = newCode;
-                        App.pendingPasswordReset.timestamp = Date.now();
-                        await sendEmailCode(App.pendingPasswordReset.email, newCode, App.pendingPasswordReset.username, 'reset');
-                        showNotification('Новый код отправлен', 'success');
-                    }
-                });
-            });
-
-            document.getElementById('backToLogin').addEventListener('click', () => {
-                document.getElementById('passwordResetScreen').remove();
-            });
         }
 
-        // ========== ИНИЦИАЛИЗАЦИЯ ==========
         function initBots() {
             App.systemBots.forEach(bot => {
                 if (!App.users[bot]) {
@@ -2925,16 +2771,14 @@
                         bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : '👆 Тапай и зарабатывай 💲!',
                         isBot: true,
                         verified: true,
-                        email: `${bot}@yolk.com`,
-                        emailVerified: true,
-                        age: 99
+                        age: 99,
+                        twoFA: false
                     };
                 }
             });
             saveToFirebase();
         }
 
-        // Глобальные функции
         window.togglePinChat = window.togglePinChat || function() {};
         window.deleteChat = window.deleteChat || function() {};
         window.openProfileModal = window.openProfileModal || function() {};
@@ -2943,7 +2787,6 @@
         window.toggleLike = window.toggleLike || function() {};
         window.sendBotCommand = window.sendBotCommand || function() {};
 
-        // Запуск
         window.addEventListener('load', () => {
             showLoading();
             initBots();
