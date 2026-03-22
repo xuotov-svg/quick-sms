@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolk · messenger</title>
+    <title>Yolkapp · messenger</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * {
             margin: 0;
@@ -66,7 +67,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Синяя звезда с белой галочкой внутри */
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -78,7 +78,6 @@
             margin-left: 4px;
         }
 
-        /* Валюта YC */
         .yc-currency {
             display: inline-flex;
             align-items: center;
@@ -125,7 +124,6 @@
             border: 1px solid #000000;
         }
 
-        /* Баннер с аватаркой */
         .profile-banner-wrapper {
             position: relative;
             width: 100%;
@@ -724,11 +722,6 @@
             100% { box-shadow: 0 0 5px #d4af37; }
         }
 
-        .global-message {
-            background: #f0f8ff;
-            border: 2px solid #d4af37;
-        }
-
         .bot-message {
             background: #f5f5dc;
             border: 2px solid #d4af37;
@@ -1223,7 +1216,6 @@
                 tempBanner: null,
                 pending2FA: null,
                 savedMessages: {},
-                globalMessages: [],
                 tapBalances: {},
                 tapUpgrades: {},
                 yolkChatMessages: {}
@@ -1347,7 +1339,7 @@
                 const loadingDiv = document.createElement('div');
                 loadingDiv.className = 'loading-screen';
                 loadingDiv.id = 'loadingScreen';
-                loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>Yolk</div>';
+                loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>Yolkapp</div>';
                 document.body.appendChild(loadingDiv);
             }
 
@@ -1394,26 +1386,6 @@
             function saveSavedMessages() {
                 if (App.currentUser) {
                     localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || []));
-                }
-            }
-
-            function loadGlobalMessages() {
-                const global = localStorage.getItem('yolk_global');
-                if (global) {
-                    try {
-                        App.globalMessages = JSON.parse(global);
-                    } catch (e) {
-                        App.globalMessages = [];
-                    }
-                } else {
-                    App.globalMessages = [];
-                }
-            }
-
-            function saveGlobalMessages() {
-                localStorage.setItem('yolk_global', JSON.stringify(App.globalMessages));
-                if (App.dataLoaded) {
-                    database.ref('globalMessages').set(App.globalMessages).catch(e => console.error('Sync error:', e));
                 }
             }
 
@@ -1464,7 +1436,6 @@
                         if (data.blocked) App.blocked = data.blocked;
                         if (data.channels) App.channels = data.channels;
                         if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
-                        if (data.globalMessages) App.globalMessages = data.globalMessages;
                         if (data.tapBalances) App.tapBalances = data.tapBalances;
                         if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
                         if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
@@ -1477,7 +1448,6 @@
                             pinnedChats: App.pinnedChats
                         }));
 
-                        if (data.globalMessages) saveGlobalMessages();
                         if (data.tapBalances || data.tapUpgrades) saveTapBalances();
                         if (data.yolkChatMessages) saveYolkChatMessages();
                     }
@@ -1487,9 +1457,8 @@
 
                     if (savedUser && App.users[savedUser]) {
                         App.currentUser = savedUser;
-                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'global' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
+                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
                         loadSavedMessages();
-                        loadGlobalMessages();
                         loadTapBalances();
                         loadYolkChatMessages();
                     }
@@ -1517,7 +1486,6 @@
                         App.currentUser = savedUser;
                         App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
                         loadSavedMessages();
-                        loadGlobalMessages();
                         loadTapBalances();
                         loadYolkChatMessages();
                     }
@@ -1536,7 +1504,6 @@
                     blocked: App.blocked,
                     channels: App.channels,
                     pinnedChats: App.pinnedChats,
-                    globalMessages: App.globalMessages,
                     tapBalances: App.tapBalances,
                     tapUpgrades: App.tapUpgrades,
                     yolkChatMessages: App.yolkChatMessages
@@ -1553,7 +1520,7 @@
             }
 
             function ensureChat(userA, userB) {
-                if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'global' || userB === 'yolk') return;
+                if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return;
                 const chatId = [userA, userB].sort().join('_');
                 if (!App.chats[chatId]) {
                     App.chats[chatId] = { user1: userA, user2: userB, messages: [] };
@@ -1563,7 +1530,7 @@
             }
 
             function getChatListForUser(user) {
-                let set = new Set(['saved', 'global', 'yolk']);
+                let set = new Set(['saved', 'yolk']);
 
                 Object.keys(App.chats || {}).forEach(key => {
                     const c = App.chats[key];
@@ -1724,7 +1691,7 @@
             function renderAuth() {
                 return `<div class="auth-container">
                     <div class="auth-box">
-                        <h2>Yolk</h2>
+                        <h2>Yolkapp</h2>
                         <div id="authForms">
                             <div id="loginForm">
                                 <div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, минимум 4"></div>
@@ -1783,7 +1750,6 @@
                         App.currentUser = clean;
                         localStorage.setItem('yolk_current_user', clean);
                         loadSavedMessages();
-                        loadGlobalMessages();
                         loadTapBalances();
                         loadYolkChatMessages();
                         render();
@@ -1891,7 +1857,6 @@
                 const userData = App.users[user] || {};
                 const chatPartner = App.activeChat || 'saved';
                 const isChannel = App.channels[chatPartner] ? true : false;
-                const isGlobal = chatPartner === 'global';
                 const isYolk = chatPartner === 'yolk';
                 const isBotChat = App.systemBots.includes(chatPartner);
 
@@ -1917,22 +1882,22 @@
                         <div class="chat-header">
                             <div class="chat-header-info">
                                 <button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button>
-                                <strong>${chatPartner === 'saved' ? '📎 ИЗБРАННОЕ' : (chatPartner === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (chatPartner === 'yolk' ? '🥚 YOLK' : chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>
+                                <strong>${chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>
                                 ${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}
                             </div>
                             <div class="chat-actions">
-                                ${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isBotChat ? `
+                                ${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `
                                     <button class="tiny-btn" id="viewProfileBtn">👤</button>
                                 ` : ''}
                                 ${isChannel && chatPartner !== 'saved' ? 
                                     `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
-                                ${chatPartner !== 'saved' && chatPartner !== 'global' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? 
+                                ${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? 
                                     `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
                             </div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
                         ${!isYolk ? `<div class="input-area">
-                            <input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (chatPartner === 'global' ? 'СООБЩЕНИЕ ВСЕМ...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...'))}" autofocus>
+                            <input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus>
                             <label for="fileUpload" class="file-label">📷</label>
                             <input type="file" id="fileUpload" accept="image/*">
                             <button class="send-btn" id="sendMsgBtn">➤</button>
@@ -1942,13 +1907,11 @@
             }
 
             function renderChatItem(u, active, currentUser) {
-                let name = u === 'saved' ? '📎 ИЗБРАННОЕ' : (u === 'global' ? '🌍 ГЛОБАЛЬНЫЙ ЧАТ' : (u === 'yolk' ? '🥚 YOLK' : u));
+                let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u);
                 const isPinned = App.pinnedChats.includes(u);
                 let avatarHtml = '<div class="chat-avatar">📁</div>';
 
-                if (u === 'global') {
-                    avatarHtml = '<div class="chat-avatar">🌍</div>';
-                } else if (u === 'yolk') {
+                if (u === 'yolk') {
                     avatarHtml = '<div class="chat-avatar">🥚</div>';
                 } else if (u !== 'saved') {
                     if (App.channels[u]) {
@@ -1977,7 +1940,7 @@
                         <div class="username-display" style="display: flex; align-items: center; gap: 2px;">${name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                         ${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}
                     </div>
-                    ${u !== 'saved' && u !== 'global' && u !== 'yolk' ? `
+                    ${u !== 'saved' && u !== 'yolk' ? `
                         <span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span>
                         <span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>
                     ` : ''}
@@ -1986,7 +1949,6 @@
 
             function renderMessage(msg, idx, currentUser, chatPartner) {
                 const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
-                const isGlobal = chatPartner === 'global';
                 const isYolk = chatPartner === 'yolk';
                 const isChannel = App.channels[chatPartner] ? true : false;
                 const isGift = msg.gift ? true : false;
@@ -1994,9 +1956,7 @@
                 const isSystem = msg.from === 'SYSTEM';
 
                 let canDelete = false;
-                if (isGlobal) {
-                    canDelete = (msg.from === currentUser) || hasVerifiedBadge(currentUser);
-                } else if (isChannel) {
+                if (isChannel) {
                     canDelete = App.channels[chatPartner]?.owner === currentUser;
                 } else if (chatPartner === 'saved') {
                     canDelete = true;
@@ -2012,7 +1972,6 @@
                 const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
                 const userLiked = msg.likes && msg.likes[currentUser];
 
-                let senderName = msg.from;
                 let messageText = msg.text || '';
                 if (isGift && messageText.startsWith('🎁 ')) {
                     messageText = messageText.substring(2);
@@ -2023,14 +1982,14 @@
                     buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
                 }
 
-                return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isGlobal ? 'global-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
-                    ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${senderName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
+                return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
+                    ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${msg.from}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
                     ${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}
                     <div style="color:#000000;">${messageText}${mediaHtml}</div>
                     ${buttonsHtml}
                     <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0, 5)}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
-                        ${(isGlobal || isChannel) ? `
+                        ${(isChannel) ? `
                             <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">
                                 ❤️ <span>${likesCount}</span>
                             </button>
@@ -2047,11 +2006,10 @@
                 let chatsList = getChatListForUser(App.currentUser);
 
                 const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
-                const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'global' && c !== 'yolk');
+                const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'yolk');
                 const saved = chatsList.includes('saved') ? ['saved'] : [];
-                const global = chatsList.includes('global') ? ['global'] : [];
                 const yolk = chatsList.includes('yolk') ? ['yolk'] : [];
-                const orderedList = [...saved, ...global, ...yolk, ...pinned, ...unpinned];
+                const orderedList = [...saved, ...yolk, ...pinned, ...unpinned];
 
                 let html = '';
                 orderedList.forEach(chat => {
@@ -2097,8 +2055,6 @@
 
                 if (chatPartner === 'saved') {
                     messages = App.savedMessages[App.currentUser] || [];
-                } else if (chatPartner === 'global') {
-                    messages = App.globalMessages || [];
                 } else if (chatPartner === 'yolk') {
                     messages = App.yolkChatMessages[App.currentUser] || [];
                 } else if (App.channels[chatPartner]) {
@@ -2142,21 +2098,7 @@
             window.toggleLike = function(chatPartner, messageIdx, event) {
                 event.stopPropagation();
 
-                if (chatPartner === 'global') {
-                    if (!App.globalMessages[messageIdx]) return;
-                    const msg = App.globalMessages[messageIdx];
-                    if (!msg.likes) msg.likes = {};
-
-                    if (msg.likes[App.currentUser]) {
-                        delete msg.likes[App.currentUser];
-                    } else {
-                        msg.likes[App.currentUser] = true;
-                    }
-
-                    saveGlobalMessages();
-                    saveToFirebase();
-                    loadMessages('global');
-                } else if (App.channels[chatPartner]) {
+                if (App.channels[chatPartner]) {
                     if (!App.channels[chatPartner].messages[messageIdx]) return;
                     const msg = App.channels[chatPartner].messages[messageIdx];
                     if (!msg.likes) msg.likes = {};
@@ -2218,7 +2160,7 @@
                 const viewProfileBtn = document.getElementById('viewProfileBtn');
                 if (viewProfileBtn) {
                     viewProfileBtn.addEventListener('click', () => {
-                        if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'global' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) {
+                        if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) {
                             if (App.channels[App.activeChat]) {
                                 openChannelModal(App.activeChat);
                             } else {
@@ -2307,11 +2249,6 @@
                         App.savedMessages[from].push(message);
                         saveSavedMessages();
                         showNotification('Сохранено в избранное');
-                    } else if (to === 'global') {
-                        App.globalMessages.push(message);
-                        saveGlobalMessages();
-                        saveToFirebase();
-                        showNotification('Сообщение отправлено в глобальный чат');
                     } else if (App.channels[to]) {
                         if (App.channels[to].owner !== from) {
                             showNotification('Только владелец может писать в канал', 'error');
@@ -2381,19 +2318,6 @@
                             msgs.splice(idx, 1);
                             saveSavedMessages();
                             showNotification('Удалено');
-                        }
-                    } else if (chatPartner === 'global') {
-                        const msgs = App.globalMessages;
-                        if (msgs && msgs[idx]) {
-                            if (msgs[idx].from === from || hasVerifiedBadge(from)) {
-                                msgs.splice(idx, 1);
-                                saveGlobalMessages();
-                                saveToFirebase();
-                                showNotification('Удалено');
-                            } else {
-                                showNotification('Нет прав на удаление', 'error');
-                                return;
-                            }
                         }
                     } else if (chatPartner === 'yolk') {
                         showNotification('Нельзя удалять системные сообщения', 'error');
