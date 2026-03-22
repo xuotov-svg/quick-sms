@@ -1254,11 +1254,11 @@
             // ТВОЙ TON КОШЕЛЕК
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
-            // ПАКЕТЫ ДЛЯ ПОКУПКИ
+            // ПАКЕТЫ ДЛЯ ПОКУПКИ (новые цены)
             const DONATION_PACKS = [
-                { yc: 100, ton: 0.25, price: '0.25 TON' },
-                { yc: 200, ton: 0.45, price: '0.45 TON' },
-                { yc: 500, ton: 0.75, price: '0.75 TON' }
+                { yc: 100, ton: 1.41, price: '1.41 TON' },
+                { yc: 200, ton: 2.64, price: '2.64 TON' },
+                { yc: 500, ton: 6.3, price: '6.3 TON' }
             ];
 
             // Состояние приложения
@@ -1722,35 +1722,20 @@
             }
 
             function handleRandomBot(message, fromUser) {
+                // Только одна кнопка - от 0 до 10
                 const range0_10 = message.text && message.text.includes('от 0 до 10');
-                const range0_100 = message.text && message.text.includes('от 0 до 100');
-                const range0_1000 = message.text && message.text.includes('от 0 до 1000');
-
+                
                 if (range0_10) {
                     const random = Math.floor(Math.random() * 11);
                     return {
                         text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`,
-                        buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
-                    };
-                }
-                if (range0_100) {
-                    const random = Math.floor(Math.random() * 101);
-                    return {
-                        text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`,
-                        buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
-                    };
-                }
-                if (range0_1000) {
-                    const random = Math.floor(Math.random() * 1001);
-                    return {
-                        text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`,
-                        buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
+                        buttons: ['от 0 до 10']
                     };
                 }
 
                 return {
-                    text: `🎲 RANDOM БОТ 🎲\n\nЯ могу загадать случайное число!\n\nВыбери диапазон:`,
-                    buttons: ['от 0 до 10', 'от 0 до 100', 'от 0 до 1000']
+                    text: `🎲 RANDOM БОТ 🎲\n\nЯ могу загадать случайное число от 0 до 10!\n\nНажми на кнопку:`,
+                    buttons: ['от 0 до 10']
                 };
             }
 
@@ -2739,7 +2724,10 @@
                                         <div>💰 ${req.yc} YC (${req.ton} TON)</div>
                                         <div class="txid-input">🔗 TXID: ${req.txid}</div>
                                         <div>📅 ${new Date(req.createdAt).toLocaleString()}</div>
-                                        <button class="tiny-btn" style="margin-top:8px; background:#4CAF50; color:white;" onclick="window.confirmDonation('${req.id}')">✅ ПОДТВЕРДИТЬ И НАЧИСЛИТЬ</button>
+                                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                            <button class="tiny-btn" style="background:#4CAF50; color:white;" onclick="window.confirmDonation('${req.id}')">✅ ПОДТВЕРДИТЬ И НАЧИСЛИТЬ</button>
+                                            <button class="tiny-btn" style="background:#ff4444; color:white;" onclick="window.cancelDonation('${req.id}')">❌ ОТМЕНИТЬ</button>
+                                        </div>
                                     </div>
                                 `).join('')}
                                 <h4 style="margin-top:16px;">✅ ВЫПОЛНЕННЫЕ</h4>
@@ -2790,6 +2778,23 @@
                         document.getElementById('adminModalOverlay')?.remove();
                         openAdminPanel();
                     }
+                }
+            };
+            
+            // Отмена заявки админом
+            window.cancelDonation = function(requestId) {
+                if (!confirm('Вы уверены, что хотите отменить эту заявку?')) return;
+                
+                const request = App.donationRequests[requestId];
+                if (!request || request.status !== 'pending') return;
+                
+                delete App.donationRequests[requestId];
+                saveDonationRequests();
+                showNotification(`❌ Заявка отменена`);
+                
+                if (App.currentUser === ADMIN_USER) {
+                    document.getElementById('adminModalOverlay')?.remove();
+                    openAdminPanel();
                 }
             };
 
@@ -2996,7 +3001,7 @@
                         <div class="tabs">
                             <div class="tab active" data-tab="shop">МАГАЗИН</div>
                             <div class="tab" data-tab="channel">КАНАЛ</div>
-                            <div class="tab" data-tab="donate">💸 ДОНАТ</div>
+                            <div class="tab" data-tab="donate">ДОНАТ</div>
                         </div>
                         
                         <div id="tabShop" class="tab-content">
@@ -3013,12 +3018,6 @@
                                         <button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button>
                                     </div>
                                 `).join('')}
-                                
-                                <h4>ПРОМОКОД</h4>
-                                <div class="promo-section">
-                                    <input type="text" id="promoCodeInput" placeholder="ВВЕДИТЕ ПРОМОКОД">
-                                    <button class="profile-btn" id="activatePromoBtn">АКТИВИРОВАТЬ</button>
-                                </div>
                             </div>
                         </div>
                         
@@ -3037,7 +3036,7 @@
                         
                         <div id="tabDonate" class="tab-content hidden">
                             <div class="shop-section">
-                                <h4>💸 ПОПОЛНИТЬ YC</h4>
+                                <h4>ПОПОЛНИТЬ YC</h4>
                                 ${DONATION_PACKS.map(pack => `
                                     <div class="shop-item">
                                         <span>🎁 ${pack.yc} YC — ${pack.price}</span>
@@ -3162,26 +3161,6 @@
                         });
                     });
 
-                    document.getElementById('activatePromoBtn')?.addEventListener('click', () => {
-                        const code = document.getElementById('promoCodeInput').value.trim().toLowerCase();
-
-                        if (App.promoCodes[code] !== undefined) {
-                            if (App.promoCodes[code] === 'verified') {
-                                App.users[App.currentUser].verified = true;
-                                showNotification('✔️ ВЫ ПОЛУЧИЛИ ОФИЦИАЛЬНУЮ ГАЛОЧКУ!');
-                            } else {
-                                App.users[App.currentUser].stars += App.promoCodes[code];
-                                showNotification(`+${App.promoCodes[code]} YC`);
-                            }
-
-                            saveToFirebase();
-                            document.getElementById('profileModalOverlay').remove();
-                            openProfileModal(App.currentUser);
-                        } else {
-                            showNotification('! НЕВЕРНЫЙ КОД', 'error');
-                        }
-                    });
-
                     document.getElementById('createChannelBtn')?.addEventListener('click', () => {
                         let channelName = document.getElementById('channelNameInput').value.trim();
                         const channelDesc = document.getElementById('channelDescInput').value.trim();
@@ -3281,7 +3260,7 @@
                             banner: null,
                             stars: 0,
                             gifts: [],
-                            bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : (bot === '@tap_bot' ? '👆 Тапай и зарабатывай 💲!' : '🎲 Загадай случайное число!'),
+                            bio: bot === '@game_bot' ? '🎰 Игровой автомат! Крути и выигрывай!' : (bot === '@tap_bot' ? '👆 Тапай и зарабатывай 💲!' : '🎲 Загадай случайное число от 0 до 10!'),
                             isBot: true,
                             verified: true,
                             age: 99,
@@ -3302,6 +3281,7 @@
             window.sendBotCommand = window.sendBotCommand || function() {};
             window.openChannelModal = window.openChannelModal || function() {};
             window.confirmDonation = window.confirmDonation || function() {};
+            window.cancelDonation = window.cancelDonation || function() {};
 
             // Запуск
             window.addEventListener('load', () => {
