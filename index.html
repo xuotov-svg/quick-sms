@@ -53,18 +53,34 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .verified-icon {
@@ -717,9 +733,15 @@
         }
 
         @keyframes giftGlow {
-            0% { box-shadow: 0 0 5px #d4af37; }
-            50% { box-shadow: 0 0 15px #d4af37; }
-            100% { box-shadow: 0 0 5px #d4af37; }
+            0% {
+                box-shadow: 0 0 5px #d4af37;
+            }
+            50% {
+                box-shadow: 0 0 15px #d4af37;
+            }
+            100% {
+                box-shadow: 0 0 5px #d4af37;
+            }
         }
 
         .global-message {
@@ -1254,7 +1276,7 @@
             // ТВОЙ TON КОШЕЛЕК
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
-            // ПАКЕТЫ ДЛЯ ПОКУПКИ (новые цены)
+            // ПАКЕТЫ ДЛЯ ПОКУПКИ
             const DONATION_PACKS = [
                 { yc: 100, ton: 1.41, price: '1.41 TON' },
                 { yc: 200, ton: 2.64, price: '2.64 TON' },
@@ -1305,7 +1327,7 @@
             }
 
             function isValidUsername(str) {
-                return /^[a-zA-Z0-9]{4,}$/.test(str);
+                return /^[a-z0-9]{4,}$/.test(str);
             }
 
             function isValidChannelName(str) {
@@ -1722,7 +1744,6 @@
             }
 
             function handleRandomBot(message, fromUser) {
-                // Только одна кнопка - от 0 до 10
                 const range0_10 = message.text && message.text.includes('от 0 до 10');
                 
                 if (range0_10) {
@@ -1805,7 +1826,7 @@
                 });
 
                 document.getElementById('loginBtn')?.addEventListener('click', () => {
-                    let username = document.getElementById('loginUsername').value.trim();
+                    let username = document.getElementById('loginUsername').value.trim().toLowerCase();
                     const pass = document.getElementById('loginPassword').value.trim();
 
                     if (!isValidUsername(username)) {
@@ -1882,7 +1903,7 @@
                 });
 
                 document.getElementById('registerBtn')?.addEventListener('click', () => {
-                    let username = document.getElementById('regUsername').value.trim();
+                    let username = document.getElementById('regUsername').value.trim().toLowerCase();
                     const pass = document.getElementById('regPassword').value.trim();
 
                     if (!isValidUsername(username)) {
@@ -2429,7 +2450,7 @@
             };
 
             function addUserBySearch() {
-                let query = document.getElementById('searchUserInput').value.trim();
+                let query = document.getElementById('searchUserInput').value.trim().toLowerCase();
                 if (!query) {
                     showNotification('Введите имя пользователя', 'error');
                     return;
@@ -3039,7 +3060,7 @@
                                 <h4>ПОПОЛНИТЬ YC</h4>
                                 ${DONATION_PACKS.map(pack => `
                                     <div class="shop-item">
-                                        <span>🎁 ${pack.yc} YC — ${pack.price}</span>
+                                        <span>${pack.yc} YC — ${pack.price}</span>
                                         <button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button>
                                     </div>
                                 `).join('')}
