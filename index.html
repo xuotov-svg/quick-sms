@@ -67,35 +67,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        @keyframes goldGlow {
-            0% { text-shadow: 0 0 0 #ffd700, 0 0 0 #ffb347; }
-            50% { text-shadow: 0 0 3px #ffd700, 0 0 6px #ffb347; }
-            100% { text-shadow: 0 0 0 #ffd700, 0 0 0 #ffb347; }
-        }
-
-        .premium-name {
-            background: linear-gradient(135deg, #ffd700, #ffb347, #ff8c00);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            animation: goldGlow 1.5s infinite;
-            font-weight: bold;
-        }
-
-        .premium-message {
-            background: linear-gradient(135deg, #ffd700, #ffb347, #ff8c00);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            animation: goldGlow 1.5s infinite;
-            font-weight: 500;
-        }
-
-        .premium-name,
-        .premium-message {
-            display: inline-block;
-        }
-
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -1035,20 +1006,26 @@
         }
 
         .sticker-item {
-            font-size: 48px;
+            display: inline-block;
+            width: 60px;
+            height: 60px;
             background: white;
-            padding: 12px;
             border-radius: 12px;
             border: 1px solid #000000;
-            min-width: 80px;
-            text-align: center;
+            margin: 8px;
             cursor: pointer;
             transition: all 0.1s ease;
+            padding: 8px;
         }
 
         .sticker-item:hover {
             background: var(--accent-soft);
             transform: scale(1.05);
+        }
+
+        .sticker-item svg {
+            width: 100%;
+            height: 100%;
         }
 
         .shop-section {
@@ -1084,21 +1061,6 @@
             font-weight: 600;
             cursor: pointer;
             font-size: 12px;
-        }
-
-        .promo-section {
-            display: flex;
-            gap: 8px;
-            margin: 12px 0;
-        }
-
-        .promo-section input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #000000;
-            background: white;
-            color: #000000;
         }
 
         .profile-actions {
@@ -1307,23 +1269,20 @@
                 { yc: 500, ton: 6.3, price: '6.3 TON' }
             ];
             
-            // ПРЕМИУМ
-            const PREMIUM_PACK = { yc: 0, ton: 5, price: '5 TON', isPremium: true };
-            
             // ПОДАРКИ ЗА ДОНАТ
             const DONATION_GIFTS = [
                 { emoji: '🥚', ton: 0.5, name: 'Яйцо' },
                 { emoji: '🍳', ton: 1.5, name: 'Яичница' }
             ];
             
-            // СТИКЕРЫ
+            // СТИКЕРЫ - нарисованные картинки SVG
             const STICKERS = [
-                { emoji: '🥚', name: 'желток', sticker: '🥚' },
-                { emoji: '😊', name: 'желток улыбается', sticker: '🥚😊' },
-                { emoji: '😢', name: 'желток грустный', sticker: '🥚😢' },
-                { emoji: '👍', name: 'желток лайк', sticker: '🥚👍' },
-                { emoji: '👎', name: 'желток дизлайк', sticker: '🥚👎' },
-                { emoji: '😠', name: 'желток злой', sticker: '🥚😠' }
+                { name: 'желток', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M40 65 Q50 75 60 65" stroke="black" stroke-width="3" fill="none" stroke-linecap="round"/></svg>' },
+                { name: 'желток улыбается', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M35 70 Q50 85 65 70" stroke="black" stroke-width="4" fill="none" stroke-linecap="round"/></svg>' },
+                { name: 'желток грустный', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M35 75 Q50 65 65 75" stroke="black" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M48 55 L52 55" stroke="black" stroke-width="3"/></svg>' },
+                { name: 'желток лайк', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M45 65 L50 75 L55 65" stroke="black" stroke-width="3" fill="none"/><path d="M30 55 L45 55" stroke="black" stroke-width="3"/><path d="M70 55 L55 55" stroke="black" stroke-width="3"/></svg>' },
+                { name: 'желток дизлайк', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M45 70 L50 60 L55 70" stroke="black" stroke-width="3" fill="none"/><path d="M30 65 L45 65" stroke="black" stroke-width="3"/><path d="M70 65 L55 65" stroke="black" stroke-width="3"/></svg>' },
+                { name: 'желток злой', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M40 30 L35 35 L40 40" stroke="black" stroke-width="3" fill="none"/><path d="M60 30 L65 35 L60 40" stroke="black" stroke-width="3" fill="none"/><path d="M45 65 Q50 60 55 65" stroke="black" stroke-width="4" fill="none"/><path d="M45 68 L55 68" stroke="black" stroke-width="2"/></svg>' }
             ];
 
             // Состояние приложения
@@ -1346,8 +1305,7 @@
                 tapBalances: {},
                 tapUpgrades: {},
                 yolkChatMessages: {},
-                donationRequests: {},
-                forwardedMessage: null
+                donationRequests: {}
             };
 
             App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
@@ -1368,12 +1326,11 @@
             function isValidPassword(str) { return /^[a-zA-Z0-9]+$/.test(str); }
             function isBot(username) { return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot); }
             function hasVerifiedBadge(username) { return App.users[username] && App.users[username].verified; }
-            function hasPremium(username) { return App.users[username] && App.users[username].premium === true; }
             function getTapReward(username) { const level = App.tapUpgrades[username] || 0; return tapUpgradeLevels[level].reward; }
             function getNextUpgradeCost(username) { const level = App.tapUpgrades[username] || 0; return tapUpgradeLevels[level].nextCost; }
             function canUpgradeTap(username) { const level = App.tapUpgrades[username] || 0; const cost = tapUpgradeLevels[level].nextCost; if (cost === null) return false; return (App.tapBalances[username] || 0) >= cost; }
             function upgradeTap(username) { const level = App.tapUpgrades[username] || 0; const cost = tapUpgradeLevels[level].nextCost; if (cost === null) return false; if ((App.tapBalances[username] || 0) >= cost) { App.tapBalances[username] -= cost; App.tapUpgrades[username] = level + 1; saveTapBalances(); return true; } return false; }
-            function initUserStars(user) { if (!App.users[user]) return; if (App.users[user].stars === undefined) App.users[user].stars = 0; if (!App.users[user].gifts) App.users[user].gifts = []; if (App.users[user].bio === undefined) App.users[user].bio = ''; if (App.users[user].verified === undefined) App.users[user].verified = false; if (App.users[user].premium === undefined) App.users[user].premium = false; if (App.users[user].age === undefined) App.users[user].age = 14; if (App.users[user].banner === undefined) App.users[user].banner = null; if (App.users[user].avatar === undefined) App.users[user].avatar = null; if (App.users[user].twoFA === undefined) App.users[user].twoFA = false; }
+            function initUserStars(user) { if (!App.users[user]) return; if (App.users[user].stars === undefined) App.users[user].stars = 0; if (!App.users[user].gifts) App.users[user].gifts = []; if (App.users[user].bio === undefined) App.users[user].bio = ''; if (App.users[user].verified === undefined) App.users[user].verified = false; if (App.users[user].age === undefined) App.users[user].age = 14; if (App.users[user].banner === undefined) App.users[user].banner = null; if (App.users[user].avatar === undefined) App.users[user].avatar = null; if (App.users[user].twoFA === undefined) App.users[user].twoFA = false; }
             function send2FACode(username) { const code = generateCode(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
             function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
             function showNotification(message, type = 'success') { const notification = document.createElement('div'); notification.className = 'notification' + (type === 'error' ? ' error' : ''); notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 3000); }
@@ -1547,7 +1504,7 @@
                     if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                     const clean = '@' + username;
                     if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
-                    App.users[clean] = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], bio: '', verified: false, premium: false, age: 14, twoFA: false };
+                    App.users[clean] = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], bio: '', verified: false, age: 14, twoFA: false };
                     App.currentUser = clean;
                     App.savedMessages[clean] = [];
                     saveSavedMessages();
@@ -1578,7 +1535,7 @@
                     <div class="chat-area">
                         <div class="chat-header">
                             <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}</div>
-                            <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="forwardBtn">↪️</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="stickerBtn">😊</button>` : ''}</div>
+                            <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="stickerBtn">😊</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
                         ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><input type="file" id="fileUpload" accept="image/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
@@ -1597,8 +1554,7 @@
                     else { const avatarUrl = App.users[u]?.avatar; avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; }
                 }
                 const userData = App.users[u] || {};
-                const isPremium = hasPremium(u);
-                return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px;">${isPremium ? `<span class="premium-name">${name}</span>` : name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`;
+                return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px;">${name}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`;
             }
             
             function renderMessage(msg, idx, currentUser, chatPartner) {
@@ -1607,9 +1563,7 @@
                 const isGift = msg.gift ? true : false;
                 const isBotMsg = App.systemBots.includes(msg.from);
                 const isSystem = msg.from === 'SYSTEM';
-                const isForwarded = msg.forwardedFrom ? true : false;
-                const fromUserPremium = hasPremium(msg.from);
-                const currentUserPremium = hasPremium(currentUser);
+                const isSticker = msg.isSticker === true;
                 
                 let canDelete = false;
                 if (isChannel) canDelete = App.channels[chatPartner]?.owner === currentUser;
@@ -1627,76 +1581,41 @@
                 let buttonsHtml = '';
                 if (isBotMsg && msg.buttons && msg.buttons.length > 0) buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
                 
-                const forwardedHtml = isForwarded ? `<small style="display:block; color:#888; margin-bottom:4px;">↪️ Переслано от ${msg.forwardedFrom}</small>` : '';
-                const messageClass = isMe ? 'me' : '';
-                const premiumClass = (isMe && currentUserPremium) || (!isMe && fromUserPremium) ? 'premium-message' : '';
+                const stickerHtml = isSticker ? `<div style="width: 80px; height: 80px; margin: 4px 0;">${msg.stickerSvg}</div>` : '';
                 
-                return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
-                    ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserPremium ? `<span class="premium-name">${msg.from}</span>` : msg.from}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
+                return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
+                    ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${msg.from}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
                     ${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}
-                    ${forwardedHtml}
-                    <div class="${premiumClass}" style="color:#000000;">${messageText}${mediaHtml}</div>
+                    ${stickerHtml}
+                    <div style="color:#000000;">${messageText}${mediaHtml}</div>
                     ${buttonsHtml}
                     <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0, 5)}</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 4px;">
                         ${(isChannel) ? `<button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">❤️ <span>${likesCount}</span></button>` : '<div></div>'}
-                        <div style="display: flex; gap: 8px;">
-                            ${!isSystem && chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBot(chatPartner) ? `<button class="tiny-btn" onclick="window.forwardMessage('${chatPartner}', ${idx})">↪️ Переслать</button>` : ''}
-                            ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
-                        </div>
+                        ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
                     </div>
                 </div>`;
             }
             
             function openStickerMenu() {
-                const modalHtml = `<div class="modal-overlay" id="stickerModalOverlay"><div class="profile-modal"><h3>😊 СТИКЕРЫ</h3><div class="gifts-collection" style="gap: 12px;">${STICKERS.map(s => `<div class="sticker-item" onclick="window.sendSticker('${s.sticker}')">${s.sticker}</div>`).join('')}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeStickerModal">ЗАКРЫТЬ</button></div></div></div>`;
+                const stickersHtml = STICKERS.map(s => `<div class="sticker-item" onclick="window.sendSticker(\`${s.svg}\`)">${s.svg}</div>`).join('');
+                const modalHtml = `<div class="modal-overlay" id="stickerModalOverlay"><div class="profile-modal"><h3>😊 СТИКЕРЫ</h3><div class="gifts-collection" style="gap: 12px; justify-content: center;">${stickersHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeStickerModal">ЗАКРЫТЬ</button></div></div></div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 document.getElementById('closeStickerModal')?.addEventListener('click', () => { document.getElementById('stickerModalOverlay')?.remove(); });
             }
             
-            window.sendSticker = function(sticker) {
+            window.sendSticker = function(stickerSvg) {
                 document.getElementById('stickerModalOverlay')?.remove();
                 const from = App.currentUser;
                 const to = App.activeChat;
                 if (!to || to === 'yolk' || to === 'saved') { showNotification('Сюда нельзя отправить стикер', 'error'); return; }
-                const message = { from, text: sticker, time: Date.now(), photo: null, gift: false };
+                const message = { from, text: '', time: Date.now(), photo: null, gift: false, isSticker: true, stickerSvg: stickerSvg };
                 const chatId = [from, to].sort().join('_');
                 if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] };
                 App.chats[chatId].messages.push(message);
                 saveToFirebase();
                 loadMessages(to);
                 showNotification('Стикер отправлен');
-            };
-            
-            window.forwardMessage = function(chatPartner, idx) {
-                let messages = [];
-                if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || [];
-                else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || [];
-                else if (App.channels[chatPartner]) messages = App.channels[chatPartner].messages || [];
-                else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; }
-                const msg = messages[idx];
-                if (!msg) return;
-                App.forwardedMessage = { text: msg.text, from: msg.from, photo: msg.photo };
-                showNotification('Выберите чат для пересылки (нажмите на чат в списке)');
-                const originalHandler = document.querySelectorAll('.chat-item');
-                const forwardHandler = (e) => {
-                    const targetChat = e.currentTarget.dataset.chat;
-                    if (targetChat && targetChat !== 'saved' && targetChat !== 'yolk') {
-                        const forwardMsg = { from: App.currentUser, text: App.forwardedMessage.text, time: Date.now(), photo: App.forwardedMessage.photo, gift: false, forwardedFrom: App.forwardedMessage.from };
-                        const chatId = [App.currentUser, targetChat].sort().join('_');
-                        if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: targetChat, messages: [] };
-                        App.chats[chatId].messages.push(forwardMsg);
-                        saveToFirebase();
-                        showNotification(`Переслано в ${targetChat}`);
-                        App.forwardedMessage = null;
-                        document.querySelectorAll('.chat-item').forEach(el => el.removeEventListener('click', forwardHandler));
-                    }
-                };
-                document.querySelectorAll('.chat-item').forEach(el => el.addEventListener('click', forwardHandler));
-                setTimeout(() => {
-                    document.querySelectorAll('.chat-item').forEach(el => el.removeEventListener('click', forwardHandler));
-                    App.forwardedMessage = null;
-                }, 30000);
             };
             
             function updateChatList() {
@@ -1782,8 +1701,6 @@
                 if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) { if (App.channels[App.activeChat]) openChannelModal(App.activeChat); else openProfileModal(App.activeChat); } });
                 const giftBtn = document.getElementById('giftBtn');
                 if (giftBtn) giftBtn.addEventListener('click', openGiftMenu);
-                const forwardBtn = document.getElementById('forwardBtn');
-                if (forwardBtn) forwardBtn.addEventListener('click', () => { showNotification('Нажмите на сообщение, чтобы переслать'); });
                 const stickerBtn = document.getElementById('stickerBtn');
                 if (stickerBtn) stickerBtn.addEventListener('click', openStickerMenu);
                 const subscribeBtn = document.getElementById('subscribeBtn');
@@ -1857,9 +1774,8 @@
             
             window.togglePinChat = function(chat, event) {
                 event.stopPropagation();
-                const maxPins = hasPremium(App.currentUser) ? 5 : 3;
                 if (App.pinnedChats.includes(chat)) { App.pinnedChats = App.pinnedChats.filter(c => c !== chat); showNotification('Чат откреплен'); }
-                else { if (App.pinnedChats.length >= maxPins) { showNotification(`Максимум ${maxPins} закрепленных чата`, 'error'); return; } App.pinnedChats.push(chat); showNotification('Чат закреплен'); }
+                else { if (App.pinnedChats.length >= 3) { showNotification('Максимум 3 закрепленных чата', 'error'); return; } App.pinnedChats.push(chat); showNotification('Чат закреплен'); }
                 saveToFirebase(); updateChatList();
             };
             
@@ -1982,14 +1898,13 @@
             }
             
             function openProfileModal(username) {
-                const userData = App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, premium: false, age: 14, twoFA: false };
+                const userData = App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, age: 14, twoFA: false };
                 const isOwn = (username === App.currentUser);
                 const isBotUser = App.systemBots.includes(username);
                 const isAdmin = (username === ADMIN_USER);
                 const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join('');
-                const isPremium = hasPremium(username);
                 
-                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${isPremium ? `<span class="premium-name">${username}</span>` : username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="channel">КАНАЛ</div><div class="tab" data-tab="donate">ДОНАТ</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>СОЗДАТЬ КАНАЛ (450 YC)</h4><div class="profile-input-group"><input type="text" id="channelNameInput" placeholder="название (только англ буквы и цифры, минимум 4)"></div><div class="profile-input-group"><textarea id="channelDescInput" placeholder="Описание..."></textarea></div><button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button></div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПРЕМИУМ СТАТУС</h4><div class="shop-item"><span>PREMIUM (НАВСЕГДА) — 5 TON</span><button class="premium-donate-btn" data-ton="5">КУПИТЬ</button></div><h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
+                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="channel">КАНАЛ</div><div class="tab" data-tab="donate">ДОНАТ</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>СОЗДАТЬ КАНАЛ (450 YC)</h4><div class="profile-input-group"><input type="text" id="channelNameInput" placeholder="название (только англ буквы и цифры, минимум 4)"></div><div class="profile-input-group"><textarea id="channelDescInput" placeholder="Описание..."></textarea></div><button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button></div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
                 
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 window.togglePasswordVisibility = function() { const passInput = document.getElementById('modalPasswordInput'); const btn = document.querySelector('.toggle-password'); if (passInput.type === 'password') { passInput.type = 'text'; btn.textContent = '🙈'; } else { passInput.type = 'password'; btn.textContent = '👁️'; } };
@@ -2003,7 +1918,6 @@
                     document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden'); if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden'); if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden'); }); });
                     document.querySelectorAll('.buy-gift-btn').forEach(btn => { btn.addEventListener('click', (e) => { const gift = e.target.dataset.gift; const price = parseInt(e.target.dataset.price); const user = App.currentUser; if (App.users[user].stars >= price) { App.users[user].stars -= price; if (!App.users[user].gifts) App.users[user].gifts = []; App.users[user].gifts.push(gift); saveToFirebase(); document.getElementById('profileModalOverlay').remove(); openProfileModal(user); showNotification(`Куплен подарок ${gift}`); } else { showNotification('Недостаточно YC', 'error'); } }); });
                     document.querySelectorAll('.donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const yc = parseInt(e.target.dataset.yc); const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc, ton, price: `${ton} TON` }); document.getElementById('profileModalOverlay')?.remove(); }); });
-                    document.querySelectorAll('.premium-donate-btn').forEach(btn => { btn.addEventListener('click', () => { openDonationModal({ yc: 0, ton: 5, price: '5 TON', isPremium: true }); document.getElementById('profileModalOverlay')?.remove(); }); });
                     document.querySelectorAll('.gift-donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const emoji = e.target.dataset.emoji; const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, giftEmoji: emoji }); document.getElementById('profileModalOverlay')?.remove(); }); });
                     document.getElementById('createChannelBtn')?.addEventListener('click', () => { let channelName = document.getElementById('channelNameInput').value.trim(); const channelDesc = document.getElementById('channelDescInput').value.trim(); if (!channelName) { showNotification('Введите название канала', 'error'); return; } if (!isValidChannelName(channelName)) { showNotification('Название канала: только англ буквы и цифры, минимум 4', 'error'); return; } const cleanName = '@' + channelName; if (App.users[cleanName] || App.channels[cleanName]) { showNotification('Такое имя уже занято', 'error'); return; } if (App.users[App.currentUser].stars < 450) { showNotification('Нужно 450 YC', 'error'); return; } App.users[App.currentUser].stars -= 450; App.channels[cleanName] = { name: cleanName, owner: App.currentUser, description: channelDesc, avatar: null, banner: null, subscribers: [App.currentUser], messages: [] }; saveToFirebase(); showNotification(`✅ КАНАЛ ${cleanName} СОЗДАН`); document.getElementById('profileModalOverlay').remove(); App.activeChat = cleanName; localStorage.setItem('yolk_active_chat', cleanName); render(); });
                     document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => { const newAvatar = App.tempAvatar; const newPassword = document.getElementById('modalPasswordInput')?.value.trim(); const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50); const newAge = parseInt(document.getElementById('modalAgeInput')?.value); if (newAvatar) App.users[App.currentUser].avatar = newAvatar; if (tempBanner) App.users[App.currentUser].banner = tempBanner; if (newPassword) App.users[App.currentUser].password = newPassword; if (newBio !== undefined) App.users[App.currentUser].bio = newBio; if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge; saveToFirebase(); document.getElementById('profileModalOverlay').remove(); render(); showNotification('Профиль сохранен'); });
@@ -2015,7 +1929,7 @@
             }
             
             function initBots() {
-                App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, premium: true, age: 99, twoFA: false }; });
+                App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, age: 99, twoFA: false }; });
                 saveToFirebase();
             }
             
@@ -2029,7 +1943,6 @@
             window.openChannelModal = window.openChannelModal || function() {};
             window.confirmDonation = window.confirmDonation || function() {};
             window.cancelDonation = window.cancelDonation || function() {};
-            window.forwardMessage = window.forwardMessage || function() {};
             window.sendSticker = window.sendSticker || function() {};
             
             window.addEventListener('load', () => { showLoading(); initBots(); loadFromFirebase(); setTimeout(hideLoading, 1000); });
