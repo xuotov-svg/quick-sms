@@ -67,6 +67,75 @@
             100% { transform: rotate(360deg); }
         }
 
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes typing {
+            0% { opacity: 0.3; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(-5px); }
+            100% { opacity: 0.3; transform: translateY(0); }
+        }
+
+        .message-sending {
+            animation: pulse 0.3s ease;
+        }
+
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #666;
+            border-radius: 50%;
+            animation: typing 1s infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10001;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ffd700;
+            animation: confettiFall 3s ease-out forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+
+        .qr-code-profile {
+            text-align: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -1005,29 +1074,6 @@
             transform: scale(1.1);
         }
 
-        .sticker-item {
-            display: inline-block;
-            width: 60px;
-            height: 60px;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #000000;
-            margin: 8px;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            padding: 8px;
-        }
-
-        .sticker-item:hover {
-            background: var(--accent-soft);
-            transform: scale(1.05);
-        }
-
-        .sticker-item svg {
-            width: 100%;
-            height: 100%;
-        }
-
         .shop-section {
             background: #f0f0f0;
             border-radius: 16px;
@@ -1230,6 +1276,14 @@
             border: 1px solid #000000;
             border-radius: 8px;
         }
+
+        .qr-code-profile {
+            text-align: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            margin: 16px 0;
+        }
     </style>
 </head>
 <body>
@@ -1256,36 +1310,20 @@
         const database = firebase.database();
 
         (function() {
-            // АДМИН - только этот пользователь видит админ-панель
             const ADMIN_USER = '@xuotov';
-            
-            // ТВОЙ TON КОШЕЛЕК
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
-            // ПАКЕТЫ ДЛЯ ПОКУПКИ
             const DONATION_PACKS = [
                 { yc: 100, ton: 1.41, price: '1.41 TON' },
                 { yc: 200, ton: 2.64, price: '2.64 TON' },
                 { yc: 500, ton: 6.3, price: '6.3 TON' }
             ];
             
-            // ПОДАРКИ ЗА ДОНАТ
             const DONATION_GIFTS = [
                 { emoji: '🥚', ton: 0.5, name: 'Яйцо' },
                 { emoji: '🍳', ton: 1.5, name: 'Яичница' }
             ];
-            
-            // СТИКЕРЫ - нарисованные картинки SVG
-            const STICKERS = [
-                { name: 'желток', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M40 65 Q50 75 60 65" stroke="black" stroke-width="3" fill="none" stroke-linecap="round"/></svg>' },
-                { name: 'желток улыбается', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M35 70 Q50 85 65 70" stroke="black" stroke-width="4" fill="none" stroke-linecap="round"/></svg>' },
-                { name: 'желток грустный', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M35 75 Q50 65 65 75" stroke="black" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M48 55 L52 55" stroke="black" stroke-width="3"/></svg>' },
-                { name: 'желток лайк', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M45 65 L50 75 L55 65" stroke="black" stroke-width="3" fill="none"/><path d="M30 55 L45 55" stroke="black" stroke-width="3"/><path d="M70 55 L55 55" stroke="black" stroke-width="3"/></svg>' },
-                { name: 'желток дизлайк', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M45 70 L50 60 L55 70" stroke="black" stroke-width="3" fill="none"/><path d="M30 65 L45 65" stroke="black" stroke-width="3"/><path d="M70 65 L55 65" stroke="black" stroke-width="3"/></svg>' },
-                { name: 'желток злой', svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#FFD966" stroke="#B87C00" stroke-width="2"/><circle cx="35" cy="40" r="5" fill="black"/><circle cx="65" cy="40" r="5" fill="black"/><path d="M40 30 L35 35 L40 40" stroke="black" stroke-width="3" fill="none"/><path d="M60 30 L65 35 L60 40" stroke="black" stroke-width="3" fill="none"/><path d="M45 65 Q50 60 55 65" stroke="black" stroke-width="4" fill="none"/><path d="M45 68 L55 68" stroke="black" stroke-width="2"/></svg>' }
-            ];
 
-            // Состояние приложения
             const App = {
                 users: {},
                 chats: {},
@@ -1305,7 +1343,9 @@
                 tapBalances: {},
                 tapUpgrades: {},
                 yolkChatMessages: {},
-                donationRequests: {}
+                donationRequests: {},
+                typingTimeouts: {},
+                chatListeners: {}
             };
 
             App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
@@ -1336,6 +1376,84 @@
             function showNotification(message, type = 'success') { const notification = document.createElement('div'); notification.className = 'notification' + (type === 'error' ? ' error' : ''); notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 3000); }
             function showLoading() { const loadingDiv = document.createElement('div'); loadingDiv.className = 'loading-screen'; loadingDiv.id = 'loadingScreen'; loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>Yolkapp</div>'; document.body.appendChild(loadingDiv); }
             function hideLoading() { const loading = document.getElementById('loadingScreen'); if (loading) loading.remove(); }
+            
+            function showConfetti() {
+                const confettiDiv = document.createElement('div');
+                confettiDiv.className = 'confetti';
+                for (let i = 0; i < 50; i++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'confetti-piece';
+                    piece.style.left = Math.random() * 100 + '%';
+                    piece.style.animationDelay = Math.random() * 2 + 's';
+                    piece.style.background = ['#ffd700', '#ffb347', '#ff8c00', '#d4af37'][Math.floor(Math.random() * 4)];
+                    confettiDiv.appendChild(piece);
+                }
+                document.body.appendChild(confettiDiv);
+                setTimeout(() => confettiDiv.remove(), 3000);
+            }
+            
+            function startTyping(chatId) {
+                if (!App.currentUser) return;
+                const typingRef = database.ref('typing/' + chatId);
+                typingRef.set({ user: App.currentUser, timestamp: Date.now() });
+                if (App.typingTimeouts[chatId]) clearTimeout(App.typingTimeouts[chatId]);
+                App.typingTimeouts[chatId] = setTimeout(() => {
+                    typingRef.remove();
+                }, 3000);
+            }
+            
+            function setupTypingListener(chatId) {
+                const typingRef = database.ref('typing/' + chatId);
+                typingRef.off();
+                typingRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    const typingIndicator = document.getElementById('typingIndicator');
+                    if (data && data.user && data.user !== App.currentUser) {
+                        if (typingIndicator) typingIndicator.style.display = 'flex';
+                    } else {
+                        if (typingIndicator) typingIndicator.style.display = 'none';
+                    }
+                });
+            }
+            
+            function setupRealtimeListener(chatId, chatPartner) {
+                if (App.chatListeners[chatId]) {
+                    database.ref('chats/' + chatId).off();
+                }
+                const chatRef = database.ref('chats/' + chatId);
+                chatRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        if (!App.chats[chatId]) App.chats[chatId] = data;
+                        else App.chats[chatId].messages = data.messages || [];
+                        if (App.activeChat === chatPartner) {
+                            renderMessages(chatPartner);
+                        }
+                    }
+                });
+                App.chatListeners[chatId] = true;
+            }
+            
+            function renderMessages(chatPartner) {
+                const messagesContainer = document.getElementById('messageList');
+                if (!messagesContainer) return;
+                let messages = [];
+                if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || [];
+                else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || [];
+                else if (App.channels[chatPartner]) messages = App.channels[chatPartner].messages || [];
+                else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; }
+                let html = '';
+                if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); });
+                else {
+                    if (chatPartner === '@game_bot') { const botMsg = handleGameBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                    else if (chatPartner === '@tap_bot') { const botMsg = handleTapBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                    else if (chatPartner === '@random_bot') { const botMsg = handleRandomBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@random_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                    else if (chatPartner === 'yolk') html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
+                    else html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
+                }
+                messagesContainer.innerHTML = html;
+                setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100);
+            }
             
             function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
             function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error(e)); } }
@@ -1466,7 +1584,7 @@
                 const root = document.getElementById('app');
                 if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; }
                 if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); }, 100); }
+                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) { loadMessages(App.activeChat); } updateChatList(); }, 100); }
             }
             
             function renderAuth() {
@@ -1535,9 +1653,10 @@
                     <div class="chat-area">
                         <div class="chat-header">
                             <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}</div>
-                            <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="stickerBtn">😊</button>` : ''}</div>
+                            <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
+                        <div id="typingIndicator" class="typing-indicator" style="display: none; margin-left: 16px; margin-bottom: 8px;"><span>печатает</span><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
                         ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><input type="file" id="fileUpload" accept="image/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                     </div>
                 </div>`;
@@ -1563,30 +1682,22 @@
                 const isGift = msg.gift ? true : false;
                 const isBotMsg = App.systemBots.includes(msg.from);
                 const isSystem = msg.from === 'SYSTEM';
-                const isSticker = msg.isSticker === true;
-                
                 let canDelete = false;
                 if (isChannel) canDelete = App.channels[chatPartner]?.owner === currentUser;
                 else if (chatPartner === 'saved') canDelete = true;
                 else if (chatPartner === 'yolk') canDelete = false;
                 else if (App.systemBots.includes(chatPartner)) canDelete = false;
                 else canDelete = isMe;
-                
                 const mediaHtml = msg.photo ? `<img src="${msg.photo}" class="media-preview">` : '';
                 const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
                 const userLiked = msg.likes && msg.likes[currentUser];
                 let messageText = msg.text || '';
                 if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2);
-                
                 let buttonsHtml = '';
                 if (isBotMsg && msg.buttons && msg.buttons.length > 0) buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
-                
-                const stickerHtml = isSticker ? `<div style="width: 80px; height: 80px; margin: 4px 0;">${msg.stickerSvg}</div>` : '';
-                
                 return `<div class="message ${isMe ? 'me' : ''} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
                     ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${msg.from}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
                     ${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}
-                    ${stickerHtml}
                     <div style="color:#000000;">${messageText}${mediaHtml}</div>
                     ${buttonsHtml}
                     <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0, 5)}</div>
@@ -1596,27 +1707,6 @@
                     </div>
                 </div>`;
             }
-            
-            function openStickerMenu() {
-                const stickersHtml = STICKERS.map(s => `<div class="sticker-item" onclick="window.sendSticker(\`${s.svg}\`)">${s.svg}</div>`).join('');
-                const modalHtml = `<div class="modal-overlay" id="stickerModalOverlay"><div class="profile-modal"><h3>😊 СТИКЕРЫ</h3><div class="gifts-collection" style="gap: 12px; justify-content: center;">${stickersHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeStickerModal">ЗАКРЫТЬ</button></div></div></div>`;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                document.getElementById('closeStickerModal')?.addEventListener('click', () => { document.getElementById('stickerModalOverlay')?.remove(); });
-            }
-            
-            window.sendSticker = function(stickerSvg) {
-                document.getElementById('stickerModalOverlay')?.remove();
-                const from = App.currentUser;
-                const to = App.activeChat;
-                if (!to || to === 'yolk' || to === 'saved') { showNotification('Сюда нельзя отправить стикер', 'error'); return; }
-                const message = { from, text: '', time: Date.now(), photo: null, gift: false, isSticker: true, stickerSvg: stickerSvg };
-                const chatId = [from, to].sort().join('_');
-                if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] };
-                App.chats[chatId].messages.push(message);
-                saveToFirebase();
-                loadMessages(to);
-                showNotification('Стикер отправлен');
-            };
             
             function updateChatList() {
                 const chatsContainer = document.getElementById('chatsList');
@@ -1644,24 +1734,22 @@
             }
             
             function loadMessages(chatPartner) {
-                const messagesContainer = document.getElementById('messageList');
-                if (!messagesContainer) return;
-                let messages = [];
-                if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || [];
-                else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || [];
-                else if (App.channels[chatPartner]) messages = App.channels[chatPartner].messages || [];
-                else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; }
-                let html = '';
-                if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); });
-                else {
-                    if (chatPartner === '@game_bot') { const botMsg = handleGameBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
-                    else if (chatPartner === '@tap_bot') { const botMsg = handleTapBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
-                    else if (chatPartner === '@random_bot') { const botMsg = handleRandomBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@random_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
-                    else if (chatPartner === 'yolk') html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
-                    else html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
+                if (chatPartner === 'saved' || chatPartner === 'yolk') {
+                    renderMessages(chatPartner);
+                    return;
                 }
-                messagesContainer.innerHTML = html;
-                setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100);
+                if (chatPartner === '@game_bot' || chatPartner === '@tap_bot' || chatPartner === '@random_bot') {
+                    renderMessages(chatPartner);
+                    return;
+                }
+                const chatId = [App.currentUser, chatPartner].sort().join('_');
+                setupRealtimeListener(chatId, chatPartner);
+                setupTypingListener(chatId);
+                renderMessages(chatPartner);
+                const messageInput = document.getElementById('messageText');
+                if (messageInput) {
+                    messageInput.oninput = () => { startTyping(chatId); };
+                }
             }
             
             window.toggleLike = function(chatPartner, messageIdx, event) {
@@ -1673,7 +1761,7 @@
                     if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser];
                     else msg.likes[App.currentUser] = true;
                     saveToFirebase();
-                    loadMessages(chatPartner);
+                    renderMessages(chatPartner);
                 }
             };
             
@@ -1688,7 +1776,7 @@
                     if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: botName, messages: [] };
                     App.chats[chatId].messages.push(botMessage);
                     saveToFirebase();
-                    loadMessages(botName);
+                    renderMessages(botName);
                 }
             };
             
@@ -1701,8 +1789,6 @@
                 if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) { if (App.channels[App.activeChat]) openChannelModal(App.activeChat); else openProfileModal(App.activeChat); } });
                 const giftBtn = document.getElementById('giftBtn');
                 if (giftBtn) giftBtn.addEventListener('click', openGiftMenu);
-                const stickerBtn = document.getElementById('stickerBtn');
-                if (stickerBtn) stickerBtn.addEventListener('click', openStickerMenu);
                 const subscribeBtn = document.getElementById('subscribeBtn');
                 if (subscribeBtn) subscribeBtn.addEventListener('click', toggleSubscribe);
                 const sendBtn = document.getElementById('sendMsgBtn');
@@ -1724,17 +1810,19 @@
                 const from = App.currentUser;
                 const to = App.activeChat;
                 if (!to || to === 'yolk') { showNotification('Сюда нельзя писать', 'error'); return; }
+                const sendBtn = document.getElementById('sendMsgBtn');
+                if (sendBtn) sendBtn.classList.add('message-sending');
+                setTimeout(() => { if (sendBtn) sendBtn.classList.remove('message-sending'); }, 300);
                 try {
                     const message = { from, text: text || '', time: Date.now(), photo: App.tempPhoto || null, gift: false };
-                    if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); }
-                    else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); }
-                    else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); else if (to === '@random_bot') response = handleRandomBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); loadMessages(to); } }
-                    else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); }
+                    if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); renderMessages('saved'); }
+                    else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); renderMessages(to); }
+                    else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); else if (to === '@random_bot') response = handleRandomBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); renderMessages(to); } }
+                    else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); renderMessages(to); }
                     if (textInput) textInput.value = '';
                     App.tempPhoto = null;
                     const fileInput = document.getElementById('fileUpload');
                     if (fileInput) fileInput.value = '';
-                    if (!App.systemBots.includes(to)) loadMessages(to);
                     updateChatList();
                 } catch (error) { console.error('Ошибка отправки:', error); showNotification('Ошибка отправки', 'error'); }
             }
@@ -1742,11 +1830,10 @@
             window.deleteMessage = function(chatPartner, idx) {
                 const from = App.currentUser;
                 try {
-                    if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); } }
+                    if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } }
                     else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; }
-                    else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); } }
-                    else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); } }
-                    loadMessages(chatPartner);
+                    else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } }
+                    else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } }
                 } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); }
             };
             
@@ -1812,9 +1899,12 @@
                 if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
                 App.users[toUser].gifts.push(giftEmoji);
                 const chatId = ensureChat(fromUser, toUser);
-                if (chatId && App.chats[chatId]) App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`, time: Date.now(), gift: true });
+                if (chatId && App.chats[chatId]) {
+                    App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`, time: Date.now(), gift: true });
+                    showConfetti();
+                }
                 saveToFirebase();
-                if (App.activeChat === toUser) loadMessages(toUser);
+                if (App.activeChat === toUser) renderMessages(toUser);
                 showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
             };
             
@@ -1828,7 +1918,7 @@
                     if (!txid) { showNotification('Введите TXID транзакции', 'error'); return; }
                     if (!comment || !comment.startsWith('@')) { showNotification('Укажите ваш юзернейм с @ в комментарии', 'error'); return; }
                     const requestId = generateId();
-                    App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), isPremium: pack.isPremium || false, giftEmoji: pack.giftEmoji || null };
+                    App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), giftEmoji: pack.giftEmoji || null };
                     saveDonationRequests();
                     document.getElementById('donationModalOverlay')?.remove();
                     showNotification(`✅ Заявка отправлена! Ожидайте начисления. ID: ${requestId.slice(-6)}`);
@@ -1840,7 +1930,7 @@
             function openAdminPanel() {
                 const pending = Object.values(App.donationRequests).filter(r => r.status === 'pending');
                 const completed = Object.values(App.donationRequests).filter(r => r.status === 'completed').slice(-10);
-                const modalHtml = `<div class="modal-overlay" id="adminModalOverlay"><div class="profile-modal" style="max-width: 500px;"><h3>🔧 АДМИН-ПАНЕЛЬ (только для @xuotov)</h3><div style="max-height: 60vh; overflow-y: auto;"><h4>⏳ ОЖИДАЮТ ПОДТВЕРЖДЕНИЯ (${pending.length})</h4>${pending.length === 0 ? '<p style="color:#666;">Нет заявок</p>' : pending.map(req => `<div class="donation-item pending"><div><strong>👤 ${req.username}</strong> (${req.user})</div><div>💰 ${req.isPremium ? 'PREMIUM статус' : (req.giftEmoji ? `Подарок ${req.giftEmoji}` : `${req.yc} YC`)} (${req.ton} TON)</div><div class="txid-input">🔗 TXID: ${req.txid}</div><div>📅 ${new Date(req.createdAt).toLocaleString()}</div><div style="display: flex; gap: 8px; margin-top: 8px;"><button class="tiny-btn" style="background:#4CAF50; color:white;" onclick="window.confirmDonation('${req.id}')">✅ ПОДТВЕРДИТЬ И НАЧИСЛИТЬ</button><button class="tiny-btn" style="background:#ff4444; color:white;" onclick="window.cancelDonation('${req.id}')">❌ ОТМЕНИТЬ</button></div></div>`).join('')}<h4 style="margin-top:16px;">✅ ВЫПОЛНЕННЫЕ</h4>${completed.length === 0 ? '<p style="color:#666;">Нет выполненных</p>' : completed.map(req => `<div class="donation-item completed"><div><strong>👤 ${req.username}</strong> (${req.user})</div><div>${req.isPremium ? 'PREMIUM статус' : (req.giftEmoji ? `Подарок ${req.giftEmoji}` : `${req.yc} YC`)}</div><div>📅 ${new Date(req.createdAt).toLocaleString()}</div></div>`).join('')}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeAdminModal">ЗАКРЫТЬ</button></div></div></div>`;
+                const modalHtml = `<div class="modal-overlay" id="adminModalOverlay"><div class="profile-modal" style="max-width: 500px;"><h3>🔧 АДМИН-ПАНЕЛЬ (только для @xuotov)</h3><div style="max-height: 60vh; overflow-y: auto;"><h4>⏳ ОЖИДАЮТ ПОДТВЕРЖДЕНИЯ (${pending.length})</h4>${pending.length === 0 ? '<p style="color:#666;">Нет заявок</p>' : pending.map(req => `<div class="donation-item pending"><div><strong>👤 ${req.username}</strong> (${req.user})</div><div>💰 ${req.giftEmoji ? `Подарок ${req.giftEmoji}` : `${req.yc} YC`} (${req.ton} TON)</div><div class="txid-input">🔗 TXID: ${req.txid}</div><div>📅 ${new Date(req.createdAt).toLocaleString()}</div><div style="display: flex; gap: 8px; margin-top: 8px;"><button class="tiny-btn" style="background:#4CAF50; color:white;" onclick="window.confirmDonation('${req.id}')">✅ ПОДТВЕРДИТЬ И НАЧИСЛИТЬ</button><button class="tiny-btn" style="background:#ff4444; color:white;" onclick="window.cancelDonation('${req.id}')">❌ ОТМЕНИТЬ</button></div></div>`).join('')}<h4 style="margin-top:16px;">✅ ВЫПОЛНЕННЫЕ</h4>${completed.length === 0 ? '<p style="color:#666;">Нет выполненных</p>' : completed.map(req => `<div class="donation-item completed"><div><strong>👤 ${req.username}</strong> (${req.user})</div><div>${req.giftEmoji ? `Подарок ${req.giftEmoji}` : `${req.yc} YC`}</div><div>📅 ${new Date(req.createdAt).toLocaleString()}</div></div>`).join('')}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeAdminModal">ЗАКРЫТЬ</button></div></div></div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 document.getElementById('closeAdminModal')?.addEventListener('click', () => { document.getElementById('adminModalOverlay')?.remove(); });
             }
@@ -1850,10 +1940,7 @@
                 if (!request || request.status !== 'pending') return;
                 const targetUser = request.user;
                 if (App.users[targetUser]) {
-                    if (request.isPremium) {
-                        App.users[targetUser].premium = true;
-                        showNotification(`✅ PREMIUM статус активирован для ${request.username}`);
-                    } else if (request.giftEmoji) {
+                    if (request.giftEmoji) {
                         if (!App.users[targetUser].gifts) App.users[targetUser].gifts = [];
                         App.users[targetUser].gifts.push(request.giftEmoji);
                         showNotification(`✅ Подарок ${request.giftEmoji} отправлен ${request.username}`);
@@ -1866,7 +1953,7 @@
                     saveDonationRequests();
                     saveToFirebase();
                     if (!App.yolkChatMessages[targetUser]) App.yolkChatMessages[targetUser] = [];
-                    App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: request.isPremium ? `✨ Вы получили PREMIUM статус НАВСЕГДА! ✨\nВаш ник теперь золотой, а сообщения мерцают!` : (request.giftEmoji ? `🎁 Вам отправили подарок ${request.giftEmoji}!` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`), time: Date.now() });
+                    App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: request.giftEmoji ? `🎁 Вам отправили подарок ${request.giftEmoji}!` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`, time: Date.now() });
                     saveYolkChatMessages();
                     if (App.currentUser === ADMIN_USER) { document.getElementById('adminModalOverlay')?.remove(); openAdminPanel(); }
                 }
@@ -1881,6 +1968,21 @@
                 showNotification(`❌ Заявка отменена`);
                 if (App.currentUser === ADMIN_USER) { document.getElementById('adminModalOverlay')?.remove(); openAdminPanel(); }
             };
+            
+            function openQRCodeModal() {
+                const user = App.currentUser;
+                const qrUrl = `https://yolkapp.ru/?add=${encodeURIComponent(user)}`;
+                const modalHtml = `<div class="modal-overlay" id="qrModalOverlay"><div class="profile-modal"><h3>📱 QR-КОД ПРОФИЛЯ</h3><div class="qr-code-profile" id="profileQrCode"></div><p style="text-align:center; margin-top:8px;">Сканируйте, чтобы добавить в друзья</p><div class="profile-input-group"><label>🔗 ССЫЛКА</label><input type="text" value="${qrUrl}" readonly onclick="this.select();document.execCommand('copy');showNotification('Ссылка скопирована!')"></div><div class="profile-actions"><button class="profile-btn secondary" id="closeQrModal">ЗАКРЫТЬ</button></div></div></div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                setTimeout(() => {
+                    const qrDiv = document.getElementById('profileQrCode');
+                    if (qrDiv) {
+                        qrDiv.innerHTML = '';
+                        new QRCode(qrDiv, { text: qrUrl, width: 200, height: 200 });
+                    }
+                }, 100);
+                document.getElementById('closeQrModal')?.addEventListener('click', () => { document.getElementById('qrModalOverlay')?.remove(); });
+            }
             
             function openChannelModal(channelName) {
                 const channel = App.channels[channelName];
@@ -1904,7 +2006,7 @@
                 const isAdmin = (username === ADMIN_USER);
                 const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join('');
                 
-                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="channel">КАНАЛ</div><div class="tab" data-tab="donate">ДОНАТ</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>СОЗДАТЬ КАНАЛ (450 YC)</h4><div class="profile-input-group"><input type="text" id="channelNameInput" placeholder="название (только англ буквы и цифры, минимум 4)"></div><div class="profile-input-group"><textarea id="channelDescInput" placeholder="Описание..."></textarea></div><button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button></div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
+                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="channel">КАНАЛ</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="qr">QR</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>СОЗДАТЬ КАНАЛ (450 YC)</h4><div class="profile-input-group"><input type="text" id="channelNameInput" placeholder="название (только англ буквы и цифры, минимум 4)"></div><div class="profile-input-group"><textarea id="channelDescInput" placeholder="Описание..."></textarea></div><button class="profile-btn" id="createChannelBtn">СОЗДАТЬ</button></div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div><div id="tabQr" class="tab-content hidden"><div class="shop-section"><h4>📱 МОЙ QR-КОД</h4><button class="profile-btn" id="showQrCodeBtn">ПОКАЗАТЬ QR-КОД</button><p style="margin-top:12px; font-size:12px; color:#666;">Отсканируйте QR-код, чтобы добавить в друзья</p></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
                 
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 window.togglePasswordVisibility = function() { const passInput = document.getElementById('modalPasswordInput'); const btn = document.querySelector('.toggle-password'); if (passInput.type === 'password') { passInput.type = 'text'; btn.textContent = '🙈'; } else { passInput.type = 'password'; btn.textContent = '👁️'; } };
@@ -1915,10 +2017,11 @@
                     const twoFAToggle = document.getElementById('twoFAToggle');
                     if (twoFAToggle) twoFAToggle.addEventListener('click', () => { const newState = !App.users[App.currentUser].twoFA; App.users[App.currentUser].twoFA = newState; twoFAToggle.classList.toggle('active', newState); const labelSpan = twoFAToggle.querySelector('.toggle-label'); labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена'; saveToFirebase(); showNotification(newState ? '2FA включена' : '2FA выключена'); });
                     document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); App.currentUser = null; App.activeChat = null; App.savedMessages = {}; localStorage.removeItem('yolk_current_user'); localStorage.removeItem('yolk_active_chat'); render(); });
-                    document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden'); if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden'); if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden'); }); });
+                    document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden'); if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden'); if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden'); if (e.target.dataset.tab === 'qr') document.getElementById('tabQr').classList.remove('hidden'); }); });
                     document.querySelectorAll('.buy-gift-btn').forEach(btn => { btn.addEventListener('click', (e) => { const gift = e.target.dataset.gift; const price = parseInt(e.target.dataset.price); const user = App.currentUser; if (App.users[user].stars >= price) { App.users[user].stars -= price; if (!App.users[user].gifts) App.users[user].gifts = []; App.users[user].gifts.push(gift); saveToFirebase(); document.getElementById('profileModalOverlay').remove(); openProfileModal(user); showNotification(`Куплен подарок ${gift}`); } else { showNotification('Недостаточно YC', 'error'); } }); });
                     document.querySelectorAll('.donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const yc = parseInt(e.target.dataset.yc); const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc, ton, price: `${ton} TON` }); document.getElementById('profileModalOverlay')?.remove(); }); });
                     document.querySelectorAll('.gift-donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const emoji = e.target.dataset.emoji; const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, giftEmoji: emoji }); document.getElementById('profileModalOverlay')?.remove(); }); });
+                    document.getElementById('showQrCodeBtn')?.addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); openQRCodeModal(); });
                     document.getElementById('createChannelBtn')?.addEventListener('click', () => { let channelName = document.getElementById('channelNameInput').value.trim(); const channelDesc = document.getElementById('channelDescInput').value.trim(); if (!channelName) { showNotification('Введите название канала', 'error'); return; } if (!isValidChannelName(channelName)) { showNotification('Название канала: только англ буквы и цифры, минимум 4', 'error'); return; } const cleanName = '@' + channelName; if (App.users[cleanName] || App.channels[cleanName]) { showNotification('Такое имя уже занято', 'error'); return; } if (App.users[App.currentUser].stars < 450) { showNotification('Нужно 450 YC', 'error'); return; } App.users[App.currentUser].stars -= 450; App.channels[cleanName] = { name: cleanName, owner: App.currentUser, description: channelDesc, avatar: null, banner: null, subscribers: [App.currentUser], messages: [] }; saveToFirebase(); showNotification(`✅ КАНАЛ ${cleanName} СОЗДАН`); document.getElementById('profileModalOverlay').remove(); App.activeChat = cleanName; localStorage.setItem('yolk_active_chat', cleanName); render(); });
                     document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => { const newAvatar = App.tempAvatar; const newPassword = document.getElementById('modalPasswordInput')?.value.trim(); const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50); const newAge = parseInt(document.getElementById('modalAgeInput')?.value); if (newAvatar) App.users[App.currentUser].avatar = newAvatar; if (tempBanner) App.users[App.currentUser].banner = tempBanner; if (newPassword) App.users[App.currentUser].password = newPassword; if (newBio !== undefined) App.users[App.currentUser].bio = newBio; if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge; saveToFirebase(); document.getElementById('profileModalOverlay').remove(); render(); showNotification('Профиль сохранен'); });
                 }
@@ -1943,7 +2046,6 @@
             window.openChannelModal = window.openChannelModal || function() {};
             window.confirmDonation = window.confirmDonation || function() {};
             window.cancelDonation = window.cancelDonation || function() {};
-            window.sendSticker = window.sendSticker || function() {};
             
             window.addEventListener('load', () => { showLoading(); initBots(); loadFromFirebase(); setTimeout(hideLoading, 1000); });
         })();
