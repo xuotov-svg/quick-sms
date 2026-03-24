@@ -1600,11 +1600,15 @@
             function saveDonationRequests() { localStorage.setItem('yolk_donation_requests', JSON.stringify(App.donationRequests)); if (App.dataLoaded) { database.ref('donationRequests').set(App.donationRequests).catch(e => console.error(e)); } }
             
             async function loadFromFirebase() {
+                console.log('🔄 Загрузка данных из Firebase...');
                 try {
                     const snapshot = await database.ref().get();
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        if (data.users) App.users = data.users;
+                        if (data.users) {
+                            App.users = data.users;
+                            console.log('✅ Загружено пользователей:', Object.keys(App.users).length);
+                        }
                         if (data.chats) App.chats = data.chats;
                         if (data.blocked) App.blocked = data.blocked;
                         if (data.channels) App.channels = data.channels;
@@ -1617,6 +1621,8 @@
                         if (data.tapBalances || data.tapUpgrades) saveTapBalances();
                         if (data.yolkChatMessages) saveYolkChatMessages();
                         if (data.donationRequests) saveDonationRequests();
+                    } else {
+                        console.log('⚠️ База данных пуста');
                     }
                     const savedUser = localStorage.getItem('yolk_current_user');
                     const savedChat = localStorage.getItem('yolk_active_chat');
@@ -1635,7 +1641,7 @@
                     App.dataLoaded = true;
                     render();
                 } catch (error) {
-                    console.error('Ошибка Firebase:', error);
+                    console.error('❌ Ошибка Firebase:', error);
                     const cachedData = localStorage.getItem('yolk_cache');
                     if (cachedData) {
                         try { const cache = JSON.parse(cachedData);
@@ -1644,6 +1650,7 @@
                             if (cache.blocked) App.blocked = cache.blocked;
                             if (cache.channels) App.channels = cache.channels;
                             if (cache.pinnedChats) App.pinnedChats = cache.pinnedChats;
+                            console.log('📦 Загружено из кэша:', Object.keys(App.users).length);
                         } catch(e) { }
                     }
                     const savedUser = localStorage.getItem('yolk_current_user');
@@ -1765,14 +1772,48 @@
                     if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                     const clean = '@' + username;
                     if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
-                    App.users[clean] = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], bio: '', verified: false, gold: false, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' };
-                    App.currentUser = clean;
-                    App.savedMessages[clean] = [];
-                    saveSavedMessages();
-                    localStorage.setItem('yolk_current_user', clean);
-                    saveToFirebase();
-                    setupUserListener(clean);
-                    render();
+                    
+                    // Показываем индикацию сохранения
+                    errorDiv.innerText = '📝 Сохранение...';
+                    errorDiv.style.color = '#d4af37';
+                    
+                    const newUser = {
+                        password: pass,
+                        avatar: null,
+                        banner: null,
+                        stars: 0,
+                        gifts: [],
+                        bio: '',
+                        verified: false,
+                        gold: false,
+                        age: 14,
+                        twoFA: false,
+                        lastSeen: Date.now(),
+                        chatWallpaper: ''
+                    };
+                    
+                    database.ref('users/' + clean).set(newUser)
+                        .then(() => {
+                            console.log('✅ Пользователь успешно сохранен в Firebase:', clean);
+                            App.users[clean] = newUser;
+                            App.currentUser = clean;
+                            App.savedMessages[clean] = [];
+                            saveSavedMessages();
+                            localStorage.setItem('yolk_current_user', clean);
+                            saveToFirebase();
+                            setupUserListener(clean);
+                            errorDiv.innerText = '';
+                            render();
+                            showNotification('✅ Аккаунт создан!');
+                        })
+                        .catch((err) => {
+                            console.error('❌ Ошибка сохранения пользователя:', err);
+                            errorDiv.innerText = '! Ошибка сервера, попробуйте позже';
+                            errorDiv.style.color = '#ff0000';
+                            setTimeout(() => {
+                                errorDiv.innerText = '';
+                            }, 3000);
+                        });
                 });
             }
             
