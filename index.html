@@ -61,9 +61,36 @@
         }
 
         .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: transparent;
             position: relative;
             z-index: 1;
-            background: #ffffff;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            background: rgba(240, 240, 240, 0.95);
+            color: #000000;
+            align-self: flex-start;
+            word-break: break-word;
+            border: 1px solid #000000;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            position: relative;
+            animation: fadeIn 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .message.me {
+            align-self: flex-end;
+            background: rgba(230, 243, 255, 0.95);
+            border: 1px solid #000000;
         }
 
         @keyframes fadeIn {
@@ -723,38 +750,6 @@
             background: var(--accent-soft);
         }
 
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: #ffffff;
-            position: relative;
-            z-index: 1;
-        }
-
-        .message {
-            max-width: 85%;
-            padding: 10px 14px;
-            border-radius: 16px;
-            background: #f0f0f0;
-            color: #000000;
-            align-self: flex-start;
-            word-break: break-word;
-            border: 1px solid #000000;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            position: relative;
-            animation: fadeIn 0.2s ease;
-        }
-
-        .message.me {
-            align-self: flex-end;
-            background: #e6f3ff;
-            border: 1px solid #000000;
-        }
-
         .message .time {
             font-size: 10px;
             opacity: 0.7;
@@ -766,7 +761,7 @@
 
         .gift-message {
             animation: giftGlow 1.5s infinite;
-            background: #fff9e6;
+            background: rgba(255, 249, 230, 0.95);
             border: 2px solid #d4af37;
         }
 
@@ -889,7 +884,7 @@
             display: flex;
             gap: 8px;
             padding: 12px;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             border-top: 2px solid #000000;
             align-items: center;
             flex-wrap: wrap;
@@ -1358,7 +1353,7 @@
                 { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
             ];
 
-            function playNotificationSound() {
+            function playHappySound() {
                 if (!App.soundEnabled) return;
                 try {
                     if (!App.audioCtx) {
@@ -1366,15 +1361,28 @@
                     }
                     const ctx = App.audioCtx;
                     const now = ctx.currentTime;
-                    const oscillator = ctx.createOscillator();
-                    const gainNode = ctx.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(ctx.destination);
-                    oscillator.frequency.value = 880;
-                    gainNode.gain.value = 0.3;
-                    oscillator.start();
-                    gainNode.gain.exponentialRampToValueAtTime(0.00001, now + 0.3);
-                    oscillator.stop(now + 0.3);
+                    const osc1 = ctx.createOscillator();
+                    const osc2 = ctx.createOscillator();
+                    const osc3 = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    osc3.connect(gain);
+                    gain.connect(ctx.destination);
+                    gain.gain.value = 0.2;
+                    osc1.frequency.value = 880;
+                    osc2.frequency.value = 1100;
+                    osc3.frequency.value = 1320;
+                    osc1.start();
+                    osc2.start();
+                    osc3.start();
+                    osc1.frequency.exponentialRampToValueAtTime(1320, now + 0.2);
+                    osc2.frequency.exponentialRampToValueAtTime(1560, now + 0.2);
+                    osc3.frequency.exponentialRampToValueAtTime(1760, now + 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+                    osc1.stop(now + 0.3);
+                    osc2.stop(now + 0.3);
+                    osc3.stop(now + 0.3);
                 } catch(e) { console.log('Sound error:', e); }
             }
 
@@ -1443,7 +1451,17 @@
                 if (!headerInfo) return;
                 const existingStatus = headerInfo.querySelector('.chat-user-status');
                 if (existingStatus) existingStatus.remove();
-                
+                const existingNameStrong = headerInfo.querySelector('strong');
+                if (existingNameStrong && App.users[username]) {
+                    const isGold = hasGoldStatus(username);
+                    if (isGold) {
+                        existingNameStrong.innerHTML = `${username}${App.users[username]?.verified ? '<span class="verified-icon"></span>' : ''}`;
+                        existingNameStrong.classList.add('gold-name');
+                    } else {
+                        existingNameStrong.innerHTML = `${username}${App.users[username]?.verified ? '<span class="verified-icon"></span>' : ''}`;
+                        existingNameStrong.classList.remove('gold-name');
+                    }
+                }
                 const isOnline = isUserOnline(username);
                 const lastSeenText = getLastSeenText(App.users[username]?.lastSeen);
                 const statusDiv = document.createElement('div');
@@ -1890,7 +1908,7 @@
                         if (newMessageCount > oldMessageCount && App.activeChat !== chatPartner && App.currentUser) {
                             const lastMsg = App.chats[chatId].messages[newMessageCount - 1];
                             if (lastMsg && lastMsg.from !== App.currentUser) {
-                                playNotificationSound();
+                                playHappySound();
                             }
                         }
                         if (App.activeChat === chatPartner) {
@@ -2053,10 +2071,10 @@
                         mediaData = App.tempPhoto;
                     }
                     const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg };
-                    if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); renderMessages('saved'); }
-                    else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); renderMessages(to); }
-                    else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); else if (to === '@random_bot') response = handleRandomBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); renderMessages(to); } }
-                    else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); renderMessages(to); }
+                    if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); renderMessages('saved'); playHappySound(); }
+                    else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); renderMessages(to); playHappySound(); }
+                    else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); else if (to === '@random_bot') response = handleRandomBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); renderMessages(to); playHappySound(); } }
+                    else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); renderMessages(to); playHappySound(); }
                     if (textInput) textInput.value = '';
                     App.tempPhoto = null;
                     App.tempVideo = null;
@@ -2143,7 +2161,7 @@
                 if (chatId && App.chats[chatId]) {
                     App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`, time: Date.now(), gift: true });
                     showConfetti();
-                    playNotificationSound();
+                    playHappySound();
                 }
                 saveToFirebase();
                 if (App.activeChat === toUser) renderMessages(toUser);
