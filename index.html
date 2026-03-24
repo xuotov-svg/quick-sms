@@ -60,11 +60,12 @@
 
         .floating-egg {
             position: absolute;
-            font-size: 24px;
-            opacity: 0.15;
+            font-size: 28px;
+            opacity: 0.2;
             pointer-events: none;
             z-index: 0;
-            animation: floatEgg 20s linear infinite;
+            animation: floatEgg linear infinite;
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.1));
         }
 
         @keyframes floatEgg {
@@ -72,11 +73,11 @@
                 transform: translateY(100vh) rotate(0deg);
                 opacity: 0;
             }
-            10% {
-                opacity: 0.15;
+            5% {
+                opacity: 0.2;
             }
-            90% {
-                opacity: 0.15;
+            95% {
+                opacity: 0.2;
             }
             100% {
                 transform: translateY(-100px) rotate(360deg);
@@ -88,6 +89,31 @@
             position: relative;
             z-index: 1;
             background: transparent;
+        }
+
+        .chat-header-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .chat-header-info strong {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chat-user-status {
+            font-size: 11px;
+            color: #4CAF50;
+            font-weight: normal;
+            margin-top: 2px;
+        }
+
+        .chat-user-status.offline {
+            color: #888;
         }
 
         @keyframes fadeIn {
@@ -103,20 +129,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        .online-status {
-            font-size: 11px;
-            color: #4CAF50;
-            margin-left: 8px;
-            font-weight: normal;
-        }
-
-        .last-seen {
-            font-size: 11px;
-            color: #888;
-            margin-left: 8px;
-            font-weight: normal;
         }
 
         .verified-icon {
@@ -690,9 +702,9 @@
 
         .chat-header-info {
             display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
         }
 
         .chat-header-info strong {
@@ -1321,7 +1333,8 @@
                 yolkChatMessages: {},
                 donationRequests: {},
                 userListeners: {},
-                onlineStatus: {}
+                onlineStatus: {},
+                lastSeenInterval: null
             };
 
             App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
@@ -1360,14 +1373,14 @@
             }
 
             function updateLastSeen(username) {
-                if (App.users[username]) {
+                if (App.users[username] && username === App.currentUser) {
                     App.users[username].lastSeen = Date.now();
                     database.ref('users/' + username + '/lastSeen').set(Date.now());
                 }
             }
 
             function getLastSeenText(lastSeen) {
-                if (!lastSeen) return 'никогда';
+                if (!lastSeen) return 'очень давно';
                 const now = Date.now();
                 const diff = now - lastSeen;
                 const minutes = Math.floor(diff / 60000);
@@ -1391,6 +1404,20 @@
                 return (Date.now() - lastSeen) < 300000;
             }
 
+            function updateChatHeaderStatus(username) {
+                const headerInfo = document.querySelector('.chat-header-info');
+                if (!headerInfo) return;
+                const existingStatus = headerInfo.querySelector('.chat-user-status');
+                if (existingStatus) existingStatus.remove();
+                
+                const isOnline = isUserOnline(username);
+                const lastSeenText = getLastSeenText(App.users[username]?.lastSeen);
+                const statusDiv = document.createElement('div');
+                statusDiv.className = 'chat-user-status' + (isOnline ? '' : ' offline');
+                statusDiv.textContent = isOnline ? 'в сети' : `был(а) ${lastSeenText}`;
+                headerInfo.appendChild(statusDiv);
+            }
+
             function setupUserListener(username) {
                 if (App.userListeners[username]) return;
                 const userRef = database.ref('users/' + username);
@@ -1408,20 +1435,6 @@
                     }
                 });
                 App.userListeners[username] = true;
-            }
-
-            function updateChatHeaderStatus(username) {
-                const header = document.querySelector('.chat-header-info strong');
-                if (header && username) {
-                    const isOnline = isUserOnline(username);
-                    const lastSeenText = getLastSeenText(App.users[username]?.lastSeen);
-                    const statusSpan = header.querySelector('.online-status, .last-seen');
-                    if (statusSpan) statusSpan.remove();
-                    const status = document.createElement('span');
-                    status.className = isOnline ? 'online-status' : 'last-seen';
-                    status.textContent = isOnline ? 'в сети' : `был(а) ${lastSeenText}`;
-                    header.appendChild(status);
-                }
             }
 
             function updateUserInterface() {
@@ -1447,23 +1460,25 @@
 
             function addFloatingEggs() {
                 const chatArea = document.querySelector('.chat-area');
-                if (!chatArea) return;
+                if (!chatArea || chatArea.classList.contains('chat-area-with-eggs')) return;
                 chatArea.classList.add('chat-area-with-eggs');
-                for (let i = 0; i < 15; i++) {
+                for (let i = 0; i < 25; i++) {
                     const egg = document.createElement('div');
                     egg.className = 'floating-egg';
                     egg.textContent = '🍳';
                     egg.style.left = Math.random() * 100 + '%';
-                    egg.style.animationDelay = Math.random() * 20 + 's';
-                    egg.style.animationDuration = 15 + Math.random() * 10 + 's';
-                    egg.style.fontSize = 20 + Math.random() * 20 + 'px';
+                    const duration = 12 + Math.random() * 8;
+                    const delay = Math.random() * 20;
+                    egg.style.animationDuration = duration + 's';
+                    egg.style.animationDelay = delay + 's';
+                    egg.style.fontSize = 20 + Math.random() * 25 + 'px';
                     chatArea.appendChild(egg);
                 }
             }
 
             function generateCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
             function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
-            function isValidUsername(str) { return /^[a-z0-9]{4,}$/.test(str); }
+            function isValidUsername(str) { return /^[a-z0-9]{4,15}$/.test(str); }
             function isValidChannelName(str) { return /^[a-zA-Z0-9]{4,}$/.test(str); }
             function isValidPassword(str) { return /^[a-zA-Z0-9]+$/.test(str); }
             function isBot(username) { return App.systemBots.includes(username) || (App.users[username] && App.users[username].isBot); }
@@ -1531,7 +1546,8 @@
                         loadYolkChatMessages();
                         loadDonationRequests();
                         setupUserListener(App.currentUser);
-                        setInterval(() => { updateLastSeen(App.currentUser); }, 60000);
+                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
+                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
                         updateLastSeen(App.currentUser);
                     }
                     App.dataLoaded = true;
@@ -1633,7 +1649,7 @@
             }
             
             function renderAuth() {
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, минимум 4"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, минимум 4"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
             }
             
             function attachAuthEvents() {
@@ -1645,11 +1661,11 @@
                 document.getElementById('loginBtn')?.addEventListener('click', () => {
                     let username = document.getElementById('loginUsername').value.trim().toLowerCase();
                     const pass = document.getElementById('loginPassword').value.trim();
-                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, МИНИМУМ 4'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; }
                     const clean = '@' + username;
                     if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; }
                     const user = App.users[clean];
-                    function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadDonationRequests(); setupUserListener(clean); setInterval(() => { updateLastSeen(clean); }, 60000); updateLastSeen(clean); render(); }
+                    function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadDonationRequests(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); }
                     if (user.twoFA) {
                         send2FACode(clean);
                         const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`;
@@ -1662,7 +1678,7 @@
                 document.getElementById('registerBtn')?.addEventListener('click', () => {
                     let username = document.getElementById('regUsername').value.trim().toLowerCase();
                     const pass = document.getElementById('regPassword').value.trim();
-                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, МИНИМУМ 4'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; }
                     if (!isValidPassword(pass)) { errorDiv.innerText = '! ПАРОЛЬ ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ'; return; }
                     if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                     const clean = '@' + username;
@@ -1698,7 +1714,7 @@
                     </div>
                     <div class="chat-area">
                         <div class="chat-header">
-                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>${isChannel ? `<small style="color:#666;">👥 ${App.channels[chatPartner]?.subscribers?.length || 0}</small>` : ''}</div>
+                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
                             <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
