@@ -1274,6 +1274,81 @@
             border: 1px solid #000000;
             border-radius: 8px;
         }
+
+        /* Call UI */
+        .call-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .call-container {
+            background: white;
+            border-radius: 32px;
+            width: 90%;
+            max-width: 350px;
+            padding: 32px 24px;
+            text-align: center;
+            border: 2px solid #000000;
+        }
+
+        .call-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            background: var(--accent-soft);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            overflow: hidden;
+            border: 3px solid #000000;
+        }
+
+        .call-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .call-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .call-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            background: #4CAF50;
+            border: 2px solid #000000;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .call-btn.decline {
+            background: #ff4444;
+        }
+
+        .call-status {
+            font-size: 14px;
+            color: #666;
+            margin-top: 16px;
+        }
     </style>
 </head>
 <body>
@@ -1339,7 +1414,13 @@
                 userListeners: {},
                 chatWallpaper: '',
                 soundEnabled: true,
-                audioCtx: null
+                audioCtx: null,
+                // Call state
+                localStream: null,
+                peerConnection: null,
+                callActive: false,
+                incomingCallListener: null,
+                callReceiver: null
             };
 
             App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
@@ -1352,6 +1433,13 @@
                 { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" },
                 { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
             ];
+
+            const configuration = {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' }
+                ]
+            };
 
             function playHappySound() {
                 if (!App.soundEnabled) return;
@@ -1385,6 +1473,28 @@
                     osc2.stop(now + 0.3);
                     osc3.stop(now + 0.3);
                 } catch(e) { console.log('Sound error:', e); }
+            }
+
+            function playRingSound() {
+                if (!App.soundEnabled) return;
+                try {
+                    if (!App.audioCtx) {
+                        App.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        App.audioCtx.resume();
+                    }
+                    const ctx = App.audioCtx;
+                    const now = ctx.currentTime;
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    gain.gain.value = 0.15;
+                    osc.frequency.value = 660;
+                    osc.start();
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+                    osc.stop(now + 0.5);
+                } catch(e) {}
             }
 
             function formatUserName(username, isGold) {
@@ -1558,6 +1668,194 @@
                 applyWallpaper();
             }
 
+            // CALL FUNCTIONS
+            async function startCall(targetUser) {
+                if (App.callActive) {
+                    showNotification('Уже есть активный звонок', 'error');
+                    return;
+                }
+                if (!App.currentUser || !targetUser) return;
+                
+                try {
+                    App.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    App.peerConnection = new RTCPeerConnection(configuration);
+                    App.localStream.getTracks().forEach(track => {
+                        App.peerConnection.addTrack(track, App.localStream);
+                    });
+                    
+                    App.peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            database.ref('calls/' + targetUser + '/candidate').set(event.candidate.toJSON());
+                        }
+                    };
+                    
+                    App.peerConnection.ontrack = (event) => {
+                        const remoteAudio = new Audio();
+                        remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.play().catch(e => console.log(e));
+                    };
+                    
+                    const offer = await App.peerConnection.createOffer();
+                    await App.peerConnection.setLocalDescription(offer);
+                    
+                    const callData = {
+                        from: App.currentUser,
+                        to: targetUser,
+                        offer: { type: offer.type, sdp: offer.sdp },
+                        status: 'ringing',
+                        timestamp: Date.now()
+                    };
+                    await database.ref('calls/' + targetUser).set(callData);
+                    
+                    showNotification(`Звоним ${targetUser}...`);
+                    App.callActive = true;
+                    App.callReceiver = targetUser;
+                    
+                    const callTimeout = setTimeout(() => {
+                        if (App.callActive) {
+                            endCall();
+                            showNotification('Собеседник не ответил', 'error');
+                        }
+                    }, 30000);
+                    
+                    const callListener = database.ref('calls/' + targetUser + '/status');
+                    const answerListener = callListener.on('value', (snap) => {
+                        const status = snap.val();
+                        if (status === 'answered') {
+                            clearTimeout(callTimeout);
+                            showNotification('Звонок принят!');
+                            callListener.off();
+                        } else if (status === 'declined' || status === 'ended') {
+                            clearTimeout(callTimeout);
+                            endCall();
+                            showNotification('Звонок отклонен', 'error');
+                            callListener.off();
+                        }
+                    });
+                    
+                    App.incomingCallListener = () => {
+                        database.ref('calls/' + App.currentUser).off();
+                        callListener.off();
+                    };
+                    
+                } catch (err) {
+                    console.error('Call error:', err);
+                    showNotification('Не удалось начать звонок. Проверьте микрофон', 'error');
+                    endCall();
+                }
+            }
+            
+            async function acceptCall(callData) {
+                if (App.callActive) {
+                    database.ref('calls/' + callData.from + '/status').set('busy');
+                    return;
+                }
+                try {
+                    App.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    App.peerConnection = new RTCPeerConnection(configuration);
+                    App.localStream.getTracks().forEach(track => {
+                        App.peerConnection.addTrack(track, App.localStream);
+                    });
+                    
+                    App.peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            database.ref('calls/' + callData.from + '/candidate').set(event.candidate.toJSON());
+                        }
+                    };
+                    
+                    App.peerConnection.ontrack = (event) => {
+                        const remoteAudio = new Audio();
+                        remoteAudio.srcObject = event.streams[0];
+                        remoteAudio.play().catch(e => console.log(e));
+                    };
+                    
+                    await App.peerConnection.setRemoteDescription(new RTCSessionDescription(callData.offer));
+                    const answer = await App.peerConnection.createAnswer();
+                    await App.peerConnection.setLocalDescription(answer);
+                    
+                    await database.ref('calls/' + callData.from).update({
+                        answer: { type: answer.type, sdp: answer.sdp },
+                        status: 'answered'
+                    });
+                    
+                    App.callActive = true;
+                    App.callReceiver = callData.from;
+                    showNotification('Звонок начат');
+                    
+                    const candidateRef = database.ref('calls/' + callData.from + '/candidate');
+                    candidateRef.on('value', async (snap) => {
+                        const candidate = snap.val();
+                        if (candidate && App.peerConnection && App.peerConnection.remoteDescription) {
+                            try {
+                                await App.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                                candidateRef.off();
+                            } catch(e) {}
+                        }
+                    });
+                    
+                } catch (err) {
+                    console.error('Accept call error:', err);
+                    endCall();
+                }
+            }
+            
+            function endCall() {
+                if (App.localStream) {
+                    App.localStream.getTracks().forEach(track => track.stop());
+                    App.localStream = null;
+                }
+                if (App.peerConnection) {
+                    App.peerConnection.close();
+                    App.peerConnection = null;
+                }
+                if (App.callReceiver) {
+                    database.ref('calls/' + App.callReceiver).remove();
+                }
+                App.callActive = false;
+                App.callReceiver = null;
+                const callOverlay = document.getElementById('callOverlay');
+                if (callOverlay) callOverlay.remove();
+            }
+            
+            function setupIncomingCallListener() {
+                if (App.incomingCallListener) {
+                    database.ref('calls/' + App.currentUser).off();
+                }
+                const callRef = database.ref('calls/' + App.currentUser);
+                App.incomingCallListener = callRef.on('value', (snapshot) => {
+                    const callData = snapshot.val();
+                    if (callData && callData.status === 'ringing' && callData.to === App.currentUser && !App.callActive) {
+                        playRingSound();
+                        const fromUser = callData.from;
+                        const fromData = App.users[fromUser] || {};
+                        const avatarHtml = fromData.avatar ? `<img src="${fromData.avatar}">` : (fromUser[1] ? fromUser[1].toUpperCase() : '?');
+                        const modalHtml = `
+                            <div class="call-overlay" id="callOverlay">
+                                <div class="call-container">
+                                    <div class="call-avatar">${avatarHtml}</div>
+                                    <h3>${formatUserName(fromUser, hasGoldStatus(fromUser))}</h3>
+                                    <div class="call-status">Входящий звонок...</div>
+                                    <div class="call-buttons">
+                                        <button class="call-btn" id="acceptCallBtn" style="background:#4CAF50;">📞</button>
+                                        <button class="call-btn decline" id="declineCallBtn">❌</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        document.getElementById('acceptCallBtn')?.addEventListener('click', async () => {
+                            document.getElementById('callOverlay')?.remove();
+                            await acceptCall(callData);
+                        });
+                        document.getElementById('declineCallBtn')?.addEventListener('click', () => {
+                            database.ref('calls/' + fromUser + '/status').set('declined');
+                            document.getElementById('callOverlay')?.remove();
+                            endCall();
+                        });
+                    }
+                });
+            }
+
             function generateCode() { return Math.floor(100000 + Math.random() * 900000).toString(); }
             function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
             function isValidUsername(str) { return /^[a-z0-9]{4,15}$/.test(str); }
@@ -1634,6 +1932,7 @@
                         loadYolkChatMessages();
                         loadDonationRequests();
                         setupUserListener(App.currentUser);
+                        setupIncomingCallListener();
                         if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
                         App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
                         updateLastSeen(App.currentUser);
@@ -1662,6 +1961,7 @@
                         loadYolkChatMessages();
                         loadDonationRequests();
                         setupUserListener(App.currentUser);
+                        setupIncomingCallListener();
                     }
                     App.dataLoaded = true;
                     render();
@@ -1734,7 +2034,7 @@
                 const root = document.getElementById('app');
                 if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; }
                 if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); }
+                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); setupIncomingCallListener(); }, 100); }
             }
             
             function renderAuth() {
@@ -1754,7 +2054,7 @@
                     const clean = '@' + username;
                     if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; }
                     const user = App.users[clean];
-                    function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadDonationRequests(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); }
+                    function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadDonationRequests(); setupUserListener(clean); setupIncomingCallListener(); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); }
                     if (user.twoFA) {
                         send2FACode(clean);
                         const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`;
@@ -1773,7 +2073,6 @@
                     const clean = '@' + username;
                     if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
                     
-                    // Показываем индикацию сохранения
                     errorDiv.innerText = '📝 Сохранение...';
                     errorDiv.style.color = '#d4af37';
                     
@@ -1802,6 +2101,7 @@
                             localStorage.setItem('yolk_current_user', clean);
                             saveToFirebase();
                             setupUserListener(clean);
+                            setupIncomingCallListener();
                             errorDiv.innerText = '';
                             render();
                             showNotification('✅ Аккаунт создан!');
@@ -1825,6 +2125,7 @@
                 const isYolk = chatPartner === 'yolk';
                 const isBotChat = App.systemBots.includes(chatPartner);
                 const isAdmin = (user === ADMIN_USER);
+                const showCallButton = chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner);
                 
                 return `<div class="main-container">
                     <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
@@ -1838,7 +2139,12 @@
                     <div class="chat-area">
                         <div class="chat-header">
                             <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${formatUserName(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner), hasGoldStatus(chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                            <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
+                            <div class="chat-actions">
+                                ${showCallButton ? `<button class="tiny-btn" id="callBtn">📞</button>` : ''}
+                                ${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}
+                                ${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}
+                                ${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}
+                            </div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
                         ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
@@ -2040,6 +2346,12 @@
                 if (subscribeBtn) subscribeBtn.addEventListener('click', toggleSubscribe);
                 const sendBtn = document.getElementById('sendMsgBtn');
                 if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+                const callBtn = document.getElementById('callBtn');
+                if (callBtn) callBtn.addEventListener('click', () => {
+                    if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
+                        startCall(App.activeChat);
+                    }
+                });
                 const fileUpload = document.getElementById('fileUpload');
                 const videoUpload = document.getElementById('videoUpload');
                 if (fileUpload) fileUpload.addEventListener('change', handleFileSelect);
@@ -2317,7 +2629,7 @@
                 const currentWallpaper = userData.chatWallpaper || '';
                 const isGold = hasGoldStatus(username);
                 
-                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${isGold ? `<span class="gold-name">${username}</span>` : username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="wallpaper">ОБОИ</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">✨ GOLD СТАТУС ✨</h4><div class="shop-item"><span>GOLD СТАТУС (НАВСЕГДА) — 3 TON</span><button class="gold-status-donate-btn" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div><div id="tabWallpaper" class="tab-content hidden"><div class="shop-section"><h4>🎨 ФОН ЧАТА</h4><div id="wallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div><div class="profile-input-group"><label>СВОЕ ИЗОБРАЖЕНИЕ</label><input type="file" id="wallpaperUpload" accept="image/*"></div></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
+                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${isGold ? `<span class="gold-name">${username}</span>` : username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="5" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="wallpaper">ОБОИ</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">✨ GOLD СТАТУС ✨</h4><div class="shop-item"><span>GOLD СТАТУС (НАВСЕГДА) — 3 TON</span><button class="gold-status-donate-btn" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div><div id="tabWallpaper" class="tab-content hidden"><div class="shop-section"><h4>🎨 ФОН ЧАТА</h4><div id="wallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div><div class="profile-input-group"><label>СВОЕ ИЗОБРАЖЕНИЕ</label><input type="file" id="wallpaperUpload" accept="image/*"></div></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
                 
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 window.togglePasswordVisibility = function() { const passInput = document.getElementById('modalPasswordInput'); const btn = document.querySelector('.toggle-password'); if (passInput.type === 'password') { passInput.type = 'text'; btn.textContent = '🙈'; } else { passInput.type = 'password'; btn.textContent = '👁️'; } };
@@ -2357,7 +2669,7 @@
                         if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                         if (newPassword) App.users[App.currentUser].password = newPassword;
                         if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
-                        if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge;
+                        if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                         if (newWallpaper !== undefined) App.users[App.currentUser].chatWallpaper = newWallpaper;
                         
                         saveToFirebase();
