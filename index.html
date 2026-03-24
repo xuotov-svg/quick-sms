@@ -6,7 +6,6 @@
     <title>Yolkapp · messenger</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
-        /* === Все стили остаются как в предыдущей версии === */
         * {
             margin: 0;
             padding: 0;
@@ -1275,104 +1274,6 @@
             border: 1px solid #000000;
             border-radius: 8px;
         }
-
-        /* Call UI */
-        .call-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(12px);
-            animation: fadeIn 0.2s ease;
-        }
-
-        .call-container {
-            background: white;
-            border-radius: 40px;
-            width: 90%;
-            max-width: 350px;
-            padding: 32px 24px;
-            text-align: center;
-            border: 2px solid #000000;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-        }
-
-        .call-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 60px;
-            background: var(--accent-soft);
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            overflow: hidden;
-            border: 3px solid #000000;
-        }
-
-        .call-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .call-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .call-status {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 24px;
-        }
-
-        .call-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .call-btn {
-            width: 64px;
-            height: 64px;
-            border-radius: 32px;
-            background: #4CAF50;
-            border: 2px solid #000000;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            transition: transform 0.1s;
-        }
-
-        .call-btn:active {
-            transform: scale(0.95);
-        }
-
-        .call-btn.decline {
-            background: #ff4444;
-        }
-
-        .call-btn.end {
-            background: #ff4444;
-        }
-
-        .timer {
-            font-size: 24px;
-            font-family: monospace;
-            margin: 16px 0;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -1438,17 +1339,7 @@
                 userListeners: {},
                 chatWallpaper: '',
                 soundEnabled: true,
-                audioCtx: null,
-                call: {
-                    active: false,
-                    peer: null,
-                    localStream: null,
-                    remoteStream: null,
-                    target: null,
-                    timer: null,
-                    startTime: null,
-                    incomingCallRef: null
-                }
+                audioCtx: null
             };
 
             App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
@@ -1462,15 +1353,6 @@
                 { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
             ];
 
-            const configuration = {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' }
-                ]
-            };
-
-            // ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
             function playHappySound() {
                 if (!App.soundEnabled) return;
                 try {
@@ -1505,30 +1387,10 @@
                 } catch(e) { console.log('Sound error:', e); }
             }
 
-            function playRingSound() {
-                if (!App.soundEnabled) return;
-                try {
-                    if (!App.audioCtx) {
-                        App.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        App.audioCtx.resume();
-                    }
-                    const ctx = App.audioCtx;
-                    const now = ctx.currentTime;
-                    const osc = ctx.createOscillator();
-                    const gain = ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(ctx.destination);
-                    gain.gain.value = 0.15;
-                    osc.frequency.value = 660;
-                    osc.start();
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
-                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
-                    osc.stop(now + 0.5);
-                } catch(e) {}
-            }
-
             function formatUserName(username, isGold) {
-                if (isGold) return `<span class="gold-name">${username}</span>`;
+                if (isGold) {
+                    return `<span class="gold-name">${username}</span>`;
+                }
                 return username;
             }
 
@@ -1574,6 +1436,7 @@
                 const minutes = Math.floor(diff / 60000);
                 const hours = Math.floor(diff / 3600000);
                 const days = Math.floor(diff / 86400000);
+                
                 if (minutes < 1) return 'только что';
                 if (minutes < 5) return `${minutes} мин назад`;
                 if (minutes < 15) return '5 мин назад';
@@ -1587,7 +1450,8 @@
 
             function isUserOnline(username) {
                 const lastSeen = App.users[username]?.lastSeen;
-                return lastSeen && (Date.now() - lastSeen) < 300000;
+                if (!lastSeen) return false;
+                return (Date.now() - lastSeen) < 300000;
             }
 
             function updateChatHeaderStatus(username) {
@@ -1703,31 +1567,48 @@
             function hasVerifiedBadge(username) { return App.users[username] && App.users[username].verified; }
             function getTapReward(username) { const level = App.tapUpgrades[username] || 0; return tapUpgradeLevels[level].reward; }
             function getNextUpgradeCost(username) { const level = App.tapUpgrades[username] || 0; return tapUpgradeLevels[level].nextCost; }
-            function canUpgradeTap(username) { const level = App.tapUpgrades[username] || 0; const cost = tapUpgradeLevels[level].nextCost; return cost !== null && (App.tapBalances[username] || 0) >= cost; }
+            function canUpgradeTap(username) { const level = App.tapUpgrades[username] || 0; const cost = tapUpgradeLevels[level].nextCost; if (cost === null) return false; return (App.tapBalances[username] || 0) >= cost; }
             function upgradeTap(username) { const level = App.tapUpgrades[username] || 0; const cost = tapUpgradeLevels[level].nextCost; if (cost === null) return false; if ((App.tapBalances[username] || 0) >= cost) { App.tapBalances[username] -= cost; App.tapUpgrades[username] = level + 1; saveTapBalances(); updateUserInterface(); return true; } return false; }
             function initUserStars(user) { if (!App.users[user]) return; if (App.users[user].stars === undefined) App.users[user].stars = 0; if (!App.users[user].gifts) App.users[user].gifts = []; if (App.users[user].bio === undefined) App.users[user].bio = ''; if (App.users[user].verified === undefined) App.users[user].verified = false; if (App.users[user].gold === undefined) App.users[user].gold = false; if (App.users[user].age === undefined) App.users[user].age = 14; if (App.users[user].banner === undefined) App.users[user].banner = null; if (App.users[user].avatar === undefined) App.users[user].avatar = null; if (App.users[user].twoFA === undefined) App.users[user].twoFA = false; if (App.users[user].lastSeen === undefined) App.users[user].lastSeen = Date.now(); if (App.users[user].chatWallpaper === undefined) App.users[user].chatWallpaper = ''; }
-            function send2FACode(username) { const code = generateCode(); const pendingCode = { code, username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
+            function send2FACode(username) { const code = generateCode(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
             function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
-            function showNotification(message, type = 'success') { const n = document.createElement('div'); n.className = 'notification' + (type === 'error' ? ' error' : ''); n.textContent = message; document.body.appendChild(n); setTimeout(() => n.remove(), 3000); }
-            function showLoading() { const d = document.createElement('div'); d.className = 'loading-screen'; d.id = 'loadingScreen'; d.innerHTML = '<div class="loading-spinner"></div><div>Yolkapp</div>'; document.body.appendChild(d); }
-            function hideLoading() { const l = document.getElementById('loadingScreen'); if (l) l.remove(); }
-            function showConfetti() { /* простая конфетти */ }
-            function loadYolkChatMessages() { const s = localStorage.getItem('yolk_chat_messages'); if (s) try { App.yolkChatMessages = JSON.parse(s); } catch(e) {} else App.yolkChatMessages = {}; }
-            function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error(e)); }
-            function loadSavedMessages() { if (!App.currentUser) return; const s = localStorage.getItem('yolk_saved_' + App.currentUser); if (s) try { App.savedMessages[App.currentUser] = JSON.parse(s); } catch(e) {} else App.savedMessages[App.currentUser] = []; }
-            function saveSavedMessages() { if (App.currentUser) localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); }
-            function loadTapBalances() { const b = localStorage.getItem('yolk_tap_balances'); if (b) try { App.tapBalances = JSON.parse(b); } catch(e) {} else App.tapBalances = {}; const u = localStorage.getItem('yolk_tap_upgrades'); if (u) try { App.tapUpgrades = JSON.parse(u); } catch(e) {} else App.tapUpgrades = {}; }
+            function showNotification(message, type = 'success') { const notification = document.createElement('div'); notification.className = 'notification' + (type === 'error' ? ' error' : ''); notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 3000); }
+            function showLoading() { const loadingDiv = document.createElement('div'); loadingDiv.className = 'loading-screen'; loadingDiv.id = 'loadingScreen'; loadingDiv.innerHTML = '<div class="loading-spinner"></div><div>Yolkapp</div>'; document.body.appendChild(loadingDiv); }
+            function hideLoading() { const loading = document.getElementById('loadingScreen'); if (loading) loading.remove(); }
+            function showConfetti() {
+                const confettiDiv = document.createElement('div');
+                confettiDiv.className = 'confetti';
+                for (let i = 0; i < 50; i++) {
+                    const piece = document.createElement('div');
+                    piece.className = 'confetti-piece';
+                    piece.style.left = Math.random() * 100 + '%';
+                    piece.style.animationDelay = Math.random() * 2 + 's';
+                    piece.style.background = ['#ffd700', '#ffb347', '#ff8c00', '#d4af37'][Math.floor(Math.random() * 4)];
+                    confettiDiv.appendChild(piece);
+                }
+                document.body.appendChild(confettiDiv);
+                setTimeout(() => confettiDiv.remove(), 3000);
+            }
+            
+            function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
+            function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error(e)); } }
+            function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
+            function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
+            function loadTapBalances() { const balances = localStorage.getItem('yolk_tap_balances'); if (balances) { try { App.tapBalances = JSON.parse(balances); } catch(e) { App.tapBalances = {}; } } else { App.tapBalances = {}; } const upgrades = localStorage.getItem('yolk_tap_upgrades'); if (upgrades) { try { App.tapUpgrades = JSON.parse(upgrades); } catch(e) { App.tapUpgrades = {}; } } else { App.tapUpgrades = {}; } }
             function saveTapBalances() { localStorage.setItem('yolk_tap_balances', JSON.stringify(App.tapBalances)); localStorage.setItem('yolk_tap_upgrades', JSON.stringify(App.tapUpgrades)); if (App.dataLoaded) { database.ref('tapBalances').set(App.tapBalances).catch(e => console.error(e)); database.ref('tapUpgrades').set(App.tapUpgrades).catch(e => console.error(e)); } }
-            function loadDonationRequests() { const s = localStorage.getItem('yolk_donation_requests'); if (s) try { App.donationRequests = JSON.parse(s); } catch(e) {} else App.donationRequests = {}; }
-            function saveDonationRequests() { localStorage.setItem('yolk_donation_requests', JSON.stringify(App.donationRequests)); if (App.dataLoaded) database.ref('donationRequests').set(App.donationRequests).catch(e => console.error(e)); }
-
+            function loadDonationRequests() { const saved = localStorage.getItem('yolk_donation_requests'); if (saved) { try { App.donationRequests = JSON.parse(saved); } catch(e) { App.donationRequests = {}; } } else { App.donationRequests = {}; } }
+            function saveDonationRequests() { localStorage.setItem('yolk_donation_requests', JSON.stringify(App.donationRequests)); if (App.dataLoaded) { database.ref('donationRequests').set(App.donationRequests).catch(e => console.error(e)); } }
+            
             async function loadFromFirebase() {
-                console.log('🔄 Загрузка данных...');
+                console.log('🔄 Загрузка данных из Firebase...');
                 try {
-                    const snap = await database.ref().get();
-                    if (snap.exists()) {
-                        const data = snap.val();
-                        if (data.users) App.users = data.users;
+                    const snapshot = await database.ref().get();
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        if (data.users) {
+                            App.users = data.users;
+                            console.log('✅ Загружено пользователей:', Object.keys(App.users).length);
+                        }
                         if (data.chats) App.chats = data.chats;
                         if (data.blocked) App.blocked = data.blocked;
                         if (data.channels) App.channels = data.channels;
@@ -1740,6 +1621,8 @@
                         if (data.tapBalances || data.tapUpgrades) saveTapBalances();
                         if (data.yolkChatMessages) saveYolkChatMessages();
                         if (data.donationRequests) saveDonationRequests();
+                    } else {
+                        console.log('⚠️ База данных пуста');
                     }
                     const savedUser = localStorage.getItem('yolk_current_user');
                     const savedChat = localStorage.getItem('yolk_active_chat');
@@ -1751,167 +1634,198 @@
                         loadYolkChatMessages();
                         loadDonationRequests();
                         setupUserListener(App.currentUser);
-                        setupIncomingCallListener();
                         if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
-                        App.lastSeenInterval = setInterval(() => updateLastSeen(App.currentUser), 30000);
+                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
                         updateLastSeen(App.currentUser);
                     }
                     App.dataLoaded = true;
                     render();
-                } catch (e) {
-                    console.error(e);
-                    const cache = localStorage.getItem('yolk_cache');
-                    if (cache) try { const c = JSON.parse(cache); if (c.users) App.users = c.users; if (c.chats) App.chats = c.chats; if (c.blocked) App.blocked = c.blocked; if (c.channels) App.channels = c.channels; if (c.pinnedChats) App.pinnedChats = c.pinnedChats; } catch(e2) {}
-                    const su = localStorage.getItem('yolk_current_user');
-                    if (su && App.users[su]) {
-                        App.currentUser = su;
+                } catch (error) {
+                    console.error('❌ Ошибка Firebase:', error);
+                    const cachedData = localStorage.getItem('yolk_cache');
+                    if (cachedData) {
+                        try { const cache = JSON.parse(cachedData);
+                            if (cache.users) App.users = cache.users;
+                            if (cache.chats) App.chats = cache.chats;
+                            if (cache.blocked) App.blocked = cache.blocked;
+                            if (cache.channels) App.channels = cache.channels;
+                            if (cache.pinnedChats) App.pinnedChats = cache.pinnedChats;
+                            console.log('📦 Загружено из кэша:', Object.keys(App.users).length);
+                        } catch(e) { }
+                    }
+                    const savedUser = localStorage.getItem('yolk_current_user');
+                    if (savedUser && App.users[savedUser]) {
+                        App.currentUser = savedUser;
                         App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
                         loadSavedMessages();
                         loadTapBalances();
                         loadYolkChatMessages();
                         loadDonationRequests();
                         setupUserListener(App.currentUser);
-                        setupIncomingCallListener();
                     }
                     App.dataLoaded = true;
                     render();
                 }
             }
-
+            
             function saveToFirebase() {
                 if (!App.dataLoaded) return;
-                const data = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats, tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, donationRequests: App.donationRequests };
-                database.ref().set(data).catch(e => console.error(e));
+                const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats, tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, donationRequests: App.donationRequests };
+                database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error));
             }
-
-            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const id = [userA, userB].sort().join('_'); if (!App.chats[id]) { App.chats[id] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return id; }
-            function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(k => { const c = App.chats[k]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(ch => { if (App.channels[ch].subscribers?.includes(user)) set.add(ch); }); return Array.from(set); }
-
-            // ==================== БОТЫ ====================
-            function handleGameBot(msg, from) {
-                const spin = msg.text?.includes('КРУТИТЬ');
-                if (spin) {
-                    if (App.users[from].stars < 5) return { text: '❌ Недостаточно YC! Нужно 5 YC для игры.\n\n[?][?][?]', buttons: ['КРУТИТЬ (5 YC)'] };
-                    App.users[from].stars -= 5;
-                    const res = []; for (let i=0;i<3;i++) res.push(App.gameSymbols[Math.floor(Math.random() * App.gameSymbols.length)]);
-                    let win = 0; if (res[0] === res[1] && res[1] === res[2]) { win = 10; App.users[from].stars += win; }
-                    saveToFirebase(); updateUserInterface();
-                    const t = `[${res[0]}] [${res[1]}] [${res[2]}]`;
-                    if (win) return { text: `${t}\n\n✨ ВЫИГРЫШ! +${win} YC ✨\nБаланс: ${App.users[from].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
-                    else return { text: `${t}\n\n😢 ПРОИГРЫШ...\nБаланс: ${App.users[from].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
+            
+            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
+            function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(channel => { if (App.channels[channel].subscribers?.includes(user)) set.add(channel); }); return Array.from(set); }
+            
+            function handleGameBot(message, fromUser) {
+                const isSpin = message.text && message.text.includes('КРУТИТЬ');
+                if (isSpin) {
+                    if (App.users[fromUser].stars < 5) return { text: `❌ Недостаточно YC! Нужно 5 YC для игры.\n\n[?][?][?]`, buttons: ['КРУТИТЬ (5 YC)'] };
+                    App.users[fromUser].stars -= 5;
+                    const results = []; for (let i = 0; i < 3; i++) results.push(App.gameSymbols[Math.floor(Math.random() * App.gameSymbols.length)]);
+                    let win = 0; if (results[0] === results[1] && results[1] === results[2]) { win = 10; App.users[fromUser].stars += win; }
+                    saveToFirebase();
+                    updateUserInterface();
+                    const resultText = `[${results[0]}] [${results[1]}] [${results[2]}]`;
+                    if (win > 0) return { text: `${resultText}\n\n✨ ВЫИГРЫШ! +${win} YC ✨\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
+                    else return { text: `${resultText}\n\n😢 ПРОИГРЫШ...\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
                 }
-                return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\n[?][?][?]\n\nПравила: нажми "КРУТИТЬ (5 YC)" и выиграй 10 YC если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\nYC Баланс: ${App.users[from].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
+                return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\n[?][?][?]\n\nПравила: нажми "КРУТИТЬ (5 YC)" и выиграй 10 YC если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\nYC Баланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
             }
-            function handleTapBot(msg, from) {
-                if (!App.tapBalances[from]) App.tapBalances[from] = 0;
-                if (!App.tapUpgrades[from]) App.tapUpgrades[from] = 0;
-                const lvl = App.tapUpgrades[from] || 0, cur = getTapReward(from), nextCost = getNextUpgradeCost(from), nextRew = lvl<4 ? tapUpgradeLevels[lvl+1].reward : null;
-                if (msg.text?.includes('ТАПНУТЬ')) {
-                    App.tapBalances[from] += cur; saveTapBalances(); updateUserInterface();
-                    return { text: `👆 ВЫ ТАПНУЛИ! +${cur} 💲\n\n💰 Баланс: ${App.tapBalances[from]} 💲\n📈 За клик: ${cur} 💲`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextRew}💲/клик)` : 'МАКСИМУМ!'] };
+            
+            function handleTapBot(message, fromUser) {
+                if (!App.tapBalances[fromUser]) App.tapBalances[fromUser] = 0;
+                if (!App.tapUpgrades[fromUser]) App.tapUpgrades[fromUser] = 0;
+                const currentLevel = App.tapUpgrades[fromUser] || 0;
+                const currentReward = getTapReward(fromUser);
+                const nextCost = getNextUpgradeCost(fromUser);
+                const nextReward = currentLevel < 4 ? tapUpgradeLevels[currentLevel + 1].reward : null;
+                if (message.text && message.text.includes('ТАПНУТЬ')) {
+                    App.tapBalances[fromUser] += currentReward;
+                    saveTapBalances();
+                    updateUserInterface();
+                    return { text: `👆 ВЫ ТАПНУЛИ! +${currentReward} 💲\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!'] };
                 }
-                if (msg.text?.includes('ПРОКАЧАТЬ')) {
-                    if (canUpgradeTap(from)) {
-                        upgradeTap(from);
-                        const newLvl = App.tapUpgrades[from] || 0, newRew = getTapReward(from), newCost = getNextUpgradeCost(from), newNext = newLvl<4 ? tapUpgradeLevels[newLvl+1].reward : null;
-                        saveTapBalances(); updateUserInterface();
-                        return { text: `✨ ПРОКАЧКА УСПЕШНА! ✨\n\nТеперь за клик: +${newRew} 💲\n💰 Баланс: ${App.tapBalances[from]} 💲`, buttons: ['ТАПНУТЬ (👆)', newCost !== null ? `ПРОКАЧАТЬ (${newCost}💲 → ${newNext}💲/клик)` : 'МАКСИМУМ!'] };
+                if (message.text && message.text.includes('ПРОКАЧАТЬ')) {
+                    if (canUpgradeTap(fromUser)) {
+                        upgradeTap(fromUser);
+                        const newLevel = App.tapUpgrades[fromUser] || 0;
+                        const newReward = getTapReward(fromUser);
+                        const newNextCost = getNextUpgradeCost(fromUser);
+                        const newNextReward = newLevel < 4 ? tapUpgradeLevels[newLevel + 1].reward : null;
+                        saveTapBalances();
+                        updateUserInterface();
+                        return { text: `✨ ПРОКАЧКА УСПЕШНА! ✨\n\nТеперь за клик: +${newReward} 💲\n💰 Баланс: ${App.tapBalances[fromUser]} 💲`, buttons: ['ТАПНУТЬ (👆)', newNextCost !== null ? `ПРОКАЧАТЬ (${newNextCost}💲 → ${newNextReward}💲/клик)` : 'МАКСИМУМ!'] };
                     } else {
-                        const need = nextCost - (App.tapBalances[from] || 0);
-                        return { text: `❌ НЕДОСТАТОЧНО 💲!\nНужно еще ${need} 💲 для прокачки\n\n💰 Баланс: ${App.tapBalances[from]} 💲\n📈 За клик: ${cur} 💲`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextRew}💲/клик)` : 'МАКСИМУМ!'] };
+                        const needed = nextCost - (App.tapBalances[fromUser] || 0);
+                        return { text: `❌ НЕДОСТАТОЧНО 💲!\nНужно еще ${needed} 💲 для прокачки\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!'] };
                     }
                 }
-                return { text: `🤖 TAP БОТ 🤖\n\n💰 Баланс: ${App.tapBalances[from]} 💲\n📈 За клик: ${cur} 💲\n\n${nextCost !== null ? `⬆️ Следующий уровень: ${nextCost} 💲 → +${nextRew} 💲/клик` : '🏆 МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ!'}\n\nНажми на кнопку, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextRew}💲/клик)` : 'МАКСИМУМ!'] };
+                return { text: `🤖 TAP БОТ 🤖\n\n💰 Баланс: ${App.tapBalances[fromUser]} 💲\n📈 За клик: ${currentReward} 💲\n\n${nextCost !== null ? `⬆️ Следующий уровень: ${nextCost} 💲 → +${nextReward} 💲/клик` : '🏆 МАКСИМАЛЬНЫЙ УРОВЕНЬ ДОСТИГНУТ!'}\n\nНажми на кнопку, чтобы тапнуть!`, buttons: ['ТАПНУТЬ (👆)', nextCost !== null ? `ПРОКАЧАТЬ (${nextCost}💲 → ${nextReward}💲/клик)` : 'МАКСИМУМ!'] };
             }
-            function handleRandomBot(msg, from) {
-                if (msg.text?.includes('от 0 до 10')) { const r = Math.floor(Math.random() * 11); return { text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${r}\n\nЗагадать еще?`, buttons: ['от 0 до 10'] }; }
+            
+            function handleRandomBot(message, fromUser) {
+                const range0_10 = message.text && message.text.includes('от 0 до 10');
+                if (range0_10) { const random = Math.floor(Math.random() * 11); return { text: `🎲 СЛУЧАЙНОЕ ЧИСЛО:\n\n${random}\n\nЗагадать еще?`, buttons: ['от 0 до 10'] }; }
                 return { text: `🎲 RANDOM БОТ 🎲\n\nЯ могу загадать случайное число от 0 до 10!\n\nНажми на кнопку:`, buttons: ['от 0 до 10'] };
             }
-
-            // ==================== ОСНОВНОЙ РЕНДЕР ====================
+            
             function render() {
                 const root = document.getElementById('app');
                 if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; }
                 if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); setupIncomingCallListener(); }, 100); }
+                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); }
             }
-
+            
             function renderAuth() {
                 return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
             }
-
+            
             function attachAuthEvents() {
                 const loginForm = document.getElementById('loginForm');
                 const regForm = document.getElementById('registerForm');
-                const errDiv = document.getElementById('authError');
+                const errorDiv = document.getElementById('authError');
                 document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; });
                 document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; });
                 document.getElementById('loginBtn')?.addEventListener('click', () => {
                     let username = document.getElementById('loginUsername').value.trim().toLowerCase();
                     const pass = document.getElementById('loginPassword').value.trim();
-                    if (!isValidUsername(username)) { errDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; }
                     const clean = '@' + username;
-                    if (!App.users[clean] || App.users[clean].password !== pass) { errDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; }
+                    if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; }
                     const user = App.users[clean];
-                    function loginSuccess() {
-                        App.currentUser = clean;
-                        localStorage.setItem('yolk_current_user', clean);
-                        loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadDonationRequests();
-                        setupUserListener(clean); setupIncomingCallListener();
-                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
-                        App.lastSeenInterval = setInterval(() => updateLastSeen(clean), 30000);
-                        updateLastSeen(clean);
-                        render();
-                    }
+                    function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadDonationRequests(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); }
                     if (user.twoFA) {
                         send2FACode(clean);
                         const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`;
                         document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        document.getElementById('verify2FABtn').addEventListener('click', () => {
-                            const code = document.getElementById('twoFactorCode').value.trim();
-                            if (!code) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; }
-                            if (verify2FACode(clean, code)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); }
-                            else document.getElementById('twoFactorError').textContent = 'Неверный или истекший код';
-                        });
+                        document.getElementById('verify2FABtn').addEventListener('click', () => { const inputCode = document.getElementById('twoFactorCode').value.trim(); if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } });
                         document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); });
-                        document.getElementById('twoFactorCode').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); });
-                    } else loginSuccess();
+                        document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); });
+                    } else { loginSuccess(); }
                 });
                 document.getElementById('registerBtn')?.addEventListener('click', () => {
                     let username = document.getElementById('regUsername').value.trim().toLowerCase();
                     const pass = document.getElementById('regPassword').value.trim();
-                    if (!isValidUsername(username)) { errDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; }
-                    if (!isValidPassword(pass)) { errDiv.innerText = '! ПАРОЛЬ ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ'; return; }
-                    if (!pass) { errDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; }
+                    if (!isValidPassword(pass)) { errorDiv.innerText = '! ПАРОЛЬ ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ'; return; }
+                    if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; }
                     const clean = '@' + username;
-                    if (App.users[clean] || App.systemBots.includes(clean)) { errDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
-                    errDiv.innerText = '📝 Сохранение...'; errDiv.style.color = '#d4af37';
-                    const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], bio: '', verified: false, gold: false, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' };
-                    database.ref('users/' + clean).set(newUser).then(() => {
-                        console.log('✅ Пользователь сохранён:', clean);
-                        App.users[clean] = newUser;
-                        App.currentUser = clean;
-                        App.savedMessages[clean] = [];
-                        saveSavedMessages();
-                        localStorage.setItem('yolk_current_user', clean);
-                        saveToFirebase();
-                        setupUserListener(clean);
-                        setupIncomingCallListener();
-                        errDiv.innerText = '';
-                        render();
-                        showNotification('✅ Аккаунт создан!');
-                    }).catch(e => { console.error(e); errDiv.innerText = '! Ошибка сервера, попробуйте позже'; errDiv.style.color = '#ff0000'; setTimeout(() => { errDiv.innerText = ''; }, 3000); });
+                    if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
+                    
+                    // Показываем индикацию сохранения
+                    errorDiv.innerText = '📝 Сохранение...';
+                    errorDiv.style.color = '#d4af37';
+                    
+                    const newUser = {
+                        password: pass,
+                        avatar: null,
+                        banner: null,
+                        stars: 0,
+                        gifts: [],
+                        bio: '',
+                        verified: false,
+                        gold: false,
+                        age: 14,
+                        twoFA: false,
+                        lastSeen: Date.now(),
+                        chatWallpaper: ''
+                    };
+                    
+                    database.ref('users/' + clean).set(newUser)
+                        .then(() => {
+                            console.log('✅ Пользователь успешно сохранен в Firebase:', clean);
+                            App.users[clean] = newUser;
+                            App.currentUser = clean;
+                            App.savedMessages[clean] = [];
+                            saveSavedMessages();
+                            localStorage.setItem('yolk_current_user', clean);
+                            saveToFirebase();
+                            setupUserListener(clean);
+                            errorDiv.innerText = '';
+                            render();
+                            showNotification('✅ Аккаунт создан!');
+                        })
+                        .catch((err) => {
+                            console.error('❌ Ошибка сохранения пользователя:', err);
+                            errorDiv.innerText = '! Ошибка сервера, попробуйте позже';
+                            errorDiv.style.color = '#ff0000';
+                            setTimeout(() => {
+                                errorDiv.innerText = '';
+                            }, 3000);
+                        });
                 });
             }
-
+            
             function renderMain() {
                 const user = App.currentUser;
                 const userData = App.users[user] || {};
-                const cp = App.activeChat || 'saved';
-                const isChannel = !!App.channels[cp];
-                const isYolk = cp === 'yolk';
-                const isBotChat = App.systemBots.includes(cp);
-                const showCall = cp !== 'saved' && cp !== 'yolk' && !isChannel && !isBot(cp);
+                const chatPartner = App.activeChat || 'saved';
+                const isChannel = App.channels[chatPartner] ? true : false;
+                const isYolk = chatPartner === 'yolk';
+                const isBotChat = App.systemBots.includes(chatPartner);
+                const isAdmin = (user === ADMIN_USER);
+                
                 return `<div class="main-container">
                     <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                         <div class="user-profile" id="openProfileBtn">
@@ -1923,385 +1837,390 @@
                     </div>
                     <div class="chat-area">
                         <div class="chat-header">
-                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${formatUserName(cp === 'saved' ? 'ИЗБРАННОЕ' : (cp === 'yolk' ? 'YOLK' : cp), hasGoldStatus(cp))}${App.users[cp]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                            <div class="chat-actions">
-                                ${showCall ? '<button class="tiny-btn" id="callBtn">📞</button>' : ''}
-                                ${cp !== 'saved' && cp !== 'yolk' && !isBotChat ? '<button class="tiny-btn" id="viewProfileBtn">👤</button>' : ''}
-                                ${isChannel && cp !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[cp]?.subscribers?.includes(user) ? '🔕' : '🔔'}</button>` : ''}
-                                ${cp !== 'saved' && cp !== 'yolk' && !isChannel && !isBot(cp) ? '<button class="tiny-btn" id="giftBtn">🎁</button>' : ''}
-                            </div>
+                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${formatUserName(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner), hasGoldStatus(chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                            <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
-                        ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${cp === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                        ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                     </div>
                 </div>`;
             }
-
-            function renderChatItem(u, active, cur) {
+            
+            function renderChatItem(u, active, currentUser) {
                 let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u);
-                const pinned = App.pinnedChats.includes(u);
-                let av = '<div class="chat-avatar">📁</div>';
-                const gold = hasGoldStatus(u);
-                if (u === 'yolk') av = '<div class="chat-avatar">🥚</div>';
+                const isPinned = App.pinnedChats.includes(u);
+                let avatarHtml = '<div class="chat-avatar">📁</div>';
+                const userGold = hasGoldStatus(u);
+                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🥚</div>';
                 else if (u !== 'saved') {
-                    if (App.channels[u]) av = App.channels[u]?.avatar ? `<div class="chat-avatar"><img src="${App.channels[u].avatar}" class="chat-avatar-img"></div>` : '<div class="chat-avatar">📢</div>';
-                    else if (App.systemBots.includes(u)) { if (u === '@game_bot') av = '<div class="chat-avatar">🎰</div>'; else if (u === '@tap_bot') av = '<div class="chat-avatar">👆</div>'; else if (u === '@random_bot') av = '<div class="chat-avatar">🎲</div>'; else av = '<div class="chat-avatar">🤖</div>'; }
-                    else { const avUrl = App.users[u]?.avatar; av = avUrl ? `<div class="chat-avatar"><img src="${avUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; }
+                    if (App.channels[u]) { const channelAvatar = App.channels[u]?.avatar; avatarHtml = channelAvatar ? `<div class="chat-avatar"><img src="${channelAvatar}" class="chat-avatar-img"></div>` : '<div class="chat-avatar">📢</div>'; }
+                    else if (App.systemBots.includes(u)) { if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>'; else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>'; else if (u === '@random_bot') avatarHtml = '<div class="chat-avatar">🎲</div>'; else avatarHtml = '<div class="chat-avatar">🤖</div>'; }
+                    else { const avatarUrl = App.users[u]?.avatar; avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; }
                 }
                 const userData = App.users[u] || {};
-                const displayName = gold ? `<span class="gold-name">${name}</span>` : name;
-                return `<div class="chat-item ${active ? 'active' : ''} ${pinned ? 'pinned' : ''}" data-chat="${u}">${av}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px;">${displayName}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`;
+                const displayName = userGold ? `<span class="gold-name">${name}</span>` : name;
+                return `<div class="chat-item ${active ? 'active' : ''} ${isPinned ? 'pinned' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px;">${displayName}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="pin-icon" onclick="window.togglePinChat('${u}', event)">📌</span><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`;
             }
-
-            function renderMessage(msg, idx, cur, cp) {
-                const isMe = msg.from === cur || (cp === 'saved' && msg.from === cur);
-                const isChannel = !!App.channels[cp];
-                const isGift = !!msg.gift;
+            
+            function renderMessage(msg, idx, currentUser, chatPartner) {
+                const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser);
+                const isChannel = App.channels[chatPartner] ? true : false;
+                const isGift = msg.gift ? true : false;
                 const isBotMsg = App.systemBots.includes(msg.from);
                 const isSystem = msg.from === 'SYSTEM';
-                const fromGold = hasGoldStatus(msg.from);
-                const curGold = hasGoldStatus(cur);
-                let canDel = false;
-                if (isChannel) canDel = App.channels[cp]?.owner === cur;
-                else if (cp === 'saved') canDel = true;
-                else if (cp === 'yolk') canDel = false;
-                else if (App.systemBots.includes(cp)) canDel = false;
-                else canDel = isMe;
-                let media = '';
+                const fromUserGold = hasGoldStatus(msg.from);
+                const currentUserGold = hasGoldStatus(currentUser);
+                let canDelete = false;
+                if (isChannel) canDelete = App.channels[chatPartner]?.owner === currentUser;
+                else if (chatPartner === 'saved') canDelete = true;
+                else if (chatPartner === 'yolk') canDelete = false;
+                else if (App.systemBots.includes(chatPartner)) canDelete = false;
+                else canDelete = isMe;
+                let mediaHtml = '';
                 if (msg.photo) {
-                    if (msg.isVideo) media = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`;
-                    else media = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`;
+                    if (msg.isVideo) {
+                        mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`;
+                    } else {
+                        mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`;
+                    }
                 }
                 const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
-                const userLiked = msg.likes && msg.likes[cur];
-                let txt = msg.text || '';
-                if (isGift && txt.startsWith('🎁 ')) txt = txt.substring(2);
-                let btns = '';
-                if (isBotMsg && msg.buttons?.length) btns = `<div class="inline-buttons">${msg.buttons.map(b => `<button class="inline-btn" onclick="window.sendBotCommand('${cp}', '${b}')">${b}</button>`).join('')}</div>`;
-                const dispName = fromGold ? `<span class="gold-name">${msg.from}</span>` : msg.from;
-                const msgClass = isMe ? 'me' : '';
-                const goldMsgClass = (isMe && curGold) || (!isMe && fromGold) ? 'gold-message' : '';
-                return `<div class="message ${msgClass} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
-                    ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${dispName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
+                const userLiked = msg.likes && msg.likes[currentUser];
+                let messageText = msg.text || '';
+                if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2);
+                let buttonsHtml = '';
+                if (isBotMsg && msg.buttons && msg.buttons.length > 0) buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`;
+                
+                const displayName = fromUserGold ? `<span class="gold-name">${msg.from}</span>` : msg.from;
+                const messageClass = isMe ? 'me' : '';
+                const goldMessageClass = (isMe && currentUserGold) || (!isMe && fromUserGold) ? 'gold-message' : '';
+                
+                return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">
+                    ${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}
                     ${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}
-                    <div class="${goldMsgClass}" style="color:#000000;">${txt}</div>${media}${btns}
-                    <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0,5)}</div>
+                    <div class="${goldMessageClass}" style="color:#000000;">${messageText}</div>
+                    ${mediaHtml}
+                    ${buttonsHtml}
+                    <div class="time">${new Date(msg.time).toLocaleTimeString().slice(0, 5)}</div>
                     <div style="display: flex; justify-content: space-between; margin-top: 4px;">
-                        ${isChannel ? `<button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${cp}', ${idx}, event)">❤️ <span>${likesCount}</span></button>` : '<div></div>'}
-                        ${canDel ? `<div class="msg-actions"><button onclick="window.deleteMessage('${cp}', ${idx})">УДАЛИТЬ</button></div>` : ''}
+                        ${(isChannel) ? `<button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">❤️ <span>${likesCount}</span></button>` : '<div></div>'}
+                        ${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}
                     </div>
                 </div>`;
             }
-
-            window.openImageModal = function(src) { document.body.insertAdjacentHTML('beforeend', `<div class="modal-overlay" onclick="this.remove()"><div style="max-width:90%;max-height:90%;display:flex;justify-content:center;align-items:center;"><img src="${src}" style="max-width:100%;max-height:100%;border-radius:12px;"></div></div>`); };
-
+            
+            window.openImageModal = function(src) {
+                const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+            };
+            
             function updateChatList() {
-                const cont = document.getElementById('chatsList');
-                if (!cont || !App.currentUser) return;
-                let list = getChatListForUser(App.currentUser);
-                const pinned = App.pinnedChats.filter(p => list.includes(p));
-                const unpinned = list.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'yolk');
-                const saved = list.includes('saved') ? ['saved'] : [];
-                const yolk = list.includes('yolk') ? ['yolk'] : [];
-                const ord = [...saved, ...yolk, ...pinned, ...unpinned];
+                const chatsContainer = document.getElementById('chatsList');
+                if (!chatsContainer || !App.currentUser) return;
+                let chatsList = getChatListForUser(App.currentUser);
+                const pinned = App.pinnedChats.filter(p => chatsList.includes(p));
+                const unpinned = chatsList.filter(c => !App.pinnedChats.includes(c) && c !== 'saved' && c !== 'yolk');
+                const saved = chatsList.includes('saved') ? ['saved'] : [];
+                const yolk = chatsList.includes('yolk') ? ['yolk'] : [];
+                const orderedList = [...saved, ...yolk, ...pinned, ...unpinned];
                 let html = '';
-                ord.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); });
-                cont.innerHTML = html;
+                orderedList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); });
+                chatsContainer.innerHTML = html;
                 document.querySelectorAll('.chat-item').forEach(el => {
                     el.addEventListener('click', (e) => {
                         if (e.target.closest('.pin-icon') || e.target.closest('.delete-chat-icon')) return;
-                        const id = el.dataset.chat;
-                        if (App.activeChat === id) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; }
-                        App.activeChat = id; localStorage.setItem('yolk_active_chat', id);
+                        const chatId = el.dataset.chat;
+                        if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; }
+                        App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId);
                         if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); }
                         document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active');
                         render();
                     });
                 });
             }
-
-            function setupRealtimeListener(chatId, partner) {
-                const ref = database.ref('chats/' + chatId);
-                ref.on('value', snap => {
-                    const data = snap.val();
+            
+            function setupRealtimeListener(chatId, chatPartner) {
+                const chatRef = database.ref('chats/' + chatId);
+                let lastMessageCount = 0;
+                chatRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
                     if (data) {
+                        const oldMessageCount = App.chats[chatId]?.messages?.length || 0;
                         if (!App.chats[chatId]) App.chats[chatId] = data;
                         else App.chats[chatId].messages = data.messages || [];
-                        if (App.activeChat === partner) renderMessages(partner);
+                        const newMessageCount = App.chats[chatId].messages?.length || 0;
+                        if (newMessageCount > oldMessageCount && App.activeChat !== chatPartner && App.currentUser) {
+                            const lastMsg = App.chats[chatId].messages[newMessageCount - 1];
+                            if (lastMsg && lastMsg.from !== App.currentUser) {
+                                playHappySound();
+                            }
+                        }
+                        if (App.activeChat === chatPartner) {
+                            renderMessages(chatPartner);
+                        }
                     }
                 });
             }
-
-            function renderMessages(partner) {
-                const cont = document.getElementById('messageList');
-                if (!cont) return;
-                let msgs = [];
-                if (partner === 'saved') msgs = App.savedMessages[App.currentUser] || [];
-                else if (partner === 'yolk') msgs = App.yolkChatMessages[App.currentUser] || [];
-                else if (App.channels[partner]) msgs = App.channels[partner].messages || [];
-                else { const id = [App.currentUser, partner].sort().join('_'); const chat = App.chats[id]; msgs = chat ? chat.messages : []; }
+            
+            function renderMessages(chatPartner) {
+                const messagesContainer = document.getElementById('messageList');
+                if (!messagesContainer) return;
+                let messages = [];
+                if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || [];
+                else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || [];
+                else if (App.channels[chatPartner]) messages = App.channels[chatPartner].messages || [];
+                else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; }
                 let html = '';
-                if (msgs.length) msgs.forEach((m,i) => { html += renderMessage(m, i, App.currentUser, partner); });
+                if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); });
                 else {
-                    if (partner === '@game_bot') { const b = handleGameBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@game_bot', text: b.text, time: Date.now(), buttons: b.buttons }, 0, App.currentUser, partner); }
-                    else if (partner === '@tap_bot') { const b = handleTapBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@tap_bot', text: b.text, time: Date.now(), buttons: b.buttons }, 0, App.currentUser, partner); }
-                    else if (partner === '@random_bot') { const b = handleRandomBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@random_bot', text: b.text, time: Date.now(), buttons: b.buttons }, 0, App.currentUser, partner); }
-                    else if (partner === 'yolk') html = '<div style="text-align:center;color:#666;margin-top:20px;padding:20px;">Здесь будут приходить коды для входа</div>';
-                    else html = '<div style="text-align:center;color:#666;margin-top:20px;padding:20px;">Нет сообщений</div>';
+                    if (chatPartner === '@game_bot') { const botMsg = handleGameBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                    else if (chatPartner === '@tap_bot') { const botMsg = handleTapBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                    else if (chatPartner === '@random_bot') { const botMsg = handleRandomBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@random_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); }
+                    else if (chatPartner === 'yolk') html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>';
+                    else html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>';
                 }
-                cont.innerHTML = html;
-                setTimeout(() => { cont.scrollTop = cont.scrollHeight; }, 100);
+                messagesContainer.innerHTML = html;
+                setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100);
             }
-
-            function loadMessages(partner) {
-                if (partner === 'saved' || partner === 'yolk') { renderMessages(partner); return; }
-                if (partner === '@game_bot' || partner === '@tap_bot' || partner === '@random_bot') { renderMessages(partner); return; }
-                const id = [App.currentUser, partner].sort().join('_');
-                setupRealtimeListener(id, partner);
-                renderMessages(partner);
-                setupUserListener(partner);
-                updateChatHeaderStatus(partner);
+            
+            function loadMessages(chatPartner) {
+                if (chatPartner === 'saved' || chatPartner === 'yolk') {
+                    renderMessages(chatPartner);
+                    return;
+                }
+                if (chatPartner === '@game_bot' || chatPartner === '@tap_bot' || chatPartner === '@random_bot') {
+                    renderMessages(chatPartner);
+                    return;
+                }
+                const chatId = [App.currentUser, chatPartner].sort().join('_');
+                setupRealtimeListener(chatId, chatPartner);
+                renderMessages(chatPartner);
+                setupUserListener(chatPartner);
+                updateChatHeaderStatus(chatPartner);
             }
-
-            window.toggleLike = function(partner, idx, e) { e.stopPropagation(); if (App.channels[partner]) { const msg = App.channels[partner].messages[idx]; if (!msg) return; if (!msg.likes) msg.likes = {}; if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser]; else msg.likes[App.currentUser] = true; saveToFirebase(); renderMessages(partner); } };
-            window.sendBotCommand = function(bot, cmd) { let r; if (bot === '@game_bot') r = handleGameBot({ text: cmd }, App.currentUser); else if (bot === '@tap_bot') r = handleTapBot({ text: cmd }, App.currentUser); else if (bot === '@random_bot') r = handleRandomBot({ text: cmd }, App.currentUser); if (r) { const msg = { from: bot, text: r.text, time: Date.now(), buttons: r.buttons }; const id = [App.currentUser, bot].sort().join('_'); if (!App.chats[id]) App.chats[id] = { user1: App.currentUser, user2: bot, messages: [] }; App.chats[id].messages.push(msg); saveToFirebase(); renderMessages(bot); } };
-
+            
+            window.toggleLike = function(chatPartner, messageIdx, event) {
+                event.stopPropagation();
+                if (App.channels[chatPartner]) {
+                    if (!App.channels[chatPartner].messages[messageIdx]) return;
+                    const msg = App.channels[chatPartner].messages[messageIdx];
+                    if (!msg.likes) msg.likes = {};
+                    if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser];
+                    else msg.likes[App.currentUser] = true;
+                    saveToFirebase();
+                    renderMessages(chatPartner);
+                }
+            };
+            
+            window.sendBotCommand = function(botName, command) {
+                let response;
+                if (botName === '@game_bot') response = handleGameBot({ text: command }, App.currentUser);
+                else if (botName === '@tap_bot') response = handleTapBot({ text: command }, App.currentUser);
+                else if (botName === '@random_bot') response = handleRandomBot({ text: command }, App.currentUser);
+                if (response) {
+                    const botMessage = { from: botName, text: response.text, time: Date.now(), buttons: response.buttons };
+                    const chatId = [App.currentUser, botName].sort().join('_');
+                    if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: botName, messages: [] };
+                    App.chats[chatId].messages.push(botMessage);
+                    saveToFirebase();
+                    renderMessages(botName);
+                }
+            };
+            
             function attachMainEvents() {
-                document.getElementById('backBtn')?.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); });
-                document.getElementById('openProfileBtn')?.addEventListener('click', () => openProfileModal(App.currentUser));
-                document.getElementById('viewProfileBtn')?.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) { if (App.channels[App.activeChat]) openChannelModal(App.activeChat); else openProfileModal(App.activeChat); } });
-                document.getElementById('giftBtn')?.addEventListener('click', openGiftMenu);
-                document.getElementById('subscribeBtn')?.addEventListener('click', toggleSubscribe);
-                document.getElementById('sendMsgBtn')?.addEventListener('click', sendMessage);
-                document.getElementById('fileUpload')?.addEventListener('change', handleFileSelect);
-                document.getElementById('videoUpload')?.addEventListener('change', handleVideoSelect);
-                document.getElementById('addUserBtn')?.addEventListener('click', addUserBySearch);
-                document.getElementById('messageText')?.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
-                document.getElementById('callBtn')?.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') startCall(App.activeChat); });
+                const backBtn = document.getElementById('backBtn');
+                if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); });
+                const openProfileBtn = document.getElementById('openProfileBtn');
+                if (openProfileBtn) openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
+                const viewProfileBtn = document.getElementById('viewProfileBtn');
+                if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat)) { if (App.channels[App.activeChat]) openChannelModal(App.activeChat); else openProfileModal(App.activeChat); } });
+                const giftBtn = document.getElementById('giftBtn');
+                if (giftBtn) giftBtn.addEventListener('click', openGiftMenu);
+                const subscribeBtn = document.getElementById('subscribeBtn');
+                if (subscribeBtn) subscribeBtn.addEventListener('click', toggleSubscribe);
+                const sendBtn = document.getElementById('sendMsgBtn');
+                if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+                const fileUpload = document.getElementById('fileUpload');
+                const videoUpload = document.getElementById('videoUpload');
+                if (fileUpload) fileUpload.addEventListener('change', handleFileSelect);
+                if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect);
+                const addUserBtn = document.getElementById('addUserBtn');
+                if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
+                const messageText = document.getElementById('messageText');
+                if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
             }
-
-            function handleVideoSelect(e) { const f = e.target.files[0]; if (!f) return; if (f.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const r = new FileReader(); r.onload = ev => { App.tempVideo = ev.target.result; sendMessage(true); }; r.readAsDataURL(f); }
-            function handleFileSelect(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => { const isAv = e.target.id === 'profileAvatarUpload', isB = e.target.id === 'profileBannerUpload', isW = e.target.id === 'wallpaperUpload'; if (isAv) { compressImage(ev.target.result, 200, 200, 0.7, c => { App.tempAvatar = c; document.querySelector('#profileModalOverlay .avatar-large').innerHTML = `<img src="${c}">`; }); } else if (isB) { compressImage(ev.target.result, 800, 200, 0.7, c => { App.tempBanner = c; document.querySelector('#profileModalOverlay .banner-container').innerHTML = `<img src="${c}" class="banner-image">`; }); } else if (isW) { compressImage(ev.target.result, 1920, 1080, 0.8, c => { App.tempWallpaper = c; document.getElementById('wallpaperPreview').style.backgroundImage = `url('${c}')`; }); } else { compressImage(ev.target.result, 800, 800, 0.6, c => { App.tempPhoto = c; sendMessage(false); }); } }; r.readAsDataURL(f); }
-
+            
+            function handleVideoSelect(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 20 * 1024 * 1024) {
+                    showNotification('Видео не более 20 МБ', 'error');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    App.tempVideo = ev.target.result;
+                    sendMessage(true);
+                };
+                reader.readAsDataURL(file);
+            }
+            
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const isAvatar = e.target.id === 'profileAvatarUpload';
+                    const isBanner = e.target.id === 'profileBannerUpload';
+                    const isWallpaper = e.target.id === 'wallpaperUpload';
+                    if (isAvatar) {
+                        compressImage(ev.target.result, 200, 200, 0.7, (compressed) => {
+                            App.tempAvatar = compressed;
+                            document.querySelector('#profileModalOverlay .avatar-large').innerHTML = `<img src="${compressed}">`;
+                        });
+                    } else if (isBanner) {
+                        compressImage(ev.target.result, 800, 200, 0.7, (compressed) => {
+                            App.tempBanner = compressed;
+                            document.querySelector('#profileModalOverlay .banner-container').innerHTML = `<img src="${compressed}" class="banner-image">`;
+                        });
+                    } else if (isWallpaper) {
+                        compressImage(ev.target.result, 1920, 1080, 0.8, (compressed) => {
+                            App.tempWallpaper = compressed;
+                            document.getElementById('wallpaperPreview').style.backgroundImage = `url('${compressed}')`;
+                        });
+                    } else {
+                        compressImage(ev.target.result, 800, 800, 0.6, (compressed) => {
+                            App.tempPhoto = compressed;
+                            sendMessage(false);
+                        });
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            
             function sendMessage(isVideo = false) {
-                const inp = document.getElementById('messageText');
-                const txt = inp ? inp.value.trim() : '';
-                if (!txt && !App.tempPhoto && !App.tempVideo) { showNotification('Введите сообщение или выберите файл', 'error'); return; }
-                const from = App.currentUser, to = App.activeChat;
+                const textInput = document.getElementById('messageText');
+                const text = textInput ? textInput.value.trim() : '';
+                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Введите сообщение или выберите файл', 'error'); return; }
+                const from = App.currentUser;
+                const to = App.activeChat;
                 if (!to || to === 'yolk') { showNotification('Сюда нельзя писать', 'error'); return; }
                 try {
-                    let media = null, isVid = false;
-                    if (App.tempVideo) { media = App.tempVideo; isVid = true; }
-                    else if (App.tempPhoto) media = App.tempPhoto;
-                    const msg = { from, text: txt || '', time: Date.now(), photo: media, gift: false, isVideo: isVid };
-                    if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(msg); saveSavedMessages(); showNotification('Сохранено в избранное'); renderMessages('saved'); playHappySound(); }
-                    else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(msg); saveToFirebase(); renderMessages(to); playHappySound(); }
-                    else if (App.systemBots.includes(to)) { let resp; if (to === '@game_bot') resp = handleGameBot({ text: txt }, from); else if (to === '@tap_bot') resp = handleTapBot({ text: txt }, from); else if (to === '@random_bot') resp = handleRandomBot({ text: txt }, from); if (resp) { const botMsg = { from: to, text: resp.text, time: Date.now(), buttons: resp.buttons }; const id = [from, to].sort().join('_'); if (!App.chats[id]) App.chats[id] = { user1: from, user2: to, messages: [] }; App.chats[id].messages.push(botMsg); saveToFirebase(); renderMessages(to); playHappySound(); } }
-                    else { const id = [from, to].sort().join('_'); if (!App.chats[id]) App.chats[id] = { user1: from, user2: to, messages: [] }; App.chats[id].messages.push(msg); saveToFirebase(); renderMessages(to); playHappySound(); }
-                    if (inp) inp.value = '';
-                    App.tempPhoto = null; App.tempVideo = null;
-                    document.getElementById('fileUpload').value = ''; document.getElementById('videoUpload').value = '';
+                    let mediaData = null;
+                    let isVideoMsg = false;
+                    if (App.tempVideo) {
+                        mediaData = App.tempVideo;
+                        isVideoMsg = true;
+                    } else if (App.tempPhoto) {
+                        mediaData = App.tempPhoto;
+                    }
+                    const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg };
+                    if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); renderMessages('saved'); playHappySound(); }
+                    else if (App.channels[to]) { if (App.channels[to].owner !== from) { showNotification('Только владелец может писать в канал', 'error'); return; } if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); renderMessages(to); playHappySound(); }
+                    else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); else if (to === '@random_bot') response = handleRandomBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); renderMessages(to); playHappySound(); } }
+                    else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); renderMessages(to); playHappySound(); }
+                    if (textInput) textInput.value = '';
+                    App.tempPhoto = null;
+                    App.tempVideo = null;
+                    const fileInput = document.getElementById('fileUpload');
+                    const videoInput = document.getElementById('videoUpload');
+                    if (fileInput) fileInput.value = '';
+                    if (videoInput) videoInput.value = '';
                     updateChatList();
-                } catch(e) { console.error(e); showNotification('Ошибка отправки', 'error'); }
+                } catch (error) { console.error('Ошибка отправки:', error); showNotification('Ошибка отправки', 'error'); }
             }
-
-            window.deleteMessage = function(partner, idx) {
+            
+            window.deleteMessage = function(chatPartner, idx) {
                 const from = App.currentUser;
                 try {
-                    if (partner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } }
-                    else if (partner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; }
-                    else if (App.channels[partner]) { if (App.channels[partner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[partner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(partner); } }
-                    else { const id = [from, partner].sort().join('_'); const msgs = App.chats[id]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(partner); } }
-                } catch(e) { console.error(e); showNotification('Ошибка удаления', 'error'); }
+                    if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } }
+                    else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; }
+                    else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } }
+                    else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } }
+                } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); }
             };
-
+            
             function addUserBySearch() {
-                let q = document.getElementById('searchUserInput').value.trim().toLowerCase();
-                if (!q) { showNotification('Введите имя пользователя', 'error'); return; }
-                if (!q.startsWith('@')) q = '@' + q;
-                if (q === 'yolk') { showNotification('Это системный чат', 'error'); return; }
-                if (App.systemBots.includes(q)) { ensureChat(App.currentUser, q); App.activeChat = q; localStorage.setItem('yolk_active_chat', q); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; }
-                if (App.channels[q]) { if (!App.channels[q].subscribers) App.channels[q].subscribers = []; if (!App.channels[q].subscribers.includes(App.currentUser)) { App.channels[q].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = q; localStorage.setItem('yolk_active_chat', q); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; }
-                if (!App.users[q]) { showNotification('Пользователь не найден', 'error'); return; }
-                if (q === App.currentUser) { showNotification('Это вы', 'error'); return; }
-                ensureChat(App.currentUser, q); App.activeChat = q; localStorage.setItem('yolk_active_chat', q); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${q} создан`);
+                let query = document.getElementById('searchUserInput').value.trim().toLowerCase();
+                if (!query) { showNotification('Введите имя пользователя', 'error'); return; }
+                if (!query.startsWith('@')) query = '@' + query;
+                if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; }
+                if (App.systemBots.includes(query)) { ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; }
+                if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; }
+                if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; }
+                if (query === App.currentUser) { showNotification('Это вы', 'error'); return; }
+                ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${query} создан`);
             }
-
-            function toggleSubscribe() { const user = App.currentUser, ch = App.activeChat; if (!App.channels[ch]) return; if (!App.channels[ch].subscribers) App.channels[ch].subscribers = []; if (!App.channels[ch].subscribers.includes(user)) { App.channels[ch].subscribers.push(user); showNotification('Вы подписались на канал'); } else { App.channels[ch].subscribers = App.channels[ch].subscribers.filter(s => s !== user); showNotification('Вы отписались от канала'); } saveToFirebase(); render(); }
-            window.togglePinChat = function(chat, e) { e.stopPropagation(); if (App.pinnedChats.includes(chat)) { App.pinnedChats = App.pinnedChats.filter(c => c !== chat); showNotification('Чат откреплен'); } else { if (App.pinnedChats.length >= 3) { showNotification('Максимум 3 закрепленных чата', 'error'); return; } App.pinnedChats.push(chat); showNotification('Чат закреплен'); } saveToFirebase(); updateChatList(); };
-            window.deleteChat = function(chat, e) { e.stopPropagation(); if (!confirm(`Удалить чат ${chat}?`)) return; const user = App.currentUser; if (App.pinnedChats.includes(chat)) App.pinnedChats = App.pinnedChats.filter(c => c !== chat); const id = [user, chat].sort().join('_'); if (App.chats[id]) delete App.chats[id]; if (App.channels[chat] && App.channels[chat].subscribers) App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user); if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToFirebase(); render(); showNotification('Чат удален'); };
-
-            function openGiftMenu() { const u = App.currentUser, target = App.activeChat, gifts = App.users[u].gifts || []; if (!gifts.length) { showNotification('У вас нет подарков', 'error'); return; } const list = gifts.map(g => `<div class="gift-item" onclick="window.sendGiftToUser('${target}', '${g}')">${g}</div>`).join(''); const html = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3><div class="gifts-collection">${list}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; document.body.insertAdjacentHTML('beforeend', html); document.getElementById('closeGiftModal').addEventListener('click', () => { document.getElementById('giftModalOverlay').remove(); }); }
-            window.sendGiftToUser = function(to, gift) { document.getElementById('giftModalOverlay')?.remove(); const from = App.currentUser; const uGifts = [...(App.users[from].gifts || [])]; const idx = uGifts.indexOf(gift); if (idx !== -1) uGifts.splice(idx, 1); App.users[from].gifts = uGifts; if (!App.users[to].gifts) App.users[to].gifts = []; App.users[to].gifts.push(gift); const cid = ensureChat(from, to); if (cid && App.chats[cid]) { App.chats[cid].messages.push({ from, text: `ПОДАРОК ${gift} ОТ ${from}`, time: Date.now(), gift: true }); showConfetti(); playHappySound(); } saveToFirebase(); if (App.activeChat === to) renderMessages(to); updateUserInterface(); if (document.getElementById('profileModalOverlay')) { const prof = document.getElementById('profileModalOverlay'), gc = prof.querySelector('.gifts-collection'); if (gc && App.users[from].gifts) { gc.innerHTML = App.users[from].gifts.map(g => `<div class="gift-item">${g}</div>`).join('') || 'НЕТ ПОДАРКОВ'; } } showNotification(`Подарок ${gift} отправлен ${to}!`); };
-
-            // === ЗВОНКИ (ФИНАЛЬНАЯ ВЕРСИЯ) ===
-            async function startCall(targetUser) {
-                if (App.call.active) { showNotification('Уже есть активный звонок', 'error'); return; }
-                if (!App.currentUser || !targetUser) return;
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const peer = new RTCPeerConnection(configuration);
-                    stream.getTracks().forEach(track => peer.addTrack(track, stream));
-                    peer.ontrack = (event) => {
-                        if (event.streams && event.streams[0]) {
-                            App.call.remoteStream = event.streams[0];
-                            const audio = new Audio();
-                            audio.srcObject = event.streams[0];
-                            audio.autoplay = true;
-                            audio.play().catch(e => console.log(e));
-                        }
-                    };
-                    peer.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            database.ref('calls/' + targetUser + '/candidate').set(JSON.stringify(event.candidate));
-                        }
-                    };
-                    const offer = await peer.createOffer();
-                    await peer.setLocalDescription(offer);
-                    const callData = { from: App.currentUser, to: targetUser, offer: { type: offer.type, sdp: offer.sdp }, status: 'ringing', timestamp: Date.now() };
-                    await database.ref('calls/' + targetUser).set(callData);
-                    App.call.active = true;
-                    App.call.peer = peer;
-                    App.call.localStream = stream;
-                    App.call.target = targetUser;
-                    App.call.startTime = Date.now();
-                    showCallUI(targetUser, 'outgoing');
-                    const timeout = setTimeout(() => { if (App.call.active && App.call.target === targetUser) { endCall(); showNotification('Собеседник не ответил', 'error'); } }, 30000);
-                    const statusRef = database.ref('calls/' + targetUser + '/status');
-                    const answerListener = statusRef.on('value', async (snap) => {
-                        const status = snap.val();
-                        if (status === 'answered') {
-                            clearTimeout(timeout);
-                            statusRef.off();
-                            showCallUI(targetUser, 'connected');
-                            startCallTimer();
-                        } else if (status === 'declined' || status === 'ended') {
-                            clearTimeout(timeout);
-                            endCall();
-                            showNotification('Звонок отклонен', 'error');
-                            statusRef.off();
-                        }
-                    });
-                    const candidateRef = database.ref('calls/' + targetUser + '/candidate');
-                    const candidateListener = candidateRef.on('value', async (snap) => {
-                        const cand = snap.val();
-                        if (cand && App.call.peer && App.call.peer.remoteDescription) {
-                            try {
-                                await App.call.peer.addIceCandidate(new RTCIceCandidate(JSON.parse(cand)));
-                                candidateRef.off();
-                            } catch(e) {}
-                        }
-                    });
-                } catch (err) { console.error(err); showNotification('Не удалось начать звонок. Проверьте микрофон', 'error'); endCall(); }
+            
+            function toggleSubscribe() {
+                const user = App.currentUser;
+                const channel = App.activeChat;
+                if (!App.channels[channel]) return;
+                if (!App.channels[channel].subscribers) App.channels[channel].subscribers = [];
+                if (!App.channels[channel].subscribers.includes(user)) { App.channels[channel].subscribers.push(user); showNotification('Вы подписались на канал'); }
+                else { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user); showNotification('Вы отписались от канала'); }
+                saveToFirebase(); render();
             }
-
-            async function acceptCall(callData) {
-                if (App.call.active) { database.ref('calls/' + callData.from + '/status').set('busy'); return; }
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    const peer = new RTCPeerConnection(configuration);
-                    stream.getTracks().forEach(track => peer.addTrack(track, stream));
-                    peer.ontrack = (event) => {
-                        if (event.streams && event.streams[0]) {
-                            App.call.remoteStream = event.streams[0];
-                            const audio = new Audio();
-                            audio.srcObject = event.streams[0];
-                            audio.autoplay = true;
-                            audio.play().catch(e => console.log(e));
-                        }
-                    };
-                    peer.onicecandidate = (event) => {
-                        if (event.candidate) database.ref('calls/' + callData.from + '/candidate').set(JSON.stringify(event.candidate));
-                    };
-                    await peer.setRemoteDescription(new RTCSessionDescription(callData.offer));
-                    const answer = await peer.createAnswer();
-                    await peer.setLocalDescription(answer);
-                    await database.ref('calls/' + callData.from).update({ answer: { type: answer.type, sdp: answer.sdp }, status: 'answered' });
-                    App.call.active = true;
-                    App.call.peer = peer;
-                    App.call.localStream = stream;
-                    App.call.target = callData.from;
-                    App.call.startTime = Date.now();
-                    showCallUI(callData.from, 'connected');
-                    startCallTimer();
-                    const candidateRef = database.ref('calls/' + callData.from + '/candidate');
-                    candidateRef.on('value', async (snap) => {
-                        const cand = snap.val();
-                        if (cand && App.call.peer && App.call.peer.remoteDescription) {
-                            try {
-                                await App.call.peer.addIceCandidate(new RTCIceCandidate(JSON.parse(cand)));
-                                candidateRef.off();
-                            } catch(e) {}
-                        }
-                    });
-                } catch (err) { console.error(err); endCall(); }
+            
+            window.togglePinChat = function(chat, event) {
+                event.stopPropagation();
+                if (App.pinnedChats.includes(chat)) { App.pinnedChats = App.pinnedChats.filter(c => c !== chat); showNotification('Чат откреплен'); }
+                else { if (App.pinnedChats.length >= 3) { showNotification('Максимум 3 закрепленных чата', 'error'); return; } App.pinnedChats.push(chat); showNotification('Чат закреплен'); }
+                saveToFirebase(); updateChatList();
+            };
+            
+            window.deleteChat = function(chat, event) {
+                event.stopPropagation();
+                if (!confirm(`Удалить чат ${chat}?`)) return;
+                const user = App.currentUser;
+                if (App.pinnedChats.includes(chat)) App.pinnedChats = App.pinnedChats.filter(c => c !== chat);
+                const chatId = [user, chat].sort().join('_');
+                if (App.chats[chatId]) delete App.chats[chatId];
+                if (App.channels[chat] && App.channels[chat].subscribers) App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user);
+                if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); }
+                saveToFirebase(); render(); showNotification('Чат удален');
+            };
+            
+            function openGiftMenu() {
+                const user = App.currentUser;
+                const target = App.activeChat;
+                const gifts = App.users[user].gifts || [];
+                if (gifts.length === 0) { showNotification('У вас нет подарков', 'error'); return; }
+                const giftList = gifts.map(g => `<div class="gift-item" onclick="window.sendGiftToUser('${target}', '${g}')">${g}</div>`).join('');
+                const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3><div class="gifts-collection">${giftList}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('closeGiftModal').addEventListener('click', () => { document.getElementById('giftModalOverlay').remove(); });
             }
-
-            function endCall() {
-                if (App.call.localStream) { App.call.localStream.getTracks().forEach(t => t.stop()); App.call.localStream = null; }
-                if (App.call.peer) { App.call.peer.close(); App.call.peer = null; }
-                if (App.call.target) database.ref('calls/' + App.call.target).remove();
-                if (App.call.timer) clearInterval(App.call.timer);
-                App.call.active = false;
-                App.call.target = null;
-                App.call.startTime = null;
-                const overlay = document.getElementById('callOverlay');
-                if (overlay) overlay.remove();
-            }
-
-            function showCallUI(target, state) {
-                const existing = document.getElementById('callOverlay');
-                if (existing) existing.remove();
-                const targetData = App.users[target] || {};
-                const avatarHtml = targetData.avatar ? `<img src="${targetData.avatar}">` : (target[1] ? target[1].toUpperCase() : '?');
-                const name = formatUserName(target, hasGoldStatus(target));
-                let statusText = '', buttonsHtml = '';
-                if (state === 'outgoing') { statusText = 'Вызов...'; buttonsHtml = `<button class="call-btn end" id="endCallBtn">🔴</button>`; }
-                else if (state === 'incoming') { statusText = 'Входящий вызов...'; buttonsHtml = `<button class="call-btn" id="acceptCallBtn">📞</button><button class="call-btn decline" id="declineCallBtn">❌</button>`; }
-                else if (state === 'connected') { statusText = 'Разговор'; buttonsHtml = `<button class="call-btn end" id="endCallBtn">🔴</button>`; }
-                const modal = document.createElement('div'); modal.id = 'callOverlay'; modal.className = 'call-overlay';
-                modal.innerHTML = `<div class="call-container"><div class="call-avatar">${avatarHtml}</div><div class="call-name">${name}</div><div class="call-status" id="callStatus">${statusText}</div><div id="callTimer" class="timer" style="${state === 'connected' ? '' : 'display:none'}">00:00</div><div class="call-buttons">${buttonsHtml}</div></div>`;
-                document.body.appendChild(modal);
-                if (state === 'incoming') {
-                    document.getElementById('acceptCallBtn')?.addEventListener('click', () => {
-                        const callRef = database.ref('calls/' + target);
-                        callRef.once('value', snap => { const data = snap.val(); if (data && data.offer) acceptCall(data); });
-                        modal.remove();
-                    });
-                    document.getElementById('declineCallBtn')?.addEventListener('click', () => { database.ref('calls/' + target + '/status').set('declined'); modal.remove(); });
+            
+            window.sendGiftToUser = function(toUser, giftEmoji) {
+                document.getElementById('giftModalOverlay')?.remove();
+                const fromUser = App.currentUser;
+                const userGifts = [...(App.users[fromUser].gifts || [])];
+                const indexToRemove = userGifts.indexOf(giftEmoji);
+                if (indexToRemove !== -1) userGifts.splice(indexToRemove, 1);
+                App.users[fromUser].gifts = userGifts;
+                if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
+                App.users[toUser].gifts.push(giftEmoji);
+                const chatId = ensureChat(fromUser, toUser);
+                if (chatId && App.chats[chatId]) {
+                    App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`, time: Date.now(), gift: true });
+                    showConfetti();
+                    playHappySound();
                 }
-                if (state !== 'incoming') {
-                    document.getElementById('endCallBtn')?.addEventListener('click', () => { endCall(); });
-                }
-            }
-
-            function startCallTimer() {
-                if (App.call.timer) clearInterval(App.call.timer);
-                App.call.timer = setInterval(() => {
-                    if (!App.call.active || !App.call.startTime) return;
-                    const elapsed = Math.floor((Date.now() - App.call.startTime) / 1000);
-                    const mins = Math.floor(elapsed / 60);
-                    const secs = elapsed % 60;
-                    const timerEl = document.getElementById('callTimer');
-                    if (timerEl) timerEl.textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
-                }, 1000);
-            }
-
-            function setupIncomingCallListener() {
-                if (!App.currentUser) return;
-                if (App.call.incomingCallRef) database.ref('calls/' + App.currentUser).off();
-                const callRef = database.ref('calls/' + App.currentUser);
-                App.call.incomingCallRef = callRef;
-                callRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (data && data.status === 'ringing' && data.to === App.currentUser && !App.call.active) {
-                        playRingSound();
-                        showCallUI(data.from, 'incoming');
+                saveToFirebase();
+                if (App.activeChat === toUser) renderMessages(toUser);
+                updateUserInterface();
+                if (document.getElementById('profileModalOverlay')) {
+                    const profileModal = document.getElementById('profileModalOverlay');
+                    const giftsCollection = profileModal.querySelector('.gifts-collection');
+                    if (giftsCollection && App.users[fromUser].gifts) {
+                        const giftsList = App.users[fromUser].gifts.map(g => `<div class="gift-item">${g}</div>`).join('');
+                        giftsCollection.innerHTML = giftsList || 'НЕТ ПОДАРКОВ';
                     }
-                });
-            }
-
-            // ==================== ПРОФИЛЬ, КАНАЛЫ, ДОНАТ, АДМИН ====================
+                }
+                showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`);
+            };
+            
             function openDonationModal(pack) {
                 const modalHtml = `<div class="modal-overlay" id="donationModalOverlay"><div class="profile-modal"><h3>💸 ПОПОЛНЕНИЕ YC</h3><div class="qr-code" id="donationQrCode"></div><div class="profile-input-group"><label>📤 АДРЕС КОШЕЛЬКА TON</label><input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Адрес скопирован!')"></div><div class="profile-input-group"><label>💰 СУММА</label><input type="text" value="${pack.ton} TON" readonly></div><div class="profile-input-group"><label>📝 ВАШ ЮЗЕРНЕЙМ (обязательно!)</label><input type="text" id="donationComment" placeholder="Например: @xuotov" value="${App.currentUser}"></div><div class="profile-input-group"><label>🔗 TXID (хеш транзакции)</label><input type="text" id="donationTxid" placeholder="Вставьте TXID из TON Keeper"></div><div class="profile-actions"><button class="profile-btn" id="submitDonationBtn">✅ Я ОТПРАВИЛ TON</button><button class="profile-btn secondary" id="closeDonationModal">ОТМЕНА</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ В комментарии к переводу ОБЯЗАТЕЛЬНО укажите свой юзернейм с @</small></div></div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -2320,7 +2239,7 @@
                 });
                 document.getElementById('closeDonationModal')?.addEventListener('click', () => { document.getElementById('donationModalOverlay')?.remove(); });
             }
-
+            
             function openAdminPanel() {
                 const pending = Object.values(App.donationRequests).filter(r => r.status === 'pending');
                 const completed = Object.values(App.donationRequests).filter(r => r.status === 'completed').slice(-10);
@@ -2328,7 +2247,7 @@
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 document.getElementById('closeAdminModal')?.addEventListener('click', () => { document.getElementById('adminModalOverlay')?.remove(); });
             }
-
+            
             window.confirmDonation = function(requestId) {
                 const request = App.donationRequests[requestId];
                 if (!request || request.status !== 'pending') return;
@@ -2337,8 +2256,12 @@
                     if (request.isGold) {
                         App.users[targetUser].gold = true;
                         showNotification(`✨ GOLD СТАТУС активирован для ${request.username}! ✨\nВаш ник теперь золотой, сообщения мерцают!`);
-                        updateUserInterface(); updateSidebarUser();
-                        if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { renderMessages(App.activeChat); updateChatList(); }
+                        updateUserInterface();
+                        updateSidebarUser();
+                        if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
+                            renderMessages(App.activeChat);
+                            updateChatList();
+                        }
                     } else if (request.giftEmoji) {
                         if (!App.users[targetUser].gifts) App.users[targetUser].gifts = [];
                         App.users[targetUser].gifts.push(request.giftEmoji);
@@ -2351,14 +2274,15 @@
                     }
                     request.status = 'completed';
                     request.completedAt = Date.now();
-                    saveDonationRequests(); saveToFirebase();
+                    saveDonationRequests();
+                    saveToFirebase();
                     if (!App.yolkChatMessages[targetUser]) App.yolkChatMessages[targetUser] = [];
                     App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: request.isGold ? `✨ Вы получили GOLD СТАТУС НАВСЕГДА! ✨\nВаш ник теперь золотой, а сообщения мерцают!` : (request.giftEmoji ? `🎁 Вам отправили подарок ${request.giftEmoji}!` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`), time: Date.now() });
                     saveYolkChatMessages();
                     if (App.currentUser === ADMIN_USER) { document.getElementById('adminModalOverlay')?.remove(); openAdminPanel(); }
                 }
             };
-
+            
             window.cancelDonation = function(requestId) {
                 if (!confirm('Вы уверены, что хотите отменить эту заявку?')) return;
                 const request = App.donationRequests[requestId];
@@ -2368,18 +2292,94 @@
                 showNotification(`❌ Заявка отменена`);
                 if (App.currentUser === ADMIN_USER) { document.getElementById('adminModalOverlay')?.remove(); openAdminPanel(); }
             };
-
-            function openChannelModal(channelName) { /* упрощённо */ const ch = App.channels[channelName]; if (!ch) return; const isOwner = ch.owner === App.currentUser; const modalHtml = `<div class="modal-overlay" id="channelModalOverlay"><div class="profile-modal"><h3>📢 КАНАЛ ${channelName}</h3>... (аналогично предыдущей версии) ...</div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); /* заглушка */ }
-
-            function openProfileModal(username) {
-                // полная функция как в предыдущем коде, для краткости опускаю, но она должна быть.
-                // В реальном коде здесь полное отображение профиля с вкладками Магазин, Донат, Обои.
-                // Так как код очень большой, я приведу её в финальной версии полностью.
-                // В данном сообщении уже превышен лимит, поэтому финальный код будет в следующем сообщении.
+            
+            function openChannelModal(channelName) {
+                const channel = App.channels[channelName];
+                if (!channel) return;
+                const isOwner = channel.owner === App.currentUser;
+                const modalHtml = `<div class="modal-overlay" id="channelModalOverlay"><div class="profile-modal"><h3>📢 КАНАЛ ${channelName}</h3><div class="profile-banner-wrapper"><div class="banner-container">${channel.banner ? `<img src="${channel.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${channel.avatar ? `<img src="${channel.avatar}">` : '📢'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${hasGoldStatus(channel.owner) ? `<span class="gold-name">${channelName}</span>` : channelName}</div></div>${isOwner ? `<div><input type="file" id="channelAvatarUpload" accept="image/*"><label for="channelAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="channelBannerUpload" accept="image/*"><label for="channelBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ВЛАДЕЛЕЦ</label><input type="text" value="${hasGoldStatus(channel.owner) ? `<span class="gold-name">${channel.owner}</span>` : channel.owner}" disabled></div><div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwner ? `<textarea id="channelDescInput" maxlength="200">${channel.description || ''}</textarea>` : `<div>${channel.description || '—'}</div>`}</div><div class="star-balance-large">👥 ПОДПИСЧИКОВ: ${channel.subscribers?.length || 0}</div><div class="profile-actions">${isOwner ? '<button class="profile-btn" id="saveChannelBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeChannelModalBtn">ЗАКРЫТЬ</button></div></div></div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                if (isOwner) {
+                    let tempAvatar = null, tempBanner = null;
+                    document.getElementById('channelAvatarUpload')?.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 200, 200, 0.7, (compressed) => { document.querySelector('#channelModalOverlay .avatar-large').innerHTML = `<img src="${compressed}">`; tempAvatar = compressed; }); }; reader.readAsDataURL(file); });
+                    document.getElementById('channelBannerUpload')?.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 200, 0.7, (compressed) => { document.querySelector('#channelModalOverlay .banner-container').innerHTML = `<img src="${compressed}" class="banner-image">`; tempBanner = compressed; }); }; reader.readAsDataURL(file); });
+                    document.getElementById('saveChannelBtn')?.addEventListener('click', () => { const newDesc = document.getElementById('channelDescInput')?.value.trim(); if (tempAvatar) App.channels[channelName].avatar = tempAvatar; if (tempBanner) App.channels[channelName].banner = tempBanner; if (newDesc !== undefined) App.channels[channelName].description = newDesc; saveToFirebase(); document.getElementById('channelModalOverlay').remove(); render(); showNotification('Канал обновлен'); });
+                }
+                document.getElementById('closeChannelModalBtn').addEventListener('click', () => { document.getElementById('channelModalOverlay').remove(); });
             }
-
-            function initBots() { App.systemBots.forEach(b => { if (!App.users[b]) App.users[b] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: b === '@game_bot' ? '🎰 Игровой автомат!' : (b === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, gold: true, age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; }); saveToFirebase(); }
-
+            
+            function openProfileModal(username) {
+                const userData = App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, gold: false, age: 14, twoFA: false, chatWallpaper: '' };
+                const isOwn = (username === App.currentUser);
+                const isBotUser = App.systemBots.includes(username);
+                const isAdmin = (username === ADMIN_USER);
+                const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join('');
+                const currentWallpaper = userData.chatWallpaper || '';
+                const isGold = hasGoldStatus(username);
+                
+                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${isGold ? `<span class="gold-name">${username}</span>` : username}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="wallpaper">ОБОИ</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4>${DONATION_PACKS.map(pack => `<div class="shop-item"><span>${pack.yc} YC — ${pack.price}</span><button class="donate-btn" data-yc="${pack.yc}" data-ton="${pack.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4>${DONATION_GIFTS.map(gift => `<div class="shop-item"><span>${gift.emoji} — ${gift.ton} TON</span><button class="gift-donate-btn" data-emoji="${gift.emoji}" data-ton="${gift.ton}">КУПИТЬ</button></div>`).join('')}<h4 style="margin-top:12px;">✨ GOLD СТАТУС ✨</h4><div class="shop-item"><span>GOLD СТАТУС (НАВСЕГДА) — 3 TON</span><button class="gold-status-donate-btn" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ Оплата в TON. После перевода нажмите "Я ОТПРАВИЛ" и введите TXID</small></div></div><div id="tabWallpaper" class="tab-content hidden"><div class="shop-section"><h4>🎨 ФОН ЧАТА</h4><div id="wallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div><div class="profile-input-group"><label>СВОЕ ИЗОБРАЖЕНИЕ</label><input type="file" id="wallpaperUpload" accept="image/*"></div></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                window.togglePasswordVisibility = function() { const passInput = document.getElementById('modalPasswordInput'); const btn = document.querySelector('.toggle-password'); if (passInput.type === 'password') { passInput.type = 'text'; btn.textContent = '🙈'; } else { passInput.type = 'password'; btn.textContent = '👁️'; } };
+                
+                if (isOwn && !isBotUser) {
+                    let tempBanner = null;
+                    const avatarUpload = document.getElementById('profileAvatarUpload');
+                    const bannerUpload = document.getElementById('profileBannerUpload');
+                    const wallpaperUpload = document.getElementById('wallpaperUpload');
+                    
+                    if (avatarUpload) {
+                        avatarUpload.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 200, 200, 0.7, (compressed) => { document.querySelector('#profileModalOverlay .avatar-large').innerHTML = `<img src="${compressed}">`; App.tempAvatar = compressed; }); }; reader.readAsDataURL(file); });
+                    }
+                    if (bannerUpload) {
+                        bannerUpload.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 200, 0.7, (compressed) => { document.querySelector('#profileModalOverlay .banner-container').innerHTML = `<img src="${compressed}" class="banner-image">`; tempBanner = compressed; }); }; reader.readAsDataURL(file); });
+                    }
+                    if (wallpaperUpload) {
+                        wallpaperUpload.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 1920, 1080, 0.8, (compressed) => { document.getElementById('wallpaperPreview').style.backgroundImage = `url('${compressed}')`; App.tempWallpaper = compressed; }); }; reader.readAsDataURL(file); });
+                    }
+                    
+                    const twoFAToggle = document.getElementById('twoFAToggle');
+                    if (twoFAToggle) twoFAToggle.addEventListener('click', () => { const newState = !App.users[App.currentUser].twoFA; App.users[App.currentUser].twoFA = newState; twoFAToggle.classList.toggle('active', newState); const labelSpan = twoFAToggle.querySelector('.toggle-label'); labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена'; saveToFirebase(); showNotification(newState ? '2FA включена' : '2FA выключена'); });
+                    document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); App.currentUser = null; App.activeChat = null; App.savedMessages = {}; localStorage.removeItem('yolk_current_user'); localStorage.removeItem('yolk_active_chat'); render(); });
+                    document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden'); if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden'); if (e.target.dataset.tab === 'wallpaper') document.getElementById('tabWallpaper').classList.remove('hidden'); }); });
+                    document.querySelectorAll('.buy-gift-btn').forEach(btn => { btn.addEventListener('click', (e) => { const gift = e.target.dataset.gift; const price = parseInt(e.target.dataset.price); const user = App.currentUser; if (App.users[user].stars >= price) { App.users[user].stars -= price; if (!App.users[user].gifts) App.users[user].gifts = []; App.users[user].gifts.push(gift); saveToFirebase(); updateUserInterface(); document.getElementById('profileModalOverlay').remove(); openProfileModal(user); showNotification(`Куплен подарок ${gift}`); } else { showNotification('Недостаточно YC', 'error'); } }); });
+                    document.querySelectorAll('.donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const yc = parseInt(e.target.dataset.yc); const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc, ton, price: `${ton} TON` }); document.getElementById('profileModalOverlay')?.remove(); }); });
+                    document.querySelectorAll('.gift-donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const emoji = e.target.dataset.emoji; const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, giftEmoji: emoji }); document.getElementById('profileModalOverlay')?.remove(); }); });
+                    document.querySelectorAll('.gold-status-donate-btn').forEach(btn => { btn.addEventListener('click', () => { openDonationModal({ yc: 0, ton: 3, price: '3 TON', isGold: true }); document.getElementById('profileModalOverlay')?.remove(); }); });
+                    document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => {
+                        const newAvatar = App.tempAvatar;
+                        const newPassword = document.getElementById('modalPasswordInput')?.value.trim();
+                        const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50);
+                        const newAge = parseInt(document.getElementById('modalAgeInput')?.value);
+                        const newWallpaper = App.tempWallpaper;
+                        
+                        if (newAvatar) App.users[App.currentUser].avatar = newAvatar;
+                        if (tempBanner) App.users[App.currentUser].banner = tempBanner;
+                        if (newPassword) App.users[App.currentUser].password = newPassword;
+                        if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
+                        if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge;
+                        if (newWallpaper !== undefined) App.users[App.currentUser].chatWallpaper = newWallpaper;
+                        
+                        saveToFirebase();
+                        updateUserInterface();
+                        updateSidebarUser();
+                        applyWallpaper();
+                        document.getElementById('profileModalOverlay').remove();
+                        render();
+                        showNotification('Профиль сохранен');
+                    });
+                }
+                document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); });
+                if (isAdmin && isOwn) {
+                    setTimeout(() => { const adminBtn = document.createElement('button'); adminBtn.className = 'profile-btn'; adminBtn.style.background = '#ff9800'; adminBtn.style.color = '#000000'; adminBtn.style.border = '1px solid #000000'; adminBtn.textContent = '🔧 АДМИН-ПАНЕЛЬ'; adminBtn.onclick = () => { document.getElementById('profileModalOverlay')?.remove(); openAdminPanel(); }; const actionsDiv = document.querySelector('#profileModalOverlay .profile-actions'); if (actionsDiv && !document.querySelector('#adminPanelBtn')) { adminBtn.id = 'adminPanelBtn'; actionsDiv.insertBefore(adminBtn, actionsDiv.firstChild); } }, 100);
+                }
+            }
+            
+            function initBots() {
+                App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, gold: true, age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; });
+                saveToFirebase();
+            }
+            
             window.togglePinChat = window.togglePinChat || function() {};
             window.deleteChat = window.deleteChat || function() {};
             window.openProfileModal = window.openProfileModal || function() {};
@@ -2391,7 +2391,7 @@
             window.confirmDonation = window.confirmDonation || function() {};
             window.cancelDonation = window.cancelDonation || function() {};
             window.openImageModal = window.openImageModal || function() {};
-
+            
             window.addEventListener('load', () => { showLoading(); initBots(); loadFromFirebase(); setTimeout(hideLoading, 1000); });
         })();
     </script>
