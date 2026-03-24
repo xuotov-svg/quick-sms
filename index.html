@@ -1274,6 +1274,162 @@
             border: 1px solid #000000;
             border-radius: 8px;
         }
+
+        /* Стили для историй */
+        .stories-row {
+            display: flex;
+            gap: 16px;
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid #000000;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+        }
+
+        .story-circle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .story-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #000000;
+            background: #f0f0f0;
+        }
+
+        .has-story .story-avatar {
+            border: 3px solid transparent;
+            background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+            border-radius: 50%;
+            padding: 2px;
+            background-clip: padding-box;
+        }
+
+        .has-story .story-avatar img,
+        .has-story .story-avatar {
+            background: white;
+        }
+
+        .story-username {
+            font-size: 12px;
+            font-weight: 500;
+            color: #000;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .story-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .story-video {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 16px;
+        }
+
+        .story-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .story-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            background: rgba(0,0,0,0.6);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .story-timer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 8px;
+            font-size: 14px;
+        }
+
+        /* Стили для рулетки */
+        .roulette-wheel {
+            text-align: center;
+            font-size: 48px;
+            background: #2c3e2f;
+            padding: 20px;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid gold;
+            transition: transform 0.5s ease;
+        }
+
+        .roulette-spinning {
+            animation: spinWheel 0.5s linear infinite;
+        }
+
+        @keyframes spinWheel {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .roulette-bets {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 16px 0;
+        }
+
+        .bet-chip {
+            background: var(--accent);
+            border: 1px solid black;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -1339,7 +1495,9 @@
                 userListeners: {},
                 chatWallpaper: '',
                 soundEnabled: true,
-                audioCtx: null
+                audioCtx: null,
+                // stories
+                stories: {}
             };
 
             App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
@@ -1530,6 +1688,8 @@
                             (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) {
                             updateChatHeaderStatus(username);
                         }
+                        // обновить строку историй, если изменилась аватарка или статус
+                        renderStoriesRow();
                     }
                 });
                 App.userListeners[username] = true;
@@ -1599,100 +1759,108 @@
             function loadDonationRequests() { const saved = localStorage.getItem('yolk_donation_requests'); if (saved) { try { App.donationRequests = JSON.parse(saved); } catch(e) { App.donationRequests = {}; } } else { App.donationRequests = {}; } }
             function saveDonationRequests() { localStorage.setItem('yolk_donation_requests', JSON.stringify(App.donationRequests)); if (App.dataLoaded) { database.ref('donationRequests').set(App.donationRequests).catch(e => console.error(e)); } }
             
-            async function loadFromFirebase() {
-                console.log('🔄 Загрузка данных из Firebase...');
-                try {
-                    const snapshot = await database.ref().get();
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        if (data.users) {
-                            App.users = data.users;
-                            console.log('✅ Загружено пользователей:', Object.keys(App.users).length);
-                        }
-                        if (data.chats) App.chats = data.chats;
-                        if (data.blocked) App.blocked = data.blocked;
-                        if (data.channels) App.channels = data.channels;
-                        if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
-                        if (data.tapBalances) App.tapBalances = data.tapBalances;
-                        if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
-                        if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
-                        if (data.donationRequests) App.donationRequests = data.donationRequests;
-                        localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats }));
-                        if (data.tapBalances || data.tapUpgrades) saveTapBalances();
-                        if (data.yolkChatMessages) saveYolkChatMessages();
-                        if (data.donationRequests) saveDonationRequests();
-                    } else {
-                        console.log('⚠️ База данных пуста');
-                    }
-                    const savedUser = localStorage.getItem('yolk_current_user');
-                    const savedChat = localStorage.getItem('yolk_active_chat');
-                    if (savedUser && App.users[savedUser]) {
-                        App.currentUser = savedUser;
-                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
-                        loadSavedMessages();
-                        loadTapBalances();
-                        loadYolkChatMessages();
-                        loadDonationRequests();
-                        setupUserListener(App.currentUser);
-                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
-                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
-                        updateLastSeen(App.currentUser);
-                    }
-                    App.dataLoaded = true;
-                    render();
-                } catch (error) {
-                    console.error('❌ Ошибка Firebase:', error);
-                    const cachedData = localStorage.getItem('yolk_cache');
-                    if (cachedData) {
-                        try { const cache = JSON.parse(cachedData);
-                            if (cache.users) App.users = cache.users;
-                            if (cache.chats) App.chats = cache.chats;
-                            if (cache.blocked) App.blocked = cache.blocked;
-                            if (cache.channels) App.channels = cache.channels;
-                            if (cache.pinnedChats) App.pinnedChats = cache.pinnedChats;
-                            console.log('📦 Загружено из кэша:', Object.keys(App.users).length);
-                        } catch(e) { }
-                    }
-                    const savedUser = localStorage.getItem('yolk_current_user');
-                    if (savedUser && App.users[savedUser]) {
-                        App.currentUser = savedUser;
-                        App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
-                        loadSavedMessages();
-                        loadTapBalances();
-                        loadYolkChatMessages();
-                        loadDonationRequests();
-                        setupUserListener(App.currentUser);
-                    }
-                    App.dataLoaded = true;
-                    render();
+            // Истории
+            function addStory(username, videoDataUrl) {
+                if (!App.stories[username]) App.stories[username] = [];
+                App.stories[username].push({
+                    videoUrl: videoDataUrl,
+                    createdAt: Date.now(),
+                    viewers: []
+                });
+                const oneHour = 60 * 60 * 1000;
+                App.stories[username] = App.stories[username].filter(s => Date.now() - s.createdAt < oneHour);
+                saveStories();
+                renderStoriesRow();
+            }
+
+            function deleteStory(username, storyIndex) {
+                if (App.stories[username] && App.stories[username][storyIndex]) {
+                    App.stories[username].splice(storyIndex, 1);
+                    saveStories();
+                    renderStoriesRow();
                 }
             }
-            
-            function saveToFirebase() {
-                if (!App.dataLoaded) return;
-                const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats, tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, donationRequests: App.donationRequests };
-                database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error));
+
+            function viewStory(viewer, storyOwner, storyIndex) {
+                const story = App.stories[storyOwner]?.[storyIndex];
+                if (story && !story.viewers.includes(viewer)) {
+                    story.viewers.push(viewer);
+                    saveStories();
+                    renderStoriesRow();
+                }
             }
-            
-            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
-            function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(channel => { if (App.channels[channel].subscribers?.includes(user)) set.add(channel); }); return Array.from(set); }
-            
+
+            function hasUnwatchedStory(username, currentUser) {
+                const userStories = App.stories[username] || [];
+                return userStories.some(s => !s.viewers.includes(currentUser));
+            }
+
+            function saveStories() {
+                localStorage.setItem('yolk_stories', JSON.stringify(App.stories));
+                if (App.dataLoaded) database.ref('stories').set(App.stories).catch(e => console.error(e));
+            }
+
+            function loadStories() {
+                const saved = localStorage.getItem('yolk_stories');
+                if (saved) { try { App.stories = JSON.parse(saved); } catch(e) {} }
+                else App.stories = {};
+                database.ref('stories').on('value', snap => { if(snap.exists()) App.stories = snap.val(); saveStories(); if(App.currentUser) renderStoriesRow(); });
+            }
+
+            // Рулетка
+            function rouletteSpin(betType, betValue, stake) {
+                const number = Math.floor(Math.random() * 37);
+                const isRed = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(number);
+                const isBlack = !isRed && number !== 0;
+                let win = false, multiplier = 0;
+                if (betType === 'color') {
+                    if ((betValue === 'red' && isRed) || (betValue === 'black' && isBlack)) { win = true; multiplier = 2; }
+                } else if (betType === 'number') {
+                    if (betValue === number) { win = true; multiplier = 36; }
+                }
+                return { win, winAmount: win ? stake * multiplier : 0, number, isRed, isBlack };
+            }
+
             function handleGameBot(message, fromUser) {
-                const isSpin = message.text && message.text.includes('КРУТИТЬ');
-                if (isSpin) {
-                    if (App.users[fromUser].stars < 5) return { text: `❌ Недостаточно YC! Нужно 5 YC для игры.\n\n[?][?][?]`, buttons: ['КРУТИТЬ (5 YC)'] };
-                    App.users[fromUser].stars -= 5;
-                    const results = []; for (let i = 0; i < 3; i++) results.push(App.gameSymbols[Math.floor(Math.random() * App.gameSymbols.length)]);
-                    let win = 0; if (results[0] === results[1] && results[1] === results[2]) { win = 10; App.users[fromUser].stars += win; }
-                    saveToFirebase();
-                    updateUserInterface();
-                    const resultText = `[${results[0]}] [${results[1]}] [${results[2]}]`;
-                    if (win > 0) return { text: `${resultText}\n\n✨ ВЫИГРЫШ! +${win} YC ✨\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
-                    else return { text: `${resultText}\n\n😢 ПРОИГРЫШ...\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
+                const text = message.text || '';
+                const userStars = App.users[fromUser]?.stars || 0;
+                if (text.startsWith('СТАВКА ЦВЕТ')) {
+                    let parts = text.split(' ');
+                    let color = parts[2];
+                    let stake = parseInt(parts[3]) || 5;
+                    if (isNaN(stake)) stake = 5;
+                    if (userStars < stake) return { text: `❌ Не хватает YC! Нужно ${stake} YC`, buttons: ['🎰 РУЛЕТКА'] };
+                    App.users[fromUser].stars -= stake;
+                    const result = rouletteSpin('color', color, stake);
+                    if (result.win) {
+                        App.users[fromUser].stars += result.winAmount;
+                        saveToFirebase(); updateUserInterface();
+                        return { text: `🎡 ВЫПАЛО: ${result.number} (${result.isRed ? '🔴 КРАСНОЕ' : (result.number===0 ? '0️⃣ ЗЕРО' : '⚫ ЧЕРНОЕ')})\n✨ ВЫИГРЫШ! +${result.winAmount} YC ✨\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['🎰 РУЛЕТКА'] };
+                    } else {
+                        saveToFirebase(); updateUserInterface();
+                        return { text: `🎡 ВЫПАЛО: ${result.number} (${result.isRed ? '🔴 КРАСНОЕ' : (result.number===0 ? '0️⃣ ЗЕРО' : '⚫ ЧЕРНОЕ')})\n😢 ПРОИГРЫШ... -${stake} YC\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['🎰 РУЛЕТКА'] };
+                    }
                 }
-                return { text: `🎰 ИГРОВОЙ АВТОМАТ 🎰\n\n[?][?][?]\n\nПравила: нажми "КРУТИТЬ (5 YC)" и выиграй 10 YC если выпадут 3 одинаковых символа!\n\nДоступные символы: ${App.gameSymbols.join(' ')}\n\nYC Баланс: ${App.users[fromUser].stars} YC`, buttons: ['КРУТИТЬ (5 YC)'] };
+                if (text.startsWith('СТАВКА ЧИСЛО')) {
+                    let parts = text.split(' ');
+                    let num = parseInt(parts[2]);
+                    let stake = parseInt(parts[3]) || 5;
+                    if (isNaN(num) || num<0 || num>36) return { text: `❌ Число от 0 до 36`, buttons: ['🎰 РУЛЕТКА'] };
+                    if (userStars < stake) return { text: `❌ Не хватает YC! Нужно ${stake} YC`, buttons: ['🎰 РУЛЕТКА'] };
+                    App.users[fromUser].stars -= stake;
+                    const result = rouletteSpin('number', num, stake);
+                    if (result.win) {
+                        App.users[fromUser].stars += result.winAmount;
+                        saveToFirebase(); updateUserInterface();
+                        return { text: `🎡 ВЫПАЛО: ${result.number}\n✨ ДЖЕКПОТ! +${result.winAmount} YC ✨\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['🎰 РУЛЕТКА'] };
+                    } else {
+                        saveToFirebase(); updateUserInterface();
+                        return { text: `🎡 ВЫПАЛО: ${result.number}\n😢 ПРОИГРЫШ... -${stake} YC\nБаланс: ${App.users[fromUser].stars} YC`, buttons: ['🎰 РУЛЕТКА'] };
+                    }
+                }
+                return { text: `🎰 РУЛЕТКА 🎰\n\n🔴 СТАВКА ЦВЕТ red 10\n⚫ СТАВКА ЦВЕТ black 5\n🔢 СТАВКА ЧИСЛО 7 15\n\nВыигрыш: цвет x2, число x36\n\nБаланс: ${userStars} YC`, buttons: ['🎰 РУЛЕТКА'] };
             }
-            
+
             function handleTapBot(message, fromUser) {
                 if (!App.tapBalances[fromUser]) App.tapBalances[fromUser] = 0;
                 if (!App.tapUpgrades[fromUser]) App.tapUpgrades[fromUser] = 0;
@@ -1734,7 +1902,7 @@
                 const root = document.getElementById('app');
                 if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; }
                 if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); }
+                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); renderStoriesRow(); }, 100); }
             }
             
             function renderAuth() {
@@ -1773,7 +1941,6 @@
                     const clean = '@' + username;
                     if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; }
                     
-                    // Показываем индикацию сохранения
                     errorDiv.innerText = '📝 Сохранение...';
                     errorDiv.style.color = '#d4af37';
                     
@@ -1836,12 +2003,13 @@
                         <div class="chats-list" id="chatsList"></div>
                     </div>
                     <div class="chat-area">
+                        <div class="stories-row" id="storiesRow"></div>
                         <div class="chat-header">
                             <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${formatUserName(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner), hasGoldStatus(chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
                             <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
-                        ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                        ${!isYolk ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : (isChannel ? 'ПОСТ...' : 'СООБЩЕНИЕ...')}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><label for="storyUpload" class="file-label">📖 ИСТОРИЯ (видео)</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><input type="file" id="storyUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                     </div>
                 </div>`;
             }
@@ -2042,12 +2210,28 @@
                 if (sendBtn) sendBtn.addEventListener('click', sendMessage);
                 const fileUpload = document.getElementById('fileUpload');
                 const videoUpload = document.getElementById('videoUpload');
+                const storyUpload = document.getElementById('storyUpload');
                 if (fileUpload) fileUpload.addEventListener('change', handleFileSelect);
                 if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect);
+                if (storyUpload) storyUpload.addEventListener('change', handleStoryUpload);
                 const addUserBtn = document.getElementById('addUserBtn');
                 if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
                 const messageText = document.getElementById('messageText');
                 if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
+            }
+            
+            function handleStoryUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!file.type.startsWith('video/')) { showNotification('Только видео!', 'error'); return; }
+                if (file.size > 50 * 1024 * 1024) { showNotification('Видео до 50 МБ', 'error'); return; }
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    addStory(App.currentUser, ev.target.result);
+                    showNotification('История добавлена! Будет доступна 1 час');
+                };
+                reader.readAsDataURL(file);
+                e.target.value = '';
             }
             
             function handleVideoSelect(e) {
@@ -2375,8 +2559,121 @@
                 }
             }
             
+            function renderStoriesRow() {
+                const container = document.getElementById('storiesRow');
+                if (!container) return;
+                let usersWithStories = [];
+                Object.keys(App.stories).forEach(u => {
+                    if (App.stories[u].length > 0 && u !== App.currentUser) usersWithStories.push(u);
+                });
+                usersWithStories.sort();
+                let html = `<div class="story-circle ${hasUnwatchedStory(App.currentUser, App.currentUser) ? 'has-story' : ''}" onclick="window.openStoryViewer('${App.currentUser}', 0)"><div class="story-avatar">${App.users[App.currentUser]?.avatar ? `<img src="${App.users[App.currentUser].avatar}" style="width:100%;height:100%;border-radius:50%">` : '📷'}</div><div class="story-username">Моя история</div></div>`;
+                usersWithStories.forEach(u => {
+                    const hasNew = hasUnwatchedStory(u, App.currentUser);
+                    const avatarUrl = App.users[u]?.avatar;
+                    html += `<div class="story-circle ${hasNew ? 'has-story' : ''}" onclick="window.openStoryViewer('${u}', 0)"><div class="story-avatar">${avatarUrl ? `<img src="${avatarUrl}" style="width:100%;height:100%;border-radius:50%">` : (u[1] || '?')}</div><div class="story-username">${u.substring(1, 10)}</div></div>`;
+                });
+                container.innerHTML = html;
+            }
+            
+            window.openStoryViewer = function(username, index) {
+                const story = App.stories[username]?.[index];
+                if (!story) return;
+                viewStory(App.currentUser, username, index);
+                const modal = document.createElement('div');
+                modal.className = 'story-viewer';
+                modal.innerHTML = `<div class="story-info"><span>${username}</span><span>${new Date(story.createdAt).toLocaleTimeString()}</span></div><div class="story-close" onclick="this.parentElement.remove()">✕</div><video class="story-video" src="${story.videoUrl}" autoplay controls></video><div class="story-timer">Просмотров: ${story.viewers.length}</div>`;
+                document.body.appendChild(modal);
+                const video = modal.querySelector('video');
+                video.onended = () => {
+                    if (App.stories[username]?.[index + 1]) {
+                        modal.remove();
+                        window.openStoryViewer(username, index + 1);
+                    } else {
+                        modal.remove();
+                    }
+                };
+            };
+            
+            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
+            function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(channel => { if (App.channels[channel].subscribers?.includes(user)) set.add(channel); }); return Array.from(set); }
+            
+            function saveToFirebase() {
+                if (!App.dataLoaded) return;
+                const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats, tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, donationRequests: App.donationRequests, stories: App.stories };
+                database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error));
+            }
+            
+            async function loadFromFirebase() {
+                console.log('🔄 Загрузка данных из Firebase...');
+                try {
+                    const snapshot = await database.ref().get();
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        if (data.users) App.users = data.users;
+                        if (data.chats) App.chats = data.chats;
+                        if (data.blocked) App.blocked = data.blocked;
+                        if (data.channels) App.channels = data.channels;
+                        if (data.pinnedChats) App.pinnedChats = data.pinnedChats;
+                        if (data.tapBalances) App.tapBalances = data.tapBalances;
+                        if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades;
+                        if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages;
+                        if (data.donationRequests) App.donationRequests = data.donationRequests;
+                        if (data.stories) App.stories = data.stories;
+                        localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, pinnedChats: App.pinnedChats }));
+                        if (data.tapBalances || data.tapUpgrades) saveTapBalances();
+                        if (data.yolkChatMessages) saveYolkChatMessages();
+                        if (data.donationRequests) saveDonationRequests();
+                        if (data.stories) saveStories();
+                    } else {
+                        console.log('⚠️ База данных пуста');
+                    }
+                    const savedUser = localStorage.getItem('yolk_current_user');
+                    const savedChat = localStorage.getItem('yolk_active_chat');
+                    if (savedUser && App.users[savedUser]) {
+                        App.currentUser = savedUser;
+                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved';
+                        loadSavedMessages();
+                        loadTapBalances();
+                        loadYolkChatMessages();
+                        loadDonationRequests();
+                        setupUserListener(App.currentUser);
+                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
+                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
+                        updateLastSeen(App.currentUser);
+                    }
+                    App.dataLoaded = true;
+                    render();
+                } catch (error) {
+                    console.error('❌ Ошибка Firebase:', error);
+                    const cachedData = localStorage.getItem('yolk_cache');
+                    if (cachedData) {
+                        try { const cache = JSON.parse(cachedData);
+                            if (cache.users) App.users = cache.users;
+                            if (cache.chats) App.chats = cache.chats;
+                            if (cache.blocked) App.blocked = cache.blocked;
+                            if (cache.channels) App.channels = cache.channels;
+                            if (cache.pinnedChats) App.pinnedChats = cache.pinnedChats;
+                            console.log('📦 Загружено из кэша:', Object.keys(App.users).length);
+                        } catch(e) { }
+                    }
+                    const savedUser = localStorage.getItem('yolk_current_user');
+                    if (savedUser && App.users[savedUser]) {
+                        App.currentUser = savedUser;
+                        App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
+                        loadSavedMessages();
+                        loadTapBalances();
+                        loadYolkChatMessages();
+                        loadDonationRequests();
+                        setupUserListener(App.currentUser);
+                    }
+                    App.dataLoaded = true;
+                    render();
+                }
+            }
+            
             function initBots() {
-                App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, gold: true, age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; });
+                App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], bio: bot === '@game_bot' ? '🎰 Рулетка!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число!'), isBot: true, verified: true, gold: true, age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; });
                 saveToFirebase();
             }
             
@@ -2391,8 +2688,9 @@
             window.confirmDonation = window.confirmDonation || function() {};
             window.cancelDonation = window.cancelDonation || function() {};
             window.openImageModal = window.openImageModal || function() {};
+            window.openStoryViewer = window.openStoryViewer || function() {};
             
-            window.addEventListener('load', () => { showLoading(); initBots(); loadFromFirebase(); setTimeout(hideLoading, 1000); });
+            window.addEventListener('load', () => { showLoading(); initBots(); loadStories(); loadFromFirebase(); setTimeout(hideLoading, 1000); });
         })();
     </script>
 </body>
