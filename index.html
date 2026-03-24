@@ -1358,6 +1358,7 @@
                 try {
                     if (!App.audioCtx) {
                         App.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        App.audioCtx.resume();
                     }
                     const ctx = App.audioCtx;
                     const now = ctx.currentTime;
@@ -1384,6 +1385,13 @@
                     osc2.stop(now + 0.3);
                     osc3.stop(now + 0.3);
                 } catch(e) { console.log('Sound error:', e); }
+            }
+
+            function formatUserName(username, isGold) {
+                if (isGold) {
+                    return `<span class="gold-name">${username}</span>`;
+                }
+                return username;
             }
 
             function hasGoldStatus(username) {
@@ -1452,15 +1460,9 @@
                 const existingStatus = headerInfo.querySelector('.chat-user-status');
                 if (existingStatus) existingStatus.remove();
                 const existingNameStrong = headerInfo.querySelector('strong');
-                if (existingNameStrong && App.users[username]) {
+                if (existingNameStrong) {
                     const isGold = hasGoldStatus(username);
-                    if (isGold) {
-                        existingNameStrong.innerHTML = `${username}${App.users[username]?.verified ? '<span class="verified-icon"></span>' : ''}`;
-                        existingNameStrong.classList.add('gold-name');
-                    } else {
-                        existingNameStrong.innerHTML = `${username}${App.users[username]?.verified ? '<span class="verified-icon"></span>' : ''}`;
-                        existingNameStrong.classList.remove('gold-name');
-                    }
+                    existingNameStrong.innerHTML = formatUserName(username, isGold) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
                 }
                 const isOnline = isUserOnline(username);
                 const lastSeenText = getLastSeenText(App.users[username]?.lastSeen);
@@ -1470,9 +1472,14 @@
                 headerInfo.appendChild(statusDiv);
             }
 
-            function updateSidebarAvatar() {
+            function updateSidebarUser() {
                 const userData = App.users[App.currentUser];
                 if (!userData) return;
+                const sidebarUser = document.querySelector('.user-profile .username-display');
+                if (sidebarUser) {
+                    const isGold = hasGoldStatus(App.currentUser);
+                    sidebarUser.innerHTML = formatUserName(App.currentUser, isGold) + (userData.verified ? '<span class="verified-icon"></span>' : '');
+                }
                 const sidebarAvatar = document.querySelector('.user-profile .avatar');
                 if (sidebarAvatar) {
                     if (userData.avatar) {
@@ -1508,12 +1515,11 @@
                 userRef.on('value', (snapshot) => {
                     const userData = snapshot.val();
                     if (userData) {
-                        const oldAvatar = App.users[username]?.avatar;
                         const oldGold = App.users[username]?.gold;
                         App.users[username] = { ...App.users[username], ...userData };
                         if (username === App.currentUser) {
                             updateUserInterface();
-                            updateSidebarAvatar();
+                            updateSidebarUser();
                             applyWallpaper();
                         }
                         if (oldGold !== userData.gold && App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
@@ -1523,9 +1529,6 @@
                         if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && 
                             (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) {
                             updateChatHeaderStatus(username);
-                        }
-                        if ((oldAvatar !== userData.avatar || oldGold !== userData.gold) && App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
-                            renderMessages(App.activeChat);
                         }
                     }
                 });
@@ -1551,7 +1554,7 @@
                         balanceElement.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`;
                     }
                 }
-                updateSidebarAvatar();
+                updateSidebarUser();
                 applyWallpaper();
             }
 
@@ -1724,7 +1727,7 @@
                 const root = document.getElementById('app');
                 if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; }
                 if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarAvatar(); applyWallpaper(); }, 100); }
+                else { initUserStars(App.currentUser); root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); }
             }
             
             function renderAuth() {
@@ -1786,14 +1789,14 @@
                     <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                         <div class="user-profile" id="openProfileBtn">
                             <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
-                            <div><div class="username-display">${userData.gold ? `<span class="gold-name">${user}</span>` : user}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                            <div><div class="username-display">${formatUserName(user, hasGoldStatus(user))}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
                         </div>
                         <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
                         <div class="chats-list" id="chatsList"></div>
                     </div>
                     <div class="chat-area">
                         <div class="chat-header">
-                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner)}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${formatUserName(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner), hasGoldStatus(chatPartner))}${App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
                             <div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel && chatPartner !== 'saved' ? `<button class="tiny-btn" id="subscribeBtn">${App.channels[chatPartner]?.subscribers?.includes?.(user) ? '🔕' : '🔔'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !isBot(chatPartner) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
@@ -2213,7 +2216,7 @@
                         App.users[targetUser].gold = true;
                         showNotification(`✨ GOLD СТАТУС активирован для ${request.username}! ✨\nВаш ник теперь золотой, сообщения мерцают!`);
                         updateUserInterface();
-                        updateSidebarAvatar();
+                        updateSidebarUser();
                         if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
                             renderMessages(App.activeChat);
                             updateChatList();
@@ -2318,7 +2321,7 @@
                         
                         saveToFirebase();
                         updateUserInterface();
-                        updateSidebarAvatar();
+                        updateSidebarUser();
                         applyWallpaper();
                         document.getElementById('profileModalOverlay').remove();
                         render();
