@@ -708,7 +708,8 @@
             });
         }
 
-        // ========== НАСТРОЙКИ ПРОФИЛЯ ==========
+
+// ========== НАСТРОЙКИ ПРОФИЛЯ ==========
 function openProfileSettings() {
     const userData = App.users[App.currentUser];
     const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
@@ -780,6 +781,12 @@ function openProfileSettings() {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Очищаем контейнер перед инициализацией
+    const recaptchaContainer = document.getElementById('recaptcha-container');
+    if (recaptchaContainer) {
+        recaptchaContainer.innerHTML = '';
+    }
     
     // Инициализация reCAPTCHA
     window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
@@ -957,7 +964,6 @@ function openProfileSettings() {
         document.getElementById('settingsModalOverlay').remove();
     });
 }
-
         // ========== ВХОД С SMS ПОДТВЕРЖДЕНИЕМ ==========
         async function showSmsVerification(phoneNumber, username) {
             return new Promise(async (resolve) => {
