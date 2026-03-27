@@ -275,64 +275,61 @@
             } else { App.privacySettings = {}; }
         }
 
-        // ========== ТЕЛЕФОН (SMS) ==========
-        async function sendSmsCode(phoneNumber) {
-            try {
-                const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                    size: 'invisible',
-                    callback: () => {}
-                });
-                const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
-                return { success: true, verificationId: confirmationResult.verificationId };
-            } catch (error) {
-                console.error('Ошибка отправки SMS:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        
-        async function verifySmsCode(code, verificationId) {
-            try {
-                const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
-                const result = await auth.signInWithCredential(credential);
-                return { success: true, user: result.user };
-            } catch (error) {
-                console.error('Ошибка проверки кода:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        
-        async function linkPhoneToAccount(phoneNumber) {
-            const user = auth.currentUser;
-            if (!user) {
-                // Если пользователь не авторизован в Firebase Auth, нужно войти
-                const result = await auth.signInWithEmailAndPassword(App.currentUser + '@yolkapp.com', 'temp');
-                if (!result.user) return { success: false, error: 'Ошибка авторизации' };
-            }
-            try {
-                const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                    size: 'invisible',
-                    callback: () => {}
-                });
-                const confirmationResult = await auth.currentUser.linkWithPhoneNumber(phoneNumber, appVerifier);
-                return { success: true, verificationId: confirmationResult.verificationId };
-            } catch (error) {
-                console.error('Ошибка привязки телефона:', error);
-                return { success: false, error: error.message };
-            }
-        }
-        
-        async function confirmPhoneLink(code, verificationId) {
-            try {
-                const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
-                await auth.currentUser.linkWithCredential(credential);
-                App.users[App.currentUser].phoneNumber = auth.currentUser.phoneNumber;
-                saveToFirebase();
-                return { success: true };
-            } catch (error) {
-                console.error('Ошибка подтверждения:', error);
-                return { success: false, error: error.message };
-            }
-        }
+        // ========== ТЕЛЕФОН (SMS) - ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
+async function sendSmsCode(phoneNumber) {
+    try {
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            size: 'invisible',
+            callback: () => {}
+        });
+        const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+        return { success: true, verificationId: confirmationResult.verificationId };
+    } catch (error) {
+        console.error('Ошибка отправки SMS:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function verifySmsCode(code, verificationId) {
+    try {
+        const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+        const result = await auth.signInWithCredential(credential);
+        return { success: true, user: result.user };
+    } catch (error) {
+        console.error('Ошибка проверки кода:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function linkPhoneToAccount(phoneNumber) {
+    try {
+        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            size: 'invisible',
+            callback: () => {}
+        });
+        // Отправляем SMS на номер
+        const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+        return { success: true, verificationId: confirmationResult.verificationId };
+    } catch (error) {
+        console.error('Ошибка отправки SMS:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function confirmPhoneLink(code, verificationId) {
+    try {
+        const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+        const result = await auth.signInWithCredential(credential);
+        // Номер подтвержден, сохраняем в нашем приложении
+        const phoneNumber = result.user.phoneNumber;
+        App.users[App.currentUser].phoneNumber = phoneNumber;
+        saveToFirebase();
+        return { success: true };
+    } catch (error) {
+        console.error('Ошибка подтверждения кода:', error);
+        return { success: false, error: error.message };
+    }
+}
 
         // ========== КАНАЛЫ ==========
         function createChannel() {
