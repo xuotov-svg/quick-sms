@@ -720,6 +720,7 @@ function openProfileSettings() {
         <div class="modal-overlay" id="settingsModalOverlay">
             <div class="profile-modal">
                 <h3>⚙️ НАСТРОЙКИ</h3>
+                <div id="recaptcha-container" style="margin-bottom: 10px;"></div>
                 <div class="profile-input-group">
                     <label>ПАРОЛЬ</label>
                     <div class="password-wrapper">
@@ -752,7 +753,6 @@ function openProfileSettings() {
                     <label>📱 НОМЕР ТЕЛЕФОНА (для входа и защиты)</label>
                     ${currentPhone ? `<div style="margin-bottom: 8px;">✅ Привязан: ${currentPhone}</div>` : '<div style="margin-bottom: 8px;">❌ Не привязан</div>'}
                     <input type="tel" id="phoneInput" placeholder="+7 999 123-45-67" value="${currentPhone}">
-                    <div id="recaptcha-container" style="margin: 10px 0;"></div>
                     <button class="tiny-btn" id="linkPhoneBtn" style="margin-top: 8px;">${currentPhone ? 'СМЕНИТЬ НОМЕР' : 'ПРИВЯЗАТЬ ТЕЛЕФОН'}</button>
                     <div id="phoneCodeSection" class="hidden" style="margin-top: 12px;">
                         <input type="text" id="phoneCode" placeholder="Код из SMS">
@@ -782,26 +782,6 @@ function openProfileSettings() {
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     
-    // Очищаем контейнер перед инициализацией
-    const recaptchaContainer = document.getElementById('recaptcha-container');
-    if (recaptchaContainer) {
-        recaptchaContainer.innerHTML = '';
-    }
-    
-    // Инициализация reCAPTCHA
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-        size: 'normal',
-        callback: (response) => {
-            console.log('reCAPTCHA решена');
-        },
-        'expired-callback': () => {
-            console.log('reCAPTCHA истекла');
-        }
-    });
-    window.recaptchaVerifier.render().then((widgetId) => {
-        console.log('reCAPTCHA отрисован, widgetId:', widgetId);
-    }).catch(err => console.log('reCAPTCHA error:', err));
-    
     window.toggleSettingsPassword = function() {
         const passInput = document.getElementById('settingsPassword');
         const btn = document.querySelector('#settingsModalOverlay .toggle-password');
@@ -817,6 +797,7 @@ function openProfileSettings() {
     let tempAvatar = null, tempBanner = null, tempWallpaper = null;
     let pendingVerificationId = null;
     let timerInterval = null;
+    let recaptchaVerifier = null;
     
     document.getElementById('settingsAvatar').addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -870,31 +851,40 @@ function openProfileSettings() {
         showNotification('Отправка кода...');
         
         try {
-            const result = await linkPhoneToAccount(phoneNumber);
-            if (result.success) {
-                pendingVerificationId = result.verificationId;
-                document.getElementById('phoneCodeSection').classList.remove('hidden');
-                
-                let timeLeft = 60;
-                const timerDiv = document.getElementById('codeTimer');
-                if (timerInterval) clearInterval(timerInterval);
-                timerInterval = setInterval(() => {
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        timerDiv.textContent = '';
-                    } else {
-                        timerDiv.textContent = `Код действителен еще ${timeLeft} сек`;
-                        timeLeft--;
-                    }
-                }, 1000);
-                
-                showNotification('Код отправлен! Введите его для подтверждения');
-            } else {
-                showNotification('Ошибка: ' + result.error, 'error');
-            }
+            // Создаем reCAPTCHA
+            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                size: 'invisible',
+                callback: () => {
+                    console.log('reCAPTCHA решена');
+                }
+            });
+            
+            // Отправляем SMS
+            const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
+            pendingVerificationId = confirmationResult.verificationId;
+            document.getElementById('phoneCodeSection').classList.remove('hidden');
+            
+            let timeLeft = 60;
+            const timerDiv = document.getElementById('codeTimer');
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerDiv.textContent = '';
+                } else {
+                    timerDiv.textContent = `Код действителен еще ${timeLeft} сек`;
+                    timeLeft--;
+                }
+            }, 1000);
+            
+            showNotification('Код отправлен! Введите его для подтверждения');
         } catch (error) {
             console.error('Ошибка:', error);
             showNotification('Ошибка: ' + error.message, 'error');
+            // Сбрасываем reCAPTCHA при ошибке
+            if (recaptchaVerifier) {
+                recaptchaVerifier.clear();
+            }
         }
     });
     
@@ -906,14 +896,14 @@ function openProfileSettings() {
         }
         
         try {
-            const result = await confirmPhoneLink(code, pendingVerificationId);
-            if (result.success) {
-                showNotification('✅ Номер телефона подтвержден!');
-                document.getElementById('settingsModalOverlay').remove();
-                openProfileSettings();
-            } else {
-                showNotification('Неверный код', 'error');
-            }
+            const credential = firebase.auth.PhoneAuthProvider.credential(pendingVerificationId, code);
+            const result = await auth.signInWithCredential(credential);
+            const phoneNumber = result.user.phoneNumber;
+            App.users[App.currentUser].phoneNumber = phoneNumber;
+            saveToFirebase();
+            showNotification('✅ Номер телефона подтвержден!');
+            document.getElementById('settingsModalOverlay').remove();
+            openProfileSettings();
         } catch (error) {
             console.error('Ошибка подтверждения:', error);
             showNotification('Неверный код', 'error');
