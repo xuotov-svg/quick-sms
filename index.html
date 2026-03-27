@@ -275,7 +275,7 @@
             } else { App.privacySettings = {}; }
         }
 
-        // ========== ТЕЛЕФОН (SMS) - ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
+        // ========== ТЕЛЕФОН (SMS) - ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
 async function sendSmsCode(phoneNumber) {
     try {
         const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
@@ -301,17 +301,42 @@ async function verifySmsCode(code, verificationId) {
     }
 }
 
+// Функция для привязки телефона - создаем временного пользователя если нужно
 async function linkPhoneToAccount(phoneNumber) {
     try {
         const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
             size: 'invisible',
             callback: () => {}
         });
-        // Отправляем SMS на номер
-        const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+        
+        // Если пользователь не авторизован в Firebase Auth, создаем временного
+        if (!auth.currentUser) {
+            // Создаем временного пользователя с уникальным email
+            const tempEmail = `temp_${Date.now()}@yolkapp.temp`;
+            const tempPassword = Math.random().toString(36);
+            await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
+        }
+        
+        // Привязываем телефон к текущему пользователю
+        const confirmationResult = await auth.currentUser.linkWithPhoneNumber(phoneNumber, appVerifier);
         return { success: true, verificationId: confirmationResult.verificationId };
     } catch (error) {
-        console.error('Ошибка отправки SMS:', error);
+        console.error('Ошибка привязки телефона:', error);
+        
+        // Если ошибка "user already linked", просто отправляем код
+        if (error.code === 'auth/provider-already-linked') {
+            try {
+                const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    size: 'invisible',
+                    callback: () => {}
+                });
+                const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+                return { success: true, verificationId: confirmationResult.verificationId };
+            } catch (e) {
+                return { success: false, error: e.message };
+            }
+        }
+        
         return { success: false, error: error.message };
     }
 }
@@ -320,10 +345,12 @@ async function confirmPhoneLink(code, verificationId) {
     try {
         const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
         const result = await auth.signInWithCredential(credential);
+        
         // Номер подтвержден, сохраняем в нашем приложении
         const phoneNumber = result.user.phoneNumber;
         App.users[App.currentUser].phoneNumber = phoneNumber;
         saveToFirebase();
+        
         return { success: true };
     } catch (error) {
         console.error('Ошибка подтверждения кода:', error);
