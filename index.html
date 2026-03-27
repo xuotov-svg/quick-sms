@@ -41,7 +41,9 @@
         .profile-avatar-overlay { position: absolute; bottom: -40px; left: 20px; z-index: 10; }
         .profile-avatar-overlay .avatar-large { width: 100px; height: 100px; border-radius: 50%; border: 4px solid white; background: var(--accent-soft); display: flex; align-items: center; justify-content: center; font-size: 40px; color: #000000; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.2); position: relative; }
         .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
-        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; }
+        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; padding-right: 20px; }
+        .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; }
+        .settings-icon:hover { background: #f0f0f0; transform: rotate(90deg); }
         .toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .toggle-switch .toggle-label { font-size: 14px; color: #000000; }
         .toggle-switch .toggle-checkbox { width: 40px; height: 20px; background: #ccc; border-radius: 20px; position: relative; transition: 0.2s; border: 1px solid #000000; }
@@ -166,11 +168,16 @@
         .color-palette { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
         .color-option { width: 30px; height: 30px; border-radius: 4px; border: 1px solid #000; cursor: pointer; }
         .color-option.active { border: 3px solid gold; transform: scale(1.1); }
-        .create-nft-btn { background: var(--accent); border: 1px solid #000; padding: 10px; width: 100%; font-weight: bold; cursor: pointer; }
+        .create-nft-btn { background: var(--accent); border: 1px solid #000; padding: 10px; width: 100%; font-weight: bold; cursor: pointer; color: #000000; }
         .change-username-btn { background: #ff9800; border: 1px solid #000; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; color: #000; }
         .admin-give-form { background: #f9f9f9; padding: 12px; border-radius: 12px; margin-bottom: 16px; border: 1px solid #000; }
         .streak-badge { display: inline-flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; color: #ff8c00; margin-left: 6px; animation: flameFlicker 1s infinite; }
         @keyframes flameFlicker { 0% { text-shadow: 0 0 2px #ff6b00; } 50% { text-shadow: 0 0 8px #ff4500; } 100% { text-shadow: 0 0 2px #ff6b00; } }
+        .online-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #4CAF50; margin-left: 6px; }
+        .online-status.offline { background-color: #888; }
+        .last-seen-text { font-size: 11px; color: #666; margin-top: 2px; }
+        .message-time { font-size: 10px; color: #888; margin-top: 4px; text-align: right; }
+        .message-reply { background: rgba(0,0,0,0.05); border-left: 3px solid var(--accent); padding: 6px 10px; margin-bottom: 6px; border-radius: 8px; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -412,6 +419,125 @@
             });
         }
 
+        // ========== НАСТРОЙКИ ПРОФИЛЯ (шестеренка) ==========
+        function openProfileSettings() {
+            const userData = App.users[App.currentUser];
+            const modalHtml = `
+                <div class="modal-overlay" id="settingsModalOverlay">
+                    <div class="profile-modal">
+                        <h3>⚙️ НАСТРОЙКИ ПРОФИЛЯ</h3>
+                        <div class="profile-input-group">
+                            <label>ПАРОЛЬ</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="settingsPassword" value="${userData.password || ''}">
+                                <button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button>
+                            </div>
+                        </div>
+                        <div class="profile-input-group">
+                            <label>ОПИСАНИЕ</label>
+                            <textarea id="settingsBio" maxlength="50">${userData.bio || ''}</textarea>
+                        </div>
+                        <div class="profile-input-group">
+                            <label>ВОЗРАСТ</label>
+                            <input type="number" id="settingsAge" min="14" max="99" value="${userData.age || 14}">
+                        </div>
+                        <div class="profile-input-group">
+                            <label>АВАТАР</label>
+                            <input type="file" id="settingsAvatar" accept="image/*">
+                        </div>
+                        <div class="profile-input-group">
+                            <label>БАННЕР</label>
+                            <input type="file" id="settingsBanner" accept="image/*">
+                        </div>
+                        <div class="profile-input-group">
+                            <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
+                            <div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="settingsTwoFAToggle">
+                                <div class="toggle-checkbox"></div>
+                                <span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span>
+                            </div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-btn" id="saveSettingsBtn">💾 СОХРАНИТЬ</button>
+                            <button class="profile-btn secondary" id="closeSettingsBtn">ОТМЕНА</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            window.toggleSettingsPassword = function() {
+                const passInput = document.getElementById('settingsPassword');
+                const btn = document.querySelector('#settingsModalOverlay .toggle-password');
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    btn.textContent = '🙈';
+                } else {
+                    passInput.type = 'password';
+                    btn.textContent = '👁️';
+                }
+            };
+            
+            let tempAvatar = null;
+            let tempBanner = null;
+            
+            document.getElementById('settingsAvatar').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    compressImage(ev.target.result, 200, 200, 0.7, (compressed) => {
+                        tempAvatar = compressed;
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            document.getElementById('settingsBanner').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    compressImage(ev.target.result, 800, 200, 0.7, (compressed) => {
+                        tempBanner = compressed;
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            document.getElementById('settingsTwoFAToggle').addEventListener('click', () => {
+                const newState = !App.users[App.currentUser].twoFA;
+                App.users[App.currentUser].twoFA = newState;
+                document.getElementById('settingsTwoFAToggle').classList.toggle('active', newState);
+                const labelSpan = document.querySelector('#settingsTwoFAToggle .toggle-label');
+                labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
+                saveToFirebase();
+                showNotification(newState ? '2FA включена' : '2FA выключена');
+            });
+            
+            document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                const newPassword = document.getElementById('settingsPassword')?.value.trim();
+                const newBio = document.getElementById('settingsBio')?.value.trim().slice(0, 50);
+                const newAge = parseInt(document.getElementById('settingsAge')?.value);
+                
+                if (newPassword) App.users[App.currentUser].password = newPassword;
+                if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
+                if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge;
+                if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
+                if (tempBanner) App.users[App.currentUser].banner = tempBanner;
+                
+                saveToFirebase();
+                updateUserInterface();
+                updateSidebarUser();
+                applyWallpaper();
+                document.getElementById('settingsModalOverlay').remove();
+                showNotification('Настройки сохранены');
+            });
+            
+            document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+                document.getElementById('settingsModalOverlay').remove();
+            });
+        }
+
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function formatLastSeen(lastSeen) {
             if (!lastSeen) return 'очень давно';
@@ -442,7 +568,7 @@
         function isUserOnline(username) { const lastSeen = App.users[username]?.lastSeen; if (!lastSeen) return false; return (Date.now() - lastSeen) < 300000; }
         function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
         function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = '#ffffff'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
-        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); const profileModal = document.getElementById('profileModalOverlay'); if (profileModal) { const giftsCollection = profileModal.querySelector('.gifts-collection'); if (giftsCollection && userData.gifts) { giftsCollection.innerHTML = userData.gifts.map(g => `<div class="gift-item">${g}</div>`).join('') || 'НЕТ ПОДАРКОВ'; } const nftCollection = profileModal.querySelector('.nft-collection'); if (nftCollection && userData.nfts) { nftCollection.innerHTML = userData.nfts.map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item"><img src="${canvas.toDataURL()}"></div>`; }).join('') || 'НЕТ ОТКРЫТОК'; } const balanceElement = profileModal.querySelector('.star-balance-large'); if (balanceElement) { balanceElement.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; } } updateSidebarUser(); applyWallpaper(); }
+        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); const profileModal = document.getElementById('profileModalOverlay'); if (profileModal && profileModal.querySelector('.gifts-collection')) { const giftsCollection = profileModal.querySelector('.gifts-collection'); if (giftsCollection && userData.gifts) { giftsCollection.innerHTML = userData.gifts.map(g => `<div class="gift-item">${g}</div>`).join('') || 'НЕТ ПОДАРКОВ'; } const nftCollection = profileModal.querySelector('.nft-collection'); if (nftCollection && userData.nfts) { nftCollection.innerHTML = userData.nfts.map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item"><img src="${canvas.toDataURL()}"></div>`; }).join('') || 'НЕТ ОТКРЫТОК'; } const balanceElement = profileModal.querySelector('.star-balance-large'); if (balanceElement) { balanceElement.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; } } updateSidebarUser(); applyWallpaper(); }
         function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
@@ -546,7 +672,7 @@
             showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`); 
         };
 
-        // ========== СМЕНА ЮЗЕРНЕЙМА ==========
+        // ========== СМЕНА ЮЗЕРНЕЙМА (1500 YC) ==========
         function changeUsername(newUsername) {
             const oldUsername = App.currentUser;
             const newName = '@' + newUsername.toLowerCase();
@@ -566,12 +692,12 @@
                 return false;
             }
             
-            if (App.users[oldUsername].stars < 25) {
-                showNotification('Недостаточно YC! Нужно 25 YC для смены имени', 'error');
+            if (App.users[oldUsername].stars < 1500) {
+                showNotification('Недостаточно YC! Нужно 1500 YC для смены имени', 'error');
                 return false;
             }
             
-            App.users[oldUsername].stars -= 25;
+            App.users[oldUsername].stars -= 1500;
             
             const userData = { ...App.users[oldUsername] };
             delete userData.password;
@@ -620,7 +746,7 @@
             saveToFirebase();
             updateUserInterface();
             render();
-            showNotification(`✅ Имя успешно изменено на ${newName}! Снято 25 YC`);
+            showNotification(`✅ Имя успешно изменено на ${newName}! Снято 1500 YC`);
             return true;
         }
 
@@ -633,43 +759,171 @@
             const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join(''); 
             const nftsList = (userData.nfts || []).map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join(''); 
             const currentWallpaper = userData.chatWallpaper || ''; 
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>${isOwn ? 'МОЙ ПРОФИЛЬ' : 'ПРОФИЛЬ ' + username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${isOwn && !isBotUser ? `<div><input type="file" id="profileAvatarUpload" accept="image/*"><label for="profileAvatarUpload">📷 АВАТАР</label></div><div><input type="file" id="profileBannerUpload" accept="image/*"><label for="profileBannerUpload">🖼️ БАННЕР</label></div>` : ''}<div class="profile-input-group"><label>ОПИСАНИЕ</label>${isOwn ? `<textarea id="modalBioInput" maxlength="50">${userData.bio || ''}</textarea>` : `<div>${userData.bio || '—'}</div>`}</div><div class="profile-input-group"><label>ВОЗРАСТ</label>${isOwn ? `<input type="number" id="modalAgeInput" min="14" max="99" value="${userData.age || 14}">` : `<div>${userData.age || 14} лет</div>`}</div>${isOwn ? `<div class="profile-input-group"><label>ПАРОЛЬ</label><div class="password-wrapper"><input type="password" id="modalPasswordInput" value="${userData.password || ''}"><button class="toggle-password" onclick="window.togglePasswordVisibility()">👁️</button></div></div><div class="profile-input-group"><label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label><div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="twoFAToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span></div><small style="color:#666; display:block; margin-top:5px;">При включении при входе потребуется код, который придет в ваш личный чат YOLK</small></div>` : ''}<div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div>${isOwn ? `<button class="tiny-btn" id="createNftBtn" style="margin-top:8px;">+ СОЗДАТЬ ОТКРЫТКУ (50 YC)</button>` : ''}</div>${isOwn ? `<div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="wallpaper">ОБОИ</div><div class="tab" data-tab="username">СМЕНИТЬ @</div></div><div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div><div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4><div class="shop-item"><span>🥚 — 0.5 TON</span><button class="gift-donate-btn" data-emoji="🥚" data-ton="0.5">КУПИТЬ</button></div><div class="shop-item"><span>🍳 — 1.5 TON</span><button class="gift-donate-btn" data-emoji="🍳" data-ton="1.5">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div><div id="tabWallpaper" class="tab-content hidden"><div class="shop-section"><h4>🎨 ФОН ЧАТА</h4><div id="wallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div><div class="profile-input-group"><label>СВОЕ ИЗОБРАЖЕНИЕ</label><input type="file" id="wallpaperUpload" accept="image/*"></div></div></div><div id="tabUsername" class="tab-content hidden"><div class="shop-section"><h4>✏️ СМЕНА ЮЗЕРНЕЙМА</h4><div class="profile-input-group"><label>НОВЫЙ ЮЗЕРНЕЙМ (только англ буквы и цифры)</label><input type="text" id="newUsernameInput" placeholder="например: newname123" maxlength="15"></div><div class="star-balance" style="margin-bottom: 12px;">💰 Стоимость: 25 YC</div><button class="change-username-btn" id="changeUsernameBtn">СМЕНИТЬ @ (25 YC)</button><small style="display:block; text-align:center; margin-top:12px;">⚠️ Все ваши чаты и данные останутся, но имя изменится навсегда</small></div></div>` : ''}<div class="profile-actions" style="margin-top: 20px;">${isOwn && !isBotUser ? '<button class="profile-btn" id="saveProfileModalBtn">СОХРАНИТЬ</button>' : ''}<button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button>${isOwn && !isBotUser ? '<button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button>' : ''}</div></div></div>`; 
+            
+            // Для своего профиля - компактная версия с шестеренкой
+            if (isOwn && !isBotUser) {
+                const modalHtml = `
+                    <div class="modal-overlay" id="profileModalOverlay">
+                        <div class="profile-modal">
+                            <h3>МОЙ ПРОФИЛЬ</h3>
+                            <div class="profile-banner-wrapper">
+                                <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div>
+                                <div class="profile-avatar-overlay">
+                                    <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
+                                </div>
+                            </div>
+                            <div class="profile-name-section">
+                                <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="settings-icon" id="openSettingsBtn">⚙️</div>
+                            </div>
+                            <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
+                            <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                            <div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>
+                            <div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div><button class="tiny-btn" id="createNftBtn" style="margin-top:8px;">+ СОЗДАТЬ ОТКРЫТКУ (50 YC)</button></div>
+                            <div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="wallpaper">ОБОИ</div><div class="tab" data-tab="username">СМЕНИТЬ @</div></div>
+                            <div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div>
+                            <div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4><div class="shop-item"><span>🥚 — 0.5 TON</span><button class="gift-donate-btn" data-emoji="🥚" data-ton="0.5">КУПИТЬ</button></div><div class="shop-item"><span>🍳 — 1.5 TON</span><button class="gift-donate-btn" data-emoji="🍳" data-ton="1.5">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
+                            <div id="tabWallpaper" class="tab-content hidden"><div class="shop-section"><h4>🎨 ФОН ЧАТА</h4><div id="wallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div><div class="profile-input-group"><label>СВОЕ ИЗОБРАЖЕНИЕ</label><input type="file" id="wallpaperUpload" accept="image/*"></div></div></div>
+                            <div id="tabUsername" class="tab-content hidden"><div class="shop-section"><h4>✏️ СМЕНА @USERNAME</h4><div class="profile-input-group"><label>НОВЫЙ ЮЗЕРНЕЙМ (только англ буквы и цифры)</label><input type="text" id="newUsernameInput" placeholder="например: newname123" maxlength="15"></div><div class="star-balance" style="margin-bottom: 12px;">💰 Стоимость: 1500 YC</div><button class="change-username-btn" id="changeUsernameBtn">СМЕНИТЬ @USERNAME (1500 YC)</button><small style="display:block; text-align:center; margin-top:12px;">⚠️ Все ваши чаты и данные останутся, но имя изменится навсегда</small></div></div>
+                            <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button><button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button></div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                document.getElementById('openSettingsBtn').addEventListener('click', () => {
+                    document.getElementById('profileModalOverlay').remove();
+                    openProfileSettings();
+                });
+                
+                document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => {
+                    document.getElementById('profileModalOverlay').remove();
+                    App.currentUser = null;
+                    App.activeChat = null;
+                    App.savedMessages = {};
+                    localStorage.removeItem('yolk_current_user');
+                    localStorage.removeItem('yolk_active_chat');
+                    render();
+                });
+                
+                let tempWallpaper = null;
+                document.getElementById('wallpaperUpload')?.addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        compressImage(ev.target.result, 1920, 1080, 0.8, (compressed) => {
+                            document.getElementById('wallpaperPreview').style.backgroundImage = `url('${compressed}')`;
+                            tempWallpaper = compressed;
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                        if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden');
+                        if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden');
+                        if (e.target.dataset.tab === 'wallpaper') document.getElementById('tabWallpaper').classList.remove('hidden');
+                        if (e.target.dataset.tab === 'username') document.getElementById('tabUsername').classList.remove('hidden');
+                    });
+                });
+                
+                document.querySelectorAll('.buy-gift-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const gift = e.target.dataset.gift;
+                        const price = parseInt(e.target.dataset.price);
+                        const user = App.currentUser;
+                        if (App.users[user].stars >= price) {
+                            App.users[user].stars -= price;
+                            if (!App.users[user].gifts) App.users[user].gifts = [];
+                            App.users[user].gifts.push(gift);
+                            saveToFirebase();
+                            updateUserInterface();
+                            document.getElementById('profileModalOverlay').remove();
+                            openProfileModal(user);
+                            showNotification(`Куплен подарок ${gift}`);
+                        } else {
+                            showNotification('Недостаточно YC', 'error');
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.donate-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const yc = parseInt(e.target.dataset.yc);
+                        const ton = parseFloat(e.target.dataset.ton);
+                        openDonationModal({ yc, ton, price: `${ton} TON` });
+                        document.getElementById('profileModalOverlay')?.remove();
+                    });
+                });
+                
+                document.querySelectorAll('.gift-donate-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const emoji = e.target.dataset.emoji;
+                        const ton = parseFloat(e.target.dataset.ton);
+                        openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, giftEmoji: emoji });
+                        document.getElementById('profileModalOverlay')?.remove();
+                    });
+                });
+                
+                document.querySelectorAll('.status-donate-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const status = e.target.dataset.status;
+                        const ton = parseFloat(e.target.dataset.ton);
+                        openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, status: status });
+                        document.getElementById('profileModalOverlay')?.remove();
+                    });
+                });
+                
+                document.getElementById('changeUsernameBtn')?.addEventListener('click', () => {
+                    const newName = document.getElementById('newUsernameInput')?.value.trim();
+                    if (!newName) {
+                        showNotification('Введите новый юзернейм', 'error');
+                        return;
+                    }
+                    changeUsername(newName);
+                    document.getElementById('profileModalOverlay')?.remove();
+                });
+                
+                document.getElementById('createNftBtn')?.addEventListener('click', () => {
+                    document.getElementById('profileModalOverlay').remove();
+                    openNftCreator();
+                });
+                
+                document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
+                    document.getElementById('profileModalOverlay').remove();
+                });
+                
+                if (isAdmin) {
+                    setTimeout(() => {
+                        const adminBtn = document.createElement('button');
+                        adminBtn.className = 'profile-btn';
+                        adminBtn.style.background = '#ff9800';
+                        adminBtn.style.color = '#000000';
+                        adminBtn.style.border = '1px solid #000000';
+                        adminBtn.textContent = '👑 АДМИН-ПАНЕЛЬ';
+                        adminBtn.onclick = () => {
+                            document.getElementById('profileModalOverlay')?.remove();
+                            openAdminPanel();
+                        };
+                        const actionsDiv = document.querySelector('#profileModalOverlay .profile-actions');
+                        if (actionsDiv && !document.querySelector('#adminPanelBtn')) {
+                            adminBtn.id = 'adminPanelBtn';
+                            actionsDiv.insertBefore(adminBtn, actionsDiv.firstChild);
+                        }
+                    }, 100);
+                }
+                return;
+            }
+            
+            // Для профиля другого пользователя - как было
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
-            window.togglePasswordVisibility = function() { const passInput = document.getElementById('modalPasswordInput'); const btn = document.querySelector('.toggle-password'); if (passInput.type === 'password') { passInput.type = 'text'; btn.textContent = '🙈'; } else { passInput.type = 'password'; btn.textContent = '👁️'; } }; 
-            if (isOwn && !isBotUser) { 
-                let tempBanner = null; 
-                const avatarUpload = document.getElementById('profileAvatarUpload'); 
-                const bannerUpload = document.getElementById('profileBannerUpload'); 
-                const wallpaperUpload = document.getElementById('wallpaperUpload'); 
-                if (avatarUpload) avatarUpload.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 200, 200, 0.7, (compressed) => { document.querySelector('#profileModalOverlay .avatar-large').innerHTML = `<img src="${compressed}">`; App.tempAvatar = compressed; }); }; reader.readAsDataURL(file); }); 
-                if (bannerUpload) bannerUpload.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 200, 0.7, (compressed) => { document.querySelector('#profileModalOverlay .banner-container').innerHTML = `<img src="${compressed}" class="banner-image">`; tempBanner = compressed; }); }; reader.readAsDataURL(file); }); 
-                if (wallpaperUpload) wallpaperUpload.addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 1920, 1080, 0.8, (compressed) => { document.getElementById('wallpaperPreview').style.backgroundImage = `url('${compressed}')`; App.tempWallpaper = compressed; }); }; reader.readAsDataURL(file); }); 
-                const twoFAToggle = document.getElementById('twoFAToggle'); 
-                if (twoFAToggle) twoFAToggle.addEventListener('click', () => { const newState = !App.users[App.currentUser].twoFA; App.users[App.currentUser].twoFA = newState; twoFAToggle.classList.toggle('active', newState); const labelSpan = twoFAToggle.querySelector('.toggle-label'); labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена'; saveToFirebase(); showNotification(newState ? '2FA включена' : '2FA выключена'); }); 
-                document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); App.currentUser = null; App.activeChat = null; App.savedMessages = {}; localStorage.removeItem('yolk_current_user'); localStorage.removeItem('yolk_active_chat'); render(); }); 
-                document.querySelectorAll('.tab').forEach(tab => { tab.addEventListener('click', (e) => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); e.target.classList.add('active'); document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden')); if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden'); if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden'); if (e.target.dataset.tab === 'wallpaper') document.getElementById('tabWallpaper').classList.remove('hidden'); if (e.target.dataset.tab === 'username') document.getElementById('tabUsername').classList.remove('hidden'); }); }); 
-                document.querySelectorAll('.buy-gift-btn').forEach(btn => { btn.addEventListener('click', (e) => { const gift = e.target.dataset.gift; const price = parseInt(e.target.dataset.price); const user = App.currentUser; if (App.users[user].stars >= price) { App.users[user].stars -= price; if (!App.users[user].gifts) App.users[user].gifts = []; App.users[user].gifts.push(gift); saveToFirebase(); updateUserInterface(); document.getElementById('profileModalOverlay').remove(); openProfileModal(user); showNotification(`Куплен подарок ${gift}`); } else { showNotification('Недостаточно YC', 'error'); } }); }); 
-                document.querySelectorAll('.donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const yc = parseInt(e.target.dataset.yc); const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc, ton, price: `${ton} TON` }); document.getElementById('profileModalOverlay')?.remove(); }); }); 
-                document.querySelectorAll('.gift-donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const emoji = e.target.dataset.emoji; const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, giftEmoji: emoji }); document.getElementById('profileModalOverlay')?.remove(); }); }); 
-                document.querySelectorAll('.status-donate-btn').forEach(btn => { btn.addEventListener('click', (e) => { const status = e.target.dataset.status; const ton = parseFloat(e.target.dataset.ton); openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, status: status }); document.getElementById('profileModalOverlay')?.remove(); }); }); 
-                document.getElementById('changeUsernameBtn')?.addEventListener('click', () => { const newName = document.getElementById('newUsernameInput')?.value.trim(); if (!newName) { showNotification('Введите новый юзернейм', 'error'); return; } changeUsername(newName); document.getElementById('profileModalOverlay')?.remove(); }); 
-                document.getElementById('saveProfileModalBtn')?.addEventListener('click', () => { const newAvatar = App.tempAvatar; const newPassword = document.getElementById('modalPasswordInput')?.value.trim(); const newBio = document.getElementById('modalBioInput')?.value.trim().slice(0, 50); const newAge = parseInt(document.getElementById('modalAgeInput')?.value); const newWallpaper = App.tempWallpaper; if (newAvatar) App.users[App.currentUser].avatar = newAvatar; if (tempBanner) App.users[App.currentUser].banner = tempBanner; if (newPassword) App.users[App.currentUser].password = newPassword; if (newBio !== undefined) App.users[App.currentUser].bio = newBio; if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge; if (newWallpaper !== undefined) App.users[App.currentUser].chatWallpaper = newWallpaper; saveToFirebase(); updateUserInterface(); updateSidebarUser(); applyWallpaper(); document.getElementById('profileModalOverlay').remove(); render(); showNotification('Профиль сохранен'); }); 
-                document.getElementById('createNftBtn')?.addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); openNftCreator(); }); 
-            } 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
-            if (isAdmin && isOwn) { 
-                setTimeout(() => { 
-                    const adminBtn = document.createElement('button'); 
-                    adminBtn.className = 'profile-btn'; 
-                    adminBtn.style.background = '#ff9800'; 
-                    adminBtn.style.color = '#000000'; 
-                    adminBtn.style.border = '1px solid #000000'; 
-                    adminBtn.textContent = '👑 АДМИН-ПАНЕЛЬ'; 
-                    adminBtn.onclick = () => { document.getElementById('profileModalOverlay')?.remove(); openAdminPanel(); }; 
-                    const actionsDiv = document.querySelector('#profileModalOverlay .profile-actions'); 
-                    if (actionsDiv && !document.querySelector('#adminPanelBtn')) { adminBtn.id = 'adminPanelBtn'; actionsDiv.insertBefore(adminBtn, actionsDiv.firstChild); } 
-                }, 100); 
-            } 
         }
 
         // ========== ДОНАТ ==========
