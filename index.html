@@ -848,16 +848,33 @@ function openProfileSettings() {
             phoneNumber = '+' + phoneNumber.replace(/[^0-9]/g, '');
         }
         
+        // Очищаем контейнер reCAPTCHA
+        const container = document.getElementById('recaptcha-container');
+        if (container) {
+            container.innerHTML = '';
+        }
+        
+        // Сбрасываем старый verifier
+        if (recaptchaVerifier) {
+            try {
+                await recaptchaVerifier.clear();
+            } catch(e) {}
+            recaptchaVerifier = null;
+        }
+        
         showNotification('Отправка кода...');
         
         try {
-            // Создаем reCAPTCHA
+            // Создаем новый reCAPTCHA
             recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
                 size: 'invisible',
                 callback: () => {
                     console.log('reCAPTCHA решена');
                 }
             });
+            
+            // Ждем инициализации reCAPTCHA
+            await recaptchaVerifier.render();
             
             // Отправляем SMS
             const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
@@ -883,7 +900,15 @@ function openProfileSettings() {
             showNotification('Ошибка: ' + error.message, 'error');
             // Сбрасываем reCAPTCHA при ошибке
             if (recaptchaVerifier) {
-                recaptchaVerifier.clear();
+                try {
+                    await recaptchaVerifier.clear();
+                } catch(e) {}
+                recaptchaVerifier = null;
+            }
+            // Очищаем контейнер
+            const container = document.getElementById('recaptcha-container');
+            if (container) {
+                container.innerHTML = '';
             }
         }
     });
