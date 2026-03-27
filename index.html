@@ -720,7 +720,6 @@ function openProfileSettings() {
         <div class="modal-overlay" id="settingsModalOverlay">
             <div class="profile-modal">
                 <h3>⚙️ НАСТРОЙКИ</h3>
-                <div id="recaptcha-container" style="margin-bottom: 10px;"></div>
                 <div class="profile-input-group">
                     <label>ПАРОЛЬ</label>
                     <div class="password-wrapper">
@@ -848,35 +847,17 @@ function openProfileSettings() {
             phoneNumber = '+' + phoneNumber.replace(/[^0-9]/g, '');
         }
         
-        // Очищаем контейнер reCAPTCHA
-        const container = document.getElementById('recaptcha-container');
-        if (container) {
-            container.innerHTML = '';
-        }
-        
-        // Сбрасываем старый verifier
-        if (recaptchaVerifier) {
-            try {
-                await recaptchaVerifier.clear();
-            } catch(e) {}
-            recaptchaVerifier = null;
-        }
-        
         showNotification('Отправка кода...');
         
         try {
-            // Создаем новый reCAPTCHA
-            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            // ИСПОЛЬЗУЕМ ВСТРОЕННУЮ reCAPTCHA FIREBASE
+            recaptchaVerifier = new firebase.auth.RecaptchaVerifier('linkPhoneBtn', {
                 size: 'invisible',
                 callback: () => {
                     console.log('reCAPTCHA решена');
                 }
             });
             
-            // Ждем инициализации reCAPTCHA
-            await recaptchaVerifier.render();
-            
-            // Отправляем SMS
             const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
             pendingVerificationId = confirmationResult.verificationId;
             document.getElementById('phoneCodeSection').classList.remove('hidden');
@@ -898,17 +879,8 @@ function openProfileSettings() {
         } catch (error) {
             console.error('Ошибка:', error);
             showNotification('Ошибка: ' + error.message, 'error');
-            // Сбрасываем reCAPTCHA при ошибке
             if (recaptchaVerifier) {
-                try {
-                    await recaptchaVerifier.clear();
-                } catch(e) {}
-                recaptchaVerifier = null;
-            }
-            // Очищаем контейнер
-            const container = document.getElementById('recaptcha-container');
-            if (container) {
-                container.innerHTML = '';
+                recaptchaVerifier.clear();
             }
         }
     });
