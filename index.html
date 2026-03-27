@@ -275,56 +275,8 @@
             } else { App.privacySettings = {}; }
         }
 
-        // ========== ТЕЛЕФОН (SMS) - ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
-async function sendSmsCode(phoneNumber) {
-    try {
-        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            size: 'invisible',
-            callback: () => {}
-        });
-        const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
-        return { success: true, verificationId: confirmationResult.verificationId };
-    } catch (error) {
-        console.error('Ошибка отправки SMS:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-async function verifySmsCode(code, verificationId) {
-    try {
-        const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
-        const result = await auth.signInWithCredential(credential);
-        return { success: true, user: result.user };
-    } catch (error) {
-        console.error('Ошибка проверки кода:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-// Функция для привязки телефона - создаем временного пользователя если нужно
-async function linkPhoneToAccount(phoneNumber) {
-    try {
-        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-            size: 'invisible',
-            callback: () => {}
-        });
-        
-        // Если пользователь не авторизован в Firebase Auth, создаем временного
-        if (!auth.currentUser) {
-            // Создаем временного пользователя с уникальным email
-            const tempEmail = `temp_${Date.now()}@yolkapp.temp`;
-            const tempPassword = Math.random().toString(36);
-            await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
-        }
-        
-        // Привязываем телефон к текущему пользователю
-        const confirmationResult = await auth.currentUser.linkWithPhoneNumber(phoneNumber, appVerifier);
-        return { success: true, verificationId: confirmationResult.verificationId };
-    } catch (error) {
-        console.error('Ошибка привязки телефона:', error);
-        
-        // Если ошибка "user already linked", просто отправляем код
-        if (error.code === 'auth/provider-already-linked') {
+        // ========== ТЕЛЕФОН (SMS) - ИСПРАВЛЕННАЯ ВЕРСИЯ ==========
+        async function sendSmsCode(phoneNumber) {
             try {
                 const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
                     size: 'invisible',
@@ -332,31 +284,69 @@ async function linkPhoneToAccount(phoneNumber) {
                 });
                 const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
                 return { success: true, verificationId: confirmationResult.verificationId };
-            } catch (e) {
-                return { success: false, error: e.message };
+            } catch (error) {
+                console.error('Ошибка отправки SMS:', error);
+                return { success: false, error: error.message };
             }
         }
-        
-        return { success: false, error: error.message };
-    }
-}
 
-async function confirmPhoneLink(code, verificationId) {
-    try {
-        const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
-        const result = await auth.signInWithCredential(credential);
-        
-        // Номер подтвержден, сохраняем в нашем приложении
-        const phoneNumber = result.user.phoneNumber;
-        App.users[App.currentUser].phoneNumber = phoneNumber;
-        saveToFirebase();
-        
-        return { success: true };
-    } catch (error) {
-        console.error('Ошибка подтверждения кода:', error);
-        return { success: false, error: error.message };
-    }
-}
+        async function verifySmsCode(code, verificationId) {
+            try {
+                const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+                const result = await auth.signInWithCredential(credential);
+                return { success: true, user: result.user };
+            } catch (error) {
+                console.error('Ошибка проверки кода:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function linkPhoneToAccount(phoneNumber) {
+            try {
+                const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    size: 'invisible',
+                    callback: () => {}
+                });
+                
+                if (!auth.currentUser) {
+                    const tempEmail = `temp_${Date.now()}@yolkapp.temp`;
+                    const tempPassword = Math.random().toString(36);
+                    await auth.createUserWithEmailAndPassword(tempEmail, tempPassword);
+                }
+                
+                const confirmationResult = await auth.currentUser.linkWithPhoneNumber(phoneNumber, appVerifier);
+                return { success: true, verificationId: confirmationResult.verificationId };
+            } catch (error) {
+                console.error('Ошибка привязки телефона:', error);
+                if (error.code === 'auth/provider-already-linked') {
+                    try {
+                        const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                            size: 'invisible',
+                            callback: () => {}
+                        });
+                        const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+                        return { success: true, verificationId: confirmationResult.verificationId };
+                    } catch (e) {
+                        return { success: false, error: e.message };
+                    }
+                }
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function confirmPhoneLink(code, verificationId) {
+            try {
+                const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+                const result = await auth.signInWithCredential(credential);
+                const phoneNumber = result.user.phoneNumber;
+                App.users[App.currentUser].phoneNumber = phoneNumber;
+                saveToFirebase();
+                return { success: true };
+            } catch (error) {
+                console.error('Ошибка подтверждения кода:', error);
+                return { success: false, error: error.message };
+            }
+        }
 
         // ========== КАНАЛЫ ==========
         function createChannel() {
@@ -729,7 +719,7 @@ async function confirmPhoneLink(code, verificationId) {
                 <div class="modal-overlay" id="settingsModalOverlay">
                     <div class="profile-modal">
                         <h3>⚙️ НАСТРОЙКИ</h3>
-                        <div id="recaptcha-container"></div>
+                        <div id="recaptcha-container" style="margin-bottom: 10px;"></div>
                         <div class="profile-input-group">
                             <label>ПАРОЛЬ</label>
                             <div class="password-wrapper">
@@ -791,12 +781,20 @@ async function confirmPhoneLink(code, verificationId) {
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
-            if (typeof firebase !== 'undefined') {
-                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                    size: 'invisible',
-                    callback: () => {}
-                });
-            }
+            // Инициализация reCAPTCHA с render
+            setTimeout(() => {
+                if (typeof firebase !== 'undefined') {
+                    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                        size: 'invisible',
+                        callback: () => {
+                            console.log('reCAPTCHA решена');
+                        }
+                    });
+                    window.recaptchaVerifier.render().then((widgetId) => {
+                        console.log('reCAPTCHA отрисован, widgetId:', widgetId);
+                    }).catch(err => console.log('reCAPTCHA error:', err));
+                }
+            }, 100);
             
             window.toggleSettingsPassword = function() {
                 const passInput = document.getElementById('settingsPassword');
@@ -1555,7 +1553,6 @@ async function confirmPhoneLink(code, verificationId) {
                 const user = App.users[clean];
                 const phoneNumber = user.phoneNumber;
                 
-                // Если есть привязанный номер телефона, отправляем SMS код
                 if (phoneNumber) {
                     try {
                         const result = await sendSmsCode(phoneNumber);
