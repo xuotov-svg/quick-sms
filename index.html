@@ -60,12 +60,6 @@
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .auth-error { color: #ff0000; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
-        .two-factor-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease; }
-        .two-factor-box { background: white; padding: 30px; border-radius: 16px; border: 2px solid #000000; max-width: 400px; width: 90%; text-align: center; }
-        .two-factor-box h3 { color: #d4af37; margin-bottom: 20px; }
-        .two-factor-box p { margin-bottom: 20px; color: #000000; }
-        .code-input { font-size: 24px; letter-spacing: 10px; text-align: center; padding: 15px; border: 2px solid #000000; border-radius: 8px; margin-bottom: 20px; width: 100%; }
-        .resend-link { color: #d4af37; cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
         .main-container { flex-direction: row; position: relative; }
         .sidebar { width: 280px; background: white; border-right: 1px solid #000000; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
         .sidebar.open { transform: translateX(0); }
@@ -176,24 +170,31 @@
         @keyframes flameFlicker { 0% { text-shadow: 0 0 2px #ff6b00; } 50% { text-shadow: 0 0 8px #ff4500; } 100% { text-shadow: 0 0 2px #ff6b00; } }
         .blocked-message { text-align: center; padding: 20px; color: #ff4444; font-weight: bold; }
         .channel-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .phone-verification { margin-top: 16px; padding: 12px; background: #f5f5f5; border-radius: 12px; border: 1px solid #ddd; }
+        .phone-verification input { width: 100%; padding: 10px; border: 1px solid #000; border-radius: 8px; margin-bottom: 10px; }
+        .code-input-group { display: flex; gap: 8px; align-items: center; }
+        .code-input-group input { flex: 1; }
+        .code-timer { font-size: 12px; color: #666; margin-top: 8px; text-align: center; }
     </style>
 </head>
 <body>
     <div id="app"></div>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
         // ========== FIREBASE ==========
         const firebaseConfig = { apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4", authDomain: "quick-sms-772c4.firebaseapp.com", databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com", projectId: "quick-sms-772c4", storageBucket: "quick-sms-772c4.firebasestorage.app", messagingSenderId: "722370764251", appId: "1:722370764251:web:1f93437108ee3d54f15bfe" };
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
 
         // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {} };
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, verificationId: null };
         App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
         const tapUpgradeLevels = [{ cost: 0, reward: 1, nextCost: 10, name: "Базовый" }, { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" }, { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" }, { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" }, { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }];
@@ -260,6 +261,64 @@
             if (saved) {
                 try { App.privacySettings = JSON.parse(saved); } catch(e) { App.privacySettings = {}; }
             } else { App.privacySettings = {}; }
+        }
+
+        // ========== ТЕЛЕФОН (SMS) ==========
+        async function sendPhoneVerification(phoneNumber) {
+            try {
+                const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    size: 'invisible',
+                    callback: () => {}
+                });
+                const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, appVerifier);
+                App.verificationId = confirmationResult.verificationId;
+                return { success: true, verificationId: confirmationResult.verificationId };
+            } catch (error) {
+                console.error('Ошибка отправки SMS:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function verifyPhoneCode(code, verificationId) {
+            try {
+                const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+                const result = await auth.signInWithCredential(credential);
+                return { success: true, user: result.user };
+            } catch (error) {
+                console.error('Ошибка проверки кода:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function linkPhoneToAccount(phoneNumber) {
+            const user = auth.currentUser;
+            if (!user) return { success: false, error: 'Не авторизован' };
+            
+            try {
+                const appVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    size: 'invisible',
+                    callback: () => {}
+                });
+                const confirmationResult = await user.linkWithPhoneNumber(phoneNumber, appVerifier);
+                App.verificationId = confirmationResult.verificationId;
+                return { success: true, verificationId: confirmationResult.verificationId };
+            } catch (error) {
+                console.error('Ошибка привязки телефона:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function confirmPhoneLink(code, verificationId) {
+            try {
+                const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+                await auth.currentUser.linkWithCredential(credential);
+                App.users[App.currentUser].phoneNumber = auth.currentUser.phoneNumber;
+                saveToFirebase();
+                return { success: true };
+            } catch (error) {
+                console.error('Ошибка подтверждения:', error);
+                return { success: false, error: error.message };
+            }
         }
 
         // ========== КАНАЛЫ ==========
@@ -404,7 +463,6 @@
                             </div>
                             <div class="profile-name-section" style="margin-top: 20px; text-align: center;">
                                 <div class="username-display" style="font-size:20px; justify-content: center;">${formatUserNameWithStatus(channelName)}</div>
-                                <div class="star-balance" style="justify-content: center; margin-top: 8px;">👥 ${channel.subscribers?.length || 0} подписчиков</div>
                             </div>
                             <div class="profile-actions">
                                 <button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeChannelBtn">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>
@@ -622,16 +680,18 @@
             });
         }
 
-        // ========== НАСТРОЙКИ ПРОФИЛЯ ==========
+        // ========== НАСТРОЙКИ ПРОФИЛЯ С ТЕЛЕФОНОМ ==========
         function openProfileSettings() {
             const userData = App.users[App.currentUser];
             const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
             const currentWallpaper = userData.chatWallpaper || '';
+            const currentPhone = userData.phoneNumber || auth.currentUser?.phoneNumber || '';
             
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
                     <div class="profile-modal">
                         <h3>⚙️ НАСТРОЙКИ</h3>
+                        <div id="recaptcha-container"></div>
                         <div class="profile-input-group">
                             <label>ПАРОЛЬ</label>
                             <div class="password-wrapper">
@@ -659,6 +719,17 @@
                             <label>ФОН ЧАТА</label>
                             <div id="settingsWallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div>
                             <input type="file" id="settingsWallpaper" accept="image/*">
+                        </div>
+                        <div class="profile-input-group">
+                            <label>📱 НОМЕР ТЕЛЕФОНА</label>
+                            ${currentPhone ? `<div style="margin-bottom: 8px;">✅ Привязан: ${currentPhone}</div>` : '<div style="margin-bottom: 8px;">❌ Не привязан</div>'}
+                            <input type="tel" id="phoneInput" placeholder="+7 999 123-45-67" value="${currentPhone}">
+                            <button class="tiny-btn" id="linkPhoneBtn" style="margin-top: 8px;">${currentPhone ? 'СМЕНИТЬ НОМЕР' : 'ПРИВЯЗАТЬ ТЕЛЕФОН'}</button>
+                            <div id="phoneCodeSection" class="hidden" style="margin-top: 12px;">
+                                <input type="text" id="phoneCode" placeholder="Код из SMS">
+                                <button class="tiny-btn" id="verifyPhoneCodeBtn">ПОДТВЕРДИТЬ</button>
+                                <div id="codeTimer" class="code-timer"></div>
+                            </div>
                         </div>
                         <div class="profile-input-group">
                             <label>СМЕНА ЮЗЕРНЕЙМА (1500 YC)</label>
@@ -689,6 +760,14 @@
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
+            // Создаем reCAPTCHA
+            if (typeof firebase !== 'undefined') {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                    size: 'invisible',
+                    callback: () => {}
+                });
+            }
+            
             window.toggleSettingsPassword = function() {
                 const passInput = document.getElementById('settingsPassword');
                 const btn = document.querySelector('#settingsModalOverlay .toggle-password');
@@ -702,6 +781,8 @@
             };
             
             let tempAvatar = null, tempBanner = null, tempWallpaper = null;
+            let pendingVerificationId = null;
+            let timerInterval = null;
             
             document.getElementById('settingsAvatar').addEventListener('change', (e) => {
                 const file = e.target.files[0];
@@ -738,6 +819,67 @@
                     });
                 };
                 reader.readAsDataURL(file);
+            });
+            
+            document.getElementById('linkPhoneBtn').addEventListener('click', async () => {
+                const phoneInput = document.getElementById('phoneInput').value.trim();
+                if (!phoneInput) {
+                    showNotification('Введите номер телефона', 'error');
+                    return;
+                }
+                
+                let phoneNumber = phoneInput;
+                if (!phoneNumber.startsWith('+')) {
+                    phoneNumber = '+' + phoneNumber.replace(/[^0-9]/g, '');
+                }
+                
+                showNotification('Отправка кода...');
+                
+                try {
+                    const appVerifier = window.recaptchaVerifier;
+                    const confirmationResult = await auth.currentUser.linkWithPhoneNumber(phoneNumber, appVerifier);
+                    pendingVerificationId = confirmationResult.verificationId;
+                    document.getElementById('phoneCodeSection').classList.remove('hidden');
+                    
+                    let timeLeft = 60;
+                    const timerDiv = document.getElementById('codeTimer');
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerInterval = setInterval(() => {
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            timerDiv.textContent = '';
+                        } else {
+                            timerDiv.textContent = `Код действителен еще ${timeLeft} сек`;
+                            timeLeft--;
+                        }
+                    }, 1000);
+                    
+                    showNotification('Код отправлен! Введите его для подтверждения');
+                } catch (error) {
+                    console.error('Ошибка:', error);
+                    showNotification('Ошибка: ' + error.message, 'error');
+                }
+            });
+            
+            document.getElementById('verifyPhoneCodeBtn').addEventListener('click', async () => {
+                const code = document.getElementById('phoneCode').value.trim();
+                if (!code) {
+                    showNotification('Введите код из SMS', 'error');
+                    return;
+                }
+                
+                try {
+                    const credential = firebase.auth.PhoneAuthProvider.credential(pendingVerificationId, code);
+                    await auth.currentUser.linkWithCredential(credential);
+                    App.users[App.currentUser].phoneNumber = auth.currentUser.phoneNumber;
+                    saveToFirebase();
+                    showNotification('✅ Номер телефона подтвержден!');
+                    document.getElementById('settingsModalOverlay').remove();
+                    openProfileSettings();
+                } catch (error) {
+                    console.error('Ошибка подтверждения:', error);
+                    showNotification('Неверный код', 'error');
+                }
             });
             
             document.getElementById('privacyToggle').addEventListener('click', () => {
@@ -790,7 +932,132 @@
             });
             
             document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+                if (timerInterval) clearInterval(timerInterval);
                 document.getElementById('settingsModalOverlay').remove();
+            });
+        }
+
+        // ========== ВХОД ПО ТЕЛЕФОНУ ==========
+        async function loginWithPhone() {
+            const modalHtml = `
+                <div class="modal-overlay" id="phoneLoginModal">
+                    <div class="profile-modal">
+                        <h3>📱 ВХОД ПО ТЕЛЕФОНУ</h3>
+                        <div id="recaptcha-container"></div>
+                        <div class="input-group">
+                            <label>НОМЕР ТЕЛЕФОНА</label>
+                            <input type="tel" id="loginPhoneNumber" placeholder="+7 999 123-45-67">
+                        </div>
+                        <div id="phoneCodeSection" class="hidden">
+                            <div class="input-group">
+                                <label>КОД ИЗ SMS</label>
+                                <input type="text" id="loginPhoneCode" placeholder="6-значный код">
+                            </div>
+                            <div id="codeTimer" class="code-timer"></div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-btn" id="sendPhoneCodeBtn">ОТПРАВИТЬ КОД</button>
+                            <button class="profile-btn secondary" id="closePhoneLoginBtn">ОТМЕНА</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                size: 'invisible',
+                callback: () => {}
+            });
+            
+            let verificationId = null;
+            let timerInterval = null;
+            
+            document.getElementById('sendPhoneCodeBtn').addEventListener('click', async () => {
+                const phoneNumber = document.getElementById('loginPhoneNumber').value.trim();
+                if (!phoneNumber) {
+                    showNotification('Введите номер телефона', 'error');
+                    return;
+                }
+                
+                let formattedNumber = phoneNumber;
+                if (!formattedNumber.startsWith('+')) {
+                    formattedNumber = '+' + formattedNumber.replace(/[^0-9]/g, '');
+                }
+                
+                try {
+                    const confirmationResult = await auth.signInWithPhoneNumber(formattedNumber, recaptchaVerifier);
+                    verificationId = confirmationResult.verificationId;
+                    document.getElementById('phoneCodeSection').classList.remove('hidden');
+                    document.getElementById('sendPhoneCodeBtn').textContent = 'ПОДТВЕРДИТЬ КОД';
+                    
+                    let timeLeft = 60;
+                    const timerDiv = document.getElementById('codeTimer');
+                    timerInterval = setInterval(() => {
+                        if (timeLeft <= 0) {
+                            clearInterval(timerInterval);
+                            timerDiv.textContent = '';
+                        } else {
+                            timerDiv.textContent = `Код действителен еще ${timeLeft} сек`;
+                            timeLeft--;
+                        }
+                    }, 1000);
+                    
+                    showNotification('Код отправлен!');
+                    
+                    document.getElementById('sendPhoneCodeBtn').onclick = async () => {
+                        const code = document.getElementById('loginPhoneCode').value.trim();
+                        if (!code) {
+                            showNotification('Введите код', 'error');
+                            return;
+                        }
+                        
+                        try {
+                            const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+                            const result = await auth.signInWithCredential(credential);
+                            const username = '@' + result.user.uid.slice(0, 12);
+                            
+                            if (!App.users[username]) {
+                                App.users[username] = {
+                                    password: '',
+                                    avatar: null,
+                                    banner: null,
+                                    stars: 0,
+                                    gifts: [],
+                                    nfts: [],
+                                    bio: '',
+                                    verified: false,
+                                    status: null,
+                                    age: 14,
+                                    twoFA: false,
+                                    lastSeen: Date.now(),
+                                    chatWallpaper: '',
+                                    phoneNumber: result.user.phoneNumber
+                                };
+                                saveToFirebase();
+                            }
+                            
+                            App.currentUser = username;
+                            localStorage.setItem('yolk_current_user', username);
+                            App.users[username].lastSeen = Date.now();
+                            saveToFirebase();
+                            document.getElementById('phoneLoginModal').remove();
+                            if (timerInterval) clearInterval(timerInterval);
+                            render();
+                            showNotification(`✅ Добро пожаловать, ${username}!`);
+                        } catch (error) {
+                            console.error('Ошибка:', error);
+                            showNotification('Неверный код', 'error');
+                        }
+                    };
+                } catch (error) {
+                    console.error('Ошибка отправки:', error);
+                    showNotification('Ошибка: ' + error.message, 'error');
+                }
+            });
+            
+            document.getElementById('closePhoneLoginBtn').addEventListener('click', () => {
+                if (timerInterval) clearInterval(timerInterval);
+                document.getElementById('phoneLoginModal').remove();
             });
         }
 
@@ -1271,20 +1538,169 @@
 
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); } }
-        function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
-        function attachAuthEvents() { const loginForm = document.getElementById('loginForm'); const regForm = document.getElementById('registerForm'); const errorDiv = document.getElementById('authError'); document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; }); document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); document.getElementById('loginBtn')?.addEventListener('click', () => { let username = document.getElementById('loginUsername').value.trim().toLowerCase(); const pass = document.getElementById('loginPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } const clean = '@' + username; if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; } const user = App.users[clean]; function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); } if (user.twoFA) { send2FACode(clean); const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); document.getElementById('verify2FABtn').addEventListener('click', () => { const inputCode = document.getElementById('twoFactorCode').value.trim(); if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } }); document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); }); document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); } else { loginSuccess(); } }); document.getElementById('registerBtn')?.addEventListener('click', () => { let username = document.getElementById('regUsername').value.trim().toLowerCase(); const pass = document.getElementById('regPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } const clean = '@' + username; if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; database.ref('users/' + clean).set(newUser).then(() => { App.users[clean] = newUser; App.currentUser = clean; App.savedMessages[clean] = []; saveSavedMessages(); localStorage.setItem('yolk_current_user', clean); saveToFirebase(); setupUserListener(clean); render(); showNotification('✅ Аккаунт создан!'); }).catch((err) => { console.error('❌ Ошибка сохранения пользователя:', err); errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); }); }
+        function renderAuth() { 
+            return `
+                <div class="auth-container">
+                    <div class="auth-box">
+                        <h2>Yolkapp</h2>
+                        <div id="authForms">
+                            <div id="loginForm">
+                                <div class="input-group">
+                                    <label>ЮЗЕРНЕЙМ</label>
+                                    <input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов">
+                                </div>
+                                <div class="input-group">
+                                    <label>ПАРОЛЬ</label>
+                                    <input id="loginPassword" type="password" placeholder="только англ буквы и цифры">
+                                </div>
+                                <button class="btn" id="loginBtn">ВОЙТИ</button>
+                                <button class="btn btn-secondary" id="phoneLoginBtn" style="margin-top: 8px;">📱 ВОЙТИ ПО ТЕЛЕФОНУ</button>
+                            </div>
+                            <div class="auth-switch">
+                                <button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button>
+                            </div>
+                        </div>
+                        <div id="registerForm" style="display: none;">
+                            <div class="input-group">
+                                <label>ЮЗЕРНЕЙМ</label>
+                                <input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов">
+                            </div>
+                            <div class="input-group">
+                                <label>ПАРОЛЬ</label>
+                                <input id="regPassword" type="password" placeholder="только англ буквы и цифры">
+                            </div>
+                            <button class="btn" id="registerBtn">СОЗДАТЬ</button>
+                            <div class="auth-switch">
+                                <button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button>
+                            </div>
+                        </div>
+                        <div id="authError" class="auth-error"></div>
+                    </div>
+                </div>
+            `; 
+        }
+        function attachAuthEvents() { 
+            const loginForm = document.getElementById('loginForm'); 
+            const regForm = document.getElementById('registerForm'); 
+            const errorDiv = document.getElementById('authError'); 
+            
+            document.getElementById('showRegisterBtn')?.addEventListener('click', () => { 
+                loginForm.style.display = 'none'; 
+                regForm.style.display = 'block'; 
+            }); 
+            document.getElementById('showLoginBtn')?.addEventListener('click', () => { 
+                regForm.style.display = 'none'; 
+                loginForm.style.display = 'block'; 
+            }); 
+            document.getElementById('phoneLoginBtn')?.addEventListener('click', () => {
+                loginWithPhone();
+            });
+            document.getElementById('loginBtn')?.addEventListener('click', () => { 
+                let username = document.getElementById('loginUsername').value.trim().toLowerCase(); 
+                const pass = document.getElementById('loginPassword').value.trim(); 
+                if (!isValidUsername(username)) { 
+                    errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; 
+                    return; 
+                } 
+                const clean = '@' + username; 
+                if (!App.users[clean] || App.users[clean].password !== pass) { 
+                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; 
+                    return; 
+                } 
+                const user = App.users[clean]; 
+                function loginSuccess() { 
+                    App.currentUser = clean; 
+                    localStorage.setItem('yolk_current_user', clean); 
+                    loadSavedMessages(); 
+                    loadTapBalances(); 
+                    loadYolkChatMessages(); 
+                    loadStreaks(); 
+                    loadPrivacySettings(); 
+                    setupUserListener(clean); 
+                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
+                    App.lastSeenInterval = setInterval(() => { 
+                        updateLastSeen(clean); 
+                    }, 30000); 
+                    updateLastSeen(clean); 
+                    render(); 
+                } 
+                if (user.twoFA) { 
+                    send2FACode(clean); 
+                    const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; 
+                    document.body.insertAdjacentHTML('beforeend', modalHtml); 
+                    document.getElementById('verify2FABtn').addEventListener('click', () => { 
+                        const inputCode = document.getElementById('twoFactorCode').value.trim(); 
+                        if (!inputCode) { 
+                            document.getElementById('twoFactorError').textContent = 'Введите код'; 
+                            return; 
+                        } 
+                        if (verify2FACode(clean, inputCode)) { 
+                            document.getElementById('twoFactorScreen').remove(); 
+                            loginSuccess(); 
+                        } else { 
+                            document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; 
+                        } 
+                    }); 
+                    document.getElementById('resend2FACode').addEventListener('click', () => { 
+                        send2FACode(clean); 
+                        showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); 
+                    }); 
+                    document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { 
+                        if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); 
+                    }); 
+                } else { 
+                    loginSuccess(); 
+                } 
+            }); 
+            document.getElementById('registerBtn')?.addEventListener('click', () => { 
+                let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
+                const pass = document.getElementById('regPassword').value.trim(); 
+                if (!isValidUsername(username)) { 
+                    errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; 
+                    return; 
+                } 
+                if (!pass) { 
+                    errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; 
+                    return; 
+                } 
+                const clean = '@' + username; 
+                if (App.users[clean] || App.systemBots.includes(clean)) { 
+                    errorDiv.innerText = '! УЖЕ ЕСТЬ'; 
+                    return; 
+                } 
+                const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; 
+                database.ref('users/' + clean).set(newUser).then(() => { 
+                    App.users[clean] = newUser; 
+                    App.currentUser = clean; 
+                    App.savedMessages[clean] = []; 
+                    saveSavedMessages(); 
+                    localStorage.setItem('yolk_current_user', clean); 
+                    saveToFirebase(); 
+                    setupUserListener(clean); 
+                    render(); 
+                    showNotification('✅ Аккаунт создан!'); 
+                }).catch((err) => { 
+                    console.error('❌ Ошибка сохранения пользователя:', err); 
+                    errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; 
+                    setTimeout(() => { 
+                        errorDiv.innerText = ''; 
+                    }, 3000); 
+                }); 
+            }); 
+        }
         function renderMain() { const user = App.currentUser; const userData = App.users[user] || {}; const chatPartner = App.activeChat || 'saved'; const isChannel = App.channels[chatPartner] ? true : false; const isYolk = chatPartner === 'yolk'; const isBotChat = App.systemBots.includes(chatPartner); const canWrite = canUserMessage(user, chatPartner) || chatPartner === 'saved' || isChannel || isBotChat || chatPartner === 'yolk';
         const isSubscribed = isChannel && App.channels[chatPartner]?.subscribers?.includes(user);
         const isOwner = isChannel && App.channels[chatPartner]?.owner === user;
         const showInputArea = !isYolk && canWrite && !isChannel;
         const showChannelInput = isChannel && isOwner;
-        return `<div class="main-container"><div class="sidebar ${App.sidebarOpen ? 'open' : ''}"><div class="user-profile" id="openProfileBtn"><div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div><div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div></div><div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div><div class="chats-list" id="chatsList"></div></div><div class="chat-area"><div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${isChannel ? formatUserNameWithStatus(chatPartner) : formatUserNameWithStatus(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner))}${!isChannel && App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div><div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat && !isChannel ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel ? `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !App.systemBots.includes(chatPartner) && canWrite ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div></div><div class="messages-container" id="messageList"></div>${!isYolk ? (showInputArea ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (isChannel ? (isOwner ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center; color:#666;"><small>Только владелец канала может писать</small></div>`) : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">🔒 ЭТОМУ ЧЕЛОВЕКУ НЕЛЬЗЯ ПИСАТЬ</div></div>`)) : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}</div></div>`; }
+        const subscribersCount = isChannel ? App.channels[chatPartner]?.subscribers?.length || 0 : 0;
+        return `<div class="main-container"><div class="sidebar ${App.sidebarOpen ? 'open' : ''}"><div class="user-profile" id="openProfileBtn"><div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div><div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div></div><div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div><div class="chats-list" id="chatsList"></div></div><div class="chat-area"><div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${isChannel ? formatUserNameWithStatus(chatPartner) : formatUserNameWithStatus(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner))}${!isChannel && App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong>${isChannel ? `<div class="chat-user-status" style="color:#666;">👥 ${subscribersCount} подписчиков</div>` : ''}</div><div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat && !isChannel ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel ? `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !App.systemBots.includes(chatPartner) && canWrite ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div></div><div class="messages-container" id="messageList"></div>${!isYolk ? (showInputArea ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (isChannel ? (isOwner ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center; color:#666;"><small>Только владелец канала может писать</small></div>`) : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">🔒 ЭТОМУ ЧЕЛОВЕКУ НЕЛЬЗЯ ПИСАТЬ</div></div>`)) : '<div class="input-area" style="justify-content:center; color:#666;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}</div></div>`; }
         function attachMainEvents() { const backBtn = document.getElementById('backBtn'); if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); }); const openProfileBtn = document.getElementById('openProfileBtn'); if (openProfileBtn) openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser)); const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.systemBots.includes(App.activeChat) && !App.channels[App.activeChat]) { openProfileModal(App.activeChat); } else if (App.channels[App.activeChat]) { openChannelModal(App.activeChat); } }); const giftBtn = document.getElementById('giftBtn'); if (giftBtn) giftBtn.addEventListener('click', openGiftMenu); const subscribeBtn = document.getElementById('subscribeBtn'); if (subscribeBtn) subscribeBtn.addEventListener('click', toggleSubscribe); const sendBtn = document.getElementById('sendMsgBtn'); if (sendBtn) sendBtn.addEventListener('click', sendMessage); const fileUpload = document.getElementById('fileUpload'); const videoUpload = document.getElementById('videoUpload'); if (fileUpload) fileUpload.addEventListener('change', handleFileSelect); if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect); const addUserBtn = document.getElementById('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch); const messageText = document.getElementById('messageText'); if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }); }
         function sendMessage() { const textInput = document.getElementById('messageText'); const text = textInput ? textInput.value.trim() : ''; if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Введите сообщение или выберите файл', 'error'); return; } const from = App.currentUser; const to = App.activeChat; if (!to || to === 'yolk') { showNotification('Сюда нельзя писать', 'error'); return; } if (!canUserMessage(from, to) && !App.channels[to]) { showNotification('Вы не можете писать этому пользователю', 'error'); return; } if (App.channels[to] && App.channels[to].owner !== from) { showNotification('Только владелец канала может писать', 'error'); return; } try { let mediaData = null; let isVideoMsg = false; if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } else if (App.tempPhoto) { mediaData = App.tempPhoto; } const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg }; if (to === 'saved') { if (!App.savedMessages[from]) App.savedMessages[from] = []; App.savedMessages[from].push(message); saveSavedMessages(); showNotification('Сохранено в избранное'); renderMessages('saved'); playHappySound(); } else if (App.channels[to]) { if (!App.channels[to].messages) App.channels[to].messages = []; App.channels[to].messages.push(message); saveToFirebase(); renderMessages(to); playHappySound(); } else if (App.systemBots.includes(to)) { let response; if (to === '@game_bot') response = handleGameBot({ text: text }, from); else if (to === '@tap_bot') response = handleTapBot({ text: text }, from); else if (to === '@random_bot') response = handleRandomBot({ text: text }, from); if (response) { const botMessage = { from: to, text: response.text, time: Date.now(), buttons: response.buttons }; const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(botMessage); saveToFirebase(); renderMessages(to); playHappySound(); } } else { const chatId = [from, to].sort().join('_'); if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; App.chats[chatId].messages.push(message); saveToFirebase(); renderMessages(to); playHappySound(); updateStreak(to); } if (textInput) textInput.value = ''; App.tempPhoto = null; App.tempVideo = null; const fileInput = document.getElementById('fileUpload'); const videoInput = document.getElementById('videoUpload'); if (fileInput) fileInput.value = ''; if (videoInput) videoInput.value = ''; updateChatList(); } catch (error) { console.error('Ошибка отправки:', error); showNotification('Ошибка отправки', 'error'); } }
         function renderMessages(chatPartner) { const messagesContainer = document.getElementById('messageList'); if (!messagesContainer) return; let messages = []; if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || []; else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || []; else if (App.channels[chatPartner]) messages = App.channels[chatPartner].messages || []; else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; } let html = ''; if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); }); else { if (chatPartner === '@game_bot') { const botMsg = handleGameBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@game_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); } else if (chatPartner === '@tap_bot') { const botMsg = handleTapBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@tap_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); } else if (chatPartner === '@random_bot') { const botMsg = handleRandomBot({ text: '' }, App.currentUser); html = renderMessage({ from: '@random_bot', text: botMsg.text, time: Date.now(), buttons: botMsg.buttons }, 0, App.currentUser, chatPartner); } else if (chatPartner === 'yolk') html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>'; else html = '<div style="text-align:center; color:#666; margin-top:20px; padding:20px;">Нет сообщений</div>'; } messagesContainer.innerHTML = html; setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100); if (!App.channels[chatPartner]) updateChatHeaderStatus(chatPartner); }
         function renderMessage(msg, idx, currentUser, chatPartner) { const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser); const isChannel = App.channels[chatPartner] ? true : false; const isGift = msg.gift ? true : false; const isBotMsg = App.systemBots.includes(msg.from); const isSystem = msg.from === 'SYSTEM'; const fromUserStatusClass = getUserStatus(msg.from)?.class || ''; let canDelete = false; if (isChannel) canDelete = App.channels[chatPartner]?.owner === currentUser; else if (chatPartner === 'saved') canDelete = true; else if (chatPartner === 'yolk') canDelete = false; else if (App.systemBots.includes(chatPartner)) canDelete = false; else canDelete = isMe; let mediaHtml = ''; if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } const likesCount = msg.likes ? Object.keys(msg.likes).length : 0; const userLiked = msg.likes && msg.likes[currentUser]; let messageText = msg.text || ''; if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2); let buttonsHtml = ''; if (isBotMsg && msg.buttons && msg.buttons.length > 0) buttonsHtml = `<div class="inline-buttons">${msg.buttons.map(btn => `<button class="inline-btn" onclick="window.sendBotCommand('${chatPartner}', '${btn}')">${btn}</button>`).join('')}</div>`; const displayName = fromUserStatusClass ? `<span class="${fromUserStatusClass}">${msg.from}</span>` : msg.from; const messageClass = isMe ? 'me' : ''; return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isBotMsg ? 'bot-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}${buttonsHtml}<div class="time">${new Date(msg.time).toLocaleTimeString().slice(0, 5)}</div><div style="display: flex; justify-content: space-between; margin-top: 4px;">${(isChannel) ? `<button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">❤️ <span>${likesCount}</span></button>` : '<div></div>'}${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`; }
         function updateChatList() { const chatsContainer = document.getElementById('chatsList'); if (!chatsContainer || !App.currentUser) return; let chatsList = getChatListForUser(App.currentUser); const saved = chatsList.includes('saved') ? ['saved'] : []; const yolk = chatsList.includes('yolk') ? ['yolk'] : []; const other = chatsList.filter(c => c !== 'saved' && c !== 'yolk'); const orderedList = [...saved, ...yolk, ...other]; let html = ''; orderedList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); }); chatsContainer.innerHTML = html; document.querySelectorAll('.chat-item').forEach(el => { el.addEventListener('click', (e) => { if (e.target.closest('.delete-chat-icon')) return; const chatId = el.dataset.chat; if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; } App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId); if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); render(); }); }); }
-        function renderChatItem(u, active, currentUser) { let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u); let avatarHtml = '<div class="chat-avatar">📁</div>'; if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🥚</div>'; else if (u !== 'saved') { if (App.channels[u]) { const channelAvatar = App.channels[u]?.avatar; avatarHtml = channelAvatar ? `<div class="chat-avatar"><img src="${channelAvatar}" class="channel-avatar-small"></div>` : '<div class="chat-avatar">📢</div>'; } else if (App.systemBots.includes(u)) { if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>'; else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>'; else if (u === '@random_bot') avatarHtml = '<div class="chat-avatar">🎲</div>'; else avatarHtml = '<div class="chat-avatar">🤖</div>'; } else { const avatarUrl = App.users[u]?.avatar; avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; } } const userData = App.users[u] || {}; const displayName = formatUserNameWithStatus(name); const streak = getStreak(u); const streakHtml = streak > 0 && !App.channels[u] ? `<span class="streak-badge" style="font-size:10px; padding:1px 4px; margin-left:5px;">🔥${streak}</span>` : ''; const subscribersHtml = App.channels[u] && App.channels[u].owner !== currentUser ? `<div style="font-size:10px; color:#666;">👥 ${App.channels[u].subscribers?.length || 0}</div>` : (userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''); return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${!App.channels[u] && userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${subscribersHtml}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`; }
+        function renderChatItem(u, active, currentUser) { let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u); let avatarHtml = '<div class="chat-avatar">📁</div>'; if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🥚</div>'; else if (u !== 'saved') { if (App.channels[u]) { const channelAvatar = App.channels[u]?.avatar; avatarHtml = channelAvatar ? `<div class="chat-avatar"><img src="${channelAvatar}" class="channel-avatar-small"></div>` : '<div class="chat-avatar">📢</div>'; } else if (App.systemBots.includes(u)) { if (u === '@game_bot') avatarHtml = '<div class="chat-avatar">🎰</div>'; else if (u === '@tap_bot') avatarHtml = '<div class="chat-avatar">👆</div>'; else if (u === '@random_bot') avatarHtml = '<div class="chat-avatar">🎲</div>'; else avatarHtml = '<div class="chat-avatar">🤖</div>'; } else { const avatarUrl = App.users[u]?.avatar; avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; } } const userData = App.users[u] || {}; const displayName = formatUserNameWithStatus(name); const streak = getStreak(u); const streakHtml = streak > 0 && !App.channels[u] ? `<span class="streak-badge" style="font-size:10px; padding:1px 4px; margin-left:5px;">🔥${streak}</span>` : ''; const subscribersHtml = App.channels[u] ? `<div style="font-size:10px; color:#666;">👥 ${App.channels[u].subscribers?.length || 0}</div>` : (userData.age ? `<div style="font-size:10px; color:#666;">${userData.age} лет</div>` : ''); return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${!App.channels[u] && userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${subscribersHtml}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`; }
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(channel => { if (App.channels[channel].subscribers?.includes(user)) set.add(channel); }); return Array.from(set); }
         function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } if (chatPartner === '@game_bot' || chatPartner === '@tap_bot' || chatPartner === '@random_bot') { renderMessages(chatPartner); return; } if (App.channels[chatPartner]) { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); setupRealtimeListener(chatId, chatPartner); renderMessages(chatPartner); setupUserListener(chatPartner); updateChatHeaderStatus(chatPartner); }
         function setupRealtimeListener(chatId, chatPartner) { const chatRef = database.ref('chats/' + chatId); chatRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { if (!App.chats[chatId]) App.chats[chatId] = data; else App.chats[chatId].messages = data.messages || []; if (App.activeChat === chatPartner) { renderMessages(chatPartner); } } }); }
