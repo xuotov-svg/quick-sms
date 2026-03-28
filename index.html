@@ -435,70 +435,274 @@
             }
         }
 
-        // ========== СИСТЕМА STREAK ==========
-        function updateStreak(chatPartner) {
-            const user = App.currentUser;
-            if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || App.systemBots.includes(chatPartner) || App.channels[chatPartner]) return 0;
-            
-            const chatId = [user, chatPartner].sort().join('_');
-            const today = new Date().toDateString();
-            
-            if (!App.streaks[chatId]) {
-                App.streaks[chatId] = { streak: 0, lastMessageDate: null, users: {} };
-            }
-            if (!App.streaks[chatId].users[user]) App.streaks[chatId].users[user] = { lastMessageDate: null };
-            if (!App.streaks[chatId].users[chatPartner]) App.streaks[chatId].users[chatPartner] = { lastMessageDate: null };
-            
-            App.streaks[chatId].users[user].lastMessageDate = today;
-            
-            const user1Date = App.streaks[chatId].users[user].lastMessageDate;
-            const user2Date = App.streaks[chatId].users[chatPartner].lastMessageDate;
-            
-            if (user1Date === today && user2Date === today) {
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toDateString();
-                
-                if (App.streaks[chatId].lastMessageDate === yesterdayStr) {
-                    App.streaks[chatId].streak++;
-                } else if (App.streaks[chatId].lastMessageDate !== today) {
-                    App.streaks[chatId].streak = 1;
-                }
-                App.streaks[chatId].lastMessageDate = today;
-            } else {
-                const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 1);
-                const yesterdayStr = yesterday.toDateString();
-                if (App.streaks[chatId].lastMessageDate !== today && App.streaks[chatId].lastMessageDate !== yesterdayStr) {
-                    App.streaks[chatId].streak = 0;
-                    App.streaks[chatId].lastMessageDate = null;
-                }
-            }
-            
-            saveStreaks();
-            return App.streaks[chatId].streak;
+        // ========== ИСПРАВЛЕННАЯ СИСТЕМА STREAK ==========
+function updateStreak(chatPartner) {
+    const user = App.currentUser;
+    if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || 
+        App.systemBots.includes(chatPartner) || App.channels[chatPartner]) return 0;
+    
+    const chatId = [user, chatPartner].sort().join('_');
+    const today = new Date().toDateString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toDateString();
+    
+    // Инициализация структуры streak для чата
+    if (!App.streaks[chatId]) {
+        App.streaks[chatId] = {
+            streak: 0,
+            lastMessageDate: null,
+            lastUpdateDate: null,  // Дата последнего обновления streak
+            users: {}
+        };
+    }
+    
+    // Инициализация данных для каждого пользователя
+    [user, chatPartner].forEach(u => {
+        if (!App.streaks[chatId].users[u]) {
+            App.streaks[chatId].users[u] = {
+                lastMessageDate: null,
+                streak: 0
+            };
+        }
+    });
+    
+    const userData = App.streaks[chatId].users[user];
+    const partnerData = App.streaks[chatId].users[chatPartner];
+    
+    // Запоминаем, что текущий пользователь написал сегодня
+    userData.lastMessageDate = today;
+    
+    // Проверяем, писал ли собеседник сегодня
+    const partnerWroteToday = partnerData.lastMessageDate === today;
+    
+    // Если оба написали сегодня
+    if (partnerWroteToday) {
+        // Проверяем, был ли вчера последний общий день
+        const lastCommonDay = App.streaks[chatId].lastMessageDate;
+        
+        if (lastCommonDay === yesterdayStr) {
+            // Если вчера был общий день, увеличиваем счетчик
+            App.streaks[chatId].streak++;
+            userData.streak = App.streaks[chatId].streak;
+            partnerData.streak = App.streaks[chatId].streak;
+        } else if (lastCommonDay !== today) {
+            // Если не было общего дня вчера, начинаем новую серию
+            App.streaks[chatId].streak = 1;
+            userData.streak = 1;
+            partnerData.streak = 1;
+        } else {
+            // Если уже сегодня обновляли, синхронизируем значения
+            userData.streak = App.streaks[chatId].streak;
+            partnerData.streak = App.streaks[chatId].streak;
         }
         
-        function getStreak(chatPartner) {
-            const user = App.currentUser;
-            if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || App.systemBots.includes(chatPartner) || App.channels[chatPartner]) return 0;
-            const chatId = [user, chatPartner].sort().join('_');
-            const streak = App.streaks[chatId]?.streak || 0;
-            return streak > 0 ? streak : 0;
-        }
-        
-        function saveStreaks() {
-            localStorage.setItem('yolk_streaks', JSON.stringify(App.streaks));
-            if (App.dataLoaded) database.ref('streaks').set(App.streaks).catch(e => console.error(e));
-        }
-        
-        function loadStreaks() {
-            const saved = localStorage.getItem('yolk_streaks');
-            if (saved) {
-                try { App.streaks = JSON.parse(saved); } catch(e) { App.streaks = {}; }
-            } else { App.streaks = {}; }
-        }
+        // Обновляем дату последнего общего дня
+        App.streaks[chatId].lastMessageDate = today;
+        App.streaks[chatId].lastUpdateDate = today;
+    } else {
+        // Если сегодня писал только один пользователь, не обновляем streak
+        // Но синхронизируем значения, если они различаются
+        const currentStreak = App.streaks[chatId].streak;
+        userData.streak = currentStreak;
+        partnerData.streak = currentStreak;
+    }
+    
+    // Проверка на следующий день - сброс, если не писали оба
+    const lastUpdate = App.streaks[chatId].lastUpdateDate;
+    if (lastUpdate && lastUpdate !== today && lastUpdate !== yesterdayStr) {
+        // Если прошло больше дня без общих сообщений, сбрасываем streak
+        App.streaks[chatId].streak = 0;
+        userData.streak = 0;
+        partnerData.streak = 0;
+        App.streaks[chatId].lastMessageDate = null;
+    }
+    
+    // Сохраняем изменения
+    saveStreaks();
+    
+    // Возвращаем текущий streak для отображения
+    return App.streaks[chatId].streak;
+}
 
+// Функция для получения streak (синхронизированного)
+function getStreak(chatPartner) {
+    const user = App.currentUser;
+    if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || 
+        App.systemBots.includes(chatPartner) || App.channels[chatPartner]) return 0;
+    
+    const chatId = [user, chatPartner].sort().join('_');
+    const today = new Date().toDateString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toDateString();
+    
+    if (!App.streaks[chatId]) return 0;
+    
+    const streakData = App.streaks[chatId];
+    const lastUpdate = streakData.lastUpdateDate;
+    
+    // Проверяем, не истекла ли серия
+    if (lastUpdate && lastUpdate !== today && lastUpdate !== yesterdayStr) {
+        // Если последнее обновление было больше дня назад, серия прервана
+        if (streakData.streak > 0) {
+            streakData.streak = 0;
+            if (streakData.users[user]) streakData.users[user].streak = 0;
+            if (streakData.users[chatPartner]) streakData.users[chatPartner].streak = 0;
+            saveStreaks();
+        }
+        return 0;
+    }
+    
+    // Возвращаем синхронизированное значение
+    const userStreak = streakData.users[user]?.streak || 0;
+    const partnerStreak = streakData.users[chatPartner]?.streak || 0;
+    
+    // Если значения различаются, синхронизируем
+    if (userStreak !== partnerStreak && streakData.streak > 0) {
+        const maxStreak = Math.max(userStreak, partnerStreak, streakData.streak);
+        streakData.streak = maxStreak;
+        streakData.users[user].streak = maxStreak;
+        streakData.users[chatPartner].streak = maxStreak;
+        saveStreaks();
+        return maxStreak;
+    }
+    
+    return streakData.streak;
+}
+
+// Функция для синхронизации streak между пользователями при загрузке
+function syncStreak(chatPartner) {
+    const user = App.currentUser;
+    if (!user || !chatPartner) return;
+    
+    const chatId = [user, chatPartner].sort().join('_');
+    if (!App.streaks[chatId]) return;
+    
+    const streakData = App.streaks[chatId];
+    const userStreak = streakData.users[user]?.streak || 0;
+    const partnerStreak = streakData.users[chatPartner]?.streak || 0;
+    const commonStreak = streakData.streak || 0;
+    
+    // Синхронизируем все три значения
+    const maxStreak = Math.max(userStreak, partnerStreak, commonStreak);
+    streakData.streak = maxStreak;
+    if (streakData.users[user]) streakData.users[user].streak = maxStreak;
+    if (streakData.users[chatPartner]) streakData.users[chatPartner].streak = maxStreak;
+    
+    saveStreaks();
+}
+
+// Обновляем функцию renderMessages, чтобы синхронизировать streak при отображении
+// Добавляем вызов syncStreak при загрузке чата
+function loadMessages(chatPartner) {
+    if (chatPartner === 'saved' || chatPartner === 'yolk') {
+        renderMessages(chatPartner);
+        return;
+    }
+    if (chatPartner === '@game_bot' || chatPartner === '@tap_bot' || chatPartner === '@random_bot') {
+        renderMessages(chatPartner);
+        return;
+    }
+    if (App.channels[chatPartner]) {
+        renderMessages(chatPartner);
+        return;
+    }
+    
+    // Синхронизируем streak при загрузке чата
+    syncStreak(chatPartner);
+    
+    const chatId = [App.currentUser, chatPartner].sort().join('_');
+    setupRealtimeListener(chatId, chatPartner);
+    renderMessages(chatPartner);
+    setupUserListener(chatPartner);
+    updateChatHeaderStatus(chatPartner);
+}
+
+// Обновляем функцию getStreakForDisplay для отображения в чате
+function getStreakForDisplay(chatPartner) {
+    const streak = getStreak(chatPartner);
+    return streak > 0 ? streak : 0;
+}
+
+// Обновляем функцию renderChatItem для отображения синхронизированного streak
+// В renderChatItem замените получение streak на:
+// const streak = getStreakForDisplay(u);
+
+// Обновляем функцию renderMessage для отображения streak в хедере чата
+function updateChatHeaderStatus(username) {
+    if (App.channels[username]) return;
+    
+    const headerInfo = document.querySelector('.chat-header-info');
+    if (!headerInfo) return;
+    
+    const existingStatus = headerInfo.querySelector('.chat-user-status');
+    if (existingStatus) existingStatus.remove();
+    
+    const existingStreak = headerInfo.querySelector('.streak-badge');
+    if (existingStreak) existingStreak.remove();
+    
+    const existingNameStrong = headerInfo.querySelector('strong');
+    if (existingNameStrong) {
+        existingNameStrong.innerHTML = formatUserNameWithStatus(username) + 
+            (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
+    }
+    
+    // Получаем синхронизированный streak
+    const streak = getStreakForDisplay(username);
+    if (streak > 0) {
+        const streakDiv = document.createElement('span');
+        streakDiv.className = 'streak-badge';
+        streakDiv.innerHTML = `🔥 ${streak}`;
+        existingNameStrong?.appendChild(streakDiv);
+    }
+    
+    if (username === 'saved' || username === 'yolk') return;
+    
+    const isOnline = isUserOnline(username);
+    const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username);
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'chat-user-status' + (isOnline ? '' : ' offline');
+    statusDiv.textContent = isOnline ? 'в сети' : `был(а) ${lastSeenText}`;
+    headerInfo.appendChild(statusDiv);
+}
+
+// Обновляем функцию sendMessage для правильного обновления streak
+// В конце sendMessage после отправки сообщения вызываем:
+// if (to !== 'saved' && to !== 'yolk' && !App.systemBots.includes(to) && !App.channels[to]) {
+//     updateStreak(to);
+// }
+
+// Также обновляем функцию saveStreaks для сохранения в Firebase
+function saveStreaks() {
+    localStorage.setItem('yolk_streaks', JSON.stringify(App.streaks));
+    if (App.dataLoaded) {
+        database.ref('streaks').set(App.streaks).catch(e => console.error(e));
+    }
+}
+
+// Обновляем функцию loadStreaks для загрузки из Firebase
+function loadStreaks() {
+    const saved = localStorage.getItem('yolk_streaks');
+    if (saved) {
+        try {
+            App.streaks = JSON.parse(saved);
+            // Синхронизируем все чаты при загрузке
+            if (App.currentUser) {
+                const chats = getChatListForUser(App.currentUser);
+                chats.forEach(chat => {
+                    if (chat !== 'saved' && chat !== 'yolk' && !App.systemBots.includes(chat) && !App.channels[chat]) {
+                        syncStreak(chat);
+                    }
+                });
+            }
+        } catch(e) {
+            App.streaks = {};
+        }
+    } else {
+        App.streaks = {};
+    }
+}
         // ========== АДМИН-ПАНЕЛЬ ==========
         function openAdminPanel() {
             const usersList = Object.keys(App.users).filter(u => !App.systemBots.includes(u));
