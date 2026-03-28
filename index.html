@@ -435,6 +435,155 @@
             }
         }
 
+        // ========== СИСТЕМА ПЕРЕВОДА СООБЩЕНИЙ ==========
+
+// Функция определения языка (простая)
+function detectLanguage(text) {
+    const cyrillicPattern = /[а-яё]/i;
+    const latinPattern = /[a-z]/i;
+    
+    const cyrillicCount = (text.match(cyrillicPattern) || []).length;
+    const latinCount = (text.match(latinPattern) || []).length;
+    
+    if (cyrillicCount > latinCount) return 'ru';
+    if (latinCount > cyrillicCount) return 'en';
+    return 'unknown';
+}
+
+// Функция перевода через бесплатный API (LibreTranslate)
+async function translateText(text, targetLang = 'ru') {
+    if (!text || text.length === 0) return text;
+    
+    const sourceLang = detectLanguage(text);
+    
+    // Если уже на русском, не переводим
+    if (sourceLang === 'ru' && targetLang === 'ru') {
+        return { translated: text, from: 'ru', to: 'ru', alreadyRussian: true };
+    }
+    
+    try {
+        // Вариант 1: Бесплатный API LibreTranslate (без ключа, но с ограничениями)
+        const response = await fetch('https://translate.astian.org/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                q: text,
+                source: sourceLang === 'unknown' ? 'auto' : sourceLang,
+                target: targetLang,
+                format: 'text'
+            })
+        });
+        
+        if (!response.ok) throw new Error('Translation failed');
+        
+        const data = await response.json();
+        return {
+            translated: data.translatedText,
+            from: sourceLang,
+            to: targetLang,
+            original: text
+        };
+    } catch (error) {
+        console.error('Translation error:', error);
+        
+        // Вариант 2: Fallback - MyMemory API (если первый не работает)
+        try {
+            const fallbackResponse = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`);
+            const fallbackData = await fallbackResponse.json();
+            return {
+                translated: fallbackData.responseData.translatedText,
+                from: sourceLang,
+                to: targetLang,
+                original: text
+            };
+        } catch (fallbackError) {
+            console.error('Fallback translation error:', fallbackError);
+            return { translated: text, from: sourceLang, to: targetLang, error: true };
+        }
+    }
+}
+
+// Функция для отображения перевода под сообщением
+function addTranslateButton(messageId, text, messageElement) {
+    const translateBtn = document.createElement('button');
+    translateBtn.className = 'translate-btn';
+    translateBtn.innerHTML = '🌐 ПЕРЕВЕСТИ';
+    translateBtn.style.cssText = `
+        background: none;
+        border: 1px solid #000;
+        border-radius: 4px;
+        padding: 2px 8px;
+        font-size: 10px;
+        cursor: pointer;
+        margin-left: 8px;
+        color: #000;
+    `;
+    
+    let translationShown = false;
+    let translationElement = null;
+    
+    translateBtn.onclick = async () => {
+        if (translationShown && translationElement) {
+            translationElement.remove();
+            translationShown = false;
+            translateBtn.innerHTML = '🌐 ПЕРЕВЕСТИ';
+            return;
+        }
+        
+        translateBtn.innerHTML = '⏳ ПЕРЕВОД...';
+        translateBtn.disabled = true;
+        
+        const result = await translateText(text);
+        
+        translateBtn.innerHTML = '🌐 СКРЫТЬ';
+        translateBtn.disabled = false;
+        
+        translationElement = document.createElement('div');
+        translationElement.className = 'translation';
+        translationElement.style.cssText = `
+            margin-top: 8px;
+            padding: 6px 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #333;
+            border-left: 3px solid #d4af37;
+        `;
+        
+        if (result.error) {
+            translationElement.innerHTML = `❌ Ошибка перевода. Язык: ${result.from === 'ru' ? 'русский' : (result.from === 'en' ? 'английский' : 'неизвестный')}`;
+        } else if (result.alreadyRussian) {
+            translationElement.innerHTML = `📖 Сообщение уже на русском языке`;
+        } else {
+            translationElement.innerHTML = `
+                <strong>📝 Перевод с ${result.from === 'ru' ? 'русского' : (result.from === 'en' ? 'английского' : 'другого')}:</strong><br>
+                ${result.translated}
+                ${result.original !== result.translated ? `<small style="display:block; margin-top:4px; color:#666;">🔤 Оригинал: ${result.original.substring(0, 50)}${result.original.length > 50 ? '...' : ''}</small>` : ''}
+            `;
+        }
+        
+        const actionsDiv = messageElement.querySelector('.msg-actions') || messageElement;
+        actionsDiv.parentNode.insertBefore(translationElement, actionsDiv.nextSibling);
+        translationShown = true;
+    };
+    
+    // Добавляем кнопку в контейнер с действиями
+    const actionsDiv = messageElement.querySelector('.msg-actions');
+    if (actionsDiv) {
+        actionsDiv.appendChild(translateBtn);
+    } else {
+        const timeDiv = messageElement.querySelector('.time');
+        if (timeDiv) {
+            timeDiv.parentNode.insertBefore(translateBtn, timeDiv.nextSibling);
+        }
+    }
+}
+
+// Обновляем функцию renderMessage, добавляем кнопку перевода
+// Найдите в renderMessage строку с msg-actions и добавьте кнопку перевода
+
         // ========== ИСПРАВЛЕННАЯ СИСТЕМА STREAK ==========
 function updateStreak(chatPartner) {
     const user = App.currentUser;
