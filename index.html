@@ -849,7 +849,7 @@ function loadStreaks() {
                         </div>
                         <div class="profile-input-group">
                             <label>ВОЗРАСТ</label>
-                            <input type="number" id="settingsAge" min="14" max="99" value="${userData.age || 14}">
+                            <input type="number" id="settingsAge" min="5" max="99" value="${userData.age || 14}">
                         </div>
                         <div class="profile-input-group">
                             <label>АВАТАР</label>
@@ -885,7 +885,7 @@ function loadStreaks() {
                             </div>
                         </div>
                         <div class="profile-actions">
-                            <button class="profile-btn" id="saveSettingsBtn">💾 СОХРАНИТЬ</button>
+                            <button class="profile-btn" id="saveSettingsBtn">СОХРАНИТЬ</button>
                             <button class="profile-btn secondary" id="closeSettingsBtn">ОТМЕНА</button>
                         </div>
                     </div>
@@ -980,7 +980,7 @@ function loadStreaks() {
                 
                 if (newPassword) App.users[App.currentUser].password = newPassword;
                 if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
-                if (newAge && newAge >= 14 && newAge <= 99) App.users[App.currentUser].age = newAge;
+                if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                 if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
