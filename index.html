@@ -1618,7 +1618,7 @@
     
     // ИСПРАВЛЕНО: теперь у владельца канала тоже показываются подписчики
     const subscribersHtml = App.channels[u] ? 
-        `<div style="font-size:10px; color:#888;">👥 ${App.channels[u].subscribers?.length || 0} подписчиков</div>` : 
+        `<div style="font-size:10px; color:#888;">${App.channels[u].subscribers?.length || 0} 👥</div>` : 
         (userData.age ? `<div style="font-size:10px; color:#888;">${userData.age} лет</div>` : '');
     
     return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${!App.channels[u] && userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${subscribersHtml}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`; 
