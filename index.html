@@ -512,7 +512,7 @@
             font-size: 14px;
             line-height: 1.4;
             word-break: break-word;
-            color: #ffffff;  /* ← БЕЛЫЙ ТЕКСТ ПОСТА */
+            color: #ffffff;
         }
         .post-image {
             max-width: 100%;
@@ -2071,7 +2071,69 @@
         
         function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; sendMessage(true); }; reader.readAsDataURL(file); }
         
-        function addUserBySearch() { let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); if (!query) { showNotification('Введите имя пользователя', 'error'); return; } if (!query.startsWith('@')) query = '@' + query; if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } if (App.systemBots.includes(query)) { if (!canUserMessage(App.currentUser, query)) { showNotification('Вы не можете писать этому боту', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; } if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${query} создан`); }
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПОИСКА ПОЛЬЗОВАТЕЛЯ (с проверкой в Firebase)
+        function addUserBySearch() { 
+            let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
+            if (!query) { showNotification('Введите имя пользователя', 'error'); return; } 
+            if (!query.startsWith('@')) query = '@' + query; 
+            if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } 
+            if (App.systemBots.includes(query)) { 
+                if (!canUserMessage(App.currentUser, query)) { showNotification('Вы не можете писать этому боту', 'error'); return; } 
+                ensureChat(App.currentUser, query); 
+                App.activeChat = query; 
+                localStorage.setItem('yolk_active_chat', query); 
+                if (window.innerWidth < 768) App.sidebarOpen = false; 
+                document.getElementById('searchUserInput').value = ''; 
+                render(); 
+                return; 
+            } 
+            if (App.channels[query]) { 
+                if (!App.channels[query].subscribers) App.channels[query].subscribers = []; 
+                if (!App.channels[query].subscribers.includes(App.currentUser)) { 
+                    App.channels[query].subscribers.push(App.currentUser); 
+                    saveToFirebase(); 
+                } 
+                App.activeChat = query; 
+                localStorage.setItem('yolk_active_chat', query); 
+                if (window.innerWidth < 768) App.sidebarOpen = false; 
+                document.getElementById('searchUserInput').value = ''; 
+                render(); 
+                return; 
+            } 
+            // Если пользователь не найден локально, проверяем в Firebase
+            if (!App.users[query]) {
+                database.ref('users/' + query).get().then(snapshot => {
+                    if (snapshot.exists()) {
+                        if (!App.users[query]) {
+                            App.users[query] = snapshot.val();
+                        }
+                        if (!canUserMessage(App.currentUser, query)) {
+                            showNotification('Этот пользователь запретил писать первым', 'error');
+                            return;
+                        }
+                        ensureChat(App.currentUser, query);
+                        App.activeChat = query;
+                        localStorage.setItem('yolk_active_chat', query);
+                        if (window.innerWidth < 768) App.sidebarOpen = false;
+                        document.getElementById('searchUserInput').value = '';
+                        render();
+                        showNotification(`Чат с ${query} создан`);
+                    } else {
+                        showNotification('Пользователь не найден', 'error');
+                    }
+                }).catch(() => showNotification('Ошибка проверки', 'error'));
+                return;
+            }
+            if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } 
+            if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } 
+            ensureChat(App.currentUser, query); 
+            App.activeChat = query; 
+            localStorage.setItem('yolk_active_chat', query); 
+            if (window.innerWidth < 768) App.sidebarOpen = false; 
+            document.getElementById('searchUserInput').value = ''; 
+            render(); 
+            showNotification(`Чат с ${query} создан`); 
+        }
         
         function toggleSubscribe() { const user = App.currentUser; const channel = App.activeChat; if (!App.channels[channel]) return; if (!App.channels[channel].subscribers) App.channels[channel].subscribers = []; if (App.channels[channel].subscribers.includes(user)) { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user); showNotification('Вы отписались от канала'); } else { App.channels[channel].subscribers.push(user); showNotification('Вы подписались на канал'); } saveToFirebase(); render(); }
         
@@ -2092,7 +2154,27 @@
         
         function initBots() { App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, status: 'GOLD', age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; }); saveToFirebase(); }
         
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, posts: App.posts })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; if (cache.posts) App.posts = cache.posts; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, posts: App.posts })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); 
+            
+            // === РЕАЛТАЙМ-СЛУШАТЕЛЬ ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ===
+            database.ref('users').on('value', (snapshot) => {
+                const usersData = snapshot.val();
+                if (usersData) {
+                    let changed = false;
+                    for (let uid in usersData) {
+                        if (!App.users[uid] || JSON.stringify(App.users[uid]) !== JSON.stringify(usersData[uid])) {
+                            App.users[uid] = usersData[uid];
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        if (App.activeTab === 'chats') updateChatList();
+                        // также можно обновить ленту, если нужно
+                    }
+                }
+            });
+            
+        }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; if (cache.posts) App.posts = cache.posts; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); });
     </script>
