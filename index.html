@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Yolkapp · messenger</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * {
             margin: 0;
@@ -14,14 +13,13 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* ========== ТОЛЬКО ТЕМНАЯ ТЕМА ========== */
         :root {
             --bg-dark: #050505;
             --bg-card: #0a0a0a;
             --bg-panel: #0f0f0f;
             --text: #ffffff;
             --text-secondary: #cccccc;
-            --text-muted: #888888;
+            --text-muted: #aaaaaa;
             --border: #2a2a2a;
             --border-light: #1a1a1a;
             --accent: #d4af37;
@@ -52,18 +50,7 @@
         }
         
         /* Эффект стекла */
-        .chat-area, 
-        .sidebar, 
-        .chat-header, 
-        .input-area,
-        .auth-box,
-        .profile-modal,
-        .message,
-        .chat-item,
-        .user-profile,
-        .search-add,
-        .post-card,
-        .create-post-area {
+        .chat-area, .sidebar, .chat-header, .input-area, .auth-box, .profile-modal, .message, .chat-item, .user-profile, .search-add, .post-card, .create-post-area {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -109,7 +96,6 @@
         }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes goldGlow { 0% { text-shadow: 0 0 0 #ffd700; } 50% { text-shadow: 0 0 5px #ffd700; } 100% { text-shadow: 0 0 0 #ffd700; } }
         @keyframes rubyGlow { 0% { text-shadow: 0 0 0 #ff4444; } 50% { text-shadow: 0 0 5px #ff4444; } 100% { text-shadow: 0 0 0 #ff4444; } }
@@ -128,18 +114,18 @@
         .verified-icon { display: inline-block; width: 18px; height: 18px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#389df2"/><stop offset="100%" stop-color="#1a73e8"/></linearGradient></defs><path fill="url(%23grad)" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/><path fill="white" d="M9.5 12.5L11.5 14.5L15.5 9.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'); background-size: contain; background-repeat: no-repeat; vertical-align: middle; margin-left: 4px; }
         
         /* Кнопки с темно-серыми эмодзи */
-        .icon-btn, .send-btn, .file-label, .tiny-btn, .inline-btn, .profile-btn, .btn, .subscribe-btn, .unsubscribe-btn, .like-btn, .settings-icon, .delete-chat-icon, .tab, .gift-item, .nft-item, .msg-actions button, .back-btn, .create-nft-btn, .change-username-btn, .toggle-password, .resend-link, .post-like-btn, .post-comment-btn, .nav-tab {
+        .icon-btn, .send-btn, .file-label, .tiny-btn, .inline-btn, .profile-btn, .btn, .subscribe-btn, .unsubscribe-btn, .like-btn, .settings-icon, .delete-chat-icon, .tab, .gift-item, .nft-item, .msg-actions button, .back-btn, .create-nft-btn, .change-username-btn, .toggle-password, .resend-link, .post-like-btn, .post-comment-btn, .nav-tab, .feed-tab {
             filter: grayscale(0.6) brightness(0.7);
             transition: all 0.2s ease;
             color: #9ca3af;
         }
         
-        .icon-btn:hover, .send-btn:hover, .file-label:hover, .tiny-btn:hover, .inline-btn:hover, .profile-btn:hover, .btn:hover, .subscribe-btn:hover, .unsubscribe-btn:hover, .like-btn:hover, .settings-icon:hover, .delete-chat-icon:hover, .tab:hover, .gift-item:hover, .nft-item:hover, .msg-actions button:hover, .post-like-btn:hover, .post-comment-btn:hover, .nav-tab:hover {
+        .icon-btn:hover, .send-btn:hover, .file-label:hover, .tiny-btn:hover, .inline-btn:hover, .profile-btn:hover, .btn:hover, .subscribe-btn:hover, .unsubscribe-btn:hover, .like-btn:hover, .settings-icon:hover, .delete-chat-icon:hover, .tab:hover, .gift-item:hover, .nft-item:hover, .msg-actions button:hover, .post-like-btn:hover, .post-comment-btn:hover, .nav-tab:hover, .feed-tab:hover {
             filter: grayscale(0.3) brightness(0.85);
             color: #d4af37;
         }
         
-        .nav-tab.active {
+        .nav-tab.active, .feed-tab.active {
             filter: grayscale(0);
             color: #d4af37;
             background: rgba(212, 175, 55, 0.2);
@@ -159,6 +145,26 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            min-height: 200px;
+        }
+        
+        .feed-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 0 12px;
+        }
+        
+        .feed-tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            background: var(--border-light);
+            border: none;
         }
         
         .post-card {
@@ -167,6 +173,7 @@
             border-radius: 20px;
             padding: 14px;
             border: 1px solid var(--border);
+            position: relative;
         }
         
         .post-header {
@@ -287,6 +294,7 @@
             justify-content: center;
             font-size: 12px;
             flex-shrink: 0;
+            cursor: pointer;
         }
         
         .comment-content {
@@ -391,31 +399,6 @@
             border: none;
         }
         
-        .feed-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding: 0 12px;
-        }
-        
-        .feed-tab {
-            flex: 1;
-            text-align: center;
-            padding: 8px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            background: var(--border-light);
-            border: none;
-            color: var(--text-muted);
-        }
-        
-        .feed-tab.active {
-            background: var(--accent);
-            color: #000;
-        }
-        
         /* Остальные стили */
         .profile-banner-wrapper { position: relative; width: 100%; margin-bottom: 20px; }
         .banner-container { width: 100%; height: 150px; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
@@ -427,6 +410,7 @@
         .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
         
         .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; padding-right: 20px; }
+        .profile-name-section .username-display { color: var(--text); font-size: 20px; }
         
         .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; }
         .settings-icon:hover { background: var(--border-light); transform: rotate(90deg); }
@@ -539,6 +523,7 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s ease; backdrop-filter: blur(4px); }
         .profile-modal { border-radius: 24px; width: 90%; max-width: 400px; padding: 24px; max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease; }
         .profile-modal h3 { font-size: 22px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; color: var(--text); }
+        .profile-modal div:not(.message) { color: var(--text); }
         
         .profile-input-group { margin-bottom: 16px; position: relative; }
         .profile-input-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: var(--text-secondary); }
@@ -577,8 +562,9 @@
         ::-webkit-scrollbar { width: 4px; background: var(--border-light); }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
         
-        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); display: flex; justify-content: center; align-items: center; z-index: 9999; font-size: 24px; flex-direction: column; gap: 20px; }
-        .loading-spinner { width: 50px; height: 50px; border: 3px solid var(--border); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        .loading-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #050505; display: flex; justify-content: center; align-items: center; z-index: 9999; flex-direction: column; gap: 20px; }
+        .loading-spinner { width: 50px; height: 50px; border: 3px solid #2a2a2a; border-top: 3px solid #d4af37; border-radius: 50%; animation: spin 1s linear infinite; }
+        .loading-text { color: #ffffff; font-size: 14px; }
         
         .notification { position: fixed; top: 20px; right: 20px; background: var(--bg-card); color: var(--text); padding: 12px 24px; border-radius: 16px; z-index: 10000; animation: slideIn 0.3s ease; border: 1px solid var(--border); font-weight: 500; box-shadow: 0 4px 12px var(--shadow); }
         .notification.error { background: #ff4444; color: white; }
@@ -600,6 +586,8 @@
         
         .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
         .channel-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -609,7 +597,15 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
         // ========== FIREBASE ==========
-        const firebaseConfig = { apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4", authDomain: "quick-sms-772c4.firebaseapp.com", databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com", projectId: "quick-sms-772c4", storageBucket: "quick-sms-772c4.firebasestorage.app", messagingSenderId: "722370764251", appId: "1:722370764251:web:1f93437108ee3d54f15bfe" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4", 
+            authDomain: "quick-sms-772c4.firebaseapp.com", 
+            databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com", 
+            projectId: "quick-sms-772c4", 
+            storageBucket: "quick-sms-772c4.firebasestorage.app", 
+            messagingSenderId: "722370764251", 
+            appId: "1:722370764251:web:1f93437108ee3d54f15bfe" 
+        };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -617,10 +613,25 @@
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, currentView: 'chats', feedFilter: 'all' };
+        const App = { 
+            users: {}, chats: {}, currentUser: null, activeChat: null, 
+            blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, 
+            tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, 
+            tempWallpaper: null, pending2FA: null, savedMessages: {}, 
+            tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, 
+            userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, 
+            streaks: {}, privacySettings: {}, posts: {}, currentView: 'chats', 
+            feedFilter: 'all', donationRequests: {}
+        };
         App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
-        const tapUpgradeLevels = [{ cost: 0, reward: 1, nextCost: 10, name: "Базовый" }, { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" }, { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" }, { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" }, { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }];
+        const tapUpgradeLevels = [
+            { cost: 0, reward: 1, nextCost: 10, name: "Базовый" }, 
+            { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" }, 
+            { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" }, 
+            { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" }, 
+            { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }
+        ];
 
         // ========== ПОСТЫ ==========
         function createPost(text, imageData, videoData) {
@@ -628,7 +639,6 @@
                 showNotification('Введите текст или добавьте медиа', 'error');
                 return;
             }
-            
             const post = {
                 id: generateId(),
                 author: App.currentUser,
@@ -637,10 +647,8 @@
                 video: videoData || null,
                 time: Date.now(),
                 likes: {},
-                comments: {},
-                views: 0
+                comments: {}
             };
-            
             App.posts[post.id] = post;
             saveToFirebase();
             renderFeed();
@@ -650,7 +658,6 @@
         function likePost(postId) {
             const post = App.posts[postId];
             if (!post) return;
-            
             if (post.likes[App.currentUser]) {
                 delete post.likes[App.currentUser];
             } else {
@@ -662,20 +669,16 @@
         
         function addComment(postId, commentText) {
             if (!commentText.trim()) return;
-            
             const post = App.posts[postId];
             if (!post) return;
-            
             const commentId = generateId();
             if (!post.comments) post.comments = {};
-            
             post.comments[commentId] = {
                 id: commentId,
                 author: App.currentUser,
                 text: commentText,
                 time: Date.now()
             };
-            
             saveToFirebase();
             renderFeed();
             showNotification('Комментарий добавлен');
@@ -684,21 +687,35 @@
         function deleteComment(postId, commentId) {
             const post = App.posts[postId];
             if (!post || !post.comments[commentId]) return;
-            
             if (post.comments[commentId].author !== App.currentUser && App.currentUser !== ADMIN_USER) {
                 showNotification('Нельзя удалить чужой комментарий', 'error');
                 return;
             }
-            
             delete post.comments[commentId];
             saveToFirebase();
             renderFeed();
             showNotification('Комментарий удален');
         }
         
-        function getAllPosts() {
+        function deletePost(postId) {
+            const post = App.posts[postId];
+            if (!post) return;
+            if (post.author !== App.currentUser && App.currentUser !== ADMIN_USER) {
+                showNotification('Нельзя удалить чужой пост', 'error');
+                return;
+            }
+            delete App.posts[postId];
+            saveToFirebase();
+            renderFeed();
+            showNotification('Пост удален');
+        }
+        
+        function getAllPostsRandom() {
             const posts = Object.values(App.posts);
-            posts.sort((a, b) => b.time - a.time);
+            for (let i = posts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [posts[i], posts[j]] = [posts[j], posts[i]];
+            }
             return posts;
         }
         
@@ -710,10 +727,10 @@
 
         // ========== СТАТУСЫ ==========
         const STATUS_TYPES = {
-            GOLD: { name: 'GOLD', class: 'gold-name', messageClass: '', color: '#ffd700' },
-            RUBY: { name: 'RUBY', class: 'ruby-name', messageClass: '', color: '#ff4444' },
-            EMERALD: { name: 'EMERALD', class: 'emerald-name', messageClass: '', color: '#44ff44' },
-            AMETHYST: { name: 'AMETHYST', class: 'amethyst-name', messageClass: '', color: '#aa66ff' }
+            GOLD: { name: 'GOLD', class: 'gold-name', color: '#ffd700' },
+            RUBY: { name: 'RUBY', class: 'ruby-name', color: '#ff4444' },
+            EMERALD: { name: 'EMERALD', class: 'emerald-name', color: '#44ff44' },
+            AMETHYST: { name: 'AMETHYST', class: 'amethyst-name', color: '#aa66ff' }
         };
         
         function getUserStatus(username) {
@@ -739,17 +756,11 @@
             if (fromUser === toUser) return true;
             if (App.systemBots.includes(toUser)) return true;
             if (App.channels[toUser]) return true;
-            
             const privacy = App.privacySettings[toUser];
             if (!privacy || !privacy.blockNewMessages) return true;
-            
             const chatId = [fromUser, toUser].sort().join('_');
             const chat = App.chats[chatId];
-            
-            if (chat && chat.messages && chat.messages.length > 0) {
-                return true;
-            }
-            
+            if (chat && chat.messages && chat.messages.length > 0) return true;
             return false;
         }
         
@@ -779,7 +790,6 @@
                 showNotification('Недостаточно YC! Нужно 50 YC для создания канала', 'error');
                 return;
             }
-            
             const modalHtml = `
                 <div class="modal-overlay" id="createChannelModal">
                     <div class="profile-modal">
@@ -796,10 +806,8 @@
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
             document.getElementById('confirmCreateChannelBtn').addEventListener('click', () => {
                 let channelName = document.getElementById('channelUsername').value.trim().toLowerCase();
-                
                 if (!channelName) {
                     showNotification('Введите название канала', 'error');
                     return;
@@ -808,15 +816,12 @@
                     showNotification('Название только англ буквы и цифры, 4-15 символов', 'error');
                     return;
                 }
-                
                 const fullChannelName = '@' + channelName;
                 if (App.channels[fullChannelName]) {
                     showNotification('Канал с таким именем уже существует', 'error');
                     return;
                 }
-                
                 App.users[user].stars -= 50;
-                
                 App.channels[fullChannelName] = {
                     name: fullChannelName,
                     owner: user,
@@ -826,14 +831,12 @@
                     avatar: null,
                     createdAt: Date.now()
                 };
-                
                 saveToFirebase();
                 updateUserInterface();
                 document.getElementById('createChannelModal').remove();
                 showNotification(`✅ Канал ${fullChannelName} создан!`);
                 render();
             });
-            
             document.getElementById('closeChannelCreateBtn').addEventListener('click', () => {
                 document.getElementById('createChannelModal').remove();
             });
@@ -843,7 +846,6 @@
             const channel = App.channels[channelName];
             if (!channel) return;
             const isOwner = channel.owner === App.currentUser;
-            
             if (isOwner) {
                 const modalHtml = `
                     <div class="modal-overlay" id="channelModalOverlay">
@@ -867,9 +869,7 @@
                     </div>
                 `;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
                 let tempAvatar = null;
-                
                 document.getElementById('channelAvatarUpload')?.addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
@@ -885,7 +885,6 @@
                     };
                     reader.readAsDataURL(file);
                 });
-                
                 document.getElementById('deleteChannelBtn')?.addEventListener('click', () => {
                     if (confirm(`Удалить канал ${channelName}? Это действие нельзя отменить!`)) {
                         delete App.channels[channelName];
@@ -899,7 +898,6 @@
                         showNotification('Канал удален');
                     }
                 });
-                
                 document.getElementById('closeChannelModalBtn').addEventListener('click', () => {
                     document.getElementById('channelModalOverlay').remove();
                 });
@@ -924,7 +922,6 @@
                     </div>
                 `;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
                 document.getElementById('subscribeChannelBtn')?.addEventListener('click', () => {
                     if (!channel.subscribers) channel.subscribers = [];
                     if (channel.subscribers.includes(App.currentUser)) {
@@ -938,7 +935,6 @@
                     document.getElementById('channelModalOverlay').remove();
                     render();
                 });
-                
                 document.getElementById('closeChannelModalBtn').addEventListener('click', () => {
                     document.getElementById('channelModalOverlay').remove();
                 });
@@ -950,41 +946,25 @@
             const user = App.currentUser;
             if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || 
                 App.systemBots.includes(chatPartner) || App.channels[chatPartner]) return 0;
-            
             const chatId = [user, chatPartner].sort().join('_');
             const today = new Date().toDateString();
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toDateString();
-            
             if (!App.streaks[chatId]) {
-                App.streaks[chatId] = {
-                    streak: 0,
-                    lastMessageDate: null,
-                    lastUpdateDate: null,
-                    users: {}
-                };
+                App.streaks[chatId] = { streak: 0, lastMessageDate: null, lastUpdateDate: null, users: {} };
             }
-            
             [user, chatPartner].forEach(u => {
                 if (!App.streaks[chatId].users[u]) {
-                    App.streaks[chatId].users[u] = {
-                        lastMessageDate: null,
-                        streak: 0
-                    };
+                    App.streaks[chatId].users[u] = { lastMessageDate: null, streak: 0 };
                 }
             });
-            
             const userData = App.streaks[chatId].users[user];
             const partnerData = App.streaks[chatId].users[chatPartner];
-            
             userData.lastMessageDate = today;
-            
             const partnerWroteToday = partnerData.lastMessageDate === today;
-            
             if (partnerWroteToday) {
                 const lastCommonDay = App.streaks[chatId].lastMessageDate;
-                
                 if (lastCommonDay === yesterdayStr) {
                     App.streaks[chatId].streak++;
                     userData.streak = App.streaks[chatId].streak;
@@ -997,7 +977,6 @@
                     userData.streak = App.streaks[chatId].streak;
                     partnerData.streak = App.streaks[chatId].streak;
                 }
-                
                 App.streaks[chatId].lastMessageDate = today;
                 App.streaks[chatId].lastUpdateDate = today;
             } else {
@@ -1005,7 +984,6 @@
                 userData.streak = currentStreak;
                 partnerData.streak = currentStreak;
             }
-            
             const lastUpdate = App.streaks[chatId].lastUpdateDate;
             if (lastUpdate && lastUpdate !== today && lastUpdate !== yesterdayStr) {
                 App.streaks[chatId].streak = 0;
@@ -1013,7 +991,6 @@
                 partnerData.streak = 0;
                 App.streaks[chatId].lastMessageDate = null;
             }
-            
             saveStreaks();
             return App.streaks[chatId].streak;
         }
@@ -1022,18 +999,14 @@
             const user = App.currentUser;
             if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || 
                 App.systemBots.includes(chatPartner) || App.channels[chatPartner]) return 0;
-            
             const chatId = [user, chatPartner].sort().join('_');
             const today = new Date().toDateString();
             const yesterday = new Date();
             yesterday.setDate(yesterday.getDate() - 1);
             const yesterdayStr = yesterday.toDateString();
-            
             if (!App.streaks[chatId]) return 0;
-            
             const streakData = App.streaks[chatId];
             const lastUpdate = streakData.lastUpdateDate;
-            
             if (lastUpdate && lastUpdate !== today && lastUpdate !== yesterdayStr) {
                 if (streakData.streak > 0) {
                     streakData.streak = 0;
@@ -1043,28 +1016,19 @@
                 }
                 return 0;
             }
-            
             return streakData.streak || 0;
         }
         
         function saveStreaks() {
             localStorage.setItem('yolk_streaks', JSON.stringify(App.streaks));
-            if (App.dataLoaded) {
-                database.ref('streaks').set(App.streaks).catch(e => console.error(e));
-            }
+            if (App.dataLoaded) database.ref('streaks').set(App.streaks).catch(e => console.error(e));
         }
         
         function loadStreaks() {
             const saved = localStorage.getItem('yolk_streaks');
             if (saved) {
-                try {
-                    App.streaks = JSON.parse(saved);
-                } catch(e) {
-                    App.streaks = {};
-                }
-            } else {
-                App.streaks = {};
-            }
+                try { App.streaks = JSON.parse(saved); } catch(e) { App.streaks = {}; }
+            } else { App.streaks = {}; }
         }
 
         // ========== АДМИН-ПАНЕЛЬ ==========
@@ -1072,7 +1036,6 @@
             const usersList = Object.keys(App.users).filter(u => !App.systemBots.includes(u));
             const giftsList = ['🔥', '🌊', '🍭', '🍬', '🥚', '🍳'];
             const statusList = ['GOLD', 'RUBY', 'EMERALD', 'AMETHYST'];
-            
             const modalHtml = `
                 <div class="modal-overlay" id="adminModalOverlay">
                     <div class="profile-modal" style="max-width: 500px;">
@@ -1120,12 +1083,10 @@
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
             const itemType = document.getElementById('adminItemType');
             const ycDiv = document.getElementById('adminYcAmount');
             const giftDiv = document.getElementById('adminGiftSelect');
             const statusDiv = document.getElementById('adminStatusSelect');
-            
             itemType.addEventListener('change', () => {
                 ycDiv.classList.add('hidden');
                 giftDiv.classList.add('hidden');
@@ -1134,21 +1095,17 @@
                 else if (itemType.value === 'gift') giftDiv.classList.remove('hidden');
                 else if (itemType.value === 'status') statusDiv.classList.remove('hidden');
             });
-            
             document.getElementById('adminGiveBtn').addEventListener('click', () => {
                 const targetUser = document.getElementById('adminTargetUser').value;
                 const type = document.getElementById('adminItemType').value;
-                
                 if (!targetUser) {
                     showNotification('Выберите пользователя', 'error');
                     return;
                 }
-                
                 if (!App.users[targetUser]) {
                     showNotification('Пользователь не найден', 'error');
                     return;
                 }
-                
                 if (type === 'yc') {
                     const amount = parseInt(document.getElementById('adminYcValue').value);
                     if (isNaN(amount) || amount <= 0) {
@@ -1157,34 +1114,29 @@
                     }
                     App.users[targetUser].stars = (App.users[targetUser].stars || 0) + amount;
                     showNotification(`✅ Выдано ${amount} YC пользователю ${targetUser}`);
-                } 
-                else if (type === 'gift') {
+                } else if (type === 'gift') {
                     const gift = document.getElementById('adminGiftValue').value;
                     if (!App.users[targetUser].gifts) App.users[targetUser].gifts = [];
                     App.users[targetUser].gifts.push(gift);
                     showNotification(`✅ Выдан подарок ${gift} пользователю ${targetUser}`);
-                }
-                else if (type === 'status') {
+                } else if (type === 'status') {
                     const status = document.getElementById('adminStatusValue').value;
                     App.users[targetUser].status = status;
                     showNotification(`✨ СТАТУС ${status} выдан пользователю ${targetUser}! ✨`);
                     updateUserInterface();
                     if (App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) renderMessages(App.activeChat);
                     updateChatList();
-                }
-                else if (type === 'verified') {
+                } else if (type === 'verified') {
                     App.users[targetUser].verified = true;
                     showNotification(`✅ VERIFIED СТАТУС выдан пользователю ${targetUser}!`);
                     updateUserInterface();
                     if (App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) renderMessages(App.activeChat);
                     updateChatList();
                 }
-                
                 saveToFirebase();
                 updateUserInterface();
                 document.getElementById('adminModalOverlay').remove();
             });
-            
             document.getElementById('closeAdminModal').addEventListener('click', () => {
                 document.getElementById('adminModalOverlay').remove();
             });
@@ -1195,7 +1147,6 @@
             const userData = App.users[App.currentUser];
             const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
             const currentWallpaper = userData.chatWallpaper || '';
-            
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
                     <div class="profile-modal">
@@ -1256,7 +1207,6 @@
                 </div>
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
             window.toggleSettingsPassword = function() {
                 const passInput = document.getElementById('settingsPassword');
                 const btn = document.querySelector('#settingsModalOverlay .toggle-password');
@@ -1268,9 +1218,7 @@
                     btn.textContent = '👁️';
                 }
             };
-            
             let tempAvatar = null, tempBanner = null, tempWallpaper = null;
-            
             document.getElementById('settingsAvatar').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1282,7 +1230,6 @@
                 };
                 reader.readAsDataURL(file);
             });
-            
             document.getElementById('settingsBanner').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1294,7 +1241,6 @@
                 };
                 reader.readAsDataURL(file);
             });
-            
             document.getElementById('settingsWallpaper').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1307,7 +1253,6 @@
                 };
                 reader.readAsDataURL(file);
             });
-            
             document.getElementById('privacyToggle').addEventListener('click', () => {
                 const newState = !App.privacySettings[App.currentUser]?.blockNewMessages;
                 updatePrivacySetting(newState);
@@ -1316,7 +1261,6 @@
                 const labelSpan = toggle.querySelector('.toggle-label');
                 labelSpan.textContent = newState ? '☑️ Незнакомцы не могут писать первыми' : '❌ Все могут писать первыми';
             });
-            
             document.getElementById('settingsTwoFAToggle').addEventListener('click', () => {
                 const newState = !App.users[App.currentUser].twoFA;
                 App.users[App.currentUser].twoFA = newState;
@@ -1326,7 +1270,6 @@
                 saveToFirebase();
                 showNotification(newState ? '2FA включена' : '2FA выключена');
             });
-            
             document.getElementById('settingsChangeUsernameBtn').addEventListener('click', () => {
                 const newName = document.getElementById('settingsNewUsername')?.value.trim();
                 if (!newName) {
@@ -1336,19 +1279,16 @@
                 changeUsername(newName);
                 document.getElementById('settingsModalOverlay')?.remove();
             });
-            
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
                 const newPassword = document.getElementById('settingsPassword')?.value.trim();
                 const newBio = document.getElementById('settingsBio')?.value.trim().slice(0, 50);
                 const newAge = parseInt(document.getElementById('settingsAge')?.value);
-                
                 if (newPassword) App.users[App.currentUser].password = newPassword;
                 if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
                 if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                 if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
-                
                 saveToFirebase();
                 updateUserInterface();
                 updateSidebarUser();
@@ -1356,7 +1296,6 @@
                 document.getElementById('settingsModalOverlay').remove();
                 showNotification('Настройки сохранены');
             });
-            
             document.getElementById('closeSettingsBtn').addEventListener('click', () => {
                 document.getElementById('settingsModalOverlay').remove();
             });
@@ -1372,30 +1311,172 @@
             const hours = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
             if (minutes < 1) return 'только что';
-            if (minutes < 5) return `${minutes} мин назад`;
+            if (minutes < 5) return minutes + ' мин назад';
             if (minutes < 15) return '5 мин назад';
             if (minutes < 30) return '15 мин назад';
             if (minutes < 60) return '30 мин назад';
             if (hours < 2) return '1 час назад';
-            if (hours < 5) return `${hours} часа назад`;
-            if (hours < 24) return `${hours} часов назад`;
+            if (hours < 5) return hours + ' часа назад';
+            if (hours < 24) return hours + ' часов назад';
             if (days === 1) return '1 день назад';
-            if (days < 5) return `${days} дня назад`;
-            return `${days} дней назад`;
+            if (days < 5) return days + ' дня назад';
+            return days + ' дней назад';
         }
 
-        function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx; const now = ctx.currentTime; const osc1 = ctx.createOscillator(); const gain = ctx.createGain(); osc1.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc1.frequency.value = 880; osc1.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc1.stop(now + 0.3); } catch(e) { console.log('Sound error:', e); } }
-        function showConfetti() { const confettiDiv = document.createElement('div'); confettiDiv.className = 'confetti'; for (let i = 0; i < 50; i++) { const piece = document.createElement('div'); piece.className = 'confetti-piece'; piece.style.left = Math.random() * 100 + '%'; piece.style.animationDelay = Math.random() * 2 + 's'; piece.style.background = ['#ffd700', '#ffb347', '#ff8c00', '#d4af37'][Math.floor(Math.random() * 4)]; confettiDiv.appendChild(piece); } document.body.appendChild(confettiDiv); setTimeout(() => confettiDiv.remove(), 3000); }
-        function showNotification(message, type = 'success') { const notification = document.createElement('div'); notification.className = 'notification' + (type === 'error' ? ' error' : ''); notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 3000); }
-        function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) { const img = new Image(); img.onload = () => { let width = img.width; let height = img.height; if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; } if (height > maxHeight) { width = (width * maxHeight) / height; height = maxHeight; } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); const compressedDataUrl = canvas.toDataURL('image/jpeg', quality); callback(compressedDataUrl); }; img.src = dataUrl; }
-        function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
-        function isValidUsername(str) { return /^[a-z0-9]{4,15}$/.test(str); }
-        function isUserOnline(username) { const lastSeen = App.users[username]?.lastSeen; if (!lastSeen) return false; return (Date.now() - lastSeen) < 300000; }
-        function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
-        function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'transparent'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
-        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); }
-        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, tapBalances: App.tapBalances, tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
-        function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
+        function playHappySound() { 
+            if (!App.soundEnabled) return; 
+            try { 
+                if (!App.audioCtx) { 
+                    App.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); 
+                    App.audioCtx.resume(); 
+                } 
+                const ctx = App.audioCtx; 
+                const now = ctx.currentTime; 
+                const osc1 = ctx.createOscillator(); 
+                const gain = ctx.createGain(); 
+                osc1.connect(gain); 
+                gain.connect(ctx.destination); 
+                gain.gain.value = 0.2; 
+                osc1.frequency.value = 880; 
+                osc1.start(); 
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); 
+                osc1.stop(now + 0.3); 
+            } catch(e) { console.log('Sound error:', e); } 
+        }
+        
+        function showConfetti() { 
+            const confettiDiv = document.createElement('div'); 
+            confettiDiv.style.position = 'fixed';
+            confettiDiv.style.top = '0';
+            confettiDiv.style.left = '0';
+            confettiDiv.style.width = '100%';
+            confettiDiv.style.height = '100%';
+            confettiDiv.style.pointerEvents = 'none';
+            confettiDiv.style.zIndex = '9999';
+            for (let i = 0; i < 50; i++) { 
+                const piece = document.createElement('div'); 
+                piece.style.position = 'absolute';
+                piece.style.width = '10px';
+                piece.style.height = '10px';
+                piece.style.top = '-10px';
+                piece.style.left = Math.random() * 100 + '%'; 
+                piece.style.animation = 'spin 2s linear forwards';
+                piece.style.background = ['#ffd700', '#ffb347', '#ff8c00', '#d4af37'][Math.floor(Math.random() * 4)]; 
+                confettiDiv.appendChild(piece); 
+            } 
+            document.body.appendChild(confettiDiv); 
+            setTimeout(() => confettiDiv.remove(), 3000); 
+        }
+        
+        function showNotification(message, type = 'success') { 
+            const notification = document.createElement('div'); 
+            notification.className = 'notification' + (type === 'error' ? ' error' : ''); 
+            notification.textContent = message; 
+            document.body.appendChild(notification); 
+            setTimeout(() => notification.remove(), 3000); 
+        }
+        
+        function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) { 
+            const img = new Image(); 
+            img.onload = () => { 
+                let width = img.width; 
+                let height = img.height; 
+                if (width > maxWidth) { 
+                    height = (height * maxWidth) / width; 
+                    width = maxWidth; 
+                } 
+                if (height > maxHeight) { 
+                    width = (width * maxHeight) / height; 
+                    height = maxHeight; 
+                } 
+                const canvas = document.createElement('canvas'); 
+                canvas.width = width; 
+                canvas.height = height; 
+                const ctx = canvas.getContext('2d'); 
+                ctx.drawImage(img, 0, 0, width, height); 
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', quality); 
+                callback(compressedDataUrl); 
+            }; 
+            img.src = dataUrl; 
+        }
+        
+        function generateId() { 
+            return Date.now() + '_' + Math.random().toString(36).substr(2, 9); 
+        }
+        
+        function isValidUsername(str) { 
+            return /^[a-z0-9]{4,15}$/.test(str); 
+        }
+        
+        function isUserOnline(username) { 
+            const lastSeen = App.users[username]?.lastSeen; 
+            if (!lastSeen) return false; 
+            return (Date.now() - lastSeen) < 300000; 
+        }
+        
+        function updateSidebarUser() { 
+            const userData = App.users[App.currentUser]; 
+            if (!userData) return; 
+            const sidebarUser = document.querySelector('.user-profile .username-display'); 
+            if (sidebarUser) { 
+                sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
+            } 
+            const sidebarAvatar = document.querySelector('.user-profile .avatar'); 
+            if (sidebarAvatar) { 
+                if (userData.avatar) { 
+                    sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; 
+                } else { 
+                    sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; 
+                } 
+            } 
+        }
+        
+        function applyWallpaper() { 
+            const chatArea = document.querySelector('.chat-area'); 
+            if (!chatArea) return; 
+            const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; 
+            if (wallpaper && wallpaper.startsWith('data:image')) { 
+                chatArea.style.backgroundImage = `url('${wallpaper}')`; 
+                chatArea.style.backgroundSize = 'cover'; 
+                chatArea.style.backgroundPosition = 'center'; 
+                chatArea.style.backgroundRepeat = 'no-repeat'; 
+            } else { 
+                chatArea.style.backgroundImage = 'none'; 
+                chatArea.style.backgroundColor = 'transparent'; 
+            } 
+        }
+        
+        function updateUserInterface() { 
+            const userData = App.users[App.currentUser]; 
+            if (!userData) return; 
+            const starBalanceElements = document.querySelectorAll('.star-balance'); 
+            starBalanceElements.forEach(el => { 
+                el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; 
+            }); 
+            updateSidebarUser(); 
+            applyWallpaper(); 
+        }
+        
+        function saveToFirebase() { 
+            if (!App.dataLoaded) return; 
+            const firebaseData = { 
+                users: App.users, chats: App.chats, blocked: App.blocked, 
+                channels: App.channels, tapBalances: App.tapBalances, 
+                tapUpgrades: App.tapUpgrades, yolkChatMessages: App.yolkChatMessages, 
+                streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts 
+            }; 
+            database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); 
+        }
+        
+        function ensureChat(userA, userB) { 
+            if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; 
+            const chatId = [userA, userB].sort().join('_'); 
+            if (!App.chats[chatId]) { 
+                App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; 
+                saveToFirebase(); 
+            } 
+            return chatId; 
+        }
 
         // ========== ФУНКЦИИ ДЛЯ ОТКРЫТОК ==========
         async function createNft(grid, owner) {
@@ -1411,7 +1492,60 @@
             return true;
         }
         
-        function openNftCreator() { if (App.users[App.currentUser].stars < 50) { showNotification('Не хватает 50 YC для создания открытки', 'error'); return; } const modalHtml = `<div class="modal-overlay" id="nftCreatorModal"><div class="profile-modal" style="max-width: 500px;"><h3>🎨 СОЗДАТЬ ОТКРЫТКУ (10x10)</h3><div class="pixel-canvas" id="pixelCanvas" style="display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 1px; background: var(--border);"></div><div class="color-palette" id="colorPalette"></div><button class="create-nft-btn" id="confirmCreateNftBtn">СОЗДАТЬ (50 YC)</button><div class="profile-actions"><button class="profile-btn secondary" id="closeNftCreator">ОТМЕНА</button></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); let grid = Array(10).fill().map(() => Array(10).fill('#ffffff')); let currentColor = '#000000'; const canvasDiv = document.getElementById('pixelCanvas'); const paletteDiv = document.getElementById('colorPalette'); const colors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080']; colors.forEach(col => { const btn = document.createElement('div'); btn.className = `color-option ${col === currentColor ? 'active' : ''}`; btn.style.backgroundColor = col; btn.addEventListener('click', () => { currentColor = col; document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active')); btn.classList.add('active'); }); paletteDiv.appendChild(btn); }); function renderCanvas() { canvasDiv.innerHTML = ''; for (let i = 0; i < 10; i++) { for (let j = 0; j < 10; j++) { const pixel = document.createElement('div'); pixel.className = 'pixel'; pixel.style.backgroundColor = grid[i][j]; pixel.style.width = '30px'; pixel.style.height = '30px'; pixel.addEventListener('click', () => { grid[i][j] = currentColor; renderCanvas(); }); canvasDiv.appendChild(pixel); } } } renderCanvas(); document.getElementById('confirmCreateNftBtn').addEventListener('click', async () => { const success = await createNft(grid, App.currentUser); if (success) document.getElementById('nftCreatorModal').remove(); }); document.getElementById('closeNftCreator').addEventListener('click', () => { document.getElementById('nftCreatorModal').remove(); }); }
+        function openNftCreator() { 
+            if (App.users[App.currentUser].stars < 50) { 
+                showNotification('Не хватает 50 YC для создания открытки', 'error'); 
+                return; 
+            } 
+            const modalHtml = `<div class="modal-overlay" id="nftCreatorModal"><div class="profile-modal" style="max-width: 500px;"><h3>🎨 СОЗДАТЬ ОТКРЫТКУ (10x10)</h3><div class="pixel-canvas" id="pixelCanvas"></div><div class="color-palette" id="colorPalette"></div><button class="create-nft-btn" id="confirmCreateNftBtn">СОЗДАТЬ (50 YC)</button><div class="profile-actions"><button class="profile-btn secondary" id="closeNftCreator">ОТМЕНА</button></div></div></div>`; 
+            document.body.insertAdjacentHTML('beforeend', modalHtml); 
+            let grid = Array(10).fill().map(() => Array(10).fill('#ffffff')); 
+            let currentColor = '#000000'; 
+            const canvasDiv = document.getElementById('pixelCanvas'); 
+            const paletteDiv = document.getElementById('colorPalette'); 
+            const colors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080']; 
+            colors.forEach(col => { 
+                const btn = document.createElement('div'); 
+                btn.className = `color-option ${col === currentColor ? 'active' : ''}`; 
+                btn.style.backgroundColor = col; 
+                btn.addEventListener('click', () => { 
+                    currentColor = col; 
+                    document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active')); 
+                    btn.classList.add('active'); 
+                }); 
+                paletteDiv.appendChild(btn); 
+            }); 
+            function renderCanvas() { 
+                canvasDiv.innerHTML = ''; 
+                canvasDiv.style.display = 'grid';
+                canvasDiv.style.gridTemplateColumns = 'repeat(10, 30px)';
+                canvasDiv.style.gridTemplateRows = 'repeat(10, 30px)';
+                canvasDiv.style.gap = '1px';
+                canvasDiv.style.background = 'var(--border)';
+                for (let i = 0; i < 10; i++) { 
+                    for (let j = 0; j < 10; j++) { 
+                        const pixel = document.createElement('div'); 
+                        pixel.className = 'pixel'; 
+                        pixel.style.backgroundColor = grid[i][j]; 
+                        pixel.style.width = '30px'; 
+                        pixel.style.height = '30px'; 
+                        pixel.addEventListener('click', () => { 
+                            grid[i][j] = currentColor; 
+                            renderCanvas(); 
+                        }); 
+                        canvasDiv.appendChild(pixel); 
+                    } 
+                } 
+            } 
+            renderCanvas(); 
+            document.getElementById('confirmCreateNftBtn').addEventListener('click', async () => { 
+                const success = await createNft(grid, App.currentUser); 
+                if (success) document.getElementById('nftCreatorModal').remove(); 
+            }); 
+            document.getElementById('closeNftCreator').addEventListener('click', () => { 
+                document.getElementById('nftCreatorModal').remove(); 
+            }); 
+        }
 
         // ========== ОТКРЫТИЕ ПОДАРКОВ ==========
         function openGiftMenu() { 
@@ -1424,7 +1558,16 @@
             const nfts = App.users[App.currentUser].nfts || []; 
             const hasNfts = nfts.length > 0; 
             const giftList = gifts.map(g => `<div class="gift-item" onclick="window.sendGiftToUser('${target}', '${g}')">${g}</div>`).join(''); 
-            const nftListHtml = hasNfts ? `<div class="nft-collection" style="margin-top:10px;">${nfts.map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 3.2, i * 3.2, 3.2, 3.2); return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
+            const nftListHtml = hasNfts ? `<div class="nft-collection" style="margin-top:10px;">${nfts.map((nft, idx) => { 
+                const canvas = document.createElement('canvas'); 
+                canvas.width = 32; 
+                canvas.height = 32; 
+                const ctx = canvas.getContext('2d'); 
+                for (let i = 0; i < 10; i++) 
+                    for (let j = 0; j < 10; j++) 
+                        ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 3.2, i * 3.2, 3.2, 3.2); 
+                return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; 
+            }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
             const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3><div class="tabs" style="margin-bottom:8px;"><div class="tab active" data-tab="emoji">ПОДАРКИ</div><div class="tab" data-tab="nft">ОТКРЫТКИ</div></div><div id="emojiTab" class="tab-content">${giftList || 'Нет подарков'}</div><div id="nftTab" class="tab-content hidden">${nftListHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.querySelectorAll('.tab').forEach(tab => { 
@@ -1501,34 +1644,26 @@
         function changeUsername(newUsername) {
             const oldUsername = App.currentUser;
             const newName = '@' + newUsername.toLowerCase();
-            
             if (!isValidUsername(newUsername)) {
                 showNotification('Юзернейм должен содержать только англ буквы и цифры (4-15 символов)', 'error');
                 return false;
             }
-            
             if (App.users[newName]) {
                 showNotification('Пользователь с таким именем уже существует', 'error');
                 return false;
             }
-            
             if (App.systemBots.includes(newName)) {
                 showNotification('Это имя занято системой', 'error');
                 return false;
             }
-            
             if (App.users[oldUsername].stars < 1500) {
                 showNotification('Недостаточно YC! Нужно 1500 YC для смены имени', 'error');
                 return false;
             }
-            
             App.users[oldUsername].stars -= 1500;
-            
             const userData = { ...App.users[oldUsername] };
             delete userData.password;
-            
             App.users[newName] = { ...userData, password: App.users[oldUsername].password };
-            
             const oldChats = Object.keys(App.chats);
             for (let chatId of oldChats) {
                 const chat = App.chats[chatId];
@@ -1540,19 +1675,16 @@
                     delete App.chats[chatId];
                 }
             }
-            
             if (App.savedMessages[oldUsername]) {
                 App.savedMessages[newName] = App.savedMessages[oldUsername];
                 delete App.savedMessages[oldUsername];
                 saveSavedMessages();
             }
-            
             if (App.yolkChatMessages[oldUsername]) {
                 App.yolkChatMessages[newName] = App.yolkChatMessages[oldUsername];
                 delete App.yolkChatMessages[oldUsername];
                 saveYolkChatMessages();
             }
-            
             for (let channelId in App.channels) {
                 const channel = App.channels[channelId];
                 if (channel.owner === oldUsername) {
@@ -1563,11 +1695,9 @@
                     if (index !== -1) channel.subscribers[index] = newName;
                 }
             }
-            
             delete App.users[oldUsername];
             App.currentUser = newName;
             localStorage.setItem('yolk_current_user', newName);
-            
             saveToFirebase();
             updateUserInterface();
             render();
@@ -1582,7 +1712,16 @@
             const isBotUser = App.systemBots.includes(username); 
             const isAdmin = (username === ADMIN_USER); 
             const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join(''); 
-            const nftsList = (userData.nfts || []).map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join(''); 
+            const nftsList = (userData.nfts || []).map((nft, idx) => { 
+                const canvas = document.createElement('canvas'); 
+                canvas.width = 48; 
+                canvas.height = 48; 
+                const ctx = canvas.getContext('2d'); 
+                for (let i = 0; i < 10; i++) 
+                    for (let j = 0; j < 10; j++) 
+                        ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); 
+                return `<div class="nft-item"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; 
+            }).join(''); 
             
             if (isOwn && !isBotUser) {
                 const modalHtml = `
@@ -1611,12 +1750,10 @@
                     </div>
                 `;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
                 document.getElementById('openSettingsBtn').addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
                     openProfileSettings();
                 });
-                
                 document.getElementById('logoutFromProfileBtn')?.addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
                     App.currentUser = null;
@@ -1626,7 +1763,6 @@
                     localStorage.removeItem('yolk_active_chat');
                     render();
                 });
-                
                 document.querySelectorAll('.tab').forEach(tab => {
                     tab.addEventListener('click', (e) => {
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -1637,7 +1773,6 @@
                         if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden');
                     });
                 });
-                
                 document.querySelectorAll('.buy-gift-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const gift = e.target.dataset.gift;
@@ -1657,7 +1792,6 @@
                         }
                     });
                 });
-                
                 document.querySelectorAll('.donate-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const yc = parseInt(e.target.dataset.yc);
@@ -1666,7 +1800,6 @@
                         document.getElementById('profileModalOverlay')?.remove();
                     });
                 });
-                
                 document.querySelectorAll('.gift-donate-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const emoji = e.target.dataset.emoji;
@@ -1675,7 +1808,6 @@
                         document.getElementById('profileModalOverlay')?.remove();
                     });
                 });
-                
                 document.querySelectorAll('.status-donate-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const status = e.target.dataset.status;
@@ -1684,12 +1816,10 @@
                         document.getElementById('profileModalOverlay')?.remove();
                     });
                 });
-                
                 document.getElementById('createChannelBtn')?.addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
                     createChannel();
                 });
-                
                 document.querySelectorAll('.view-channel-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const channelName = e.target.dataset.channel;
@@ -1697,16 +1827,13 @@
                         openChannelModal(channelName);
                     });
                 });
-                
                 document.getElementById('createNftBtn')?.addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
                     openNftCreator();
                 });
-                
                 document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
                     document.getElementById('profileModalOverlay').remove();
                 });
-                
                 if (isAdmin) {
                     setTimeout(() => {
                         const adminBtn = document.createElement('button');
@@ -1728,7 +1855,6 @@
                 }
                 return;
             }
-            
             const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
@@ -1738,7 +1864,13 @@
         function openDonationModal(pack) { 
             const modalHtml = `<div class="modal-overlay" id="donationModalOverlay"><div class="profile-modal"><h3>💸 ПОПОЛНЕНИЕ YC</h3><div class="qr-code" id="donationQrCode"></div><div class="profile-input-group"><label>📤 АДРЕС КОШЕЛЬКА TON</label><input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Адрес скопирован!')"></div><div class="profile-input-group"><label>💰 СУММА</label><input type="text" value="${pack.ton} TON" readonly></div><div class="profile-input-group"><label>📝 ВАШ ЮЗЕРНЕЙМ (обязательно!)</label><input type="text" id="donationComment" placeholder="Например: @durov" value="${App.currentUser}"></div><div class="profile-input-group"><label>🔗 TXID (хеш транзакции)</label><input type="text" id="donationTxid" placeholder="Вставьте TXID из TON Keeper"></div><div class="profile-actions"><button class="profile-btn" id="submitDonationBtn">✅ Я ОТПРАВИЛ TON</button><button class="profile-btn secondary" id="closeDonationModal">ОТМЕНА</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ В комментарии к переводу ОБЯЗАТЕЛЬНО укажите свой юзернейм с @</small></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
-            setTimeout(() => { const qrDiv = document.getElementById('donationQrCode'); if (qrDiv) { qrDiv.innerHTML = ''; new QRCode(qrDiv, { text: TON_ADDRESS, width: 200, height: 200 }); } }, 100); 
+            setTimeout(() => { 
+                const qrDiv = document.getElementById('donationQrCode'); 
+                if (qrDiv) { 
+                    qrDiv.innerHTML = ''; 
+                    new QRCode(qrDiv, { text: TON_ADDRESS, width: 200, height: 200 }); 
+                } 
+            }, 100); 
             document.getElementById('submitDonationBtn')?.addEventListener('click', () => { 
                 const txid = document.getElementById('donationTxid')?.value.trim(); 
                 const comment = document.getElementById('donationComment')?.value.trim(); 
@@ -1751,7 +1883,9 @@
                 document.getElementById('donationModalOverlay')?.remove(); 
                 showNotification(`✅ Заявка отправлена! Ожидайте начисления. ID: ${requestId.slice(-6)}`); 
             }); 
-            document.getElementById('closeDonationModal')?.addEventListener('click', () => { document.getElementById('donationModalOverlay')?.remove(); }); 
+            document.getElementById('closeDonationModal')?.addEventListener('click', () => { 
+                document.getElementById('donationModalOverlay')?.remove(); 
+            }); 
         }
         
         window.confirmDonation = function(requestId) { 
@@ -1813,12 +1947,10 @@
             if (existingStatus) existingStatus.remove(); 
             const existingStreak = headerInfo.querySelector('.streak-badge');
             if (existingStreak) existingStreak.remove();
-            
             const existingNameStrong = headerInfo.querySelector('strong'); 
             if (existingNameStrong) { 
                 existingNameStrong.innerHTML = formatUserNameWithStatus(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
             } 
-            
             const streak = getStreak(username);
             if (streak > 0) {
                 const streakDiv = document.createElement('span');
@@ -1826,9 +1958,7 @@
                 streakDiv.innerHTML = `🔥 ${streak}`;
                 existingNameStrong?.appendChild(streakDiv);
             }
-            
             if (username === 'saved' || username === 'yolk') return;
-            
             const isOnline = isUserOnline(username); 
             const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username); 
             const statusDiv = document.createElement('div'); 
@@ -1841,18 +1971,16 @@
         function renderFeed() {
             const messagesContainer = document.getElementById('messageList');
             if (!messagesContainer) return;
-            
             let posts = [];
             if (App.feedFilter === 'all') {
-                posts = getAllPosts();
+                posts = getAllPostsRandom();
             } else {
                 posts = getMyPosts();
             }
-            
             let html = `
                 <div class="feed-tabs">
-                    <div class="feed-tab ${App.feedFilter === 'all' ? 'active' : ''}" data-filter="all">ВСЕ ПОСТЫ</div>
-                    <div class="feed-tab ${App.feedFilter === 'my' ? 'active' : ''}" data-filter="my">МОИ ПОСТЫ</div>
+                    <div class="feed-tab ${App.feedFilter === 'all' ? 'active' : ''}" data-filter="all">📢 РЕКОМЕНДАЦИИ</div>
+                    <div class="feed-tab ${App.feedFilter === 'my' ? 'active' : ''}" data-filter="my">📝 МОИ ПОСТЫ</div>
                 </div>
                 <div class="create-post-area">
                     <textarea class="create-post-text" id="newPostText" rows="3" placeholder="Что нового?"></textarea>
@@ -1867,31 +1995,23 @@
                 <div class="feed-container" id="feedContainer"></div>
             `;
             messagesContainer.innerHTML = html;
-            
-            // Обработчики для переключения вкладок
             document.querySelectorAll('.feed-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     App.feedFilter = tab.dataset.filter;
                     renderFeed();
                 });
             });
-            
             const feedContainer = document.getElementById('feedContainer');
             if (!feedContainer) return;
-            
             if (posts.length === 0) {
                 feedContainer.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:40px;">Нет постов. Будьте первым, кто опубликует пост! 🎉</div>';
             } else {
                 feedContainer.innerHTML = posts.map(post => renderPostCard(post)).join('');
             }
-            
-            // Обработчики для создания поста
             let postPhoto = null;
             let postVideo = null;
-            
             const imageUpload = document.getElementById('postImageUpload');
             const videoUpload = document.getElementById('postVideoUpload');
-            
             if (imageUpload) {
                 imageUpload.addEventListener('change', (e) => {
                     const file = e.target.files[0];
@@ -1906,7 +2026,6 @@
                     reader.readAsDataURL(file);
                 });
             }
-            
             if (videoUpload) {
                 videoUpload.addEventListener('change', (e) => {
                     const file = e.target.files[0];
@@ -1923,8 +2042,7 @@
                     reader.readAsDataURL(file);
                 });
             }
-            
-            document.querySelectorAll('.file-label').forEach((label, idx) => {
+            document.querySelectorAll('.file-label').forEach((label) => {
                 label.addEventListener('click', () => {
                     if (label.textContent.includes('📷')) {
                         imageUpload?.click();
@@ -1933,7 +2051,6 @@
                     }
                 });
             });
-            
             const publishBtn = document.getElementById('publishPostBtn');
             if (publishBtn) {
                 publishBtn.addEventListener('click', () => {
@@ -1957,14 +2074,14 @@
             const likesCount = post.likes ? Object.keys(post.likes).length : 0;
             const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
             const userData = App.users[post.author] || {};
-            
             let mediaHtml = '';
             if (post.image) {
                 mediaHtml = `<img src="${post.image}" class="post-media" onclick="window.openImageModal('${post.image}')">`;
             } else if (post.video) {
                 mediaHtml = `<video controls class="post-media"><source src="${post.video}" type="video/mp4"></video>`;
             }
-            
+            const deleteButton = (post.author === App.currentUser || App.currentUser === ADMIN_USER) ? 
+                `<button class="tiny-btn" onclick="window.deletePost('${post.id}')" style="position:absolute; right:10px; top:10px;">🗑️</button>` : '';
             let commentsHtml = '';
             if (post.comments && Object.keys(post.comments).length > 0) {
                 commentsHtml = `
@@ -1996,9 +2113,9 @@
                     </div>
                 `;
             }
-            
             return `
-                <div class="post-card" data-post-id="${post.id}">
+                <div class="post-card" data-post-id="${post.id}" style="position: relative;">
+                    ${deleteButton}
                     <div class="post-header">
                         <div class="post-avatar" onclick="window.openProfileModal('${post.author}')">
                             ${userData.avatar ? `<img src="${userData.avatar}">` : (post.author[1] || '🍳')}
@@ -2030,7 +2147,6 @@
             const minutes = Math.floor(diff / 60000);
             const hours = Math.floor(diff / 3600000);
             const days = Math.floor(diff / 86400000);
-            
             if (minutes < 1) return 'только что';
             if (minutes < 60) return `${minutes} мин назад`;
             if (hours < 24) return `${hours} ч назад`;
@@ -2040,15 +2156,16 @@
         }
         
         function escapeHtml(text) {
+            if (!text) return '';
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
         
+        // ========== ГЛОБАЛЬНЫЕ ФУНКЦИИ ДЛЯ HTML ==========
         window.likePost = function(postId) {
             likePost(postId);
         };
-        
         window.addComment = function(postId) {
             const input = document.getElementById(`commentInput_${postId}`);
             if (!input) return;
@@ -2060,27 +2177,33 @@
             addComment(postId, text);
             input.value = '';
         };
-        
         window.toggleComments = function(postId) {
             const commentsDiv = document.getElementById(`commentsSection_${postId}`);
             if (commentsDiv) {
-                if (commentsDiv.style.display === 'none') {
-                    commentsDiv.style.display = 'block';
-                } else {
-                    commentsDiv.style.display = 'none';
-                }
+                commentsDiv.style.display = commentsDiv.style.display === 'none' ? 'block' : 'none';
             }
         };
-        
         window.deleteComment = function(postId, commentId) {
             deleteComment(postId, commentId);
+        };
+        window.deletePost = function(postId) {
+            if (confirm('Удалить этот пост?')) {
+                deletePost(postId);
+            }
+        };
+        window.openProfileModal = function(username) {
+            openProfileModal(username);
+        };
+        window.openImageModal = function(src) {
+            const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; 
+            document.body.insertAdjacentHTML('beforeend', modalHtml); 
         };
 
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { 
             const root = document.getElementById('app'); 
             if (!App.dataLoaded) { 
-                root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; 
+                root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div><div class="loading-text">Загрузка...</div></div>'; 
                 return; 
             } 
             if (!App.currentUser) { 
@@ -2176,7 +2299,6 @@
         function renderMain() { 
             const user = App.currentUser; 
             const userData = App.users[user] || {}; 
-            
             return `<div class="main-container">
                 <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                     <div class="user-profile" id="openProfileBtn">
@@ -2228,27 +2350,22 @@
         function attachMainEvents() { 
             const backBtn = document.getElementById('backBtn'); 
             if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); }); 
-            
             const openProfileBtn = document.getElementById('openProfileBtn'); 
             if (openProfileBtn) openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser)); 
-            
             const navChatsTab = document.getElementById('navChatsTab');
             const navFeedTab = document.getElementById('navFeedTab');
-            
             if (navChatsTab) {
                 navChatsTab.addEventListener('click', () => {
                     App.currentView = 'chats';
                     render();
                 });
             }
-            
             if (navFeedTab) {
                 navFeedTab.addEventListener('click', () => {
                     App.currentView = 'feed';
                     render();
                 });
             }
-            
             if (App.currentView === 'chats') {
                 const viewProfileBtn = document.getElementById('viewProfileBtn'); 
                 if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { 
@@ -2258,24 +2375,18 @@
                         openChannelModal(App.activeChat); 
                     } 
                 }); 
-                
                 const giftBtn = document.getElementById('giftBtn'); 
                 if (giftBtn) giftBtn.addEventListener('click', openGiftMenu); 
-                
                 const subscribeBtn = document.getElementById('subscribeBtn'); 
                 if (subscribeBtn) subscribeBtn.addEventListener('click', toggleSubscribe); 
-                
                 const sendBtn = document.getElementById('sendMsgBtn'); 
                 if (sendBtn) sendBtn.addEventListener('click', sendMessage); 
-                
                 const fileUpload = document.getElementById('fileUpload'); 
                 const videoUpload = document.getElementById('videoUpload'); 
                 if (fileUpload) fileUpload.addEventListener('change', handleFileSelect); 
                 if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect); 
-                
                 const addUserBtn = document.getElementById('addUserBtn'); 
                 if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch); 
-                
                 const messageText = document.getElementById('messageText'); 
                 if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } }); 
             }
@@ -2468,7 +2579,6 @@
             const subscribersHtml = App.channels[u] ? 
                 `<div style="font-size:10px; color:var(--text-muted);">${App.channels[u].subscribers?.length || 0} 👥</div>` : 
                 (userData.age ? `<div style="font-size:10px; color:var(--text-muted);">${userData.age} лет</div>` : '');
-            
             return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${!App.channels[u] && userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${subscribersHtml}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`; 
         }
         
@@ -2776,11 +2886,6 @@
                 saveToFirebase(); 
                 renderMessages(botName); 
             } 
-        };
-        
-        window.openImageModal = function(src) { 
-            const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; 
-            document.body.insertAdjacentHTML('beforeend', modalHtml); 
         };
         
         function initBots() { 
