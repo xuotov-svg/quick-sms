@@ -71,7 +71,6 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
         
-        /* Дополнительный эффект свечения для активных элементов */
         .chat-item:hover,
         .chat-item.active,
         .btn:hover,
@@ -149,7 +148,6 @@
         
         .verified-icon { display: inline-block; width: 18px; height: 18px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#389df2"/><stop offset="100%" stop-color="#1a73e8"/></linearGradient></defs><path fill="url(%23grad)" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/><path fill="white" d="M9.5 12.5L11.5 14.5L15.5 9.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'); background-size: contain; background-repeat: no-repeat; vertical-align: middle; margin-left: 4px; }
         
-        /* ========== ВСЕ КНОПКИ С ЭМОДЗИ - ТЕМНО-СЕРЫЕ ========== */
         .icon-btn, 
         .send-btn, 
         .file-label,
@@ -502,6 +500,7 @@
             align-items: center;
             gap: 4px;
             flex-wrap: wrap;
+            color: #ffffff;
         }
         .post-time {
             font-size: 11px;
@@ -513,6 +512,7 @@
             font-size: 14px;
             line-height: 1.4;
             word-break: break-word;
+            color: #ffffff;  /* ← БЕЛЫЙ ТЕКСТ ПОСТА */
         }
         .post-image {
             max-width: 100%;
@@ -575,6 +575,7 @@
             font-weight: bold;
             cursor: pointer;
             filter: grayscale(0.3);
+            color: #000;
         }
         .no-posts {
             text-align: center;
@@ -1753,7 +1754,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (НОВЫЙ ФУНКЦИОНАЛ) ==========
+        // ========== ЛЕНТА ПОСТОВ (ИСПРАВЛЕНА: БЕЛЫЙ ТЕКСТ И РАБОТАЮЩИЕ ЛАЙКИ) ==========
         function createPost(text, imageData) {
             if (!text && !imageData) {
                 showNotification('Напишите текст или добавьте изображение', 'error');
@@ -1767,7 +1768,7 @@
                 text: text || '',
                 image: imageData || null,
                 time: Date.now(),
-                likes: {},
+                likes: {},      // обязательно пустой объект
                 comments: []
             };
             App.posts[postId] = newPost;
@@ -1791,11 +1792,19 @@
 
         function likePost(postId) {
             const post = App.posts[postId];
-            if (!post) return;
+            if (!post) {
+                showNotification('Пост не найден', 'error');
+                return;
+            }
+            if (!post.likes) post.likes = {};
+            
             if (post.likes[App.currentUser]) {
                 delete post.likes[App.currentUser];
+                showNotification('❤️ Лайк убран');
             } else {
                 post.likes[App.currentUser] = true;
+                showNotification('👍 Вы поставили лайк!');
+                playHappySound();
             }
             saveToFirebase();
             if (App.activeTab === 'feed') renderFeed();
@@ -1806,7 +1815,6 @@
             if (subtab === 'my') {
                 return allPosts.filter(p => p.author === App.currentUser);
             } else {
-                // рекомендации: все посты кроме своих, случайный порядок
                 const otherPosts = allPosts.filter(p => p.author !== App.currentUser);
                 for (let i = otherPosts.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -1867,6 +1875,10 @@
                 const data = snapshot.val();
                 if (data) {
                     App.posts = data;
+                    // Инициализируем likes для старых постов
+                    for (let id in App.posts) {
+                        if (!App.posts[id].likes) App.posts[id].likes = {};
+                    }
                 } else {
                     App.posts = {};
                 }
@@ -1894,7 +1906,6 @@
             const isSubscribed = isChannel && App.channels[chatPartner]?.subscribers?.includes(user);
             const isOwner = isChannel && App.channels[chatPartner]?.owner === user;
             const showInputArea = !isYolk && canWrite && !isChannel;
-            const showChannelInput = isChannel && isOwner;
             
             return `<div class="main-container"><div class="sidebar ${App.sidebarOpen ? 'open' : ''}"><div class="user-profile" id="openProfileBtn"><div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div><div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div></div><div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div><div class="chats-list" id="chatsList"></div></div><div class="chat-area"><div class="main-tabs"><div class="main-tab ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div><div class="main-tab ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div></div>${!isFeed ? (`
             <div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${isChannel ? formatUserNameWithStatus(chatPartner) : formatUserNameWithStatus(chatPartner === 'saved' ? 'ИЗБРАННОЕ' : (chatPartner === 'yolk' ? 'YOLK' : chatPartner))}${!isChannel && App.users[chatPartner]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div><div class="chat-actions">${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isBotChat && !isChannel ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${isChannel ? `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${chatPartner !== 'saved' && chatPartner !== 'yolk' && !isChannel && !App.systemBots.includes(chatPartner) && canWrite ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div></div><div class="messages-container" id="messageList"></div>${!isYolk ? (showInputArea ? `<div class="input-area"><input type="text" id="messageText" placeholder="${chatPartner === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (isChannel ? (isOwner ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center; color:#888;"><small>Только владелец канала может писать</small></div>`) : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">🔒 ЭТОМУ ЧЕЛОВЕКУ НЕЛЬЗЯ ПИСАТЬ</div></div>`)) : '<div class="input-area" style="justify-content:center; color:#888;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}</div>`) : (`
@@ -1926,7 +1937,6 @@
             const messageText = document.getElementById('messageText'); 
             if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
             
-            // события для ленты
             const mainTabs = document.querySelectorAll('.main-tab');
             mainTabs.forEach(tab => {
                 tab.addEventListener('click', (e) => {
@@ -2075,6 +2085,7 @@
         
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         
+        // Глобальные привязки для ленты
         window.likePost = likePost;
         window.deletePost = deletePost;
         window.openProfileModal = openProfileModal;
