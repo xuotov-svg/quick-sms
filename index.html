@@ -1800,10 +1800,10 @@
             
             if (post.likes[App.currentUser]) {
                 delete post.likes[App.currentUser];
-                showNotification('❤️ Лайк убран');
+                showNotification('❤️ Вы убрали лайк');
             } else {
                 post.likes[App.currentUser] = true;
-                showNotification('👍 Вы поставили лайк!');
+                showNotification('❤️ Вы поставили лайк');
                 playHappySound();
             }
             saveToFirebase();
@@ -1829,7 +1829,7 @@
             if (!feedContainer) return;
             const posts = getFeedPosts(App.feedSubtab);
             if (posts.length === 0) {
-                feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
+                feedContainer.innerHTML = '<div class="no-posts">Нет постов</div>';
                 return;
             }
             let html = '';
