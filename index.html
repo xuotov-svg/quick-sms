@@ -2593,425 +2593,453 @@
         }
         
         // ========== FEED FUNCTIONS ==========
-        async function createFeedPost(text, mediaData, mediaType) {
-            if (!isUserAdult(App.currentUser)) {
-                showNotification('❌ Доступно только для пользователей 18+', 'error');
-                return false;
-            }
-            if (!text && !mediaData) {
-                showNotification('Напишите текст или добавьте медиа', 'error');
-                return false;
-            }
-            if (text && text.length > 500) {
-                showNotification('Текст не более 500 символов', 'error');
-                return false;
-            }
-            const postId = generateId();
-            const post = {
-                id: postId,
-                author: App.currentUser,
-                authorAge: App.users[App.currentUser].age || 14,
-                text: text || '',
-                media: mediaData ? { type: mediaType, url: mediaData } : null,
-                timestamp: Date.now(),
-                likes: {},
-                comments: []
-            };
-            try {
-                await database.ref('feedPosts/' + postId).set(post);
-                showNotification('✅ Пост опубликован');
-                return true;
-            } catch (error) {
-                console.error(error);
-                showNotification('Ошибка публикации', 'error');
-                return false;
-            }
-        }
-        
-        async function deleteFeedPost(postId, postAuthor) {
-            const currentUser = App.currentUser;
-            if (currentUser !== postAuthor && currentUser !== ADMIN_USER) {
-                showNotification('У вас нет прав на удаление', 'error');
-                return false;
-            }
-            if (confirm('🗑️ Удалить пост?')) {
-                try {
-                    await database.ref('feedPosts/' + postId).remove();
-                    showNotification('🗑️ Пост удален');
-                    return true;
-                } catch (error) {
-                    showNotification('Ошибка удаления', 'error');
-                    return false;
-                }
-            }
+let feedListenersSet = false;
+
+async function createFeedPost(text, mediaData, mediaType) {
+    if (!isUserAdult(App.currentUser)) {
+        showNotification('❌ Доступно только для пользователей 18+', 'error');
+        return false;
+    }
+    if (!text && !mediaData) {
+        showNotification('Напишите текст или добавьте медиа', 'error');
+        return false;
+    }
+    if (text && text.length > 500) {
+        showNotification('Текст не более 500 символов', 'error');
+        return false;
+    }
+    const postId = generateId();
+    const post = {
+        id: postId,
+        author: App.currentUser,
+        authorAge: App.users[App.currentUser].age || 14,
+        text: text || '',
+        media: mediaData ? { type: mediaType, url: mediaData } : null,
+        timestamp: Date.now(),
+        likes: {},
+        comments: []
+    };
+    try {
+        await database.ref('feedPosts/' + postId).set(post);
+        showNotification('✅ Пост опубликован');
+        return true;
+    } catch (error) {
+        console.error(error);
+        showNotification('Ошибка публикации', 'error');
+        return false;
+    }
+}
+
+async function deleteFeedPost(postId, postAuthor) {
+    const currentUser = App.currentUser;
+    if (currentUser !== postAuthor && currentUser !== ADMIN_USER) {
+        showNotification('У вас нет прав на удаление', 'error');
+        return false;
+    }
+    if (confirm('🗑️ Удалить пост?')) {
+        try {
+            await database.ref('feedPosts/' + postId).remove();
+            showNotification('🗑️ Пост удален');
+            return true;
+        } catch (error) {
+            showNotification('Ошибка удаления', 'error');
             return false;
         }
-        
-        async function toggleLikePost(postId) {
-            if (!isUserAdult(App.currentUser)) {
-                showNotification('❌ Лайки доступны только для пользователей 18+', 'error');
-                return;
-            }
-            const postRef = database.ref('feedPosts/' + postId);
-            try {
-                const snapshot = await postRef.once('value');
-                const post = snapshot.val();
-                if (!post) return;
-                const likes = post.likes || {};
-                if (likes[App.currentUser]) {
-                    delete likes[App.currentUser];
-                } else {
-                    likes[App.currentUser] = true;
-                }
-                await postRef.child('likes').set(likes);
-            } catch (error) {
-                console.error(error);
-            }
+    }
+    return false;
+}
+
+async function toggleLikePost(postId) {
+    if (!isUserAdult(App.currentUser)) {
+        showNotification('❌ Лайки доступны только для пользователей 18+', 'error');
+        return;
+    }
+    const postRef = database.ref('feedPosts/' + postId);
+    try {
+        const snapshot = await postRef.once('value');
+        const post = snapshot.val();
+        if (!post) return;
+        const likes = post.likes || {};
+        if (likes[App.currentUser]) {
+            delete likes[App.currentUser];
+        } else {
+            likes[App.currentUser] = true;
         }
-        
-        async function addCommentToPost(postId, commentText) {
-            if (!isUserAdult(App.currentUser)) {
-                showNotification('❌ Комментарии доступны только для пользователей 18+', 'error');
-                return false;
-            }
-            if (!commentText.trim()) return false;
-            const comment = {
-                author: App.currentUser,
-                authorAge: App.users[App.currentUser].age || 14,
-                text: commentText.trim(),
-                timestamp: Date.now()
-            };
-            try {
-                const postRef = database.ref('feedPosts/' + postId);
-                const snapshot = await postRef.once('value');
-                const post = snapshot.val();
-                if (!post) return false;
-                const comments = post.comments || [];
-                comments.push(comment);
-                await postRef.child('comments').set(comments);
-                return true;
-            } catch (error) {
-                console.error(error);
-                return false;
-            }
-        }
-        
-        async function loadInitialFeed() {
-            feedPosts = [];
-            feedLoading = false;
-            feedHasMore = true;
-            feedLastTimestamp = null;
-            try {
-                const query = database.ref('feedPosts').orderByChild('timestamp').limitToLast(10);
-                const snapshot = await query.once('value');
-                const items = [];
-                snapshot.forEach(child => {
-                    items.push({ id: child.key, ...child.val() });
-                });
-                items.sort((a,b) => b.timestamp - a.timestamp);
-                feedPosts = items;
-                if (items.length === 10) {
-                    feedHasMore = true;
-                    feedLastTimestamp = items[items.length-1].timestamp;
-                } else {
-                    feedHasMore = false;
-                }
-                renderFeedPosts();
-            } catch (error) {
-                console.error(error);
-            }
-        }
-        
-        async function loadMoreFeed() {
-            if (feedLoading || !feedHasMore) return;
-            feedLoading = true;
-            try {
-                let query = database.ref('feedPosts').orderByChild('timestamp');
-                if (feedLastTimestamp) {
-                    query = query.endAt(feedLastTimestamp - 1);
-                }
-                query = query.limitToLast(10);
-                const snapshot = await query.once('value');
-                const items = [];
-                snapshot.forEach(child => {
-                    items.push({ id: child.key, ...child.val() });
-                });
-                items.sort((a,b) => b.timestamp - a.timestamp);
-                const existingIds = new Set(feedPosts.map(p => p.id));
-                const newItems = items.filter(p => !existingIds.has(p.id));
-                if (newItems.length > 0) {
-                    feedPosts.push(...newItems);
-                    feedPosts.sort((a,b) => b.timestamp - a.timestamp);
-                    feedLastTimestamp = feedPosts[feedPosts.length-1]?.timestamp;
-                }
-                if (items.length < 10) feedHasMore = false;
-                renderFeedPosts();
-            } catch (error) {
-                console.error(error);
-            } finally {
-                feedLoading = false;
-            }
-        }
-        
-        function setupFeedListeners() {
-            if (feedNewListener) feedNewListener.off();
-            if (feedRemovedListener) feedRemovedListener.off();
-            if (feedChangedListener) feedChangedListener.off();
-            
-            feedNewListener = database.ref('feedPosts').on('child_added', (snapshot) => {
-                const newPost = { id: snapshot.key, ...snapshot.val() };
-                if (!feedPosts.some(p => p.id === newPost.id)) {
-                    feedPosts.unshift(newPost);
-                    renderFeedPosts();
-                }
-            });
-            
-            feedRemovedListener = database.ref('feedPosts').on('child_removed', (snapshot) => {
-                const removedId = snapshot.key;
-                feedPosts = feedPosts.filter(p => p.id !== removedId);
-                renderFeedPosts();
-            });
-            
-            feedChangedListener = database.ref('feedPosts').on('child_changed', (snapshot) => {
-                const changed = { id: snapshot.key, ...snapshot.val() };
-                const index = feedPosts.findIndex(p => p.id === changed.id);
-                if (index !== -1) {
-                    feedPosts[index] = changed;
-                    renderFeedPosts();
-                }
-            });
-        }
-        
-        function renderFeed() {
-            const container = document.getElementById('feedContainer');
-            if (!container) return;
-            
-            const isAdult = isUserAdult(App.currentUser);
-            
-            let createFormHtml = '';
-            if (isAdult) {
-                createFormHtml = `
-                    <div class="feed-form">
-                        <textarea id="feedPostText" placeholder="Что нового? (макс 500 символов)" maxlength="500" rows="3"></textarea>
-                        <div class="feed-media-buttons">
-                            <label class="feed-media-upload" for="feedPhotoInput">📷 ФОТО</label>
-                            <label class="feed-media-upload" for="feedVideoInput">🎥 ВИДЕО</label>
-                            <input type="file" id="feedPhotoInput" accept="image/*" style="display:none">
-                            <input type="file" id="feedVideoInput" accept="video/*" style="display:none">
-                        </div>
-                        <div id="feedMediaPreview" class="feed-media-preview"></div>
-                        <button class="profile-btn" id="publishFeedBtn">Опубликовать</button>
-                    </div>
-                `;
-            } else {
-                createFormHtml = `<div class="feed-age-warning">🔞 Лента доступна только для пользователей 18+</div>`;
-            }
-            
-            container.innerHTML = createFormHtml + `<div id="feedPostsList"></div>`;
-            
-            if (isAdult) {
-                let tempMediaData = null;
-                let tempMediaType = null;
-                const photoInput = document.getElementById('feedPhotoInput');
-                const videoInput = document.getElementById('feedVideoInput');
-                const previewDiv = document.getElementById('feedMediaPreview');
-                
-                photoInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    compressImage(URL.createObjectURL(file), 800, 800, 0.7, (compressed) => {
-                        tempMediaData = compressed;
-                        tempMediaType = 'image';
-                        previewDiv.innerHTML = `<img src="${compressed}" style="max-width:100%; max-height:200px; border-radius:12px;">`;
-                        previewDiv.style.display = 'block';
-                    });
-                });
-                
-                videoInput.addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    if (file.size > 20 * 1024 * 1024) {
-                        showNotification('Видео не более 20 МБ', 'error');
-                        return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        tempMediaData = ev.target.result;
-                        tempMediaType = 'video';
-                        previewDiv.innerHTML = `<video controls style="max-width:100%; max-height:200px;"><source src="${tempMediaData}" type="video/mp4"></video>`;
-                        previewDiv.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('publishFeedBtn').addEventListener('click', async () => {
-                    const text = document.getElementById('feedPostText').value.trim();
-                    if (!text && !tempMediaData) {
-                        showNotification('Напишите текст или добавьте медиа', 'error');
-                        return;
-                    }
-                    await createFeedPost(text, tempMediaData, tempMediaType);
-                    document.getElementById('feedPostText').value = '';
-                    tempMediaData = null;
-                    tempMediaType = null;
-                    previewDiv.innerHTML = '';
-                    previewDiv.style.display = 'none';
-                    photoInput.value = '';
-                    videoInput.value = '';
-                });
-            }
-            
+        await postRef.child('likes').set(likes);
+        // Локально обновляем пост для мгновенного отклика (опционально)
+        const localPost = feedPosts.find(p => p.id === postId);
+        if (localPost) {
+            localPost.likes = likes;
             renderFeedPosts();
-            
-            const feedContainerDiv = container;
-            feedContainerDiv.addEventListener('scroll', () => {
-                if (feedContainerDiv.scrollTop + feedContainerDiv.clientHeight >= feedContainerDiv.scrollHeight - 100) {
-                    loadMoreFeed();
-                }
-            });
         }
-        
-        function renderFeedPosts() {
-            const postsList = document.getElementById('feedPostsList');
-            if (!postsList) return;
-            if (feedPosts.length === 0) {
-                postsList.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">Пока нет постов. Будьте первым!</div>';
-                return;
-            }
-            const isAdult = isUserAdult(App.currentUser);
-            let html = '';
-            feedPosts.forEach(post => {
-                const authorData = App.users[post.author] || { avatar: null, verified: false };
-                const avatarHtml = authorData.avatar ? `<img src="${authorData.avatar}">` : (post.author[1] || '@');
-                const statusClass = getUserStatus(post.author)?.class || '';
-                const verifiedBadge = authorData.verified ? '<span class="verified-icon"></span>' : '';
-                const timeAgo = formatTimeAgo(post.timestamp);
-                const likesCount = post.likes ? Object.keys(post.likes).length : 0;
-                const userLiked = post.likes && post.likes[App.currentUser];
-                const commentsCount = post.comments ? post.comments.length : 0;
-                const canDelete = (post.author === App.currentUser || App.currentUser === ADMIN_USER);
-                let mediaHtml = '';
-                if (post.media) {
-                    if (post.media.type === 'image') {
-                        mediaHtml = `<img src="${post.media.url}" class="feed-media" onclick="window.openImageModal('${post.media.url}')">`;
-                    } else if (post.media.type === 'video') {
-                        mediaHtml = `<video controls class="feed-media"><source src="${post.media.url}" type="video/mp4"></video>`;
-                    }
-                }
-                html += `
-                    <div class="feed-post" data-post-id="${post.id}">
-                        <div class="feed-post-header">
-                            <div class="feed-avatar" onclick="openProfileModal('${post.author}')">${avatarHtml}</div>
-                            <div class="feed-author">
-                                <div class="feed-author-name" onclick="openProfileModal('${post.author}')">
-                                    <span class="${statusClass}">${post.author}</span>${verifiedBadge}
-                                </div>
-                                <div class="feed-time">${timeAgo}</div>
-                            </div>
-                            ${canDelete ? `<button class="feed-delete-btn" onclick="window.deleteFeedPost('${post.id}', '${post.author}')">🗑️</button>` : ''}
-                        </div>
-                        <div class="feed-text">${escapeHtml(post.text)}</div>
-                        ${mediaHtml}
-                        <div class="feed-actions">
-                            <button class="feed-like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleFeedLike('${post.id}')">❤️ <span>${likesCount}</span></button>
-                            <button class="feed-comment-btn" onclick="window.openCommentsModal('${post.id}')">💬 <span>${commentsCount}</span></button>
-                        </div>
-                    </div>
-                `;
-            });
-            postsList.innerHTML = html;
-            if (!isAdult) {
-                document.querySelectorAll('.feed-like-btn, .feed-comment-btn').forEach(btn => {
-                    btn.style.opacity = '0.5';
-                    btn.style.pointerEvents = 'none';
-                });
-            }
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function addCommentToPost(postId, commentText) {
+    if (!isUserAdult(App.currentUser)) {
+        showNotification('❌ Комментарии доступны только для пользователей 18+', 'error');
+        return false;
+    }
+    if (!commentText.trim()) return false;
+    const comment = {
+        author: App.currentUser,
+        authorAge: App.users[App.currentUser].age || 14,
+        text: commentText.trim(),
+        timestamp: Date.now()
+    };
+    try {
+        const postRef = database.ref('feedPosts/' + postId);
+        const snapshot = await postRef.once('value');
+        const post = snapshot.val();
+        if (!post) return false;
+        const comments = post.comments || [];
+        comments.push(comment);
+        await postRef.child('comments').set(comments);
+        return true;
+    } catch (error) {
+        console.error(error);
+        return false;
+    }
+}
+
+async function loadInitialFeed() {
+    feedPosts = [];
+    feedLoading = false;
+    feedHasMore = true;
+    feedLastTimestamp = null;
+    try {
+        const query = database.ref('feedPosts').orderByChild('timestamp').limitToLast(10);
+        const snapshot = await query.once('value');
+        const items = [];
+        snapshot.forEach(child => {
+            items.push({ id: child.key, ...child.val() });
+        });
+        items.sort((a,b) => b.timestamp - a.timestamp);
+        feedPosts = items;
+        if (items.length === 10) {
+            feedHasMore = true;
+            feedLastTimestamp = items[items.length-1].timestamp;
+        } else {
+            feedHasMore = false;
         }
-        
-        function formatTimeAgo(timestamp) {
-            const seconds = Math.floor((Date.now() - timestamp) / 1000);
-            if (seconds < 60) return `${seconds} сек назад`;
-            const minutes = Math.floor(seconds / 60);
-            if (minutes < 60) return `${minutes} мин назад`;
-            const hours = Math.floor(minutes / 60);
-            if (hours < 24) return `${hours} ч назад`;
-            const days = Math.floor(hours / 24);
-            return `${days} дн назад`;
+        renderFeedPosts();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function loadMoreFeed() {
+    if (feedLoading || !feedHasMore) return;
+    feedLoading = true;
+    try {
+        let query = database.ref('feedPosts').orderByChild('timestamp');
+        if (feedLastTimestamp) {
+            query = query.endAt(feedLastTimestamp - 1);
         }
-        
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
+        query = query.limitToLast(10);
+        const snapshot = await query.once('value');
+        const items = [];
+        snapshot.forEach(child => {
+            items.push({ id: child.key, ...child.val() });
+        });
+        items.sort((a,b) => b.timestamp - a.timestamp);
+        const existingIds = new Set(feedPosts.map(p => p.id));
+        const newItems = items.filter(p => !existingIds.has(p.id));
+        if (newItems.length > 0) {
+            feedPosts.push(...newItems);
+            feedPosts.sort((a,b) => b.timestamp - a.timestamp);
+            feedLastTimestamp = feedPosts[feedPosts.length-1]?.timestamp;
         }
-        
-        window.toggleFeedLike = async function(postId) {
-            if (!isUserAdult(App.currentUser)) {
-                showNotification('❌ Лайки доступны только для пользователей 18+', 'error');
-                return;
-            }
-            await toggleLikePost(postId);
-        };
-        
-        window.deleteFeedPost = async function(postId, author) {
-            await deleteFeedPost(postId, author);
-        };
-        
-        window.openCommentsModal = function(postId) {
-            const post = feedPosts.find(p => p.id === postId);
-            if (!post) return;
-            const isAdult = isUserAdult(App.currentUser);
-            let commentsHtml = '';
-            if (post.comments && post.comments.length) {
-                commentsHtml = post.comments.map(com => `
-                    <div class="comment-item">
-                        <div class="comment-author" onclick="openProfileModal('${com.author}')">${com.author}</div>
-                        <div class="comment-text">${escapeHtml(com.text)}</div>
-                        <div class="comment-time">${formatTimeAgo(com.timestamp)}</div>
-                    </div>
-                `).join('');
-            } else {
-                commentsHtml = '<div style="text-align:center; color:#888;">Нет комментариев</div>';
-            }
-            
-            const modalHtml = `
-                <div class="modal-overlay" id="commentsModal">
-                    <div class="profile-modal" style="max-width: 500px;">
-                        <h3>💬 Комментарии</h3>
-                        <div class="feed-post" style="margin-bottom:16px;">
-                            <div class="feed-post-header">
-                                <div class="feed-avatar" onclick="openProfileModal('${post.author}')">${App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}">` : (post.author[1] || '@')}</div>
-                                <div class="feed-author">
-                                    <div class="feed-author-name" onclick="openProfileModal('${post.author}')">${post.author}</div>
-                                    <div class="feed-time">${formatTimeAgo(post.timestamp)}</div>
-                                </div>
-                            </div>
-                            <div class="feed-text">${escapeHtml(post.text)}</div>
-                            ${post.media ? (post.media.type === 'image' ? `<img src="${post.media.url}" class="feed-media" style="max-width:100%;">` : `<video controls style="max-width:100%;"><source src="${post.media.url}"></video>`) : ''}
-                        </div>
-                        <div class="comment-list">${commentsHtml}</div>
-                        ${isAdult ? `<div class="input-group"><textarea id="newCommentText" placeholder="Ваш комментарий..." rows="2" style="width:100%; background:rgba(0,0,0,0.5); border-radius:12px; padding:8px; color:#fff;"></textarea><button class="profile-btn" id="submitCommentBtn">Отправить</button></div>` : '<div class="feed-age-warning">🔞 Только для 18+</div>'}
-                        <div class="profile-actions"><button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button></div>
-                    </div>
+        if (items.length < 10) feedHasMore = false;
+        renderFeedPosts();
+    } catch (error) {
+        console.error(error);
+    } finally {
+        feedLoading = false;
+    }
+}
+
+function setupFeedListeners() {
+    // Удаляем предыдущие слушатели, если они были
+    if (feedNewListener) feedNewListener.off();
+    if (feedRemovedListener) feedRemovedListener.off();
+    if (feedChangedListener) feedChangedListener.off();
+    
+    feedNewListener = database.ref('feedPosts').on('child_added', (snapshot) => {
+        const newPost = { id: snapshot.key, ...snapshot.val() };
+        if (!feedPosts.some(p => p.id === newPost.id)) {
+            feedPosts.unshift(newPost);
+            renderFeedPosts();
+        }
+    });
+    
+    feedRemovedListener = database.ref('feedPosts').on('child_removed', (snapshot) => {
+        const removedId = snapshot.key;
+        feedPosts = feedPosts.filter(p => p.id !== removedId);
+        renderFeedPosts();
+    });
+    
+    feedChangedListener = database.ref('feedPosts').on('child_changed', (snapshot) => {
+        const changed = { id: snapshot.key, ...snapshot.val() };
+        const index = feedPosts.findIndex(p => p.id === changed.id);
+        if (index !== -1) {
+            feedPosts[index] = changed;
+            renderFeedPosts();
+        }
+    });
+}
+
+function renderFeed() {
+    const container = document.getElementById('feedContainer');
+    if (!container) return;
+    
+    const isAdult = isUserAdult(App.currentUser);
+    
+    let createFormHtml = '';
+    if (isAdult) {
+        createFormHtml = `
+            <div class="feed-form">
+                <textarea id="feedPostText" placeholder="Что нового? (макс 500 символов)" maxlength="500" rows="3"></textarea>
+                <div class="feed-media-buttons">
+                    <label class="feed-media-upload" for="feedPhotoInput">📷 ФОТО</label>
+                    <label class="feed-media-upload" for="feedVideoInput">🎥 ВИДЕО</label>
+                    <input type="file" id="feedPhotoInput" accept="image/*" style="display:none">
+                    <input type="file" id="feedVideoInput" accept="video/*" style="display:none">
                 </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            if (isAdult) {
-                document.getElementById('submitCommentBtn').addEventListener('click', async () => {
-                    const commentText = document.getElementById('newCommentText').value.trim();
-                    if (!commentText) return;
-                    const success = await addCommentToPost(postId, commentText);
-                    if (success) {
-                        document.getElementById('commentsModal').remove();
-                        loadInitialFeed();
-                    }
-                });
+                <div id="feedMediaPreview" class="feed-media-preview"></div>
+                <button class="profile-btn" id="publishFeedBtn">Опубликовать</button>
+            </div>
+        `;
+    } else {
+        createFormHtml = `<div class="feed-age-warning">🔞 Лента доступна только для пользователей 18+</div>`;
+    }
+    
+    container.innerHTML = createFormHtml + `<div id="feedPostsList"></div>`;
+    
+    if (isAdult) {
+        let tempMediaData = null;
+        let tempMediaType = null;
+        const photoInput = document.getElementById('feedPhotoInput');
+        const videoInput = document.getElementById('feedVideoInput');
+        const previewDiv = document.getElementById('feedMediaPreview');
+        
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            compressImage(URL.createObjectURL(file), 800, 800, 0.7, (compressed) => {
+                tempMediaData = compressed;
+                tempMediaType = 'image';
+                previewDiv.innerHTML = `<img src="${compressed}" style="max-width:100%; max-height:200px; border-radius:12px;">`;
+                previewDiv.style.display = 'block';
+            });
+        });
+        
+        videoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 20 * 1024 * 1024) {
+                showNotification('Видео не более 20 МБ', 'error');
+                return;
             }
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                tempMediaData = ev.target.result;
+                tempMediaType = 'video';
+                previewDiv.innerHTML = `<video controls style="max-width:100%; max-height:200px;"><source src="${tempMediaData}" type="video/mp4"></video>`;
+                previewDiv.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        document.getElementById('publishFeedBtn').addEventListener('click', async () => {
+            const text = document.getElementById('feedPostText').value.trim();
+            if (!text && !tempMediaData) {
+                showNotification('Напишите текст или добавьте медиа', 'error');
+                return;
+            }
+            await createFeedPost(text, tempMediaData, tempMediaType);
+            document.getElementById('feedPostText').value = '';
+            tempMediaData = null;
+            tempMediaType = null;
+            previewDiv.innerHTML = '';
+            previewDiv.style.display = 'none';
+            photoInput.value = '';
+            videoInput.value = '';
+        });
+    }
+    
+    // Подключаем слушатели Firebase, если ещё не подключены
+    if (!feedListenersSet) {
+        setupFeedListeners();
+        feedListenersSet = true;
+    }
+    
+    renderFeedPosts();
+    
+    const feedContainerDiv = container;
+    feedContainerDiv.addEventListener('scroll', () => {
+        if (feedContainerDiv.scrollTop + feedContainerDiv.clientHeight >= feedContainerDiv.scrollHeight - 100) {
+            loadMoreFeed();
+        }
+    });
+}
+
+function renderFeedPosts() {
+    const postsList = document.getElementById('feedPostsList');
+    if (!postsList) return;
+    if (feedPosts.length === 0) {
+        postsList.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">Пока нет постов. Будьте первым!</div>';
+        return;
+    }
+    const isAdult = isUserAdult(App.currentUser);
+    let html = '';
+    feedPosts.forEach(post => {
+        const authorData = App.users[post.author] || { avatar: null, verified: false };
+        const avatarHtml = authorData.avatar ? `<img src="${authorData.avatar}">` : (post.author[1] || '@');
+        const statusClass = getUserStatus(post.author)?.class || '';
+        const verifiedBadge = authorData.verified ? '<span class="verified-icon"></span>' : '';
+        const timeAgo = formatTimeAgo(post.timestamp);
+        const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+        const userLiked = post.likes && post.likes[App.currentUser];
+        const commentsCount = post.comments ? post.comments.length : 0;
+        const canDelete = (post.author === App.currentUser || App.currentUser === ADMIN_USER);
+        let mediaHtml = '';
+        if (post.media) {
+            if (post.media.type === 'image') {
+                mediaHtml = `<img src="${post.media.url}" class="feed-media" onclick="window.openImageModal('${post.media.url}')">`;
+            } else if (post.media.type === 'video') {
+                mediaHtml = `<video controls class="feed-media"><source src="${post.media.url}" type="video/mp4"></video>`;
+            }
+        }
+        html += `
+            <div class="feed-post" data-post-id="${post.id}">
+                <div class="feed-post-header">
+                    <div class="feed-avatar" onclick="openProfileModal('${post.author}')">${avatarHtml}</div>
+                    <div class="feed-author">
+                        <div class="feed-author-name" onclick="openProfileModal('${post.author}')">
+                            <span class="${statusClass}">${post.author}</span>${verifiedBadge}
+                        </div>
+                        <div class="feed-time">${timeAgo}</div>
+                    </div>
+                    ${canDelete ? `<button class="feed-delete-btn" onclick="window.deleteFeedPost('${post.id}', '${post.author}')">🗑️</button>` : ''}
+                </div>
+                <div class="feed-text">${escapeHtml(post.text)}</div>
+                ${mediaHtml}
+                <div class="feed-actions">
+                    <button class="feed-like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleFeedLike('${post.id}')">❤️ <span>${likesCount}</span></button>
+                    <button class="feed-comment-btn" onclick="window.openCommentsModal('${post.id}')">💬 <span>${commentsCount}</span></button>
+                </div>
+            </div>
+        `;
+    });
+    postsList.innerHTML = html;
+    if (!isAdult) {
+        document.querySelectorAll('.feed-like-btn, .feed-comment-btn').forEach(btn => {
+            btn.style.opacity = '0.5';
+            btn.style.pointerEvents = 'none';
+        });
+    }
+}
+
+function formatTimeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds < 60) return `${seconds} сек назад`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} мин назад`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} ч назад`;
+    const days = Math.floor(hours / 24);
+    return `${days} дн назад`;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+window.toggleFeedLike = async function(postId) {
+    if (!isUserAdult(App.currentUser)) {
+        showNotification('❌ Лайки доступны только для пользователей 18+', 'error');
+        return;
+    }
+    await toggleLikePost(postId);
+};
+
+window.deleteFeedPost = async function(postId, author) {
+    await deleteFeedPost(postId, author);
+};
+
+window.openCommentsModal = function(postId) {
+    const post = feedPosts.find(p => p.id === postId);
+    if (!post) return;
+    const isAdult = isUserAdult(App.currentUser);
+    let commentsHtml = '';
+    if (post.comments && post.comments.length) {
+        commentsHtml = post.comments.map(com => `
+            <div class="comment-item">
+                <div class="comment-author" onclick="openProfileModal('${com.author}')">${com.author}</div>
+                <div class="comment-text">${escapeHtml(com.text)}</div>
+                <div class="comment-time">${formatTimeAgo(com.timestamp)}</div>
+            </div>
+        `).join('');
+    } else {
+        commentsHtml = '<div style="text-align:center; color:#888;">Нет комментариев</div>';
+    }
+    
+    const modalHtml = `
+        <div class="modal-overlay" id="commentsModal">
+            <div class="profile-modal" style="max-width: 500px;">
+                <h3>💬 Комментарии</h3>
+                <div class="feed-post" style="margin-bottom:16px;">
+                    <div class="feed-post-header">
+                        <div class="feed-avatar" onclick="openProfileModal('${post.author}')">${App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}">` : (post.author[1] || '@')}</div>
+                        <div class="feed-author">
+                            <div class="feed-author-name" onclick="openProfileModal('${post.author}')">${post.author}</div>
+                            <div class="feed-time">${formatTimeAgo(post.timestamp)}</div>
+                        </div>
+                    </div>
+                    <div class="feed-text">${escapeHtml(post.text)}</div>
+                    ${post.media ? (post.media.type === 'image' ? `<img src="${post.media.url}" class="feed-media" style="max-width:100%;">` : `<video controls style="max-width:100%;"><source src="${post.media.url}"></video>`) : ''}
+                </div>
+                <div class="comment-list">${commentsHtml}</div>
+                ${isAdult ? `<div class="input-group"><textarea id="newCommentText" placeholder="Ваш комментарий..." rows="2" style="width:100%; background:rgba(0,0,0,0.5); border-radius:12px; padding:8px; color:#fff;"></textarea><button class="profile-btn" id="submitCommentBtn">Отправить</button></div>` : '<div class="feed-age-warning">🔞 Только для 18+</div>'}
+                <div class="profile-actions"><button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button></div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    if (isAdult) {
+        document.getElementById('submitCommentBtn').addEventListener('click', async () => {
+            const commentText = document.getElementById('newCommentText').value.trim();
+            if (!commentText) return;
+            const success = await addCommentToPost(postId, commentText);
+            if (success) {
+                document.getElementById('commentsModal').remove();
+                loadInitialFeed();
+            }
+        });
+    }
+    
+    document.getElementById('closeCommentsModal').addEventListener('click', () => {
+        document.getElementById('commentsModal').remove();
+    });
+};
+
+function initFeed() {
+    if (!feedListenersSet) {
+        setupFeedListeners();
+        feedListenersSet = true;
+    }
+    loadInitialFeed();
+}
             
             document.getElementById('closeCommentsModal').addEventListener('click', () => {
                 document.getElementById('commentsModal').remove();
