@@ -1793,14 +1793,8 @@ function loadFeedPosts(limit = 10, lastKey = null) {
         if (data) {
             const posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
             posts.sort((a,b) => b.timestamp - a.timestamp);
-            if (!lastKey) {
-                App.feedPosts = posts;
-            } else {
-                // Убираем дубликаты при добавлении новых постов
-                const existingIds = new Set(App.feedPosts.map(p => p.id));
-                const newPosts = posts.filter(p => !existingIds.has(p.id));
-                App.feedPosts = [...App.feedPosts, ...newPosts];
-            }
+            if (!lastKey) App.feedPosts = posts;
+            else App.feedPosts = [...App.feedPosts, ...posts];
             if (posts.length > 0) App.feedLastKey = posts[posts.length-1].id;
         }
         renderFeedPosts();
@@ -1839,7 +1833,7 @@ function renderFeedPosts() {
         const isLiked = post.likes && post.likes[App.currentUser];
         const isAuthor = post.author === App.currentUser;
         html += `
-            <div class="feed-post-card" data-post-id="${post.id}" data-post-index="${App.feedPosts.indexOf(post)}">
+            <div class="feed-post-card" data-post-id="${post.id}">
                 <div class="feed-post-header" onclick="openProfileModal('${post.author}')">
                     <div class="feed-avatar">${avatarHtml}</div>
                     <div class="feed-author-info">
@@ -1850,8 +1844,8 @@ function renderFeedPosts() {
                 <div class="feed-text">${escapeHtml(post.text)}</div>
                 ${mediaHtml}
                 <div class="feed-actions">
-                    <button class="feed-action-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}" onclick="window.toggleLikeOnPost('${post.id}')">❤️ <span class="likes-count">${likesCount}</span></button>
-                    <button class="feed-action-btn" onclick="window.openCommentsModal('${post.id}')">💬 <span class="comments-count">${post.comments?.length || 0}</span></button>
+                    <button class="feed-action-btn ${isLiked ? 'liked' : ''}" onclick="window.toggleLikeOnPost('${post.id}')">❤️ <span>${likesCount}</span></button>
+                    <button class="feed-action-btn" onclick="window.openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
                     ${isAuthor ? `<button class="feed-action-btn danger" onclick="window.deleteFeedPost('${post.id}')">🗑️</button>` : ''}
                 </div>
             </div>
@@ -1883,28 +1877,12 @@ function setupInfiniteScroll() {
     const sentinelDiv = document.createElement('div');
     sentinelDiv.id = 'feed-sentinel';
     sentinelDiv.style.height = '10px';
-    sentinelDiv.style.marginTop = '20px';
-    sentinelDiv.style.textAlign = 'center';
-    sentinelDiv.style.color = '#888';
-    sentinelDiv.style.fontSize = '12px';
-    sentinelDiv.innerHTML = 'Загрузка...';
     container.appendChild(sentinelDiv);
     App.feedObserver = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting && !App.feedLoading && App.feedLastKey) {
-            sentinelDiv.innerHTML = 'Загрузка...';
-            loadFeedPosts(10, App.feedLastKey).then(() => {
-                if (App.feedLastKey) {
-                    sentinelDiv.innerHTML = 'Загрузить ещё';
-                } else {
-                    sentinelDiv.innerHTML = 'Вы просмотрели все посты';
-                }
-            });
-        } else if (entries[0].isIntersecting && !App.feedLastKey) {
-            sentinelDiv.innerHTML = 'Вы просмотрели все посты';
-        } else if (!App.feedLoading) {
-            sentinelDiv.innerHTML = 'Прокрутите для загрузки';
+            loadFeedPosts(10, App.feedLastKey);
         }
-    }, { root: container, threshold: 0.1, rootMargin: '0px 0px 100px 0px' });
+    }, { root: container, threshold: 0.1 });
     App.feedObserver.observe(sentinelDiv);
 }
 
@@ -1930,9 +1908,7 @@ function createFeedPost(text, mediaData, isVideo) {
     database.ref('feedPosts/' + newPost.id).set(newPost).then(() => {
         showNotification('Пост опубликован!');
         if (App.activeFeed) {
-            // Добавляем новый пост в начало без перезагрузки всей ленты
-            App.feedPosts.unshift(newPost);
-            renderFeedPosts();
+            loadFeedPosts(10, null);
         }
     }).catch(e => showNotification('Ошибка публикации', 'error'));
 }
@@ -1949,160 +1925,89 @@ window.toggleLikeOnPost = function(postId) {
         const post = snapshot.val();
         if (!post) return;
         const likes = post.likes || {};
-        if (likes[App.currentUser]) {
-            delete likes[App.currentUser];
-        } else {
-            likes[App.currentUser] = true;
-        }
+        if (likes[App.currentUser]) delete likes[App.currentUser];
+        else likes[App.currentUser] = true;
         postRef.update({ likes }).then(() => {
-            // Обновляем локальные данные без перерисовки всей ленты
-            const localPost = App.feedPosts.find(p => p.id === postId);
-            if (localPost) {
-                localPost.likes = likes;
-                // Обновляем только кнопку лайка в DOM
-                const postElement = document.querySelector(`.feed-post-card[data-post-id="${postId}"]`);
-                if (postElement) {
-                    const likeBtn = postElement.querySelector('.feed-action-btn:first-child');
-                    const likesSpan = likeBtn.querySelector('.likes-count');
-                    const likesCount = Object.keys(likes).length;
-                    if (likesSpan) likesSpan.textContent = likesCount;
-                    if (likes[App.currentUser]) {
-                        likeBtn.classList.add('liked');
-                    } else {
-                        likeBtn.classList.remove('liked');
-                    }
-                }
-            }
+            if (App.activeFeed) renderFeedPosts();
         });
-    }).catch(e => console.error('Ошибка при лайке:', e));
+    });
 };
 
 window.openCommentsModal = function(postId) {
-    // Находим актуальный пост (берем из Firebase, чтобы получить последние комментарии)
-    const postRef = database.ref('feedPosts/' + postId);
-    postRef.get().then(snapshot => {
-        const post = snapshot.val();
-        if (!post) {
-            showNotification('Пост не найден', 'error');
+    const post = App.feedPosts.find(p => p.id === postId);
+    if (!post) return;
+    const comments = post.comments || [];
+    const modalHtml = `
+        <div class="modal-overlay" id="commentsModal">
+            <div class="profile-modal comments-modal" style="max-width: 500px;">
+                <h3>💬 Комментарии</h3>
+                <div class="comments-list" id="commentsList">
+                    ${comments.map(c => `
+                        <div class="comment-item">
+                            <div class="comment-avatar">${App.users[c.author]?.avatar ? `<img src="${App.users[c.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (c.author[1] || '?')}</div>
+                            <div class="comment-content">
+                                <div class="comment-author" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
+                                <div class="comment-text">${escapeHtml(c.text)}</div>
+                                <div class="comment-time">${new Date(c.timestamp).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `).join('') || '<div style="color:#aaa;">Нет комментариев</div>'}
+                </div>
+                <div class="input-area" style="margin-top: 16px;">
+                    <input type="text" id="commentInput" placeholder="Ваш комментарий..." autocomplete="off">
+                    <button class="send-btn" id="submitCommentBtn">➤</button>
+                </div>
+                <div class="profile-actions" style="margin-top: 12px;">
+                    <button class="profile-btn secondary" id="closeCommentsModal">ЗАКРЫТЬ</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    document.getElementById('submitCommentBtn').addEventListener('click', () => {
+        // ПРОВЕРКА ВОЗРАСТА - только 18+ могут писать комментарии
+        if (!isUserAdult(App.currentUser)) {
+            showNotification('❌ Только пользователи 18+ могут писать комментарии', 'error');
             return;
         }
         
-        const comments = post.comments || [];
-        const modalHtml = `
-            <div class="modal-overlay" id="commentsModal" data-post-id="${postId}">
-                <div class="profile-modal comments-modal" style="max-width: 500px;">
-                    <h3>💬 Комментарии</h3>
-                    <div class="comments-list" id="commentsList" style="max-height: 400px; overflow-y: auto;">
-                        ${comments.length === 0 ? '<div style="text-align:center; color:#aaa; padding:20px;">Нет комментариев</div>' : comments.map((c, idx) => `
-                            <div class="comment-item" data-comment-index="${idx}">
-                                <div class="comment-avatar" onclick="openProfileModal('${c.author}')" style="cursor:pointer;">${App.users[c.author]?.avatar ? `<img src="${App.users[c.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (c.author[1] || '?')}</div>
-                                <div class="comment-content">
-                                    <div class="comment-author" onclick="openProfileModal('${c.author}')" style="cursor:pointer;">${formatUserNameWithStatus(c.author)}</div>
-                                    <div class="comment-text">${escapeHtml(c.text)}</div>
-                                    <div class="comment-time">${new Date(c.timestamp).toLocaleString()}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="input-area" style="margin-top: 16px;">
-                        <input type="text" id="commentInput" placeholder="Ваш комментарий..." autocomplete="off">
-                        <button class="send-btn" id="submitCommentBtn">➤</button>
-                    </div>
-                    <div class="profile-actions" style="margin-top: 12px;">
-                        <button class="profile-btn secondary" id="closeCommentsModal">ЗАКРЫТЬ</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
-        const submitBtn = document.getElementById('submitCommentBtn');
-        const commentInput = document.getElementById('commentInput');
-        const closeBtn = document.getElementById('closeCommentsModal');
-        
-        const sendComment = () => {
-            // ПРОВЕРКА ВОЗРАСТА - только 18+ могут писать комментарии
-            if (!isUserAdult(App.currentUser)) {
-                showNotification('❌ Только пользователи 18+ могут писать комментарии', 'error');
-                return;
-            }
-            
-            const text = commentInput.value.trim();
-            if (!text) {
-                showNotification('Введите текст комментария', 'error');
-                return;
-            }
-            
-            const newComment = {
-                author: App.currentUser,
-                text: text,
-                timestamp: Date.now()
-            };
-            
-            const postRef2 = database.ref('feedPosts/' + postId);
-            postRef2.get().then(snapshot => {
-                const postData = snapshot.val();
-                if (!postData) return;
-                const commentsList = postData.comments || [];
-                commentsList.push(newComment);
-                postRef2.update({ comments: commentsList }).then(() => {
-                    // Обновляем локальный пост
-                    const localPost = App.feedPosts.find(p => p.id === postId);
-                    if (localPost) {
-                        localPost.comments = commentsList;
-                        // Обновляем счетчик комментариев в ленте
-                        const postElement = document.querySelector(`.feed-post-card[data-post-id="${postId}"]`);
-                        if (postElement) {
-                            const commentsSpan = postElement.querySelector('.comments-count');
-                            if (commentsSpan) commentsSpan.textContent = commentsList.length;
-                        }
-                    }
-                    commentInput.value = '';
-                    // Обновляем список комментариев в модалке
-                    const commentsListDiv = document.getElementById('commentsList');
-                    if (commentsListDiv) {
-                        const newCommentHtml = `
-                            <div class="comment-item">
-                                <div class="comment-avatar" onclick="openProfileModal('${newComment.author}')" style="cursor:pointer;">${App.users[newComment.author]?.avatar ? `<img src="${App.users[newComment.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (newComment.author[1] || '?')}</div>
-                                <div class="comment-content">
-                                    <div class="comment-author" onclick="openProfileModal('${newComment.author}')" style="cursor:pointer;">${formatUserNameWithStatus(newComment.author)}</div>
-                                    <div class="comment-text">${escapeHtml(newComment.text)}</div>
-                                    <div class="comment-time">${new Date(newComment.timestamp).toLocaleString()}</div>
-                                </div>
-                            </div>
-                        `;
-                        if (commentsListDiv.innerHTML.includes('Нет комментариев')) {
-                            commentsListDiv.innerHTML = newCommentHtml;
-                        } else {
-                            commentsListDiv.insertAdjacentHTML('beforeend', newCommentHtml);
-                        }
-                        commentsListDiv.scrollTop = commentsListDiv.scrollHeight;
-                    }
-                    showNotification('Комментарий добавлен');
-                });
-            });
+        const input = document.getElementById('commentInput');
+        const text = input.value.trim();
+        if (!text) return;
+        const newComment = {
+            author: App.currentUser,
+            text: text,
+            timestamp: Date.now()
         };
-        
-        submitBtn.addEventListener('click', sendComment);
-        commentInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendComment();
+        const postRef = database.ref('feedPosts/' + postId);
+        postRef.get().then(snapshot => {
+            const postData = snapshot.val();
+            if (!postData) return;
+            const comments = postData.comments || [];
+            comments.push(newComment);
+            postRef.update({ comments }).then(() => {
+                input.value = '';
+                document.getElementById('commentsModal').remove();
+                if (App.activeFeed) renderFeedPosts();
+            });
         });
-        closeBtn.addEventListener('click', () => {
-            document.getElementById('commentsModal')?.remove();
-        });
-    }).catch(e => console.error('Ошибка при открытии комментариев:', e));
+    });
+    
+    document.getElementById('closeCommentsModal').addEventListener('click', () => {
+        document.getElementById('commentsModal').remove();
+    });
+    
+    document.getElementById('commentInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') document.getElementById('submitCommentBtn').click();
+    });
 };
 
 window.deleteFeedPost = function(postId) {
     if (!confirm('Удалить пост?')) return;
     database.ref('feedPosts/' + postId).remove().then(() => {
         showNotification('Пост удален');
-        // Удаляем пост из локального массива
-        const index = App.feedPosts.findIndex(p => p.id === postId);
-        if (index !== -1) {
-            App.feedPosts.splice(index, 1);
-            renderFeedPosts();
-        }
+        if (App.activeFeed) loadFeedPosts(10, null);
     });
 };
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
