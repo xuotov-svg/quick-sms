@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp · Liquid Glass2</title>
+    <title>Yolkapp · Liquid Glass</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -512,7 +512,7 @@
             font-size: 14px;
             line-height: 1.4;
             word-break: break-word;
-            color: #ffffff;  /* ← БЕЛЫЙ ТЕКСТ ПОСТА */
+            color: #ffffff;
         }
         .post-image {
             max-width: 100%;
@@ -599,7 +599,7 @@
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, activeTab: 'chats', feedSubtab: 'recommendations', postsLoaded: false };
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, activeTab: 'chats', feedSubtab: 'recommendations', postsLoaded: false, feedDisplayLimit: 10, feedAllPosts: [], feedLoading: false };
         App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
         const tapUpgradeLevels = [{ cost: 0, reward: 1, nextCost: 10, name: "Базовый" }, { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" }, { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" }, { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" }, { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }];
@@ -1754,7 +1754,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (исправленная версия: без перерисовки при лайке) ==========
+        // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНАЯ И БЕЗ ПЕРЕРИСОВКИ ПРИ ЛАЙКЕ) ==========
         function createPost(text, imageData) {
             if (!text && !imageData) {
                 showNotification('Напишите текст или добавьте изображение', 'error');
@@ -1774,7 +1774,12 @@
             App.posts[postId] = newPost;
             saveToFirebase();
             showNotification('Пост опубликован!');
-            if (App.activeTab === 'feed') renderFeed(); // полная перерисовка только при создании
+            if (App.activeTab === 'feed') {
+                // Добавляем новый пост в начало массива всех постов и перерисовываем ленту
+                App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
+                App.feedDisplayLimit = 10;
+                renderFeed();
+            }
             return true;
         }
 
@@ -1787,7 +1792,11 @@
             delete App.posts[postId];
             saveToFirebase();
             showNotification('Пост удалён');
-            if (App.activeTab === 'feed') renderFeed(); // полная перерисовка при удалении
+            if (App.activeTab === 'feed') {
+                App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
+                App.feedDisplayLimit = 10;
+                renderFeed();
+            }
         }
 
         function likePost(postId) {
@@ -1826,13 +1835,13 @@
             }
         }
 
-        function getFeedPosts(subtab) {
-            const allPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-            if (subtab === 'my') {
-                return allPosts.filter(p => p.author === App.currentUser);
+        function getFeedPostsForDisplay(limit) {
+            if (App.feedSubtab === 'my') {
+                const myPosts = App.feedAllPosts.filter(p => p.author === App.currentUser);
+                return myPosts.slice(0, limit);
             } else {
                 // Рекомендации: исключаем свои посты
-                let otherPosts = allPosts.filter(p => p.author !== App.currentUser);
+                let otherPosts = App.feedAllPosts.filter(p => p.author !== App.currentUser);
                 // Перемешиваем случайно
                 for (let i = otherPosts.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -1840,7 +1849,7 @@
                 }
                 // Убираем повторы авторов так, чтобы один автор не встречался чаще 1 раза в 5 постов
                 const limited = [];
-                const lastAuthors = []; // храним последние 5 авторов
+                const lastAuthors = [];
                 for (let post of otherPosts) {
                     if (limited.length > 0 && lastAuthors.includes(post.author)) {
                         continue;
@@ -1848,14 +1857,14 @@
                     limited.push(post);
                     lastAuthors.push(post.author);
                     if (lastAuthors.length > 5) lastAuthors.shift();
-                    if (limited.length >= 20) break;
+                    if (limited.length >= limit) break;
                 }
                 // Если после фильтрации осталось мало постов, добавим остальные без ограничения
-                if (limited.length < 3 && otherPosts.length > limited.length) {
+                if (limited.length < limit && otherPosts.length > limited.length) {
                     for (let post of otherPosts) {
                         if (!limited.includes(post)) {
                             limited.push(post);
-                            if (limited.length >= 10) break;
+                            if (limited.length >= limit) break;
                         }
                     }
                 }
@@ -1866,7 +1875,7 @@
         function renderFeed() {
             const feedContainer = document.getElementById('feedContainer');
             if (!feedContainer) return;
-            const posts = getFeedPosts(App.feedSubtab);
+            const posts = getFeedPostsForDisplay(App.feedDisplayLimit);
             if (posts.length === 0) {
                 feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
                 return;
@@ -1896,6 +1905,42 @@
                 `;
             }
             feedContainer.innerHTML = html;
+            // Проверяем, нужно ли подгрузить ещё (если показано меньше, чем доступно)
+            if (App.feedDisplayLimit < (App.feedSubtab === 'my' ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length)) {
+                // Добавляем индикатор загрузки внизу
+                const loadMoreDiv = document.createElement('div');
+                loadMoreDiv.className = 'no-posts';
+                loadMoreDiv.style.padding = '20px';
+                loadMoreDiv.textContent = 'Загрузка...';
+                feedContainer.appendChild(loadMoreDiv);
+            }
+        }
+
+        function loadMorePosts() {
+            if (App.feedLoading) return;
+            App.feedLoading = true;
+            // Увеличиваем лимит на 10
+            const totalPosts = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
+            if (App.feedDisplayLimit < totalPosts) {
+                App.feedDisplayLimit += 10;
+                renderFeed();
+            }
+            App.feedLoading = false;
+        }
+
+        function initFeedScroll() {
+            const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) return;
+            feedContainer.removeEventListener('scroll', handleFeedScroll);
+            feedContainer.addEventListener('scroll', handleFeedScroll);
+        }
+
+        function handleFeedScroll() {
+            const container = document.getElementById('feedContainer');
+            if (!container) return;
+            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
+                loadMorePosts();
+            }
         }
 
         function escapeHtml(str) {
@@ -1909,8 +1954,8 @@
         }
 
         function loadPostsFromFirebase() {
-            // Загружаем посты один раз при старте, без постоянной подписки, чтобы избежать автоматической перерисовки
-            database.ref('posts').once('value', (snapshot) => {
+            // Загружаем все посты один раз и подписываемся на изменения
+            database.ref('posts').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     App.posts = data;
@@ -1920,52 +1965,18 @@
                 } else {
                     App.posts = {};
                 }
+                App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
                 App.postsLoaded = true;
-                if (App.activeTab === 'feed') renderFeed();
-            });
-            // Подписка для получения новых постов в реальном времени без перерисовки ленты (только добавляем в начало)
-            database.ref('posts').on('child_added', (snapshot) => {
-                if (!App.postsLoaded) return;
-                const newPost = snapshot.val();
-                if (newPost && !App.posts[newPost.id]) {
-                    App.posts[newPost.id] = newPost;
-                    if (!App.posts[newPost.id].likes) App.posts[newPost.id].likes = {};
-                    if (App.activeTab === 'feed') {
-                        // Если мы на вкладке ленты, обновляем ленту полностью (чтобы новый пост попал в список)
-                        renderFeed();
-                    }
-                }
-            });
-            // Слушаем удаление постов
-            database.ref('posts').on('child_removed', (snapshot) => {
-                const removedId = snapshot.key;
-                if (App.posts[removedId]) {
-                    delete App.posts[removedId];
-                    if (App.activeTab === 'feed') renderFeed();
-                }
-            });
-            // Слушаем изменение лайков, но не перерисовываем всю ленту
-            database.ref('posts').on('child_changed', (snapshot) => {
-                const updated = snapshot.val();
-                if (updated && App.posts[updated.id]) {
-                    const oldLikes = App.posts[updated.id].likes ? Object.keys(App.posts[updated.id].likes).length : 0;
-                    App.posts[updated.id] = updated;
-                    if (!App.posts[updated.id].likes) App.posts[updated.id].likes = {};
-                    const newLikes = Object.keys(App.posts[updated.id].likes).length;
-                    // Если изменилось только количество лайков, обновляем UI локально
-                    if (oldLikes !== newLikes && App.activeTab === 'feed') {
-                        const isLiked = !!App.posts[updated.id].likes[App.currentUser];
-                        updatePostLikeUI(updated.id, isLiked, newLikes);
-                    } else if (App.activeTab === 'feed') {
-                        // Если изменилось что-то ещё (текст, картинка), перерисовываем (но такого быть не должно)
-                        renderFeed();
-                    }
+                if (App.activeTab === 'feed') {
+                    App.feedDisplayLimit = 10;
+                    renderFeed();
+                    initFeedScroll();
                 }
             });
         }
 
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
-        function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats') { if (App.activeChat) loadMessages(App.activeChat); updateChatList(); } else { renderFeed(); } updateSidebarUser(); applyWallpaper(); }, 100); } }
+        function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats') { if (App.activeChat) loadMessages(App.activeChat); updateChatList(); } else { renderFeed(); initFeedScroll(); } updateSidebarUser(); applyWallpaper(); }, 100); } }
         
         function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
         
@@ -2090,7 +2101,10 @@
                     } else if (tabName === 'feed') {
                         App.activeTab = 'feed';
                         render();
-                        setTimeout(() => renderFeed(), 50);
+                        setTimeout(() => {
+                            renderFeed();
+                            initFeedScroll();
+                        }, 50);
                     }
                 });
             });
@@ -2100,7 +2114,9 @@
                     const feedType = e.target.dataset.feed;
                     if (feedType === 'recommendations') App.feedSubtab = 'recommendations';
                     else if (feedType === 'my') App.feedSubtab = 'my';
+                    App.feedDisplayLimit = 10;
                     renderFeed();
+                    initFeedScroll();
                     document.querySelectorAll('.feed-subtab').forEach(s => s.classList.remove('active'));
                     e.target.classList.add('active');
                 });
