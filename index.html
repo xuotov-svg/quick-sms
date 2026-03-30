@@ -1789,13 +1789,11 @@ function loadFeedPosts(limit = 10, lastTimestamp = null) {
 
     let query;
     if (lastTimestamp) {
-        // Загружаем посты, которые старше последнего загруженного timestamp
         query = database.ref('feedPosts')
             .orderByChild('timestamp')
             .endBefore(lastTimestamp)
             .limitToLast(limit);
     } else {
-        // Первая загрузка — самые новые
         query = database.ref('feedPosts')
             .orderByChild('timestamp')
             .limitToLast(limit);
@@ -1804,16 +1802,12 @@ function loadFeedPosts(limit = 10, lastTimestamp = null) {
     return query.get().then(snapshot => {
         const data = snapshot.val();
         if (data) {
-            // Преобразуем объект в массив
             let posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
-            // Сортируем по убыванию timestamp (новые сверху)
             posts.sort((a, b) => b.timestamp - a.timestamp);
 
             if (!lastTimestamp) {
-                // Первая загрузка — заменяем текущие посты
                 App.feedPosts = posts;
             } else {
-                // Добавляем только те посты, которых ещё нет в памяти
                 const existingIds = new Set(App.feedPosts.map(p => p.id));
                 const newPosts = posts.filter(p => !existingIds.has(p.id));
                 if (newPosts.length) {
@@ -1821,7 +1815,6 @@ function loadFeedPosts(limit = 10, lastTimestamp = null) {
                 }
             }
 
-            // Запоминаем самый старый timestamp для следующей подгрузки
             if (posts.length > 0) {
                 App.lastTimestamp = posts[posts.length - 1].timestamp;
             }
@@ -1842,34 +1835,28 @@ function subscribeFeedPosts() {
             const posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
             posts.sort((a, b) => b.timestamp - a.timestamp);
 
-            // Если в памяти ещё нет постов, просто сохраняем
             if (!App.feedPosts || App.feedPosts.length === 0) {
                 App.feedPosts = posts;
                 if (App.activeFeed) renderFeedPosts();
                 return;
             }
 
-            // Находим новые посты (которых нет в текущем списке)
             const existingIds = new Set(App.feedPosts.map(p => p.id));
             const newPosts = posts.filter(p => !existingIds.has(p.id));
 
-            // Находим удалённые посты (которые есть в памяти, но нет в базе)
             const newIds = new Set(posts.map(p => p.id));
             const deletedPosts = App.feedPosts.filter(p => !newIds.has(p.id));
 
             if (newPosts.length > 0) {
-                // Новые посты добавляем в начало (они свежие)
                 App.feedPosts = [...newPosts, ...App.feedPosts];
                 if (App.activeFeed) renderFeedPosts();
             }
 
             if (deletedPosts.length > 0) {
-                // Удаляем из памяти те, которых больше нет в базе
                 App.feedPosts = App.feedPosts.filter(p => newIds.has(p.id));
                 if (App.activeFeed) renderFeedPosts();
             }
         } else {
-            // База пуста — очищаем ленту
             App.feedPosts = [];
             if (App.activeFeed) renderFeedPosts();
         }
@@ -1894,6 +1881,10 @@ function renderFeedPosts() {
         const likesCount = post.likes ? Object.keys(post.likes).length : 0;
         const isLiked = post.likes && post.likes[App.currentUser];
         const isAuthor = post.author === App.currentUser;
+        const isAdmin = App.currentUser === '@durov';   // Администратор
+
+        // Показываем кнопку удаления, если пользователь автор ИЛИ администратор
+        const showDelete = isAuthor || isAdmin;
 
         html += `
             <div class="feed-post-card" data-post-id="${post.id}" data-post-index="${index}">
@@ -1909,14 +1900,13 @@ function renderFeedPosts() {
                 <div class="feed-actions">
                     <button class="feed-action-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}" onclick="window.toggleLikeOnPost('${post.id}')">❤️ <span class="likes-count">${likesCount}</span></button>
                     <button class="feed-action-btn" onclick="window.openCommentsModal('${post.id}')">💬 <span class="comments-count">${post.comments?.length || 0}</span></button>
-                    ${isAuthor ? `<button class="feed-action-btn danger" onclick="window.deleteFeedPost('${post.id}')">🗑️</button>` : ''}
+                    ${showDelete ? `<button class="feed-action-btn danger" onclick="window.deleteFeedPost('${post.id}')">🗑️</button>` : ''}
                 </div>
             </div>
         `;
     });
     container.innerHTML = html;
 
-    // Добавляем индикатор загрузки в конец, если есть ещё посты
     if (App.lastTimestamp && !App.feedLoading) {
         const loadingDiv = document.createElement('div');
         loadingDiv.id = 'feed-loading-indicator';
@@ -1950,7 +1940,6 @@ function setupInfiniteScroll() {
     const container = document.getElementById('messageList');
     if (!container) return;
 
-    // Удаляем старый sentinel, если есть
     const oldSentinel = document.getElementById('feed-sentinel');
     if (oldSentinel) oldSentinel.remove();
 
@@ -1962,7 +1951,6 @@ function setupInfiniteScroll() {
 
     App.feedObserver = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting && !App.feedLoading && App.lastTimestamp) {
-            // Загружаем следующую порцию (более старые посты)
             loadFeedPosts(10, App.lastTimestamp);
         }
     }, { root: container, threshold: 0.1, rootMargin: '0px 0px 100px 0px' });
@@ -1996,7 +1984,6 @@ function createFeedPost(text, mediaData, isVideo) {
     database.ref('feedPosts/' + newPost.id).set(newPost)
         .then(() => {
             showNotification('✅ Пост опубликован!');
-            // Добавляем в начало, если его ещё нет
             if (!App.feedPosts.some(p => p.id === newPost.id)) {
                 App.feedPosts.unshift(newPost);
                 if (App.activeFeed) renderFeedPosts();
@@ -2023,7 +2010,6 @@ window.toggleLikeOnPost = function(postId) {
             likes[App.currentUser] = true;
         }
         postRef.update({ likes }).then(() => {
-            // Обновляем локальные данные
             const localPost = App.feedPosts.find(p => p.id === postId);
             if (localPost) {
                 localPost.likes = likes;
@@ -2112,7 +2098,6 @@ window.openCommentsModal = function(postId) {
                 const commentsList = postData.comments || [];
                 commentsList.push(newComment);
                 postRef2.update({ comments: commentsList }).then(() => {
-                    // Обновляем локальный пост
                     const localPost = App.feedPosts.find(p => p.id === postId);
                     if (localPost) {
                         localPost.comments = commentsList;
@@ -2123,7 +2108,6 @@ window.openCommentsModal = function(postId) {
                         }
                     }
                     commentInput.value = '';
-                    // Обновляем список комментариев в модалке
                     const commentsListDiv = document.getElementById('commentsList');
                     if (commentsListDiv) {
                         const newCommentHtml = `
@@ -2158,8 +2142,18 @@ window.openCommentsModal = function(postId) {
     }).catch(e => console.error('Ошибка при открытии комментариев:', e));
 };
 
-// Удаление поста
+// Удаление поста (админ может удалить любой)
 window.deleteFeedPost = function(postId) {
+    const isAdmin = App.currentUser === '@durov';
+    const postToDelete = App.feedPosts.find(p => p.id === postId);
+    if (!postToDelete) return;
+
+    // Если не админ и не автор — не даём удалять
+    if (!isAdmin && postToDelete.author !== App.currentUser) {
+        showNotification('Вы не можете удалить этот пост', 'error');
+        return;
+    }
+
     if (!confirm('🗑️ Удалить пост?')) return;
 
     database.ref('feedPosts/' + postId).remove()
@@ -2170,7 +2164,8 @@ window.deleteFeedPost = function(postId) {
                 App.feedPosts.splice(index, 1);
                 renderFeedPosts();
             }
-        });
+        })
+        .catch(e => showNotification('Ошибка удаления', 'error'));
 };
 
 // (Опционально) Очистка всей ленты — только для админа
