@@ -1795,44 +1795,51 @@ function loadFeedPosts(limit = 10) {
     if (App.feedLoading) return Promise.resolve();
     App.feedLoading = true;
     
-    // Если загружаем впервые, создаем перемешанный массив ID
-    if (!App.shuffledPostIds) {
+    // Если загружаем впервые и нет перемешанного списка
+    if (!App.shuffledPostIds && !App.isLoadingShuffled) {
+        App.isLoadingShuffled = true;
         return database.ref('feedPosts').get().then(snapshot => {
             const data = snapshot.val();
             if (data) {
                 const allIds = Object.keys(data);
-                // Перемешиваем ID
+                // Перемешиваем ID только один раз
                 App.shuffledPostIds = shuffleArray(allIds);
                 App.currentPostIndex = 0;
+                App.isLoadingShuffled = false;
                 // Загружаем первую порцию
                 return loadNextPosts(limit);
             } else {
                 App.feedPosts = [];
                 renderFeedPosts();
                 App.feedLoading = false;
+                App.isLoadingShuffled = false;
             }
         }).catch(e => { 
             console.error(e); 
             App.feedLoading = false;
+            App.isLoadingShuffled = false;
             App.feedPosts = [];
             renderFeedPosts();
         });
-    } else {
-        // Загружаем следующую порцию
+    } else if (App.shuffledPostIds) {
+        // Если список уже есть, загружаем следующую порцию
         return loadNextPosts(limit);
+    } else {
+        App.feedLoading = false;
+        return Promise.resolve();
     }
 }
 
 function loadNextPosts(limit) {
     if (!App.shuffledPostIds || App.currentPostIndex >= App.shuffledPostIds.length) {
-        // Больше нет постов, можно начать заново или показать сообщение
+        // Больше нет постов
         App.feedLoading = false;
         if (App.feedPosts.length === 0) {
             renderFeedPosts();
         }
         // Добавляем индикатор конца ленты
         const container = document.getElementById('messageList');
-        if (container && !document.getElementById('feed-end-message')) {
+        if (container && !document.getElementById('feed-end-message') && App.shuffledPostIds && App.shuffledPostIds.length > 0) {
             const endDiv = document.createElement('div');
             endDiv.id = 'feed-end-message';
             endDiv.style.textAlign = 'center';
@@ -1881,18 +1888,52 @@ function loadNextPosts(limit) {
 function subscribeFeedPosts() {
     database.ref('feedPosts').on('value', (snapshot) => {
         const data = snapshot.val();
+        
         if (data) {
-            // При обновлении базы данных, обновляем перемешанный массив ID
             const allIds = Object.keys(data);
-            App.shuffledPostIds = shuffleArray(allIds);
-            App.currentPostIndex = 0;
-            App.feedPosts = [];
             
-            // Загружаем посты заново в случайном порядке
-            if (App.activeFeed) {
-                loadFeedPosts(10);
+            // Если это первая загрузка или постов стало меньше (удаление)
+            if (!App.shuffledPostIds) {
+                // Пересоздаем перемешанный список ID
+                App.shuffledPostIds = shuffleArray(allIds);
+                App.currentPostIndex = 0;
+                App.feedPosts = [];
+                if (App.activeFeed) {
+                    loadFeedPosts(10);
+                }
+            } 
+            // Если добавились новые посты
+            else if (allIds.length > App.shuffledPostIds.length) {
+                // Находим новые ID
+                const newIds = allIds.filter(id => !App.shuffledPostIds.includes(id));
+                if (newIds.length > 0) {
+                    // Добавляем новые ID в начало списка
+                    App.shuffledPostIds = [...newIds, ...App.shuffledPostIds];
+                    // Загружаем только новые посты и добавляем их в начало ленты
+                    const promises = newIds.map(id => database.ref('feedPosts/' + id).get());
+                    Promise.all(promises).then(snapshots => {
+                        const newPosts = [];
+                        snapshots.forEach(snapshot => {
+                            const postData = snapshot.val();
+                            if (postData) {
+                                newPosts.push({ id: snapshot.key, ...postData });
+                            }
+                        });
+                        // Сортируем новые посты по времени
+                        newPosts.sort((a, b) => b.timestamp - a.timestamp);
+                        // Добавляем в начало (без дубликатов)
+                        const existingIds = new Set(App.feedPosts.map(p => p.id));
+                        const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p.id));
+                        App.feedPosts = [...uniqueNewPosts, ...App.feedPosts];
+                        if (App.activeFeed) {
+                            renderFeedPosts();
+                        }
+                    });
+                }
             }
+            // Если постов стало столько же, ничего не делаем
         } else {
+            // База данных пуста
             App.feedPosts = [];
             App.shuffledPostIds = null;
             App.currentPostIndex = 0;
@@ -1924,20 +1965,16 @@ function renderFeedPosts() {
         const isLiked = post.likes && post.likes[App.currentUser];
         const isAuthor = post.author === App.currentUser;
         
-        // Определяем цвет текста в зависимости от темы (можно оставить как есть)
-        const textColor = '#ffffff'; // для темной темы
-        const secondaryColor = '#aaaaaa';
-        
         html += `
             <div class="feed-post-card" data-post-id="${post.id}" data-post-index="${index}">
                 <div class="feed-post-header" onclick="openProfileModal('${post.author}')">
                     <div class="feed-avatar">${avatarHtml}</div>
                     <div class="feed-author-info">
-                        <div class="feed-author-name" style="color: ${textColor};">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                        <div class="feed-time" style="color: ${secondaryColor};">${new Date(post.timestamp).toLocaleString()}</div>
+                        <div class="feed-author-name">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                        <div class="feed-time">${new Date(post.timestamp).toLocaleString()}</div>
                     </div>
                 </div>
-                <div class="feed-text" style="color: ${textColor};">${escapeHtml(post.text)}</div>
+                <div class="feed-text">${escapeHtml(post.text)}</div>
                 ${mediaHtml}
                 <div class="feed-actions">
                     <button class="feed-action-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}" onclick="window.toggleLikeOnPost('${post.id}')">❤️ <span class="likes-count">${likesCount}</span></button>
@@ -1949,14 +1986,14 @@ function renderFeedPosts() {
     });
     container.innerHTML = html;
     
-    // Добавляем индикатор загрузки в конец
+    // Добавляем индикатор загрузки в конец (если есть еще посты)
     if (App.shuffledPostIds && App.currentPostIndex < App.shuffledPostIds.length) {
         const loadingDiv = document.createElement('div');
         loadingDiv.id = 'feed-loading-indicator';
         loadingDiv.style.textAlign = 'center';
         loadingDiv.style.padding = '20px';
         loadingDiv.style.color = '#888';
-        loadingDiv.innerHTML = '⏳ Загрузка...';
+        loadingDiv.innerHTML = '⏳ Прокрутите для загрузки...';
         container.appendChild(loadingDiv);
     }
     
@@ -1996,6 +2033,9 @@ function setupInfiniteScroll() {
         if (entries[0].isIntersecting && !App.feedLoading) {
             // Проверяем, есть ли еще посты для загрузки
             if (App.shuffledPostIds && App.currentPostIndex < App.shuffledPostIds.length) {
+                // Удаляем индикатор загрузки перед новой загрузкой
+                const loadingIndicator = document.getElementById('feed-loading-indicator');
+                if (loadingIndicator) loadingIndicator.remove();
                 loadNextPosts(10);
             }
         }
@@ -2026,17 +2066,16 @@ function createFeedPost(text, mediaData, isVideo) {
     
     database.ref('feedPosts/' + newPost.id).set(newPost).then(() => {
         showNotification('✅ Пост опубликован!');
-        // Обновляем ленту - добавляем новый пост в начало списка
+        // Добавляем новый ID в начало перемешанного списка
+        if (App.shuffledPostIds) {
+            App.shuffledPostIds.unshift(newPost.id);
+        } else {
+            App.shuffledPostIds = [newPost.id];
+        }
+        // Добавляем новый пост в начало ленты
+        App.feedPosts.unshift(newPost);
         if (App.activeFeed) {
-            // Добавляем новый ID в начало перемешанного списка
-            if (App.shuffledPostIds) {
-                App.shuffledPostIds.unshift(newPost.id);
-            } else {
-                App.shuffledPostIds = [newPost.id];
-            }
-            App.currentPostIndex = 0;
-            App.feedPosts = [];
-            loadFeedPosts(10);
+            renderFeedPosts();
         }
     }).catch(e => showNotification('❌ Ошибка публикации', 'error'));
 }
