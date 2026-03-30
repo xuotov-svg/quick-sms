@@ -1782,89 +1782,110 @@ function isUserAdult(username) {
     return (user.age && user.age >= 18) ? true : false;
 }
 
+// Загрузка постов с пагинацией (новые сверху, старые снизу)
 function loadFeedPosts(limit = 10, lastTimestamp = null) {
     if (App.feedLoading) return Promise.resolve();
     App.feedLoading = true;
-    
+
     let query;
     if (lastTimestamp) {
-        // Загружаем посты старше последнего загруженного
+        // Загружаем посты, которые старше последнего загруженного timestamp
         query = database.ref('feedPosts')
             .orderByChild('timestamp')
             .endBefore(lastTimestamp)
             .limitToLast(limit);
     } else {
-        // Первая загрузка - берем самые новые
+        // Первая загрузка — самые новые
         query = database.ref('feedPosts')
             .orderByChild('timestamp')
             .limitToLast(limit);
     }
-    
+
     return query.get().then(snapshot => {
         const data = snapshot.val();
         if (data) {
             // Преобразуем объект в массив
             let posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
-            // Сортируем по времени (новые сверху)
+            // Сортируем по убыванию timestamp (новые сверху)
             posts.sort((a, b) => b.timestamp - a.timestamp);
-            
+
             if (!lastTimestamp) {
-                // Первая загрузка
+                // Первая загрузка — заменяем текущие посты
                 App.feedPosts = posts;
             } else {
-                // Добавляем новые посты (без дубликатов)
+                // Добавляем только те посты, которых ещё нет в памяти
                 const existingIds = new Set(App.feedPosts.map(p => p.id));
                 const newPosts = posts.filter(p => !existingIds.has(p.id));
-                App.feedPosts = [...App.feedPosts, ...newPosts];
+                if (newPosts.length) {
+                    App.feedPosts = [...App.feedPosts, ...newPosts];
+                }
             }
-            
-            // Сохраняем самый старый timestamp для следующей загрузки
+
+            // Запоминаем самый старый timestamp для следующей подгрузки
             if (posts.length > 0) {
                 App.lastTimestamp = posts[posts.length - 1].timestamp;
             }
         }
         renderFeedPosts();
         App.feedLoading = false;
-    }).catch(e => { 
-        console.error(e); 
+    }).catch(e => {
+        console.error(e);
         App.feedLoading = false;
     });
 }
 
+// Подписка на изменения в базе (добавление/удаление постов)
 function subscribeFeedPosts() {
     database.ref('feedPosts').on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             const posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
             posts.sort((a, b) => b.timestamp - a.timestamp);
-            
-            // Проверяем, появились ли новые посты
+
+            // Если в памяти ещё нет постов, просто сохраняем
+            if (!App.feedPosts || App.feedPosts.length === 0) {
+                App.feedPosts = posts;
+                if (App.activeFeed) renderFeedPosts();
+                return;
+            }
+
+            // Находим новые посты (которых нет в текущем списке)
             const existingIds = new Set(App.feedPosts.map(p => p.id));
             const newPosts = posts.filter(p => !existingIds.has(p.id));
-            
+
+            // Находим удалённые посты (которые есть в памяти, но нет в базе)
+            const newIds = new Set(posts.map(p => p.id));
+            const deletedPosts = App.feedPosts.filter(p => !newIds.has(p.id));
+
             if (newPosts.length > 0) {
-                // Добавляем новые посты в начало
+                // Новые посты добавляем в начало (они свежие)
                 App.feedPosts = [...newPosts, ...App.feedPosts];
-                if (App.activeFeed) {
-                    renderFeedPosts();
-                }
+                if (App.activeFeed) renderFeedPosts();
+            }
+
+            if (deletedPosts.length > 0) {
+                // Удаляем из памяти те, которых больше нет в базе
+                App.feedPosts = App.feedPosts.filter(p => newIds.has(p.id));
+                if (App.activeFeed) renderFeedPosts();
             }
         } else {
+            // База пуста — очищаем ленту
             App.feedPosts = [];
             if (App.activeFeed) renderFeedPosts();
         }
     });
 }
 
+// Отрисовка ленты
 function renderFeedPosts() {
     const container = document.getElementById('messageList');
     if (!container || !App.activeFeed) return;
-    
+
     if (App.feedPosts.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">📭 Пока нет постов. Напишите первый!</div>';
         return;
     }
-    
+
     let html = '';
     App.feedPosts.forEach((post, index) => {
         const author = App.users[post.author] || {};
@@ -1873,7 +1894,7 @@ function renderFeedPosts() {
         const likesCount = post.likes ? Object.keys(post.likes).length : 0;
         const isLiked = post.likes && post.likes[App.currentUser];
         const isAuthor = post.author === App.currentUser;
-        
+
         html += `
             <div class="feed-post-card" data-post-id="${post.id}" data-post-index="${index}">
                 <div class="feed-post-header" onclick="openProfileModal('${post.author}')">
@@ -1894,20 +1915,22 @@ function renderFeedPosts() {
         `;
     });
     container.innerHTML = html;
-    
-    // Добавляем индикатор загрузки в конец
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = 'feed-loading-indicator';
-    loadingDiv.style.textAlign = 'center';
-    loadingDiv.style.padding = '20px';
-    loadingDiv.style.color = '#888';
-    loadingDiv.innerHTML = '⏳ Прокрутите для загрузки старых постов...';
-    container.appendChild(loadingDiv);
-    
-    // бесконечный скролл
+
+    // Добавляем индикатор загрузки в конец, если есть ещё посты
+    if (App.lastTimestamp && !App.feedLoading) {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'feed-loading-indicator';
+        loadingDiv.style.textAlign = 'center';
+        loadingDiv.style.padding = '20px';
+        loadingDiv.style.color = '#888';
+        loadingDiv.innerHTML = '⏳ Прокрутите для загрузки старых постов...';
+        container.appendChild(loadingDiv);
+    }
+
     setupInfiniteScroll();
 }
 
+// Экранирование HTML
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -1920,41 +1943,45 @@ function escapeHtml(str) {
     });
 }
 
+// Бесконечная прокрутка
 function setupInfiniteScroll() {
     if (App.feedObserver) App.feedObserver.disconnect();
-    
+
     const container = document.getElementById('messageList');
     if (!container) return;
-    
-    // Удаляем старый sentinel если есть
+
+    // Удаляем старый sentinel, если есть
     const oldSentinel = document.getElementById('feed-sentinel');
     if (oldSentinel) oldSentinel.remove();
-    
+
     const sentinelDiv = document.createElement('div');
     sentinelDiv.id = 'feed-sentinel';
     sentinelDiv.style.height = '1px';
     sentinelDiv.style.marginTop = '10px';
     container.appendChild(sentinelDiv);
-    
+
     App.feedObserver = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && !App.feedLoading) {
-            // Загружаем следующие посты (более старые)
+        if (entries[0].isIntersecting && !App.feedLoading && App.lastTimestamp) {
+            // Загружаем следующую порцию (более старые посты)
             loadFeedPosts(10, App.lastTimestamp);
         }
     }, { root: container, threshold: 0.1, rootMargin: '0px 0px 100px 0px' });
-    
+
     App.feedObserver.observe(sentinelDiv);
 }
 
+// Создание нового поста
 function createFeedPost(text, mediaData, isVideo) {
-    if (!text && !mediaData) { showNotification('Напишите текст или добавьте медиа', 'error'); return; }
-    
-    // ПРОВЕРКА ВОЗРАСТА - только 18+ могут создавать посты
+    if (!text && !mediaData) {
+        showNotification('Напишите текст или добавьте медиа', 'error');
+        return;
+    }
+
     if (!isUserAdult(App.currentUser)) {
         showNotification('❌ Только пользователи 18+ могут создавать посты', 'error');
         return;
     }
-    
+
     const newPost = {
         id: generateId(),
         author: App.currentUser,
@@ -1965,24 +1992,26 @@ function createFeedPost(text, mediaData, isVideo) {
         image: (!isVideo && mediaData) ? mediaData : null,
         video: (isVideo && mediaData) ? mediaData : null
     };
-    
-    database.ref('feedPosts/' + newPost.id).set(newPost).then(() => {
-        showNotification('✅ Пост опубликован!');
-        // Добавляем новый пост в начало ленты
-        App.feedPosts.unshift(newPost);
-        if (App.activeFeed) {
-            renderFeedPosts();
-        }
-    }).catch(e => showNotification('❌ Ошибка публикации', 'error'));
+
+    database.ref('feedPosts/' + newPost.id).set(newPost)
+        .then(() => {
+            showNotification('✅ Пост опубликован!');
+            // Добавляем в начало, если его ещё нет
+            if (!App.feedPosts.some(p => p.id === newPost.id)) {
+                App.feedPosts.unshift(newPost);
+                if (App.activeFeed) renderFeedPosts();
+            }
+        })
+        .catch(e => showNotification('❌ Ошибка публикации', 'error'));
 }
 
+// Лайк / дизлайк
 window.toggleLikeOnPost = function(postId) {
-    // ПРОВЕРКА ВОЗРАСТА - только 18+ могут ставить лайки
     if (!isUserAdult(App.currentUser)) {
         showNotification('❌ Только пользователи 18+ могут ставить лайки', 'error');
         return;
     }
-    
+
     const postRef = database.ref('feedPosts/' + postId);
     postRef.get().then(snapshot => {
         const post = snapshot.val();
@@ -1998,7 +2027,6 @@ window.toggleLikeOnPost = function(postId) {
             const localPost = App.feedPosts.find(p => p.id === postId);
             if (localPost) {
                 localPost.likes = likes;
-                // Обновляем только кнопку лайка в DOM
                 const postElement = document.querySelector(`.feed-post-card[data-post-id="${postId}"]`);
                 if (postElement) {
                     const likeBtn = postElement.querySelector('.feed-action-btn:first-child');
@@ -2016,8 +2044,8 @@ window.toggleLikeOnPost = function(postId) {
     }).catch(e => console.error('Ошибка при лайке:', e));
 };
 
+// Открытие модалки комментариев
 window.openCommentsModal = function(postId) {
-    // Находим актуальный пост
     const postRef = database.ref('feedPosts/' + postId);
     postRef.get().then(snapshot => {
         const post = snapshot.val();
@@ -2025,7 +2053,7 @@ window.openCommentsModal = function(postId) {
             showNotification('Пост не найден', 'error');
             return;
         }
-        
+
         const comments = post.comments || [];
         const modalHtml = `
             <div class="modal-overlay" id="commentsModal" data-post-id="${postId}">
@@ -2054,30 +2082,29 @@ window.openCommentsModal = function(postId) {
             </div>
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-        
+
         const submitBtn = document.getElementById('submitCommentBtn');
         const commentInput = document.getElementById('commentInput');
         const closeBtn = document.getElementById('closeCommentsModal');
-        
+
         const sendComment = () => {
-            // ПРОВЕРКА ВОЗРАСТА - только 18+ могут писать комментарии
             if (!isUserAdult(App.currentUser)) {
                 showNotification('❌ Только пользователи 18+ могут писать комментарии', 'error');
                 return;
             }
-            
+
             const text = commentInput.value.trim();
             if (!text) {
                 showNotification('Введите текст комментария', 'error');
                 return;
             }
-            
+
             const newComment = {
                 author: App.currentUser,
                 text: text,
                 timestamp: Date.now()
             };
-            
+
             const postRef2 = database.ref('feedPosts/' + postId);
             postRef2.get().then(snapshot => {
                 const postData = snapshot.val();
@@ -2089,7 +2116,6 @@ window.openCommentsModal = function(postId) {
                     const localPost = App.feedPosts.find(p => p.id === postId);
                     if (localPost) {
                         localPost.comments = commentsList;
-                        // Обновляем счетчик комментариев в ленте
                         const postElement = document.querySelector(`.feed-post-card[data-post-id="${postId}"]`);
                         if (postElement) {
                             const commentsSpan = postElement.querySelector('.comments-count');
@@ -2121,7 +2147,7 @@ window.openCommentsModal = function(postId) {
                 });
             });
         };
-        
+
         submitBtn.addEventListener('click', sendComment);
         commentInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendComment();
@@ -2132,19 +2158,49 @@ window.openCommentsModal = function(postId) {
     }).catch(e => console.error('Ошибка при открытии комментариев:', e));
 };
 
+// Удаление поста
 window.deleteFeedPost = function(postId) {
     if (!confirm('🗑️ Удалить пост?')) return;
-    
-    database.ref('feedPosts/' + postId).remove().then(() => {
-        showNotification('✅ Пост удален');
-        // Удаляем пост из локального массива
-        const index = App.feedPosts.findIndex(p => p.id === postId);
-        if (index !== -1) {
-            App.feedPosts.splice(index, 1);
-            renderFeedPosts();
-        }
-    });
+
+    database.ref('feedPosts/' + postId).remove()
+        .then(() => {
+            showNotification('✅ Пост удален');
+            const index = App.feedPosts.findIndex(p => p.id === postId);
+            if (index !== -1) {
+                App.feedPosts.splice(index, 1);
+                renderFeedPosts();
+            }
+        });
 };
+
+// (Опционально) Очистка всей ленты — только для админа
+function deleteAllPosts() {
+    if (App.currentUser !== '@durov') {
+        showNotification('Только администратор может очистить ленту', 'error');
+        return;
+    }
+    if (!confirm('❗ ВНИМАНИЕ! Это удалит ВСЕ посты без возможности восстановления. Вы уверены?')) return;
+
+    database.ref('feedPosts').get().then(snapshot => {
+        const data = snapshot.val();
+        if (!data) {
+            showNotification('Постов и так нет', 'info');
+            return;
+        }
+        const updates = {};
+        for (let id in data) {
+            updates[`feedPosts/${id}`] = null;
+        }
+        database.ref().update(updates).then(() => {
+            showNotification('✅ Все посты удалены!');
+            App.feedPosts = [];
+            if (App.activeFeed) renderFeedPosts();
+        });
+    }).catch(error => {
+        console.error(error);
+        showNotification('Ошибка при удалении', 'error');
+    });
+}
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeFeed) { loadFeedPosts(10, null); renderFeedPosts(); } else if (App.activeChat) loadMessages(App.activeChat); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); } }
         function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
