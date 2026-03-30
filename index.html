@@ -1773,8 +1773,8 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-       // ========== ФУНКЦИИ ЛЕНТЫ ==========
-        
+      // ========== ЛЕНТА ПОСТОВ (ИСПРАВЛЕННАЯ ВЕРСИЯ) ==========
+
 // Функция проверки возраста
 function isUserAdult(username) {
     const user = App.users[username];
@@ -1799,7 +1799,7 @@ function loadFeedPosts(limit = 10, lastTimestamp = null) {
             .limitToLast(limit);
     }
 
-    return query.get().then(snapshot => {
+    return query.once('value').then(snapshot => {
         const data = snapshot.val();
         if (data) {
             let posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
@@ -1881,7 +1881,7 @@ function renderFeedPosts() {
         const likesCount = post.likes ? Object.keys(post.likes).length : 0;
         const isLiked = post.likes && post.likes[App.currentUser];
         const isAuthor = post.author === App.currentUser;
-        const isAdmin = App.currentUser === '@durov';   // Администратор
+        const isAdmin = App.currentUser === '@durov';
 
         // Показываем кнопку удаления, если пользователь автор ИЛИ администратор
         const showDelete = isAuthor || isAdmin;
@@ -1989,30 +1989,40 @@ function createFeedPost(text, mediaData, isVideo) {
                 if (App.activeFeed) renderFeedPosts();
             }
         })
-        .catch(e => showNotification('❌ Ошибка публикации', 'error'));
+        .catch(e => {
+            console.error('Ошибка публикации:', e);
+            showNotification('❌ Ошибка публикации', 'error');
+        });
 }
 
-// Лайк / дизлайк
+// Лайк / дизлайк - ИСПРАВЛЕННАЯ ВЕРСИЯ
 window.toggleLikeOnPost = function(postId) {
     if (!isUserAdult(App.currentUser)) {
         showNotification('❌ Только пользователи 18+ могут ставить лайки', 'error');
         return;
     }
 
-    const postRef = database.ref('feedPosts/' + postId);
-    postRef.get().then(snapshot => {
+    const postRef = database.ref('feedPosts').child(postId);
+    postRef.once('value', (snapshot) => {
         const post = snapshot.val();
-        if (!post) return;
+        if (!post) {
+            showNotification('❌ Пост не найден или был удален', 'error');
+            return;
+        }
+        
         const likes = post.likes || {};
         if (likes[App.currentUser]) {
             delete likes[App.currentUser];
         } else {
             likes[App.currentUser] = true;
         }
+        
         postRef.update({ likes }).then(() => {
+            // Обновляем локальные данные
             const localPost = App.feedPosts.find(p => p.id === postId);
             if (localPost) {
                 localPost.likes = likes;
+                // Обновляем интерфейс без перерисовки всей ленты
                 const postElement = document.querySelector(`.feed-post-card[data-post-id="${postId}"]`);
                 if (postElement) {
                     const likeBtn = postElement.querySelector('.feed-action-btn:first-child');
@@ -2026,17 +2036,23 @@ window.toggleLikeOnPost = function(postId) {
                     }
                 }
             }
+        }).catch(e => {
+            console.error('Ошибка при обновлении лайка:', e);
+            showNotification('❌ Ошибка при обновлении лайка', 'error');
         });
-    }).catch(e => console.error('Ошибка при лайке:', e));
+    }).catch(e => {
+        console.error('Ошибка при получении поста:', e);
+        showNotification('❌ Ошибка при получении поста', 'error');
+    });
 };
 
-// Открытие модалки комментариев
+// Открытие модалки комментариев - ИСПРАВЛЕННАЯ ВЕРСИЯ
 window.openCommentsModal = function(postId) {
-    const postRef = database.ref('feedPosts/' + postId);
-    postRef.get().then(snapshot => {
+    const postRef = database.ref('feedPosts').child(postId);
+    postRef.once('value', (snapshot) => {
         const post = snapshot.val();
         if (!post) {
-            showNotification('Пост не найден', 'error');
+            showNotification('❌ Пост не найден или был удален', 'error');
             return;
         }
 
@@ -2091,22 +2107,31 @@ window.openCommentsModal = function(postId) {
                 timestamp: Date.now()
             };
 
-            const postRef2 = database.ref('feedPosts/' + postId);
-            postRef2.get().then(snapshot => {
+            const postRef2 = database.ref('feedPosts').child(postId);
+            postRef2.once('value', (snapshot) => {
                 const postData = snapshot.val();
-                if (!postData) return;
+                if (!postData) {
+                    showNotification('❌ Пост не найден', 'error');
+                    document.getElementById('commentsModal')?.remove();
+                    return;
+                }
+                
                 const commentsList = postData.comments || [];
                 commentsList.push(newComment);
+                
                 postRef2.update({ comments: commentsList }).then(() => {
+                    // Обновляем локальные данные
                     const localPost = App.feedPosts.find(p => p.id === postId);
                     if (localPost) {
                         localPost.comments = commentsList;
+                        // Обновляем счетчик комментариев
                         const postElement = document.querySelector(`.feed-post-card[data-post-id="${postId}"]`);
                         if (postElement) {
                             const commentsSpan = postElement.querySelector('.comments-count');
                             if (commentsSpan) commentsSpan.textContent = commentsList.length;
                         }
                     }
+                    
                     commentInput.value = '';
                     const commentsListDiv = document.getElementById('commentsList');
                     if (commentsListDiv) {
@@ -2128,6 +2153,9 @@ window.openCommentsModal = function(postId) {
                         commentsListDiv.scrollTop = commentsListDiv.scrollHeight;
                     }
                     showNotification('✅ Комментарий добавлен');
+                }).catch(e => {
+                    console.error('Ошибка при добавлении комментария:', e);
+                    showNotification('❌ Ошибка при добавлении комментария', 'error');
                 });
             });
         };
@@ -2139,22 +2167,28 @@ window.openCommentsModal = function(postId) {
         closeBtn.addEventListener('click', () => {
             document.getElementById('commentsModal')?.remove();
         });
-    }).catch(e => console.error('Ошибка при открытии комментариев:', e));
+    }).catch(e => {
+        console.error('Ошибка при открытии комментариев:', e);
+        showNotification('❌ Ошибка при открытии комментариев', 'error');
+    });
 };
 
 // Удаление поста (админ может удалить любой)
 window.deleteFeedPost = function(postId) {
     const isAdmin = App.currentUser === '@durov';
     const postToDelete = App.feedPosts.find(p => p.id === postId);
-    if (!postToDelete) return;
-
-    // Если не админ и не автор — не даём удалять
-    if (!isAdmin && postToDelete.author !== App.currentUser) {
-        showNotification('Вы не можете удалить этот пост', 'error');
+    if (!postToDelete) {
+        showNotification('Пост не найден', 'error');
         return;
     }
 
-    if (!confirm('🗑️ Удалить пост?')) return;
+    // Если не админ и не автор — не даём удалять
+    if (!isAdmin && postToDelete.author !== App.currentUser) {
+        showNotification('❌ Вы не можете удалить этот пост', 'error');
+        return;
+    }
+
+    if (!confirm('🗑️ Удалить пост? Это действие нельзя отменить.')) return;
 
     database.ref('feedPosts/' + postId).remove()
         .then(() => {
@@ -2162,26 +2196,30 @@ window.deleteFeedPost = function(postId) {
             const index = App.feedPosts.findIndex(p => p.id === postId);
             if (index !== -1) {
                 App.feedPosts.splice(index, 1);
-                renderFeedPosts();
+                if (App.activeFeed) renderFeedPosts();
             }
         })
-        .catch(e => showNotification('Ошибка удаления', 'error'));
+        .catch(e => {
+            console.error('Ошибка удаления:', e);
+            showNotification('❌ Ошибка удаления поста', 'error');
+        });
 };
 
-// (Опционально) Очистка всей ленты — только для админа
+// Очистка всей ленты — только для админа
 function deleteAllPosts() {
     if (App.currentUser !== '@durov') {
-        showNotification('Только администратор может очистить ленту', 'error');
+        showNotification('❌ Только администратор может очистить ленту', 'error');
         return;
     }
     if (!confirm('❗ ВНИМАНИЕ! Это удалит ВСЕ посты без возможности восстановления. Вы уверены?')) return;
 
-    database.ref('feedPosts').get().then(snapshot => {
+    database.ref('feedPosts').once('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) {
             showNotification('Постов и так нет', 'info');
             return;
         }
+        
         const updates = {};
         for (let id in data) {
             updates[`feedPosts/${id}`] = null;
@@ -2190,10 +2228,10 @@ function deleteAllPosts() {
             showNotification('✅ Все посты удалены!');
             App.feedPosts = [];
             if (App.activeFeed) renderFeedPosts();
+        }).catch(e => {
+            console.error('Ошибка при удалении:', e);
+            showNotification('❌ Ошибка при удалении', 'error');
         });
-    }).catch(error => {
-        console.error(error);
-        showNotification('Ошибка при удалении', 'error');
     });
 }
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
