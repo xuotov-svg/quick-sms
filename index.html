@@ -1782,103 +1782,49 @@ function isUserAdult(username) {
     return (user.age && user.age >= 18) ? true : false;
 }
 
-// Функция перемешивания массива (алгоритм Фишера-Йетса)
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-function loadFeedPosts(limit = 10) {
+function loadFeedPosts(limit = 10, lastTimestamp = null) {
     if (App.feedLoading) return Promise.resolve();
     App.feedLoading = true;
     
-    // Если загружаем впервые и нет перемешанного списка
-    if (!App.shuffledPostIds && !App.isLoadingShuffled) {
-        App.isLoadingShuffled = true;
-        return database.ref('feedPosts').get().then(snapshot => {
-            const data = snapshot.val();
-            if (data) {
-                const allIds = Object.keys(data);
-                // Перемешиваем ID только один раз
-                App.shuffledPostIds = shuffleArray(allIds);
-                App.currentPostIndex = 0;
-                App.isLoadingShuffled = false;
-                // Загружаем первую порцию
-                return loadNextPosts(limit);
-            } else {
-                App.feedPosts = [];
-                renderFeedPosts();
-                App.feedLoading = false;
-                App.isLoadingShuffled = false;
-            }
-        }).catch(e => { 
-            console.error(e); 
-            App.feedLoading = false;
-            App.isLoadingShuffled = false;
-            App.feedPosts = [];
-            renderFeedPosts();
-        });
-    } else if (App.shuffledPostIds) {
-        // Если список уже есть, загружаем следующую порцию
-        return loadNextPosts(limit);
+    let query;
+    if (lastTimestamp) {
+        // Загружаем посты старше последнего загруженного
+        query = database.ref('feedPosts')
+            .orderByChild('timestamp')
+            .endBefore(lastTimestamp)
+            .limitToLast(limit);
     } else {
-        App.feedLoading = false;
-        return Promise.resolve();
-    }
-}
-
-function loadNextPosts(limit) {
-    if (!App.shuffledPostIds || App.currentPostIndex >= App.shuffledPostIds.length) {
-        // Больше нет постов
-        App.feedLoading = false;
-        if (App.feedPosts.length === 0) {
-            renderFeedPosts();
-        }
-        // Добавляем индикатор конца ленты
-        const container = document.getElementById('messageList');
-        if (container && !document.getElementById('feed-end-message') && App.shuffledPostIds && App.shuffledPostIds.length > 0) {
-            const endDiv = document.createElement('div');
-            endDiv.id = 'feed-end-message';
-            endDiv.style.textAlign = 'center';
-            endDiv.style.padding = '20px';
-            endDiv.style.color = '#888';
-            endDiv.innerHTML = '📭 Вы просмотрели все посты';
-            container.appendChild(endDiv);
-        }
-        return Promise.resolve();
+        // Первая загрузка - берем самые новые
+        query = database.ref('feedPosts')
+            .orderByChild('timestamp')
+            .limitToLast(limit);
     }
     
-    const nextIds = App.shuffledPostIds.slice(App.currentPostIndex, App.currentPostIndex + limit);
-    App.currentPostIndex += limit;
-    
-    // Загружаем посты по ID
-    const promises = nextIds.map(id => database.ref('feedPosts/' + id).get());
-    return Promise.all(promises).then(snapshots => {
-        const newPosts = [];
-        snapshots.forEach(snapshot => {
-            const postData = snapshot.val();
-            if (postData) {
-                newPosts.push({ id: snapshot.key, ...postData });
+    return query.get().then(snapshot => {
+        const data = snapshot.val();
+        if (data) {
+            // Преобразуем объект в массив
+            let posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
+            // Сортируем по времени (новые сверху)
+            posts.sort((a, b) => b.timestamp - a.timestamp);
+            
+            if (!lastTimestamp) {
+                // Первая загрузка
+                App.feedPosts = posts;
+            } else {
+                // Добавляем новые посты (без дубликатов)
+                const existingIds = new Set(App.feedPosts.map(p => p.id));
+                const newPosts = posts.filter(p => !existingIds.has(p.id));
+                App.feedPosts = [...App.feedPosts, ...newPosts];
             }
-        });
-        
-        // Сортируем новые посты по времени (свежие сверху)
-        newPosts.sort((a, b) => b.timestamp - a.timestamp);
-        
-        // Добавляем новые посты (без дубликатов)
-        const existingIds = new Set(App.feedPosts.map(p => p.id));
-        const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p.id));
-        App.feedPosts = [...App.feedPosts, ...uniqueNewPosts];
-        
+            
+            // Сохраняем самый старый timestamp для следующей загрузки
+            if (posts.length > 0) {
+                App.lastTimestamp = posts[posts.length - 1].timestamp;
+            }
+        }
         renderFeedPosts();
         App.feedLoading = false;
-        
-        // Удаляем индикатор конца, если он был
-        const endMessage = document.getElementById('feed-end-message');
-        if (endMessage) endMessage.remove();
     }).catch(e => { 
         console.error(e); 
         App.feedLoading = false;
@@ -1888,55 +1834,23 @@ function loadNextPosts(limit) {
 function subscribeFeedPosts() {
     database.ref('feedPosts').on('value', (snapshot) => {
         const data = snapshot.val();
-        
         if (data) {
-            const allIds = Object.keys(data);
+            const posts = Object.entries(data).map(([id, post]) => ({ id, ...post }));
+            posts.sort((a, b) => b.timestamp - a.timestamp);
             
-            // Если это первая загрузка или постов стало меньше (удаление)
-            if (!App.shuffledPostIds) {
-                // Пересоздаем перемешанный список ID
-                App.shuffledPostIds = shuffleArray(allIds);
-                App.currentPostIndex = 0;
-                App.feedPosts = [];
+            // Проверяем, появились ли новые посты
+            const existingIds = new Set(App.feedPosts.map(p => p.id));
+            const newPosts = posts.filter(p => !existingIds.has(p.id));
+            
+            if (newPosts.length > 0) {
+                // Добавляем новые посты в начало
+                App.feedPosts = [...newPosts, ...App.feedPosts];
                 if (App.activeFeed) {
-                    loadFeedPosts(10);
-                }
-            } 
-            // Если добавились новые посты
-            else if (allIds.length > App.shuffledPostIds.length) {
-                // Находим новые ID
-                const newIds = allIds.filter(id => !App.shuffledPostIds.includes(id));
-                if (newIds.length > 0) {
-                    // Добавляем новые ID в начало списка
-                    App.shuffledPostIds = [...newIds, ...App.shuffledPostIds];
-                    // Загружаем только новые посты и добавляем их в начало ленты
-                    const promises = newIds.map(id => database.ref('feedPosts/' + id).get());
-                    Promise.all(promises).then(snapshots => {
-                        const newPosts = [];
-                        snapshots.forEach(snapshot => {
-                            const postData = snapshot.val();
-                            if (postData) {
-                                newPosts.push({ id: snapshot.key, ...postData });
-                            }
-                        });
-                        // Сортируем новые посты по времени
-                        newPosts.sort((a, b) => b.timestamp - a.timestamp);
-                        // Добавляем в начало (без дубликатов)
-                        const existingIds = new Set(App.feedPosts.map(p => p.id));
-                        const uniqueNewPosts = newPosts.filter(p => !existingIds.has(p.id));
-                        App.feedPosts = [...uniqueNewPosts, ...App.feedPosts];
-                        if (App.activeFeed) {
-                            renderFeedPosts();
-                        }
-                    });
+                    renderFeedPosts();
                 }
             }
-            // Если постов стало столько же, ничего не делаем
         } else {
-            // База данных пуста
             App.feedPosts = [];
-            App.shuffledPostIds = null;
-            App.currentPostIndex = 0;
             if (App.activeFeed) renderFeedPosts();
         }
     });
@@ -1946,13 +1860,8 @@ function renderFeedPosts() {
     const container = document.getElementById('messageList');
     if (!container || !App.activeFeed) return;
     
-    if (App.feedPosts.length === 0 && (!App.shuffledPostIds || App.shuffledPostIds.length === 0)) {
+    if (App.feedPosts.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">📭 Пока нет постов. Напишите первый!</div>';
-        return;
-    }
-    
-    if (App.feedPosts.length === 0 && App.shuffledPostIds && App.shuffledPostIds.length > 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#aaa;">⏳ Загрузка постов...</div>';
         return;
     }
     
@@ -1986,16 +1895,14 @@ function renderFeedPosts() {
     });
     container.innerHTML = html;
     
-    // Добавляем индикатор загрузки в конец (если есть еще посты)
-    if (App.shuffledPostIds && App.currentPostIndex < App.shuffledPostIds.length) {
-        const loadingDiv = document.createElement('div');
-        loadingDiv.id = 'feed-loading-indicator';
-        loadingDiv.style.textAlign = 'center';
-        loadingDiv.style.padding = '20px';
-        loadingDiv.style.color = '#888';
-        loadingDiv.innerHTML = '⏳ Прокрутите для загрузки...';
-        container.appendChild(loadingDiv);
-    }
+    // Добавляем индикатор загрузки в конец
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'feed-loading-indicator';
+    loadingDiv.style.textAlign = 'center';
+    loadingDiv.style.padding = '20px';
+    loadingDiv.style.color = '#888';
+    loadingDiv.innerHTML = '⏳ Прокрутите для загрузки старых постов...';
+    container.appendChild(loadingDiv);
     
     // бесконечный скролл
     setupInfiniteScroll();
@@ -2031,13 +1938,8 @@ function setupInfiniteScroll() {
     
     App.feedObserver = new IntersectionObserver(entries => {
         if (entries[0].isIntersecting && !App.feedLoading) {
-            // Проверяем, есть ли еще посты для загрузки
-            if (App.shuffledPostIds && App.currentPostIndex < App.shuffledPostIds.length) {
-                // Удаляем индикатор загрузки перед новой загрузкой
-                const loadingIndicator = document.getElementById('feed-loading-indicator');
-                if (loadingIndicator) loadingIndicator.remove();
-                loadNextPosts(10);
-            }
+            // Загружаем следующие посты (более старые)
+            loadFeedPosts(10, App.lastTimestamp);
         }
     }, { root: container, threshold: 0.1, rootMargin: '0px 0px 100px 0px' });
     
@@ -2066,12 +1968,6 @@ function createFeedPost(text, mediaData, isVideo) {
     
     database.ref('feedPosts/' + newPost.id).set(newPost).then(() => {
         showNotification('✅ Пост опубликован!');
-        // Добавляем новый ID в начало перемешанного списка
-        if (App.shuffledPostIds) {
-            App.shuffledPostIds.unshift(newPost.id);
-        } else {
-            App.shuffledPostIds = [newPost.id];
-        }
         // Добавляем новый пост в начало ленты
         App.feedPosts.unshift(newPost);
         if (App.activeFeed) {
@@ -2246,16 +2142,6 @@ window.deleteFeedPost = function(postId) {
         if (index !== -1) {
             App.feedPosts.splice(index, 1);
             renderFeedPosts();
-        }
-        // Обновляем перемешанный список ID
-        if (App.shuffledPostIds) {
-            const idIndex = App.shuffledPostIds.indexOf(postId);
-            if (idIndex !== -1) {
-                App.shuffledPostIds.splice(idIndex, 1);
-                if (idIndex < App.currentPostIndex) {
-                    App.currentPostIndex--;
-                }
-            }
         }
     });
 };
