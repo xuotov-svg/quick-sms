@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp · Liquid Glass22</title>
+    <title>Yolkapp · Liquid Glass11</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -1803,15 +1803,17 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-       // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНАЯ, КОММЕНТАРИИ БЕЗ ПЕРЕЗАГРУЗКИ) ==========
+       // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНЫЙ ЦИКЛ, КОММЕНТАРИИ БЕЗ ПЕРЕЗАГРУЗКИ) ==========
 
 // Глобальные переменные для бесконечной ленты
 App.feedObserver = null;        // Intersection Observer
 App.feedCurrentPage = 0;        // Текущая страница
-App.feedHasMore = true;         // Есть ли еще посты
+App.feedHasMore = true;         // Всегда true для бесконечного цикла
 App.feedIsLoading = false;      // Загружается ли сейчас
-App.feedPageSize = 5;           // Размер страницы (меньше для плавности)
+App.feedPageSize = 5;           // Размер страницы
 App.feedSentinel = null;        // Элемент-наблюдатель
+App.feedAllPostsCache = [];     // Кэш всех постов для бесконечного цикла
+App.feedCurrentOffset = 0;      // Текущее смещение в бесконечном цикле
 
 function createPost(text, imageData) {
     if (!text && !imageData) {
@@ -1833,15 +1835,14 @@ function createPost(text, imageData) {
     showNotification('Пост опубликован!');
     
     if (App.activeTab === 'feed') {
-        // Добавляем новый пост в начало массива
-        App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-        // Добавляем пост в начало отображаемых постов
+        // Обновляем кэш
+        updateFeedCache();
+        // Добавляем пост в начало
         App.feedDisplayedPosts.unshift(newPost);
-        // Добавляем пост в начало DOM
+        // Добавляем в DOM
         prependPostToDOM(newPost);
-        // Сбрасываем пагинацию
-        App.feedCurrentPage = 0;
-        App.feedHasMore = true;
+        // Сбрасываем смещение
+        App.feedCurrentOffset = 0;
     }
     return true;
 }
@@ -1857,15 +1858,16 @@ function deletePost(postId) {
     showNotification('Пост удалён');
     
     if (App.activeTab === 'feed') {
-        // Удаляем из массивов
-        App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
+        // Обновляем кэш
+        updateFeedCache();
+        // Удаляем из отображаемых
         App.feedDisplayedPosts = App.feedDisplayedPosts.filter(p => p.id !== postId);
         // Удаляем из DOM
         const postElement = document.querySelector(`.post-card[data-post-id="${postId}"]`);
         if (postElement) postElement.remove();
         
         // Если постов стало мало, подгружаем еще
-        if (App.feedDisplayedPosts.length < 3 && App.feedHasMore) {
+        if (App.feedDisplayedPosts.length < 3) {
             loadMorePosts();
         }
     }
@@ -1885,7 +1887,7 @@ function addComment(postId, text) {
     post.comments.unshift(newComment);
     saveToFirebase();
     
-    // Обновляем только комментарии этого поста (без перезагрузки ленты)
+    // Обновляем только комментарии этого поста
     updateCommentsForPost(postId);
 }
 
@@ -1919,25 +1921,52 @@ function updateCommentsForPost(postId) {
         commentList.innerHTML = html;
     }
     
-    // Обновляем счётчик комментариев в кнопке
     const commentBtn = postCard.querySelector('.post-comment-btn');
     if (commentBtn) {
         commentBtn.innerHTML = `💬 ${comments.length}`;
     }
 }
 
-function getFeedPostsSlice(start, limit) {
+// Обновление кэша постов
+function updateFeedCache() {
     if (App.feedSubtab === 'my') {
-        const myPosts = App.feedAllPosts.filter(p => p.author === App.currentUser);
-        return myPosts.slice(start, start + limit);
+        App.feedAllPostsCache = Object.values(App.posts)
+            .filter(p => p.author === App.currentUser)
+            .sort((a,b) => b.time - a.time);
     } else {
         // Рекомендации: исключаем свои посты
-        let otherPosts = App.feedAllPosts.filter(p => p.author !== App.currentUser);
-        return otherPosts.slice(start, start + limit);
+        App.feedAllPostsCache = Object.values(App.posts)
+            .filter(p => p.author !== App.currentUser)
+            .sort((a,b) => b.time - a.time);
+    }
+    
+    // Если постов нет, создаем заглушку
+    if (App.feedAllPostsCache.length === 0) {
+        App.feedAllPostsCache = [{
+            id: 'placeholder',
+            author: 'system',
+            text: '✨ Здесь будут появляться посты других пользователей! ✨\nНапиши что-нибудь сам или добавь друзей!',
+            image: null,
+            time: Date.now(),
+            comments: []
+        }];
     }
 }
 
-// Добавление поста в начало DOM (без перерисовки всей ленты)
+// Получение постов с бесконечным циклом
+function getInfiniteFeedPosts(offset, limit) {
+    const total = App.feedAllPostsCache.length;
+    if (total === 0) return [];
+    
+    const posts = [];
+    for (let i = 0; i < limit; i++) {
+        const index = (offset + i) % total;
+        posts.push(App.feedAllPostsCache[index]);
+    }
+    return posts;
+}
+
+// Добавление поста в начало DOM
 function prependPostToDOM(post) {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
@@ -1959,7 +1988,7 @@ function prependPostToDOM(post) {
             ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
             <div class="post-actions">
                 <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
-                ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                ${isAuthor && post.author !== 'system' ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
             </div>
             <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
                 <div class="comment-input-area">
@@ -1975,27 +2004,24 @@ function prependPostToDOM(post) {
     updateCommentsForPost(post.id);
 }
 
-// Загрузка следующих постов
+// Загрузка следующих постов (бесконечный цикл)
 async function loadMorePosts() {
-    if (App.feedIsLoading || !App.feedHasMore) return;
+    if (App.feedIsLoading) return;
     
     App.feedIsLoading = true;
     
-    const nextPage = App.feedCurrentPage + 1;
-    const start = nextPage * App.feedPageSize;
-    const newPosts = getFeedPostsSlice(start, App.feedPageSize);
+    // Получаем следующие посты с циклическим смещением
+    const start = App.feedCurrentOffset;
+    const newPosts = getInfiniteFeedPosts(start, App.feedPageSize);
     
     if (newPosts.length === 0) {
-        App.feedHasMore = false;
-        removeSentinel();
-        showEndMessage();
         App.feedIsLoading = false;
         return;
     }
     
-    // Добавляем новые посты в массив
+    // Добавляем новые посты
     App.feedDisplayedPosts = [...App.feedDisplayedPosts, ...newPosts];
-    App.feedCurrentPage = nextPage;
+    App.feedCurrentOffset = (start + App.feedPageSize) % App.feedAllPostsCache.length;
     
     // Добавляем в DOM
     appendPostsToDOM(newPosts);
@@ -2008,7 +2034,7 @@ function appendPostsToDOM(posts) {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
     
-    // Удаляем старый сентинел, если есть
+    // Удаляем старый сентинел
     removeSentinel();
     
     let html = '';
@@ -2030,7 +2056,7 @@ function appendPostsToDOM(posts) {
                 ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
                 <div class="post-actions">
                     <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
-                    ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                    ${isAuthor && post.author !== 'system' ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
                 </div>
                 <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
                     <div class="comment-input-area">
@@ -2050,13 +2076,11 @@ function appendPostsToDOM(posts) {
         updateCommentsForPost(post.id);
     }
     
-    // Добавляем новый сентинел, если есть еще посты
-    if (App.feedHasMore) {
-        addSentinel();
-    }
+    // Добавляем новый сентинел для бесконечной прокрутки (всегда добавляем)
+    addSentinel();
 }
 
-// Добавление элемента-наблюдателя для бесконечной прокрутки
+// Добавление элемента-наблюдателя
 function addSentinel() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
@@ -2077,7 +2101,7 @@ function addSentinel() {
     if (App.feedObserver) App.feedObserver.disconnect();
     
     App.feedObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && !App.feedIsLoading && App.feedHasMore) {
+        if (entries[0].isIntersecting && !App.feedIsLoading) {
             loadMorePosts();
         }
     }, { threshold: 0.1 });
@@ -2096,19 +2120,6 @@ function removeSentinel() {
     }
 }
 
-function showEndMessage() {
-    const feedContainer = document.getElementById('feedContainer');
-    if (!feedContainer) return;
-    
-    const endMessage = document.createElement('div');
-    endMessage.className = 'no-posts';
-    endMessage.style.padding = '20px';
-    endMessage.style.textAlign = 'center';
-    endMessage.style.color = '#888';
-    endMessage.innerHTML = '✨ Вы всё просмотрели ✨';
-    feedContainer.appendChild(endMessage);
-}
-
 function renderFeedFull() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
@@ -2116,15 +2127,21 @@ function renderFeedFull() {
     // Очищаем контейнер
     feedContainer.innerHTML = '';
     
-    const posts = App.feedDisplayedPosts;
+    // Обновляем кэш
+    updateFeedCache();
     
-    if (posts.length === 0) {
+    // Сбрасываем состояние
+    App.feedCurrentOffset = 0;
+    App.feedDisplayedPosts = getInfiniteFeedPosts(0, App.feedPageSize);
+    App.feedCurrentOffset = App.feedPageSize;
+    
+    if (App.feedDisplayedPosts.length === 0) {
         feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
         return;
     }
     
     let html = '';
-    for (let post of posts) {
+    for (let post of App.feedDisplayedPosts) {
         const isAuthor = post.author === App.currentUser;
         const authorStatus = getUserStatus(post.author);
         const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
@@ -2142,7 +2159,7 @@ function renderFeedFull() {
                 ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
                 <div class="post-actions">
                     <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
-                    ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                    ${isAuthor && post.author !== 'system' ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
                 </div>
                 <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
                     <div class="comment-input-area">
@@ -2158,27 +2175,22 @@ function renderFeedFull() {
     feedContainer.innerHTML = html;
     
     // Заполняем комментарии
-    for (let post of posts) {
+    for (let post of App.feedDisplayedPosts) {
         updateCommentsForPost(post.id);
     }
     
     // Добавляем сентинел для бесконечной прокрутки
-    if (App.feedHasMore) {
-        addSentinel();
-    }
+    addSentinel();
 }
 
 function initFeedScroll() {
-    // Используем Intersection Observer вместо scroll event
     // Удаляем старый observer
     if (App.feedObserver) {
         App.feedObserver.disconnect();
     }
     
-    // Добавляем сентинел, если посты есть
-    if (App.feedDisplayedPosts.length > 0 && App.feedHasMore) {
-        addSentinel();
-    }
+    // Добавляем сентинел
+    addSentinel();
 }
 
 function escapeHtml(str) {
@@ -2204,22 +2216,6 @@ function loadPostsFromFirebase() {
             App.posts = {};
         }
         
-        App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-        
-        // Сбрасываем состояние ленты
-        App.feedCurrentPage = 0;
-        App.feedHasMore = true;
-        App.feedDisplayedPosts = getFeedPostsSlice(0, App.feedPageSize);
-        
-        // Проверяем, есть ли еще посты
-        const totalAvailable = (App.feedSubtab === 'my') ? 
-            App.feedAllPosts.filter(p => p.author === App.currentUser).length : 
-            App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
-        
-        if (App.feedDisplayedPosts.length >= totalAvailable) {
-            App.feedHasMore = false;
-        }
-        
         App.postsLoaded = true;
         
         if (App.activeTab === 'feed') {
@@ -2229,7 +2225,7 @@ function loadPostsFromFirebase() {
     });
 }
 
-// Добавляем CSS анимацию для новых постов
+// Добавляем CSS анимацию
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideDown {
