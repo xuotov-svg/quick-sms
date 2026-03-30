@@ -1754,7 +1754,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (ИСПРАВЛЕНА: БЕЛЫЙ ТЕКСТ И РАБОТАЮЩИЕ ЛАЙКИ) ==========
+        // ========== ЛЕНТА ПОСТОВ (исправленная версия) ==========
         function createPost(text, imageData) {
             if (!text && !imageData) {
                 showNotification('Напишите текст или добавьте изображение', 'error');
@@ -1768,7 +1768,7 @@
                 text: text || '',
                 image: imageData || null,
                 time: Date.now(),
-                likes: {},      // обязательно пустой объект
+                likes: {},
                 comments: []
             };
             App.posts[postId] = newPost;
@@ -1798,7 +1798,8 @@
             }
             if (!post.likes) post.likes = {};
             
-            if (post.likes[App.currentUser]) {
+            const wasLiked = !!post.likes[App.currentUser];
+            if (wasLiked) {
                 delete post.likes[App.currentUser];
                 showNotification('❤️ Лайк убран');
             } else {
@@ -1807,7 +1808,22 @@
                 playHappySound();
             }
             saveToFirebase();
-            if (App.activeTab === 'feed') renderFeed();
+            // Обновляем только интерфейс этого поста, без перерисовки всей ленты
+            updatePostLikeUI(postId, !wasLiked, Object.keys(post.likes).length);
+        }
+
+        function updatePostLikeUI(postId, liked, likesCount) {
+            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if (!postCard) return;
+            const likeBtn = postCard.querySelector('.post-like-btn');
+            if (likeBtn) {
+                likeBtn.innerHTML = `❤️ ${likesCount}`;
+                if (liked) {
+                    likeBtn.classList.add('liked');
+                } else {
+                    likeBtn.classList.remove('liked');
+                }
+            }
         }
 
         function getFeedPosts(subtab) {
@@ -1815,12 +1831,37 @@
             if (subtab === 'my') {
                 return allPosts.filter(p => p.author === App.currentUser);
             } else {
-                const otherPosts = allPosts.filter(p => p.author !== App.currentUser);
+                // Рекомендации: исключаем свои посты
+                let otherPosts = allPosts.filter(p => p.author !== App.currentUser);
+                // Перемешиваем случайно
                 for (let i = otherPosts.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [otherPosts[i], otherPosts[j]] = [otherPosts[j], otherPosts[i]];
                 }
-                return otherPosts;
+                // Теперь убираем повторы авторов так, чтобы один автор не встречался чаще 1 раза в 5 постов
+                const limited = [];
+                const lastAuthors = []; // храним последние 5 авторов
+                for (let post of otherPosts) {
+                    if (limited.length > 0 && lastAuthors.includes(post.author)) {
+                        // этот автор уже был среди последних 5, пропускаем, но если постов мало, то всё равно добавим в конец?
+                        // Чтобы не было бесконечного цикла, разрешим, но сместим в конец
+                        continue;
+                    }
+                    limited.push(post);
+                    lastAuthors.push(post.author);
+                    if (lastAuthors.length > 5) lastAuthors.shift();
+                    if (limited.length >= 20) break; // ограничим 20 постами для производительности
+                }
+                // Если после фильтрации осталось мало постов, добавим остальные без ограничения
+                if (limited.length < 3 && otherPosts.length > limited.length) {
+                    for (let post of otherPosts) {
+                        if (!limited.includes(post)) {
+                            limited.push(post);
+                            if (limited.length >= 10) break;
+                        }
+                    }
+                }
+                return limited;
             }
         }
 
@@ -1841,7 +1882,7 @@
                 const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
                 const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
                 html += `
-                    <div class="post-card">
+                    <div class="post-card" data-post-id="${post.id}">
                         <div class="post-header">
                             <div class="post-avatar">${avatarHtml}</div>
                             <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
@@ -1875,7 +1916,6 @@
                 const data = snapshot.val();
                 if (data) {
                     App.posts = data;
-                    // Инициализируем likes для старых постов
                     for (let id in App.posts) {
                         if (!App.posts[id].likes) App.posts[id].likes = {};
                     }
@@ -1892,7 +1932,73 @@
         
         function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
         
-        function attachAuthEvents() { const loginForm = document.getElementById('loginForm'); const regForm = document.getElementById('registerForm'); const errorDiv = document.getElementById('authError'); document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; }); document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); document.getElementById('loginBtn')?.addEventListener('click', () => { let username = document.getElementById('loginUsername').value.trim().toLowerCase(); const pass = document.getElementById('loginPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } const clean = '@' + username; if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; } const user = App.users[clean]; function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); } if (user.twoFA) { send2FACode(clean); const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); document.getElementById('verify2FABtn').addEventListener('click', () => { const inputCode = document.getElementById('twoFactorCode').value.trim(); if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } }); document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); }); document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); } else { loginSuccess(); } }); document.getElementById('registerBtn')?.addEventListener('click', () => { let username = document.getElementById('regUsername').value.trim().toLowerCase(); const pass = document.getElementById('regPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } const clean = '@' + username; if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; database.ref('users/' + clean).set(newUser).then(() => { App.users[clean] = newUser; App.currentUser = clean; App.savedMessages[clean] = []; saveSavedMessages(); localStorage.setItem('yolk_current_user', clean); saveToFirebase(); setupUserListener(clean); render(); showNotification('✅ Аккаунт создан!'); }).catch((err) => { console.error('❌ Ошибка сохранения пользователя:', err); errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); }); }
+        function attachAuthEvents() { 
+            const loginForm = document.getElementById('loginForm'); 
+            const regForm = document.getElementById('registerForm'); 
+            const errorDiv = document.getElementById('authError'); 
+            document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; }); 
+            document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); 
+            document.getElementById('loginBtn')?.addEventListener('click', () => { 
+                let username = document.getElementById('loginUsername').value.trim().toLowerCase(); 
+                const pass = document.getElementById('loginPassword').value.trim(); 
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } 
+                const clean = '@' + username; 
+                if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; } 
+                const user = App.users[clean]; 
+                function loginSuccess() { 
+                    App.currentUser = clean; 
+                    localStorage.setItem('yolk_current_user', clean); 
+                    loadSavedMessages(); 
+                    loadTapBalances(); 
+                    loadYolkChatMessages(); 
+                    loadStreaks(); 
+                    loadPrivacySettings(); 
+                    setupUserListener(clean); 
+                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
+                    App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); 
+                    updateLastSeen(clean); 
+                    render(); 
+                } 
+                if (user.twoFA) { 
+                    send2FACode(clean); 
+                    const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; 
+                    document.body.insertAdjacentHTML('beforeend', modalHtml); 
+                    document.getElementById('verify2FABtn').addEventListener('click', () => { 
+                        const inputCode = document.getElementById('twoFactorCode').value.trim(); 
+                        if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } 
+                        if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } 
+                        else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } 
+                    }); 
+                    document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); }); 
+                    document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); 
+                } else { loginSuccess(); } 
+            }); 
+            document.getElementById('registerBtn')?.addEventListener('click', async () => { 
+                let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
+                const pass = document.getElementById('regPassword').value.trim(); 
+                if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } 
+                if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } 
+                const clean = '@' + username; 
+                if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
+                const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; 
+                try {
+                    await database.ref('users/' + clean).set(newUser);
+                    App.users[clean] = newUser;
+                    App.currentUser = clean;
+                    App.savedMessages[clean] = [];
+                    saveSavedMessages();
+                    localStorage.setItem('yolk_current_user', clean);
+                    saveToFirebase();
+                    setupUserListener(clean);
+                    render();
+                    showNotification('✅ Аккаунт создан!');
+                } catch (err) {
+                    console.error('❌ Ошибка сохранения пользователя:', err);
+                    errorDiv.innerText = '! Ошибка сервера, попробуйте позже';
+                    setTimeout(() => { errorDiv.innerText = ''; }, 3000);
+                }
+            }); 
+        }
         
         function renderMain() { 
             const user = App.currentUser; 
@@ -2092,7 +2198,95 @@
         
         function initBots() { App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, status: 'GOLD', age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; }); saveToFirebase(); }
         
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, posts: App.posts })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; if (cache.posts) App.posts = cache.posts; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { 
+            console.log('🔄 Загрузка данных из Firebase...'); 
+            try { 
+                database.ref().get().then(snapshot => { 
+                    if (snapshot.exists()) { 
+                        const data = snapshot.val(); 
+                        if (data.users) {
+                            // Обновляем существующих пользователей, не перезаписывая целиком
+                            for (let uid in data.users) {
+                                if (App.users[uid]) {
+                                    App.users[uid] = { ...App.users[uid], ...data.users[uid] };
+                                } else {
+                                    App.users[uid] = data.users[uid];
+                                }
+                            }
+                        }
+                        if (data.chats) App.chats = data.chats; 
+                        if (data.blocked) App.blocked = data.blocked; 
+                        if (data.channels) App.channels = data.channels; 
+                        if (data.tapBalances) App.tapBalances = data.tapBalances; 
+                        if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; 
+                        if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; 
+                        if (data.streaks) App.streaks = data.streaks; 
+                        if (data.privacySettings) App.privacySettings = data.privacySettings; 
+                        if (data.posts) {
+                            App.posts = data.posts;
+                            for (let id in App.posts) {
+                                if (!App.posts[id].likes) App.posts[id].likes = {};
+                            }
+                        }
+                        localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, posts: App.posts })); 
+                        if (data.tapBalances || data.tapUpgrades) saveTapBalances(); 
+                        if (data.yolkChatMessages) saveYolkChatMessages(); 
+                        if (data.streaks) saveStreaks(); 
+                        if (data.privacySettings) savePrivacySettings(); 
+                    } else { 
+                        console.log('⚠️ База данных пуста'); 
+                    } 
+                    const savedUser = localStorage.getItem('yolk_current_user'); 
+                    const savedChat = localStorage.getItem('yolk_active_chat'); 
+                    if (savedUser && App.users[savedUser]) { 
+                        App.currentUser = savedUser; 
+                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; 
+                        loadSavedMessages(); 
+                        loadTapBalances(); 
+                        loadYolkChatMessages(); 
+                        loadStreaks(); 
+                        loadPrivacySettings(); 
+                        setupUserListener(App.currentUser); 
+                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
+                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); 
+                        updateLastSeen(App.currentUser); 
+                    } 
+                    App.dataLoaded = true; 
+                    render(); 
+                    loadPostsFromFirebase(); 
+                }).catch(error => { 
+                    console.error('❌ Ошибка Firebase:', error); 
+                    const cachedData = localStorage.getItem('yolk_cache'); 
+                    if (cachedData) { 
+                        try { 
+                            const cache = JSON.parse(cachedData); 
+                            if (cache.users) App.users = cache.users; 
+                            if (cache.chats) App.chats = cache.chats; 
+                            if (cache.blocked) App.blocked = cache.blocked; 
+                            if (cache.channels) App.channels = cache.channels; 
+                            if (cache.posts) App.posts = cache.posts; 
+                            console.log('📦 Загружено из кэша:', Object.keys(App.users).length); 
+                        } catch(e) { } 
+                    } 
+                    const savedUser = localStorage.getItem('yolk_current_user'); 
+                    if (savedUser && App.users[savedUser]) { 
+                        App.currentUser = savedUser; 
+                        App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; 
+                        loadSavedMessages(); 
+                        loadTapBalances(); 
+                        loadYolkChatMessages(); 
+                        loadStreaks(); 
+                        loadPrivacySettings(); 
+                        setupUserListener(App.currentUser); 
+                    } 
+                    App.dataLoaded = true; 
+                    render(); 
+                    loadPostsFromFirebase(); 
+                }); 
+            } catch (error) { 
+                console.error('❌ Ошибка Firebase:', error); 
+            } 
+        }
         
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); });
     </script>
