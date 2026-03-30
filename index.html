@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp · Liquid Glass3</title>
+    <title>Yolkapp · Liquid Glass</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -648,7 +648,7 @@
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, activeTab: 'chats', feedSubtab: 'recommendations', postsLoaded: false, feedDisplayLimit: 10, feedAllPosts: [], feedLoading: false };
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, activeTab: 'chats', feedSubtab: 'recommendations', postsLoaded: false, feedDisplayedPosts: [], feedAllPosts: [], feedLoading: false, feedHasMore: true };
         App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
         const tapUpgradeLevels = [{ cost: 0, reward: 1, nextCost: 10, name: "Базовый" }, { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" }, { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" }, { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" }, { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }];
@@ -1803,7 +1803,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (КОММЕНТАРИИ ВМЕСТО ЛАЙКОВ) ==========
+        // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНАЯ, КОММЕНТАРИИ, ПОВТОРЫ РАЗРЕШЕНЫ) ==========
         function createPost(text, imageData) {
             if (!text && !imageData) {
                 showNotification('Напишите текст или добавьте изображение', 'error');
@@ -1823,9 +1823,10 @@
             saveToFirebase();
             showNotification('Пост опубликован!');
             if (App.activeTab === 'feed') {
+                // Обновляем список всех постов и сбрасываем отображённые, чтобы показать новый пост в начале
                 App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-                App.feedDisplayLimit = 10;
-                renderFeed();
+                App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
+                renderFeedFull();
             }
             return true;
         }
@@ -1841,8 +1842,8 @@
             showNotification('Пост удалён');
             if (App.activeTab === 'feed') {
                 App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-                App.feedDisplayLimit = 10;
-                renderFeed();
+                App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
+                renderFeedFull();
             }
         }
 
@@ -1886,12 +1887,17 @@
                 `;
             }
             commentList.innerHTML = html;
+            // Обновляем счётчик комментариев в кнопке
+            const commentBtn = postCard.querySelector('.post-comment-btn');
+            if (commentBtn) {
+                commentBtn.innerHTML = `💬 ${comments.length}`;
+            }
         }
 
-        function getFeedPostsForDisplay(limit) {
+        function getFeedPostsSlice(start, limit) {
             if (App.feedSubtab === 'my') {
                 const myPosts = App.feedAllPosts.filter(p => p.author === App.currentUser);
-                return myPosts.slice(0, limit);
+                return myPosts.slice(start, start + limit);
             } else {
                 // Рекомендации: исключаем свои посты, перемешиваем, повторы разрешены
                 let otherPosts = App.feedAllPosts.filter(p => p.author !== App.currentUser);
@@ -1899,14 +1905,14 @@
                     const j = Math.floor(Math.random() * (i + 1));
                     [otherPosts[i], otherPosts[j]] = [otherPosts[j], otherPosts[i]];
                 }
-                return otherPosts.slice(0, limit);
+                return otherPosts.slice(start, start + limit);
             }
         }
 
-        function renderFeed() {
+        function renderFeedFull() {
             const feedContainer = document.getElementById('feedContainer');
             if (!feedContainer) return;
-            const posts = getFeedPostsForDisplay(App.feedDisplayLimit);
+            const posts = App.feedDisplayedPosts;
             if (posts.length === 0) {
                 feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
                 return;
@@ -1946,8 +1952,9 @@
             for (let post of posts) {
                 renderCommentsForPost(post.id);
             }
+            // Добавляем индикатор загрузки, если есть ещё посты
             const totalAvailable = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
-            if (App.feedDisplayLimit < totalAvailable) {
+            if (App.feedDisplayedPosts.length < totalAvailable) {
                 const loadMoreDiv = document.createElement('div');
                 loadMoreDiv.className = 'no-posts';
                 loadMoreDiv.style.padding = '20px';
@@ -1956,35 +1963,70 @@
             }
         }
 
-        window.toggleCommentInput = function(postId) {
-            const section = document.getElementById(`comment-section-${postId}`);
-            if (section) {
-                if (section.style.display === 'none') {
-                    section.style.display = 'block';
-                    // Фокусируемся на поле ввода
-                    const input = document.getElementById(`comment-input-${postId}`);
-                    if (input) input.focus();
-                } else {
-                    section.style.display = 'none';
-                }
-            }
-        };
-
-        window.submitComment = function(postId) {
-            const input = document.getElementById(`comment-input-${postId}`);
-            const text = input ? input.value.trim() : '';
-            if (!text) return;
-            addComment(postId, text);
-            if (input) input.value = '';
-        };
-
         function loadMorePosts() {
             if (App.feedLoading) return;
             App.feedLoading = true;
+            const currentCount = App.feedDisplayedPosts.length;
+            const newPosts = getFeedPostsSlice(currentCount, 10);
+            if (newPosts.length === 0) {
+                App.feedLoading = false;
+                return;
+            }
+            // Добавляем новые посты в конец
+            App.feedDisplayedPosts = [...App.feedDisplayedPosts, ...newPosts];
+            // Добавляем их в DOM без полной перерисовки
+            const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) {
+                App.feedLoading = false;
+                return;
+            }
+            // Удаляем старый индикатор загрузки, если есть
+            const existingLoader = feedContainer.querySelector('.no-posts:last-child');
+            if (existingLoader && existingLoader.textContent === 'Загрузка...') {
+                existingLoader.remove();
+            }
+            let html = '';
+            for (let post of newPosts) {
+                const isAuthor = post.author === App.currentUser;
+                const authorStatus = getUserStatus(post.author);
+                const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
+                const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
+                const commentsCount = (post.comments || []).length;
+                html += `
+                    <div class="post-card" data-post-id="${post.id}">
+                        <div class="post-header">
+                            <div class="post-avatar">${avatarHtml}</div>
+                            <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                            <div class="post-time">${new Date(post.time).toLocaleString()}</div>
+                        </div>
+                        <div class="post-content">${escapeHtml(post.text)}</div>
+                        ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
+                        <div class="post-actions">
+                            <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
+                            ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                        </div>
+                        <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
+                            <div class="comment-input-area">
+                                <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Написать комментарий...">
+                                <button class="comment-btn" onclick="window.submitComment('${post.id}')">→</button>
+                            </div>
+                            <div class="comment-list"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            feedContainer.insertAdjacentHTML('beforeend', html);
+            for (let post of newPosts) {
+                renderCommentsForPost(post.id);
+            }
+            // Добавляем новый индикатор загрузки, если есть ещё посты
             const totalAvailable = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
-            if (App.feedDisplayLimit < totalAvailable) {
-                App.feedDisplayLimit += 10;
-                renderFeed();
+            if (App.feedDisplayedPosts.length < totalAvailable) {
+                const loadMoreDiv = document.createElement('div');
+                loadMoreDiv.className = 'no-posts';
+                loadMoreDiv.style.padding = '20px';
+                loadMoreDiv.textContent = 'Загрузка...';
+                feedContainer.appendChild(loadMoreDiv);
             }
             App.feedLoading = false;
         }
@@ -2026,17 +2068,57 @@
                     App.posts = {};
                 }
                 App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
+                App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
                 App.postsLoaded = true;
                 if (App.activeTab === 'feed') {
-                    App.feedDisplayLimit = 10;
-                    renderFeed();
+                    renderFeedFull();
                     initFeedScroll();
                 }
             });
         }
 
+        // ========== РЕАЛЬНОЕ ВРЕМЯ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ (чтобы поиск работал между устройствами) ==========
+        function listenUsersRealtime() {
+            database.ref('users').on('child_added', (snapshot) => {
+                const username = snapshot.key;
+                const userData = snapshot.val();
+                if (userData && !App.users[username]) {
+                    App.users[username] = userData;
+                    // Если это текущий пользователь, обновляем интерфейс
+                    if (username === App.currentUser) {
+                        updateUserInterface();
+                        updateSidebarUser();
+                        applyWallpaper();
+                    }
+                    // Обновляем список чатов, если нужно
+                    if (App.activeTab === 'chats') updateChatList();
+                }
+            });
+            database.ref('users').on('child_changed', (snapshot) => {
+                const username = snapshot.key;
+                const userData = snapshot.val();
+                if (userData && App.users[username]) {
+                    const oldStatus = App.users[username].status;
+                    App.users[username] = { ...App.users[username], ...userData };
+                    if (username === App.currentUser) {
+                        updateUserInterface();
+                        updateSidebarUser();
+                        applyWallpaper();
+                    }
+                    if (oldStatus !== userData.status && App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) {
+                        renderMessages(App.activeChat);
+                        updateChatList();
+                    }
+                    if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) {
+                        updateChatHeaderStatus(username);
+                    }
+                    if (App.activeTab === 'chats') updateChatList();
+                }
+            });
+        }
+
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
-        function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats') { if (App.activeChat) loadMessages(App.activeChat); updateChatList(); } else { renderFeed(); initFeedScroll(); } updateSidebarUser(); applyWallpaper(); }, 100); } }
+        function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats') { if (App.activeChat) loadMessages(App.activeChat); updateChatList(); } else { renderFeedFull(); initFeedScroll(); } updateSidebarUser(); applyWallpaper(); }, 100); } }
         
         function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только англ буквы и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
         
@@ -2162,7 +2244,7 @@
                         App.activeTab = 'feed';
                         render();
                         setTimeout(() => {
-                            renderFeed();
+                            renderFeedFull();
                             initFeedScroll();
                         }, 50);
                     }
@@ -2174,8 +2256,9 @@
                     const feedType = e.target.dataset.feed;
                     if (feedType === 'recommendations') App.feedSubtab = 'recommendations';
                     else if (feedType === 'my') App.feedSubtab = 'my';
-                    App.feedDisplayLimit = 10;
-                    renderFeed();
+                    App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
+                    App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
+                    renderFeedFull();
                     initFeedScroll();
                     document.querySelectorAll('.feed-subtab').forEach(s => s.classList.remove('active'));
                     e.target.classList.add('active');
@@ -2348,8 +2431,25 @@
         // Глобальные привязки для ленты
         window.deletePost = deletePost;
         window.openProfileModal = openProfileModal;
-        window.toggleCommentInput = toggleCommentInput;
-        window.submitComment = submitComment;
+        window.toggleCommentInput = function(postId) {
+            const section = document.getElementById(`comment-section-${postId}`);
+            if (section) {
+                if (section.style.display === 'none') {
+                    section.style.display = 'block';
+                    const input = document.getElementById(`comment-input-${postId}`);
+                    if (input) input.focus();
+                } else {
+                    section.style.display = 'none';
+                }
+            }
+        };
+        window.submitComment = function(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const text = input ? input.value.trim() : '';
+            if (!text) return;
+            addComment(postId, text);
+            if (input) input.value = '';
+        };
         
         function initBots() { App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, status: 'GOLD', age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; }); saveToFirebase(); }
         
@@ -2408,6 +2508,7 @@
                     App.dataLoaded = true; 
                     render(); 
                     loadPostsFromFirebase(); 
+                    listenUsersRealtime(); // включаем реальное время для пользователей
                 }).catch(error => { 
                     console.error('❌ Ошибка Firebase:', error); 
                     const cachedData = localStorage.getItem('yolk_cache'); 
@@ -2436,6 +2537,7 @@
                     App.dataLoaded = true; 
                     render(); 
                     loadPostsFromFirebase(); 
+                    listenUsersRealtime(); 
                 }); 
             } catch (error) { 
                 console.error('❌ Ошибка Firebase:', error); 
