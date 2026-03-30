@@ -1754,7 +1754,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (исправленная версия) ==========
+        // ========== ЛЕНТА ПОСТОВ (исправленная версия: без перерисовки при лайке) ==========
         function createPost(text, imageData) {
             if (!text && !imageData) {
                 showNotification('Напишите текст или добавьте изображение', 'error');
@@ -1774,7 +1774,7 @@
             App.posts[postId] = newPost;
             saveToFirebase();
             showNotification('Пост опубликован!');
-            if (App.activeTab === 'feed') renderFeed();
+            if (App.activeTab === 'feed') renderFeed(); // полная перерисовка только при создании
             return true;
         }
 
@@ -1787,7 +1787,7 @@
             delete App.posts[postId];
             saveToFirebase();
             showNotification('Пост удалён');
-            if (App.activeTab === 'feed') renderFeed();
+            if (App.activeTab === 'feed') renderFeed(); // полная перерисовка при удалении
         }
 
         function likePost(postId) {
@@ -1838,19 +1838,17 @@
                     const j = Math.floor(Math.random() * (i + 1));
                     [otherPosts[i], otherPosts[j]] = [otherPosts[j], otherPosts[i]];
                 }
-                // Теперь убираем повторы авторов так, чтобы один автор не встречался чаще 1 раза в 5 постов
+                // Убираем повторы авторов так, чтобы один автор не встречался чаще 1 раза в 5 постов
                 const limited = [];
                 const lastAuthors = []; // храним последние 5 авторов
                 for (let post of otherPosts) {
                     if (limited.length > 0 && lastAuthors.includes(post.author)) {
-                        // этот автор уже был среди последних 5, пропускаем, но если постов мало, то всё равно добавим в конец?
-                        // Чтобы не было бесконечного цикла, разрешим, но сместим в конец
                         continue;
                     }
                     limited.push(post);
                     lastAuthors.push(post.author);
                     if (lastAuthors.length > 5) lastAuthors.shift();
-                    if (limited.length >= 20) break; // ограничим 20 постами для производительности
+                    if (limited.length >= 20) break;
                 }
                 // Если после фильтрации осталось мало постов, добавим остальные без ограничения
                 if (limited.length < 3 && otherPosts.length > limited.length) {
@@ -1911,8 +1909,8 @@
         }
 
         function loadPostsFromFirebase() {
-            const postsRef = database.ref('posts');
-            postsRef.on('value', (snapshot) => {
+            // Загружаем посты один раз при старте, без постоянной подписки, чтобы избежать автоматической перерисовки
+            database.ref('posts').once('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     App.posts = data;
@@ -1924,6 +1922,45 @@
                 }
                 App.postsLoaded = true;
                 if (App.activeTab === 'feed') renderFeed();
+            });
+            // Подписка для получения новых постов в реальном времени без перерисовки ленты (только добавляем в начало)
+            database.ref('posts').on('child_added', (snapshot) => {
+                if (!App.postsLoaded) return;
+                const newPost = snapshot.val();
+                if (newPost && !App.posts[newPost.id]) {
+                    App.posts[newPost.id] = newPost;
+                    if (!App.posts[newPost.id].likes) App.posts[newPost.id].likes = {};
+                    if (App.activeTab === 'feed') {
+                        // Если мы на вкладке ленты, обновляем ленту полностью (чтобы новый пост попал в список)
+                        renderFeed();
+                    }
+                }
+            });
+            // Слушаем удаление постов
+            database.ref('posts').on('child_removed', (snapshot) => {
+                const removedId = snapshot.key;
+                if (App.posts[removedId]) {
+                    delete App.posts[removedId];
+                    if (App.activeTab === 'feed') renderFeed();
+                }
+            });
+            // Слушаем изменение лайков, но не перерисовываем всю ленту
+            database.ref('posts').on('child_changed', (snapshot) => {
+                const updated = snapshot.val();
+                if (updated && App.posts[updated.id]) {
+                    const oldLikes = App.posts[updated.id].likes ? Object.keys(App.posts[updated.id].likes).length : 0;
+                    App.posts[updated.id] = updated;
+                    if (!App.posts[updated.id].likes) App.posts[updated.id].likes = {};
+                    const newLikes = Object.keys(App.posts[updated.id].likes).length;
+                    // Если изменилось только количество лайков, обновляем UI локально
+                    if (oldLikes !== newLikes && App.activeTab === 'feed') {
+                        const isLiked = !!App.posts[updated.id].likes[App.currentUser];
+                        updatePostLikeUI(updated.id, isLiked, newLikes);
+                    } else if (App.activeTab === 'feed') {
+                        // Если изменилось что-то ещё (текст, картинка), перерисовываем (но такого быть не должно)
+                        renderFeed();
+                    }
+                }
             });
         }
 
@@ -2205,7 +2242,6 @@
                     if (snapshot.exists()) { 
                         const data = snapshot.val(); 
                         if (data.users) {
-                            // Обновляем существующих пользователей, не перезаписывая целиком
                             for (let uid in data.users) {
                                 if (App.users[uid]) {
                                     App.users[uid] = { ...App.users[uid], ...data.users[uid] };
