@@ -28,7 +28,7 @@
             --accent: #d4af37; 
             --accent-soft: #2a2418; 
             --message-me: #1e2a3a; 
-            --message-other: #1a1a1a; 
+            --message-other: #1a11a1; 
             --header: #0a0a0a; 
             --shadow: rgba(0,0,0,0.5); 
             --danger: #ff4444; 
@@ -1775,7 +1775,6 @@
             saveToFirebase();
             showNotification('Пост опубликован!');
             if (App.activeTab === 'feed') {
-                // Добавляем новый пост в начало массива всех постов и перерисовываем ленту
                 App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
                 App.feedDisplayLimit = 10;
                 renderFeed();
@@ -1801,19 +1800,14 @@
 
         function likePost(postId) {
             const post = App.posts[postId];
-            if (!post) {
-                showNotification('Пост не найден', 'error');
-                return;
-            }
+            if (!post) return;
             if (!post.likes) post.likes = {};
             
             const wasLiked = !!post.likes[App.currentUser];
             if (wasLiked) {
                 delete post.likes[App.currentUser];
-                showNotification('❤️ Лайк убран');
             } else {
                 post.likes[App.currentUser] = true;
-                showNotification('👍 Вы поставили лайк!');
                 playHappySound();
             }
             saveToFirebase();
@@ -1840,35 +1834,15 @@
                 const myPosts = App.feedAllPosts.filter(p => p.author === App.currentUser);
                 return myPosts.slice(0, limit);
             } else {
-                // Рекомендации: исключаем свои посты
+                // Рекомендации: исключаем свои посты, перемешиваем, без ограничений на повторы
                 let otherPosts = App.feedAllPosts.filter(p => p.author !== App.currentUser);
                 // Перемешиваем случайно
                 for (let i = otherPosts.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
                     [otherPosts[i], otherPosts[j]] = [otherPosts[j], otherPosts[i]];
                 }
-                // Убираем повторы авторов так, чтобы один автор не встречался чаще 1 раза в 5 постов
-                const limited = [];
-                const lastAuthors = [];
-                for (let post of otherPosts) {
-                    if (limited.length > 0 && lastAuthors.includes(post.author)) {
-                        continue;
-                    }
-                    limited.push(post);
-                    lastAuthors.push(post.author);
-                    if (lastAuthors.length > 5) lastAuthors.shift();
-                    if (limited.length >= limit) break;
-                }
-                // Если после фильтрации осталось мало постов, добавим остальные без ограничения
-                if (limited.length < limit && otherPosts.length > limited.length) {
-                    for (let post of otherPosts) {
-                        if (!limited.includes(post)) {
-                            limited.push(post);
-                            if (limited.length >= limit) break;
-                        }
-                    }
-                }
-                return limited;
+                // Берём первые limit постов (повторы авторов разрешены)
+                return otherPosts.slice(0, limit);
             }
         }
 
@@ -1906,7 +1880,8 @@
             }
             feedContainer.innerHTML = html;
             // Проверяем, нужно ли подгрузить ещё (если показано меньше, чем доступно)
-            if (App.feedDisplayLimit < (App.feedSubtab === 'my' ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length)) {
+            const totalAvailable = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
+            if (App.feedDisplayLimit < totalAvailable) {
                 // Добавляем индикатор загрузки внизу
                 const loadMoreDiv = document.createElement('div');
                 loadMoreDiv.className = 'no-posts';
@@ -1919,9 +1894,8 @@
         function loadMorePosts() {
             if (App.feedLoading) return;
             App.feedLoading = true;
-            // Увеличиваем лимит на 10
-            const totalPosts = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
-            if (App.feedDisplayLimit < totalPosts) {
+            const totalAvailable = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
+            if (App.feedDisplayLimit < totalAvailable) {
                 App.feedDisplayLimit += 10;
                 renderFeed();
             }
@@ -2230,7 +2204,48 @@
         
         function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; sendMessage(true); }; reader.readAsDataURL(file); }
         
-        function addUserBySearch() { let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); if (!query) { showNotification('Введите имя пользователя', 'error'); return; } if (!query.startsWith('@')) query = '@' + query; if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } if (App.systemBots.includes(query)) { if (!canUserMessage(App.currentUser, query)) { showNotification('Вы не можете писать этому боту', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; } if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${query} создан`); }
+        function addUserBySearch() { 
+            let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
+            if (!query) { showNotification('Введите имя пользователя', 'error'); return; } 
+            if (!query.startsWith('@')) query = '@' + query; 
+            if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } 
+            if (App.systemBots.includes(query)) { 
+                if (!canUserMessage(App.currentUser, query)) { showNotification('Вы не можете писать этому боту', 'error'); return; } 
+                ensureChat(App.currentUser, query); 
+                App.activeChat = query; 
+                localStorage.setItem('yolk_active_chat', query); 
+                if (window.innerWidth < 768) App.sidebarOpen = false; 
+                document.getElementById('searchUserInput').value = ''; 
+                render(); 
+                return; 
+            } 
+            if (App.channels[query]) { 
+                if (!App.channels[query].subscribers) App.channels[query].subscribers = []; 
+                if (!App.channels[query].subscribers.includes(App.currentUser)) { 
+                    App.channels[query].subscribers.push(App.currentUser); 
+                    saveToFirebase(); 
+                } 
+                App.activeChat = query; 
+                localStorage.setItem('yolk_active_chat', query); 
+                if (window.innerWidth < 768) App.sidebarOpen = false; 
+                document.getElementById('searchUserInput').value = ''; 
+                render(); 
+                return; 
+            } 
+            if (!App.users[query]) { 
+                showNotification('Пользователь не найден', 'error'); 
+                return; 
+            } 
+            if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } 
+            if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } 
+            ensureChat(App.currentUser, query); 
+            App.activeChat = query; 
+            localStorage.setItem('yolk_active_chat', query); 
+            if (window.innerWidth < 768) App.sidebarOpen = false; 
+            document.getElementById('searchUserInput').value = ''; 
+            render(); 
+            showNotification(`Чат с ${query} создан`); 
+        }
         
         function toggleSubscribe() { const user = App.currentUser; const channel = App.activeChat; if (!App.channels[channel]) return; if (!App.channels[channel].subscribers) App.channels[channel].subscribers = []; if (App.channels[channel].subscribers.includes(user)) { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user); showNotification('Вы отписались от канала'); } else { App.channels[channel].subscribers.push(user); showNotification('Вы подписались на канал'); } saveToFirebase(); render(); }
         
