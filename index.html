@@ -512,7 +512,7 @@
             font-size: 14px;
             line-height: 1.4;
             word-break: break-word;
-            color: #ffffff;
+            color: #ffffff;  /* ← БЕЛЫЙ ТЕКСТ ПОСТА */
         }
         .post-image {
             max-width: 100%;
@@ -582,11 +582,6 @@
             padding: 40px;
             color: #888;
         }
-        .loading-posts {
-            text-align: center;
-            padding: 20px;
-            color: #888;
-        }
     </style>
 </head>
 <body>
@@ -604,7 +599,7 @@
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, activeTab: 'chats', feedSubtab: 'recommendations', postsLoaded: false, feedPostsQueue: [], feedShownPosts: [], feedLoading: false, feedHasMore: true };
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, tapBalances: {}, tapUpgrades: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: {}, activeTab: 'chats', feedSubtab: 'recommendations', postsLoaded: false };
         App.systemBots = ['@game_bot', '@tap_bot', '@random_bot'];
         App.gameSymbols = ['🐣', '🛩️', '7️⃣', '🍳', '🥚', '🔥', '🌊', '🍭', '🍬'];
         const tapUpgradeLevels = [{ cost: 0, reward: 1, nextCost: 10, name: "Базовый" }, { cost: 10, reward: 2, nextCost: 100, name: "Уровень 2" }, { cost: 100, reward: 4, nextCost: 1000, name: "Уровень 3" }, { cost: 1000, reward: 8, nextCost: 10000, name: "Уровень 4" }, { cost: 10000, reward: 500, nextCost: null, name: "МАКСИМУМ!" }];
@@ -1759,7 +1754,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНАЯ, БЕЗ УВЕДОМЛЕНИЙ, БЕЗ ПЕРЕЗАГРУЗКИ ПРИ ЛАЙКЕ) ==========
+        // ========== ЛЕНТА ПОСТОВ (ИСПРАВЛЕНА: БЕЛЫЙ ТЕКСТ И РАБОТАЮЩИЕ ЛАЙКИ) ==========
         function createPost(text, imageData) {
             if (!text && !imageData) {
                 showNotification('Напишите текст или добавьте изображение', 'error');
@@ -1773,21 +1768,13 @@
                 text: text || '',
                 image: imageData || null,
                 time: Date.now(),
-                likes: {},
+                likes: {},      // обязательно пустой объект
                 comments: []
             };
             App.posts[postId] = newPost;
             saveToFirebase();
             showNotification('Пост опубликован!');
-            if (App.activeTab === 'feed') {
-                if (App.feedSubtab === 'my') {
-                    renderFeed();
-                } else {
-                    // В рекомендации добавляем в начало очереди
-                    App.feedPostsQueue.unshift(newPost);
-                    renderFeed();
-                }
-            }
+            if (App.activeTab === 'feed') renderFeed();
             return true;
         }
 
@@ -1805,153 +1792,71 @@
 
         function likePost(postId) {
             const post = App.posts[postId];
-            if (!post) return;
+            if (!post) {
+                showNotification('Пост не найден', 'error');
+                return;
+            }
             if (!post.likes) post.likes = {};
             
             if (post.likes[App.currentUser]) {
                 delete post.likes[App.currentUser];
+                showNotification('❤️ Лайк убран');
             } else {
                 post.likes[App.currentUser] = true;
+                showNotification('👍 Вы поставили лайк!');
                 playHappySound();
             }
             saveToFirebase();
-            // Обновляем только счётчик лайков на месте, без полной перерисовки
-            const likeBtn = document.querySelector(`.post-like-btn[data-post-id="${postId}"]`);
-            if (likeBtn) {
-                const likesCount = Object.keys(post.likes).length;
-                const isLiked = post.likes[App.currentUser];
-                likeBtn.innerHTML = `❤️ ${likesCount}`;
-                if (isLiked) {
-                    likeBtn.classList.add('liked');
-                } else {
-                    likeBtn.classList.remove('liked');
+            if (App.activeTab === 'feed') renderFeed();
+        }
+
+        function getFeedPosts(subtab) {
+            const allPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
+            if (subtab === 'my') {
+                return allPosts.filter(p => p.author === App.currentUser);
+            } else {
+                const otherPosts = allPosts.filter(p => p.author !== App.currentUser);
+                for (let i = otherPosts.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [otherPosts[i], otherPosts[j]] = [otherPosts[j], otherPosts[i]];
                 }
+                return otherPosts;
             }
-        }
-
-        // Функция для получения случайных постов с условием: один и тот же пост не чаще 1 раза в 5
-        function getRandomPostsWithLimit(allPosts, limit, shownPostsHistory) {
-            if (!allPosts.length) return [];
-            
-            // Создаём копию доступных постов
-            let available = [...allPosts];
-            
-            // Фильтруем те, что были показаны недавно (в последних 5 показанных)
-            const recentPosts = shownPostsHistory.slice(-5);
-            available = available.filter(p => !recentPosts.includes(p.id));
-            
-            // Если после фильтрации ничего не осталось, берём все
-            if (available.length === 0) {
-                available = [...allPosts];
-            }
-            
-            // Перемешиваем
-            for (let i = available.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [available[i], available[j]] = [available[j], available[i]];
-            }
-            
-            // Берём нужное количество
-            return available.slice(0, limit);
-        }
-
-        function loadMoreRecommendations() {
-            if (App.feedLoading || !App.feedHasMore) return;
-            
-            const allPosts = Object.values(App.posts).filter(p => p.author !== App.currentUser);
-            if (allPosts.length === 0) {
-                App.feedHasMore = false;
-                return;
-            }
-            
-            App.feedLoading = true;
-            
-            // Получаем новые посты
-            const newPosts = getRandomPostsWithLimit(allPosts, 5, App.feedShownPosts);
-            
-            if (newPosts.length === 0) {
-                App.feedHasMore = false;
-                App.feedLoading = false;
-                return;
-            }
-            
-            // Добавляем в очередь
-            App.feedPostsQueue.push(...newPosts);
-            // Запоминаем ID показанных
-            newPosts.forEach(p => App.feedShownPosts.push(p.id));
-            // Ограничиваем историю 20 записями
-            if (App.feedShownPosts.length > 20) App.feedShownPosts = App.feedShownPosts.slice(-20);
-            
-            App.feedLoading = false;
-            renderFeed();
         }
 
         function renderFeed() {
             const feedContainer = document.getElementById('feedContainer');
             if (!feedContainer) return;
-            
-            if (App.feedSubtab === 'my') {
-                const myPosts = Object.values(App.posts).filter(p => p.author === App.currentUser).sort((a,b) => b.time - a.time);
-                if (myPosts.length === 0) {
-                    feedContainer.innerHTML = '<div class="no-posts">У вас пока нет постов 😢<br>Напишите что-нибудь!</div>';
-                    return;
-                }
-                let html = '';
-                for (let post of myPosts) {
-                    html += renderPostCard(post);
-                }
-                feedContainer.innerHTML = html;
+            const posts = getFeedPosts(App.feedSubtab);
+            if (posts.length === 0) {
+                feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
                 return;
             }
-            
-            // Рекомендации - бесконечная лента
-            if (App.feedPostsQueue.length === 0 && !App.feedLoading) {
-                loadMoreRecommendations();
-                feedContainer.innerHTML = '<div class="loading-posts">Загрузка постов...</div>';
-                return;
-            }
-            
-            // Берём первые 10 постов из очереди
-            const toShow = App.feedPostsQueue.splice(0, 10);
             let html = '';
-            for (let post of toShow) {
-                html += renderPostCard(post);
+            for (let post of posts) {
+                const isLiked = post.likes && post.likes[App.currentUser];
+                const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+                const isAuthor = post.author === App.currentUser;
+                const authorStatus = getUserStatus(post.author);
+                const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
+                const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
+                html += `
+                    <div class="post-card">
+                        <div class="post-header">
+                            <div class="post-avatar">${avatarHtml}</div>
+                            <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                            <div class="post-time">${new Date(post.time).toLocaleString()}</div>
+                        </div>
+                        <div class="post-content">${escapeHtml(post.text)}</div>
+                        ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
+                        <div class="post-actions">
+                            <button class="post-like-btn ${isLiked ? 'liked' : ''}" onclick="window.likePost('${post.id}')">❤️ ${likesCount}</button>
+                            ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                        </div>
+                    </div>
+                `;
             }
             feedContainer.innerHTML = html;
-            
-            // Добавляем индикатор загрузки и бесконечный скролл
-            if (App.feedPostsQueue.length < 5 && App.feedHasMore) {
-                const loadingDiv = document.createElement('div');
-                loadingDiv.className = 'loading-posts';
-                loadingDiv.id = 'feedLoadingIndicator';
-                loadingDiv.textContent = 'Загрузка...';
-                feedContainer.appendChild(loadingDiv);
-                loadMoreRecommendations();
-            }
-        }
-        
-        function renderPostCard(post) {
-            const isLiked = post.likes && post.likes[App.currentUser];
-            const likesCount = post.likes ? Object.keys(post.likes).length : 0;
-            const isAuthor = post.author === App.currentUser;
-            const authorStatus = getUserStatus(post.author);
-            const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
-            const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
-            return `
-                <div class="post-card" data-post-id="${post.id}">
-                    <div class="post-header">
-                        <div class="post-avatar" onclick="window.openProfileModal('${post.author}')">${avatarHtml}</div>
-                        <div class="post-author" onclick="window.openProfileModal('${post.author}')">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                        <div class="post-time">${new Date(post.time).toLocaleString()}</div>
-                    </div>
-                    <div class="post-content">${escapeHtml(post.text)}</div>
-                    ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
-                    <div class="post-actions">
-                        <button class="post-like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post.id}" onclick="window.likePost('${post.id}')">❤️ ${likesCount}</button>
-                        ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
-                    </div>
-                </div>
-            `;
         }
 
         function escapeHtml(str) {
@@ -1970,6 +1875,7 @@
                 const data = snapshot.val();
                 if (data) {
                     App.posts = data;
+                    // Инициализируем likes для старых постов
                     for (let id in App.posts) {
                         if (!App.posts[id].likes) App.posts[id].likes = {};
                     }
@@ -1977,15 +1883,7 @@
                     App.posts = {};
                 }
                 App.postsLoaded = true;
-                
-                // Обновляем очередь рекомендаций
-                App.feedPostsQueue = [];
-                App.feedShownPosts = [];
-                App.feedHasMore = true;
-                
-                if (App.activeTab === 'feed') {
-                    renderFeed();
-                }
+                if (App.activeTab === 'feed') renderFeed();
             });
         }
 
@@ -2049,20 +1947,7 @@
                     } else if (tabName === 'feed') {
                         App.activeTab = 'feed';
                         render();
-                        setTimeout(() => {
-                            renderFeed();
-                            // Добавляем бесконечный скролл
-                            const feedContainer = document.getElementById('feedContainer');
-                            if (feedContainer) {
-                                feedContainer.onscroll = () => {
-                                    if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
-                                        if (App.feedSubtab === 'recommendations' && !App.feedLoading && App.feedHasMore) {
-                                            loadMoreRecommendations();
-                                        }
-                                    }
-                                };
-                            }
-                        }, 50);
+                        setTimeout(() => renderFeed(), 50);
                     }
                 });
             });
@@ -2070,15 +1955,8 @@
             feedSubtabs.forEach(sub => {
                 sub.addEventListener('click', (e) => {
                     const feedType = e.target.dataset.feed;
-                    if (feedType === 'recommendations') {
-                        App.feedSubtab = 'recommendations';
-                        // Сбрасываем очередь для новой сессии
-                        App.feedPostsQueue = [];
-                        App.feedShownPosts = [];
-                        App.feedHasMore = true;
-                    } else if (feedType === 'my') {
-                        App.feedSubtab = 'my';
-                    }
+                    if (feedType === 'recommendations') App.feedSubtab = 'recommendations';
+                    else if (feedType === 'my') App.feedSubtab = 'my';
                     renderFeed();
                     document.querySelectorAll('.feed-subtab').forEach(s => s.classList.remove('active'));
                     e.target.classList.add('active');
@@ -2193,67 +2071,7 @@
         
         function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; sendMessage(true); }; reader.readAsDataURL(file); }
         
-        function addUserBySearch() { 
-            let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
-            if (!query) { showNotification('Введите имя пользователя', 'error'); return; } 
-            if (!query.startsWith('@')) query = '@' + query; 
-            if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } 
-            if (App.systemBots.includes(query)) { 
-                if (!canUserMessage(App.currentUser, query)) { showNotification('Вы не можете писать этому боту', 'error'); return; } 
-                ensureChat(App.currentUser, query); 
-                App.activeChat = query; 
-                localStorage.setItem('yolk_active_chat', query); 
-                if (window.innerWidth < 768) App.sidebarOpen = false; 
-                document.getElementById('searchUserInput').value = ''; 
-                render(); 
-                return; 
-            } 
-            if (App.channels[query]) { 
-                if (!App.channels[query].subscribers) App.channels[query].subscribers = []; 
-                if (!App.channels[query].subscribers.includes(App.currentUser)) { 
-                    App.channels[query].subscribers.push(App.currentUser); 
-                    saveToFirebase(); 
-                } 
-                App.activeChat = query; 
-                localStorage.setItem('yolk_active_chat', query); 
-                if (window.innerWidth < 768) App.sidebarOpen = false; 
-                document.getElementById('searchUserInput').value = ''; 
-                render(); 
-                return; 
-            } 
-            if (!App.users[query]) {
-                database.ref('users/' + query).get().then(snapshot => {
-                    if (snapshot.exists()) {
-                        if (!App.users[query]) {
-                            App.users[query] = snapshot.val();
-                        }
-                        if (!canUserMessage(App.currentUser, query)) {
-                            showNotification('Этот пользователь запретил писать первым', 'error');
-                            return;
-                        }
-                        ensureChat(App.currentUser, query);
-                        App.activeChat = query;
-                        localStorage.setItem('yolk_active_chat', query);
-                        if (window.innerWidth < 768) App.sidebarOpen = false;
-                        document.getElementById('searchUserInput').value = '';
-                        render();
-                        showNotification(`Чат с ${query} создан`);
-                    } else {
-                        showNotification('Пользователь не найден', 'error');
-                    }
-                }).catch(() => showNotification('Ошибка проверки', 'error'));
-                return;
-            }
-            if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } 
-            if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } 
-            ensureChat(App.currentUser, query); 
-            App.activeChat = query; 
-            localStorage.setItem('yolk_active_chat', query); 
-            if (window.innerWidth < 768) App.sidebarOpen = false; 
-            document.getElementById('searchUserInput').value = ''; 
-            render(); 
-            showNotification(`Чат с ${query} создан`); 
-        }
+        function addUserBySearch() { let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); if (!query) { showNotification('Введите имя пользователя', 'error'); return; } if (!query.startsWith('@')) query = '@' + query; if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } if (App.systemBots.includes(query)) { if (!canUserMessage(App.currentUser, query)) { showNotification('Вы не можете писать этому боту', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; } if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${query} создан`); }
         
         function toggleSubscribe() { const user = App.currentUser; const channel = App.activeChat; if (!App.channels[channel]) return; if (!App.channels[channel].subscribers) App.channels[channel].subscribers = []; if (App.channels[channel].subscribers.includes(user)) { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== user); showNotification('Вы отписались от канала'); } else { App.channels[channel].subscribers.push(user); showNotification('Вы подписались на канал'); } saveToFirebase(); render(); }
         
@@ -2267,32 +2085,14 @@
         
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         
+        // Глобальные привязки для ленты
         window.likePost = likePost;
         window.deletePost = deletePost;
         window.openProfileModal = openProfileModal;
         
         function initBots() { App.systemBots.forEach(bot => { if (!App.users[bot]) App.users[bot] = { password: 'bot', avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: bot === '@game_bot' ? '🎰 Игровой автомат!' : (bot === '@tap_bot' ? '👆 Тапай!' : '🎲 Загадай число от 0 до 10!'), isBot: true, verified: true, status: 'GOLD', age: 99, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; }); saveToFirebase(); }
         
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, posts: App.posts })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); 
-            
-            // === РЕАЛТАЙМ-СЛУШАТЕЛЬ ДЛЯ НОВЫХ ПОЛЬЗОВАТЕЛЕЙ ===
-            database.ref('users').on('value', (snapshot) => {
-                const usersData = snapshot.val();
-                if (usersData) {
-                    let changed = false;
-                    for (let uid in usersData) {
-                        if (!App.users[uid] || JSON.stringify(App.users[uid]) !== JSON.stringify(usersData[uid])) {
-                            App.users[uid] = usersData[uid];
-                            changed = true;
-                        }
-                    }
-                    if (changed) {
-                        if (App.activeTab === 'chats') updateChatList();
-                    }
-                }
-            });
-            
-        }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; if (cache.posts) App.posts = cache.posts; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, posts: App.posts })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; if (cache.posts) App.posts = cache.posts; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); loadPostsFromFirebase(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); });
     </script>
