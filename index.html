@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp · Liquid Glass</title>
+    <title>Yolkapp · Liquid Glass1</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -1803,280 +1803,742 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНАЯ, КОММЕНТАРИИ, ПОВТОРЫ РАЗРЕШЕНЫ) ==========
-        function createPost(text, imageData) {
-            if (!text && !imageData) {
-                showNotification('Напишите текст или добавьте изображение', 'error');
-                return false;
-            }
-            const user = App.currentUser;
-            const postId = generateId();
-            const newPost = {
-                id: postId,
-                author: user,
-                text: text || '',
-                image: imageData || null,
-                time: Date.now(),
-                comments: []
-            };
-            App.posts[postId] = newPost;
-            saveToFirebase();
-            showNotification('Пост опубликован!');
-            if (App.activeTab === 'feed') {
-                // Обновляем список всех постов и сбрасываем отображённые, чтобы показать новый пост в начале
-                App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-                App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
-                renderFeedFull();
-            }
-            return true;
-        }
+       // ========== ЛЕНТА ПОСТОВ (ИСПРАВЛЕННАЯ) ==========
 
-        function deletePost(postId) {
-            const post = App.posts[postId];
-            if (!post || post.author !== App.currentUser) {
-                showNotification('Нельзя удалить этот пост', 'error');
-                return;
-            }
-            delete App.posts[postId];
-            saveToFirebase();
-            showNotification('Пост удалён');
-            if (App.activeTab === 'feed') {
-                App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-                App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
-                renderFeedFull();
-            }
-        }
+// Добавьте эти переменные в объект App
+// App.feedHasMore = true;
+// App.feedLoading = false;
+// App.feedDisplayedPosts = [];
+// App.feedAllPosts = [];
+// App.feedSubtab = 'recommendations';
+// App.activeTab = 'chats';
 
-        function addComment(postId, text) {
-            if (!text.trim()) return;
-            const post = App.posts[postId];
-            if (!post) return;
-            if (!post.comments) post.comments = [];
-            post.comments.unshift({
-                author: App.currentUser,
-                text: text.trim(),
-                time: Date.now()
-            });
-            saveToFirebase();
-            // Обновляем только комментарии этого поста без перерисовки всей ленты
-            renderCommentsForPost(postId);
-        }
+function createPost(text, imageData) {
+    if (!text && !imageData) {
+        showNotification('Напишите текст или добавьте изображение', 'error');
+        return false;
+    }
+    
+    const user = App.currentUser;
+    if (!user || !App.users[user]) {
+        showNotification('Ошибка: пользователь не найден', 'error');
+        return false;
+    }
+    
+    const postId = generateId();
+    const newPost = {
+        id: postId,
+        author: user,
+        text: text || '',
+        image: imageData || null,
+        time: Date.now(),
+        comments: []
+    };
+    
+    App.posts[postId] = newPost;
+    saveToFirebase();
+    showNotification('✅ Пост опубликован!');
+    
+    // Обновляем список всех постов
+    App.feedAllPosts = Object.values(App.posts).sort((a, b) => b.time - a.time);
+    
+    // Если открыта лента, обновляем отображение
+    if (App.activeTab === 'feed') {
+        // Сохраняем позицию скролла и открытые комментарии
+        const feedContainer = document.getElementById('feedContainer');
+        const scrollPosition = feedContainer ? feedContainer.scrollTop : 0;
+        const openComments = getOpenCommentsState();
+        
+        // Сбрасываем загруженные посты и загружаем заново
+        App.feedDisplayedPosts = [];
+        App.feedHasMore = true;
+        loadMorePosts(true); // force reset
+        
+        // Восстанавливаем состояние открытых комментариев
+        setTimeout(() => {
+            restoreOpenCommentsState(openComments);
+            if (feedContainer) feedContainer.scrollTop = scrollPosition;
+        }, 100);
+    }
+    
+    return true;
+}
 
-        function renderCommentsForPost(postId) {
-            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-            if (!postCard) return;
-            const commentList = postCard.querySelector('.comment-list');
-            if (!commentList) return;
-            const post = App.posts[postId];
-            if (!post) return;
-            const comments = post.comments || [];
-            if (comments.length === 0) {
-                commentList.innerHTML = '<div style="color:#888; font-size:12px; text-align:center;">Нет комментариев</div>';
-                return;
-            }
-            let html = '';
-            for (let c of comments.slice(0, 10)) { // показываем последние 10
-                const authorStatus = getUserStatus(c.author);
-                const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${c.author}</span>` : c.author;
-                html += `
-                    <div class="comment-item">
-                        <span class="comment-author" onclick="window.openProfileModal('${c.author}')">${authorDisplay}</span>
-                        <span class="comment-text">${escapeHtml(c.text)}</span>
-                        <span class="comment-time">${new Date(c.time).toLocaleTimeString().slice(0,5)}</span>
-                    </div>
-                `;
-            }
-            commentList.innerHTML = html;
-            // Обновляем счётчик комментариев в кнопке
-            const commentBtn = postCard.querySelector('.post-comment-btn');
-            if (commentBtn) {
-                commentBtn.innerHTML = `💬 ${comments.length}`;
-            }
-        }
+function deletePost(postId) {
+    const post = App.posts[postId];
+    if (!post || post.author !== App.currentUser) {
+        showNotification('Нельзя удалить этот пост', 'error');
+        return;
+    }
+    
+    delete App.posts[postId];
+    saveToFirebase();
+    showNotification('🗑️ Пост удалён');
+    
+    if (App.activeTab === 'feed') {
+        App.feedAllPosts = Object.values(App.posts).sort((a, b) => b.time - a.time);
+        App.feedDisplayedPosts = [];
+        App.feedHasMore = true;
+        loadMorePosts(true);
+    }
+}
 
-        function getFeedPostsSlice(start, limit) {
-            if (App.feedSubtab === 'my') {
-                const myPosts = App.feedAllPosts.filter(p => p.author === App.currentUser);
-                return myPosts.slice(start, start + limit);
-            } else {
-                // Рекомендации: исключаем свои посты, перемешиваем, повторы разрешены
-                let otherPosts = App.feedAllPosts.filter(p => p.author !== App.currentUser);
-                for (let i = otherPosts.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [otherPosts[i], otherPosts[j]] = [otherPosts[j], otherPosts[i]];
-                }
-                return otherPosts.slice(start, start + limit);
-            }
-        }
+function addComment(postId, text) {
+    if (!text || !text.trim()) return;
+    
+    const post = App.posts[postId];
+    if (!post) return;
+    
+    if (!post.comments) post.comments = [];
+    
+    const newComment = {
+        author: App.currentUser,
+        text: text.trim(),
+        time: Date.now()
+    };
+    
+    post.comments.unshift(newComment);
+    saveToFirebase();
+    
+    // ✅ Обновляем ТОЛЬКО комментарии этого поста, без перерисовки всей ленты
+    updateCommentsOnly(postId);
+    
+    // Показываем уведомление
+    showNotification('💬 Комментарий добавлен');
+}
 
-        function renderFeedFull() {
-            const feedContainer = document.getElementById('feedContainer');
-            if (!feedContainer) return;
-            const posts = App.feedDisplayedPosts;
-            if (posts.length === 0) {
-                feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
-                return;
-            }
-            let html = '';
-            for (let post of posts) {
-                const isAuthor = post.author === App.currentUser;
-                const authorStatus = getUserStatus(post.author);
-                const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
-                const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
-                const commentsCount = (post.comments || []).length;
-                html += `
-                    <div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header">
-                            <div class="post-avatar">${avatarHtml}</div>
-                            <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                            <div class="post-time">${new Date(post.time).toLocaleString()}</div>
-                        </div>
-                        <div class="post-content">${escapeHtml(post.text)}</div>
-                        ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
-                        <div class="post-actions">
-                            <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
-                            ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
-                        </div>
-                        <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
-                            <div class="comment-input-area">
-                                <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Написать комментарий...">
-                                <button class="comment-btn" onclick="window.submitComment('${post.id}')">→</button>
-                            </div>
-                            <div class="comment-list"></div>
-                        </div>
-                    </div>
-                `;
-            }
-            feedContainer.innerHTML = html;
-            // После отрисовки заполняем комментарии для каждого поста
-            for (let post of posts) {
-                renderCommentsForPost(post.id);
-            }
-            // Добавляем индикатор загрузки, если есть ещё посты
-            const totalAvailable = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
-            if (App.feedDisplayedPosts.length < totalAvailable) {
-                const loadMoreDiv = document.createElement('div');
-                loadMoreDiv.className = 'no-posts';
-                loadMoreDiv.style.padding = '20px';
-                loadMoreDiv.textContent = 'Загрузка...';
-                feedContainer.appendChild(loadMoreDiv);
-            }
-        }
+function updateCommentsOnly(postId) {
+    const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+    if (!postCard) return;
+    
+    const post = App.posts[postId];
+    if (!post) return;
+    
+    // Обновляем счетчик комментариев
+    const commentBtn = postCard.querySelector('.post-comment-btn');
+    if (commentBtn) {
+        const commentsCount = post.comments ? post.comments.length : 0;
+        commentBtn.innerHTML = `💬 ${commentsCount}`;
+    }
+    
+    // Обновляем список комментариев
+    const commentList = postCard.querySelector('.comment-list');
+    if (!commentList) return;
+    
+    const comments = post.comments || [];
+    
+    if (comments.length === 0) {
+        commentList.innerHTML = '<div style="color:#888; font-size:12px; text-align:center; padding:10px;">Нет комментариев</div>';
+        return;
+    }
+    
+    let html = '';
+    // Показываем последние 5 комментариев
+    for (let c of comments.slice(0, 5)) {
+        const authorStatus = getUserStatus(c.author);
+        const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${c.author}</span>` : c.author;
+        const timeStr = formatCommentTime(c.time);
+        
+        html += `
+            <div class="comment-item">
+                <span class="comment-author" onclick="window.openProfileModal('${c.author}')">${authorDisplay}</span>
+                <span class="comment-text">${escapeHtml(c.text)}</span>
+                <span class="comment-time">${timeStr}</span>
+            </div>
+        `;
+    }
+    
+    if (comments.length > 5) {
+        html += `<div class="more-comments" onclick="window.loadMoreComments('${postId}')" style="color:#888; font-size:12px; text-align:center; padding:5px; cursor:pointer;">
+            Показать еще ${comments.length - 5} комментариев...
+        </div>`;
+    }
+    
+    commentList.innerHTML = html;
+}
 
-        function loadMorePosts() {
-            if (App.feedLoading) return;
-            App.feedLoading = true;
-            const currentCount = App.feedDisplayedPosts.length;
-            const newPosts = getFeedPostsSlice(currentCount, 10);
-            if (newPosts.length === 0) {
-                App.feedLoading = false;
-                return;
-            }
-            // Добавляем новые посты в конец
-            App.feedDisplayedPosts = [...App.feedDisplayedPosts, ...newPosts];
-            // Добавляем их в DOM без полной перерисовки
-            const feedContainer = document.getElementById('feedContainer');
-            if (!feedContainer) {
-                App.feedLoading = false;
-                return;
-            }
-            // Удаляем старый индикатор загрузки, если есть
-            const existingLoader = feedContainer.querySelector('.no-posts:last-child');
-            if (existingLoader && existingLoader.textContent === 'Загрузка...') {
-                existingLoader.remove();
-            }
-            let html = '';
-            for (let post of newPosts) {
-                const isAuthor = post.author === App.currentUser;
-                const authorStatus = getUserStatus(post.author);
-                const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
-                const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
-                const commentsCount = (post.comments || []).length;
-                html += `
-                    <div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header">
-                            <div class="post-avatar">${avatarHtml}</div>
-                            <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                            <div class="post-time">${new Date(post.time).toLocaleString()}</div>
-                        </div>
-                        <div class="post-content">${escapeHtml(post.text)}</div>
-                        ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
-                        <div class="post-actions">
-                            <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
-                            ${isAuthor ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
-                        </div>
-                        <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
-                            <div class="comment-input-area">
-                                <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Написать комментарий...">
-                                <button class="comment-btn" onclick="window.submitComment('${post.id}')">→</button>
-                            </div>
-                            <div class="comment-list"></div>
-                        </div>
-                    </div>
-                `;
-            }
-            feedContainer.insertAdjacentHTML('beforeend', html);
-            for (let post of newPosts) {
-                renderCommentsForPost(post.id);
-            }
-            // Добавляем новый индикатор загрузки, если есть ещё посты
-            const totalAvailable = (App.feedSubtab === 'my') ? App.feedAllPosts.filter(p => p.author === App.currentUser).length : App.feedAllPosts.filter(p => p.author !== App.currentUser).length;
-            if (App.feedDisplayedPosts.length < totalAvailable) {
-                const loadMoreDiv = document.createElement('div');
-                loadMoreDiv.className = 'no-posts';
-                loadMoreDiv.style.padding = '20px';
-                loadMoreDiv.textContent = 'Загрузка...';
-                feedContainer.appendChild(loadMoreDiv);
-            }
+function formatCommentTime(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'только что';
+    if (minutes < 60) return `${minutes} мин назад`;
+    if (hours < 24) return `${hours} ч назад`;
+    if (days === 1) return 'вчера';
+    return `${days} дн назад`;
+}
+
+function loadMorePosts(reset = false) {
+    if (App.feedLoading) return;
+    
+    if (reset) {
+        App.feedDisplayedPosts = [];
+        App.feedHasMore = true;
+        const feedContainer = document.getElementById('feedContainer');
+        if (feedContainer) feedContainer.innerHTML = '';
+    }
+    
+    if (!App.feedHasMore) {
+        removeLoadingIndicator();
+        showEndMessage();
+        return;
+    }
+    
+    App.feedLoading = true;
+    showLoadingIndicator();
+    
+    // Имитация задержки для плавности
+    setTimeout(() => {
+        const currentCount = App.feedDisplayedPosts.length;
+        const newPosts = getFeedPostsSlice(currentCount, 10);
+        
+        if (newPosts.length === 0) {
+            App.feedHasMore = false;
             App.feedLoading = false;
+            removeLoadingIndicator();
+            showEndMessage();
+            return;
         }
-
-        function initFeedScroll() {
-            const feedContainer = document.getElementById('feedContainer');
-            if (!feedContainer) return;
-            feedContainer.removeEventListener('scroll', handleFeedScroll);
-            feedContainer.addEventListener('scroll', handleFeedScroll);
+        
+        App.feedDisplayedPosts = [...App.feedDisplayedPosts, ...newPosts];
+        renderFeedIncremental(newPosts);
+        
+        App.feedLoading = false;
+        removeLoadingIndicator();
+        
+        // Если загрузили меньше 10 постов, значит больше нет
+        if (newPosts.length < 10) {
+            App.feedHasMore = false;
+            showEndMessage();
         }
+    }, 300);
+}
 
-        function handleFeedScroll() {
-            const container = document.getElementById('feedContainer');
-            if (!container) return;
-            if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
-                loadMorePosts();
+function getFeedPostsSlice(start, limit) {
+    if (App.feedSubtab === 'my') {
+        // Мои посты - в хронологическом порядке
+        const myPosts = App.feedAllPosts.filter(p => p.author === App.currentUser);
+        return myPosts.slice(start, start + limit);
+    } else {
+        // Рекомендации - перемешиваем ОДИН РАЗ при загрузке
+        if (!App.feedShuffledPosts || start === 0) {
+            App.feedShuffledPosts = [...App.feedAllPosts.filter(p => p.author !== App.currentUser)];
+            // Перемешиваем только один раз
+            for (let i = App.feedShuffledPosts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [App.feedShuffledPosts[i], App.feedShuffledPosts[j]] = [App.feedShuffledPosts[j], App.feedShuffledPosts[i]];
             }
         }
+        return App.feedShuffledPosts.slice(start, start + limit);
+    }
+}
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            }).replace(/\n/g, '<br>');
+function renderFeedIncremental(posts) {
+    const feedContainer = document.getElementById('feedContainer');
+    if (!feedContainer) return;
+    
+    let html = '';
+    for (let post of posts) {
+        html += renderPostCard(post);
+    }
+    
+    feedContainer.insertAdjacentHTML('beforeend', html);
+    
+    // Инициализируем комментарии для новых постов
+    for (let post of posts) {
+        updateCommentsOnly(post.id);
+    }
+}
+
+function renderPostCard(post) {
+    const isAuthor = post.author === App.currentUser;
+    const authorStatus = getUserStatus(post.author);
+    const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
+    const avatarHtml = getPostAvatar(post.author);
+    const commentsCount = (post.comments || []).length;
+    const postId = post.id;
+    
+    return `
+        <div class="post-card" data-post-id="${postId}">
+            <div class="post-header">
+                <div class="post-avatar" onclick="window.openProfileModal('${post.author}')">${avatarHtml}</div>
+                <div class="post-author" onclick="window.openProfileModal('${post.author}')">
+                    ${authorDisplay}
+                    ${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}
+                </div>
+                <div class="post-time">${formatPostTime(post.time)}</div>
+            </div>
+            <div class="post-content">${escapeHtml(post.text)}</div>
+            ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
+            <div class="post-actions">
+                <button class="post-comment-btn" onclick="window.toggleCommentSection('${postId}')">
+                    💬 ${commentsCount}
+                </button>
+                ${isAuthor ? `
+                    <button class="post-delete-btn" onclick="window.deletePost('${postId}')">
+                        🗑️ Удалить
+                    </button>
+                ` : ''}
+            </div>
+            <div class="comment-section" id="comment-section-${postId}" style="display: none;">
+                <div class="comment-input-area">
+                    <input type="text" class="comment-input" id="comment-input-${postId}" 
+                           placeholder="Написать комментарий..." maxlength="500">
+                    <button class="comment-btn" onclick="window.submitComment('${postId}')">→</button>
+                </div>
+                <div class="comment-list"></div>
+            </div>
+        </div>
+    `;
+}
+
+function getPostAvatar(username) {
+    const user = App.users[username];
+    if (user?.avatar) {
+        return `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;">`;
+    }
+    // Безопасное получение первой буквы
+    const firstChar = username && username.length > 1 ? username[1].toUpperCase() : '?';
+    return firstChar;
+}
+
+function formatPostTime(timestamp) {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'только что';
+    if (minutes < 60) return `${minutes} мин назад`;
+    if (hours < 24) return `${hours} ч назад`;
+    if (days === 1) return 'вчера';
+    if (days < 7) return `${days} дн назад`;
+    
+    return new Date(timestamp).toLocaleDateString();
+}
+
+function showLoadingIndicator() {
+    const feedContainer = document.getElementById('feedContainer');
+    if (!feedContainer) return;
+    
+    // Удаляем старый индикатор
+    removeLoadingIndicator();
+    
+    const loader = document.createElement('div');
+    loader.className = 'loading-indicator';
+    loader.style.cssText = 'text-align: center; padding: 20px; color: #888;';
+    loader.innerHTML = '<div class="loading-spinner" style="width: 30px; height: 30px; margin: 0 auto;"></div><div style="margin-top: 10px;">Загрузка...</div>';
+    feedContainer.appendChild(loader);
+}
+
+function removeLoadingIndicator() {
+    const feedContainer = document.getElementById('feedContainer');
+    const loader = feedContainer?.querySelector('.loading-indicator');
+    if (loader) loader.remove();
+}
+
+function showEndMessage() {
+    const feedContainer = document.getElementById('feedContainer');
+    if (!feedContainer) return;
+    
+    // Проверяем, нет ли уже сообщения
+    if (feedContainer.querySelector('.end-message')) return;
+    
+    const endMsg = document.createElement('div');
+    endMsg.className = 'end-message';
+    endMsg.style.cssText = 'text-align: center; padding: 20px; color: #888; font-size: 14px;';
+    endMsg.innerHTML = '🏁 Вы просмотрели все посты';
+    feedContainer.appendChild(endMsg);
+}
+
+function getOpenCommentsState() {
+    const openSections = [];
+    document.querySelectorAll('.comment-section').forEach(section => {
+        if (section.style.display === 'block') {
+            const postId = section.id.replace('comment-section-', '');
+            openSections.push(postId);
         }
+    });
+    return openSections;
+}
 
-        function loadPostsFromFirebase() {
-            database.ref('posts').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    App.posts = data;
-                    for (let id in App.posts) {
-                        if (!App.posts[id].comments) App.posts[id].comments = [];
-                    }
-                } else {
-                    App.posts = {};
-                }
-                App.feedAllPosts = Object.values(App.posts).sort((a,b) => b.time - a.time);
-                App.feedDisplayedPosts = getFeedPostsSlice(0, 10);
-                App.postsLoaded = true;
-                if (App.activeTab === 'feed') {
-                    renderFeedFull();
-                    initFeedScroll();
-                }
-            });
+function restoreOpenCommentsState(openSections) {
+    openSections.forEach(postId => {
+        const section = document.getElementById(`comment-section-${postId}`);
+        if (section) {
+            section.style.display = 'block';
         }
+    });
+}
 
+// Обновленные обработчики
+window.toggleCommentSection = function(postId) {
+    const section = document.getElementById(`comment-section-${postId}`);
+    if (!section) return;
+    
+    // Закрываем все другие открытые секции (опционально)
+    document.querySelectorAll('.comment-section').forEach(s => {
+        if (s.id !== `comment-section-${postId}` && s.style.display === 'block') {
+            s.style.display = 'none';
+        }
+    });
+    
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        const input = document.getElementById(`comment-input-${postId}`);
+        if (input) input.focus();
+    } else {
+        section.style.display = 'none';
+    }
+};
+
+window.submitComment = function(postId) {
+    const input = document.getElementById(`comment-input-${postId}`);
+    const text = input ? input.value.trim() : '';
+    
+    if (!text) {
+        showNotification('Введите текст комментария', 'error');
+        return;
+    }
+    
+    if (text.length > 500) {
+        showNotification('Комментарий не может быть длиннее 500 символов', 'error');
+        return;
+    }
+    
+    addComment(postId, text);
+    if (input) input.value = '';
+};
+
+window.loadMoreComments = function(postId) {
+    const post = App.posts[postId];
+    if (!post || !post.comments) return;
+    
+    const commentList = document.querySelector(`.post-card[data-post-id="${postId}"] .comment-list`);
+    if (!commentList) return;
+    
+    let html = '';
+    for (let c of post.comments) {
+        const authorStatus = getUserStatus(c.author);
+        const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${c.author}</span>` : c.author;
+        const timeStr = formatCommentTime(c.time);
+        
+        html += `
+            <div class="comment-item">
+                <span class="comment-author" onclick="window.openProfileModal('${c.author}')">${authorDisplay}</span>
+                <span class="comment-text">${escapeHtml(c.text)}</span>
+                <span class="comment-time">${timeStr}</span>
+            </div>
+        `;
+    }
+    
+    commentList.innerHTML = html;
+};
+
+function renderFeedFull() {
+    const feedContainer = document.getElementById('feedContainer');
+    if (!feedContainer) return;
+    
+    if (App.feedDisplayedPosts.length === 0) {
+        feedContainer.innerHTML = '<div class="no-posts">📭 Нет постов. Будьте первым!</div>';
+        return;
+    }
+    
+    feedContainer.innerHTML = '';
+    renderFeedIncremental(App.feedDisplayedPosts);
+}
+
+function initFeedScroll() {
+    const feedContainer = document.getElementById('feedContainer');
+    if (!feedContainer) return;
+    
+    let scrollTimeout;
+    feedContainer.removeEventListener('scroll', handleFeedScroll);
+    feedContainer.addEventListener('scroll', function() {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(handleFeedScroll, 100);
+    });
+}
+
+function handleFeedScroll() {
+    const container = document.getElementById('feedContainer');
+    if (!container) return;
+    if (App.feedLoading) return;
+    
+    // Проверяем, доскроллил ли пользователь до конца
+    const scrollPosition = container.scrollTop + container.clientHeight;
+    const scrollHeight = container.scrollHeight;
+    
+    if (scrollPosition >= scrollHeight - 200) {
+        loadMorePosts();
+    }
+}
+
+function switchFeedTab(tab) {
+    App.feedSubtab = tab;
+    App.feedDisplayedPosts = [];
+    App.feedHasMore = true;
+    App.feedShuffledPosts = null; // Сбрасываем перемешанный список
+    
+    // Обновляем активную вкладку в UI
+    document.querySelectorAll('.feed-subtab').forEach(sub => {
+        sub.classList.remove('active');
+    });
+    document.querySelector(`.feed-subtab[data-feed="${tab}"]`)?.classList.add('active');
+    
+    // Перезагружаем ленту
+    loadMorePosts(true);
+}
+
+function loadPostsFromFirebase() {
+    database.ref('posts').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            App.posts = data;
+            for (let id in App.posts) {
+                if (!App.posts[id].comments) App.posts[id].comments = [];
+                // Сортируем комментарии по времени (новые сверху)
+                App.posts[id].comments.sort((a, b) => b.time - a.time);
+            }
+        } else {
+            App.posts = {};
+        }
+        
+        App.feedAllPosts = Object.values(App.posts).sort((a, b) => b.time - a.time);
+        App.feedShuffledPosts = null; // Сброс кэша
+        App.postsLoaded = true;
+        
+        if (App.activeTab === 'feed') {
+            App.feedDisplayedPosts = [];
+            App.feedHasMore = true;
+            loadMorePosts(true);
+            initFeedScroll();
+        }
+    });
+}
+
+// Добавьте эти стили в ваш CSS
+const feedStyles = `
+    .loading-indicator {
+        text-align: center;
+        padding: 20px;
+        color: #888;
+    }
+    
+    .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 2px solid rgba(212, 175, 55, 0.2);
+        border-top: 2px solid var(--accent);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    .end-message {
+        text-align: center;
+        padding: 20px;
+        color: #888;
+        font-size: 14px;
+    }
+    
+    .more-comments {
+        text-align: center;
+        padding: 8px;
+        color: var(--accent);
+        font-size: 12px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    
+    .more-comments:hover {
+        opacity: 0.7;
+    }
+    
+    .comment-item {
+        font-size: 13px;
+        color: #cccccc;
+        background: rgba(0,0,0,0.3);
+        border-radius: 16px;
+        padding: 8px 12px;
+        margin-bottom: 8px;
+        transition: 0.2s;
+    }
+    
+    .comment-item:hover {
+        background: rgba(0,0,0,0.5);
+    }
+    
+    .comment-author {
+        font-weight: bold;
+        color: var(--accent);
+        margin-right: 8px;
+        cursor: pointer;
+    }
+    
+    .comment-author:hover {
+        text-decoration: underline;
+    }
+    
+    .comment-text {
+        color: #ffffff;
+        word-break: break-word;
+    }
+    
+    .comment-time {
+        font-size: 10px;
+        color: #888;
+        margin-left: 8px;
+    }
+    
+    .comment-input-area {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .comment-input {
+        flex: 1;
+        background: rgba(0,0,0,0.5);
+        border: 1px solid rgba(255,255,255,0.15);
+        border-radius: 20px;
+        padding: 8px 12px;
+        color: white;
+        font-size: 13px;
+        outline: none;
+        transition: 0.2s;
+    }
+    
+    .comment-input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+    }
+    
+    .comment-btn {
+        background: var(--accent);
+        border: none;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: #000;
+        transition: 0.2s;
+    }
+    
+    .comment-btn:hover {
+        transform: scale(1.02);
+        filter: brightness(0.95);
+    }
+    
+    .post-comment-btn, .post-delete-btn {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        cursor: pointer;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #6b7280;
+        padding: 6px 12px;
+        border-radius: 20px;
+        transition: 0.2s;
+    }
+    
+    .post-comment-btn:hover, .post-delete-btn:hover {
+        background: rgba(212, 175, 55, 0.2);
+        color: var(--accent);
+        transform: translateY(-1px);
+    }
+    
+    .post-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(212,175,55,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    
+    .post-avatar:hover {
+        transform: scale(1.05);
+    }
+    
+    .post-author {
+        font-weight: bold;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex-wrap: wrap;
+        color: #ffffff;
+        cursor: pointer;
+    }
+    
+    .post-author:hover {
+        text-decoration: underline;
+    }
+    
+    .post-time {
+        font-size: 11px;
+        color: #888;
+        margin-left: auto;
+    }
+    
+    .post-card {
+        background: rgba(15,15,20,0.7);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        padding: 14px;
+        transition: 0.2s;
+        border: 1px solid rgba(255,255,255,0.05);
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .post-card:hover {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: rgba(212, 175, 55, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .post-image {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 16px;
+        margin-top: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    
+    .post-image:hover {
+        opacity: 0.95;
+        transform: scale(1.01);
+    }
+    
+    .post-content {
+        margin: 10px 0;
+        font-size: 14px;
+        line-height: 1.5;
+        word-break: break-word;
+        color: #ffffff;
+    }
+`;
+
+// Добавляем стили
+if (!document.getElementById('feed-styles')) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'feed-styles';
+    styleSheet.textContent = feedStyles;
+    document.head.appendChild(styleSheet);
+}
         // ========== РЕАЛЬНОЕ ВРЕМЯ ДЛЯ ПОЛЬЗОВАТЕЛЕЙ (чтобы поиск работал между устройствами) ==========
         function listenUsersRealtime() {
             database.ref('users').on('child_added', (snapshot) => {
