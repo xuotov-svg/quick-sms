@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp · Liquid Glass11</title>
+    <title>Yolkapp · Liquid Glass67</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -1803,17 +1803,18 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-       // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНЫЙ ЦИКЛ, КОММЕНТАРИИ БЕЗ ПЕРЕЗАГРУЗКИ) ==========
+      // ========== ЛЕНТА ПОСТОВ (БЕСКОНЕЧНЫЙ ЦИКЛ ТОЛЬКО ДЛЯ РЕКОМЕНДАЦИЙ) ==========
 
-// Глобальные переменные для бесконечной ленты
-App.feedObserver = null;        // Intersection Observer
-App.feedCurrentPage = 0;        // Текущая страница
-App.feedHasMore = true;         // Всегда true для бесконечного цикла
-App.feedIsLoading = false;      // Загружается ли сейчас
-App.feedPageSize = 5;           // Размер страницы
-App.feedSentinel = null;        // Элемент-наблюдатель
-App.feedAllPostsCache = [];     // Кэш всех постов для бесконечного цикла
-App.feedCurrentOffset = 0;      // Текущее смещение в бесконечном цикле
+// Глобальные переменные для ленты
+App.feedObserver = null;        
+App.feedCurrentPage = 0;        
+App.feedIsLoading = false;      
+App.feedPageSize = 5;           
+App.feedSentinel = null;        
+App.feedAllPostsCache = [];     
+App.feedCurrentOffset = 0;      
+App.feedRecommendationsPosts = []; // Для рекомендаций (бесконечный цикл)
+App.feedMyPosts = [];              // Для моих постов (без цикла)
 
 function createPost(text, imageData) {
     if (!text && !imageData) {
@@ -1828,21 +1829,31 @@ function createPost(text, imageData) {
         text: text || '',
         image: imageData || null,
         time: Date.now(),
-        comments: []
+        comments: [],
+        likes: {}  // Добавляем лайки
     };
     App.posts[postId] = newPost;
     saveToFirebase();
     showNotification('Пост опубликован!');
     
     if (App.activeTab === 'feed') {
-        // Обновляем кэш
         updateFeedCache();
-        // Добавляем пост в начало
-        App.feedDisplayedPosts.unshift(newPost);
-        // Добавляем в DOM
-        prependPostToDOM(newPost);
-        // Сбрасываем смещение
-        App.feedCurrentOffset = 0;
+        
+        // Добавляем пост только если мы на вкладке "Мои посты" или если это пост текущего пользователя
+        if (App.feedSubtab === 'my') {
+            // Для моих постов - добавляем в начало
+            App.feedMyPosts.unshift(newPost);
+            App.feedDisplayedPosts = [...App.feedMyPosts];
+            // Полная перерисовка для избежания дублирования
+            renderFeedFull();
+        } else {
+            // Для рекомендаций - добавляем в кэш
+            App.feedRecommendationsPosts.unshift(newPost);
+            App.feedCurrentOffset = 0;
+            App.feedDisplayedPosts = getInfiniteFeedPosts(0, App.feedPageSize);
+            App.feedCurrentOffset = App.feedPageSize;
+            renderFeedFull();
+        }
     }
     return true;
 }
@@ -1858,17 +1869,20 @@ function deletePost(postId) {
     showNotification('Пост удалён');
     
     if (App.activeTab === 'feed') {
-        // Обновляем кэш
         updateFeedCache();
-        // Удаляем из отображаемых
-        App.feedDisplayedPosts = App.feedDisplayedPosts.filter(p => p.id !== postId);
-        // Удаляем из DOM
-        const postElement = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-        if (postElement) postElement.remove();
         
-        // Если постов стало мало, подгружаем еще
-        if (App.feedDisplayedPosts.length < 3) {
-            loadMorePosts();
+        if (App.feedSubtab === 'my') {
+            // Удаляем из моих постов
+            App.feedMyPosts = App.feedMyPosts.filter(p => p.id !== postId);
+            App.feedDisplayedPosts = [...App.feedMyPosts];
+            renderFeedFull();
+        } else {
+            // Удаляем из рекомендаций
+            App.feedRecommendationsPosts = App.feedRecommendationsPosts.filter(p => p.id !== postId);
+            App.feedCurrentOffset = 0;
+            App.feedDisplayedPosts = getInfiniteFeedPosts(0, App.feedPageSize);
+            App.feedCurrentOffset = App.feedPageSize;
+            renderFeedFull();
         }
     }
 }
@@ -1887,8 +1901,47 @@ function addComment(postId, text) {
     post.comments.unshift(newComment);
     saveToFirebase();
     
-    // Обновляем только комментарии этого поста
     updateCommentsForPost(postId);
+}
+
+// Функция для лайка поста
+function toggleLikePost(postId) {
+    const post = App.posts[postId];
+    if (!post) return;
+    
+    if (!post.likes) post.likes = {};
+    
+    if (post.likes[App.currentUser]) {
+        delete post.likes[App.currentUser];
+    } else {
+        post.likes[App.currentUser] = true;
+    }
+    
+    saveToFirebase();
+    
+    // Обновляем кнопку лайка в DOM
+    updateLikeButton(postId);
+}
+
+function updateLikeButton(postId) {
+    const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+    if (!postCard) return;
+    
+    const post = App.posts[postId];
+    if (!post) return;
+    
+    const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+    const userLiked = post.likes && post.likes[App.currentUser];
+    
+    const likeBtn = postCard.querySelector('.post-like-btn');
+    if (likeBtn) {
+        likeBtn.innerHTML = userLiked ? `❤️ ${likesCount}` : `🤍 ${likesCount}`;
+        if (userLiked) {
+            likeBtn.style.color = '#ff4444';
+        } else {
+            likeBtn.style.color = '#6b7280';
+        }
+    }
 }
 
 function updateCommentsForPost(postId) {
@@ -1927,90 +1980,57 @@ function updateCommentsForPost(postId) {
     }
 }
 
-// Обновление кэша постов
 function updateFeedCache() {
-    if (App.feedSubtab === 'my') {
-        App.feedAllPostsCache = Object.values(App.posts)
-            .filter(p => p.author === App.currentUser)
-            .sort((a,b) => b.time - a.time);
-    } else {
-        // Рекомендации: исключаем свои посты
-        App.feedAllPostsCache = Object.values(App.posts)
-            .filter(p => p.author !== App.currentUser)
-            .sort((a,b) => b.time - a.time);
-    }
+    // Обновляем кэш для рекомендаций (исключаем свои посты)
+    App.feedRecommendationsPosts = Object.values(App.posts)
+        .filter(p => p.author !== App.currentUser)
+        .sort((a,b) => b.time - a.time);
     
-    // Если постов нет, создаем заглушку
-    if (App.feedAllPostsCache.length === 0) {
-        App.feedAllPostsCache = [{
+    // Обновляем кэш для моих постов
+    App.feedMyPosts = Object.values(App.posts)
+        .filter(p => p.author === App.currentUser)
+        .sort((a,b) => b.time - a.time);
+    
+    // Если рекомендаций нет, создаем заглушку
+    if (App.feedRecommendationsPosts.length === 0) {
+        App.feedRecommendationsPosts = [{
             id: 'placeholder',
             author: 'system',
             text: '✨ Здесь будут появляться посты других пользователей! ✨\nНапиши что-нибудь сам или добавь друзей!',
             image: null,
             time: Date.now(),
-            comments: []
+            comments: [],
+            likes: {}
         }];
     }
 }
 
-// Получение постов с бесконечным циклом
+// Получение постов с бесконечным циклом (только для рекомендаций)
 function getInfiniteFeedPosts(offset, limit) {
-    const total = App.feedAllPostsCache.length;
+    const total = App.feedRecommendationsPosts.length;
     if (total === 0) return [];
     
     const posts = [];
     for (let i = 0; i < limit; i++) {
         const index = (offset + i) % total;
-        posts.push(App.feedAllPostsCache[index]);
+        posts.push({...App.feedRecommendationsPosts[index]}); // Копируем чтобы не мутировать оригинал
     }
     return posts;
 }
 
-// Добавление поста в начало DOM
-function prependPostToDOM(post) {
-    const feedContainer = document.getElementById('feedContainer');
-    if (!feedContainer) return;
-    
-    const isAuthor = post.author === App.currentUser;
-    const authorStatus = getUserStatus(post.author);
-    const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
-    const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
-    const commentsCount = (post.comments || []).length;
-    
-    const postHtml = `
-        <div class="post-card" data-post-id="${post.id}" style="animation: slideDown 0.3s ease;">
-            <div class="post-header">
-                <div class="post-avatar">${avatarHtml}</div>
-                <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                <div class="post-time">${new Date(post.time).toLocaleString()}</div>
-            </div>
-            <div class="post-content">${escapeHtml(post.text)}</div>
-            ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
-            <div class="post-actions">
-                <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
-                ${isAuthor && post.author !== 'system' ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
-            </div>
-            <div class="comment-section" id="comment-section-${post.id}" style="display: none;">
-                <div class="comment-input-area">
-                    <input type="text" class="comment-input" id="comment-input-${post.id}" placeholder="Написать комментарий...">
-                    <button class="comment-btn" onclick="window.submitComment('${post.id}')">→</button>
-                </div>
-                <div class="comment-list"></div>
-            </div>
-        </div>
-    `;
-    
-    feedContainer.insertAdjacentHTML('afterbegin', postHtml);
-    updateCommentsForPost(post.id);
-}
-
-// Загрузка следующих постов (бесконечный цикл)
+// Загрузка следующих постов
 async function loadMorePosts() {
     if (App.feedIsLoading) return;
     
     App.feedIsLoading = true;
     
-    // Получаем следующие посты с циклическим смещением
+    if (App.feedSubtab === 'my') {
+        // Для моих постов - просто показываем всё, без дополнительной загрузки
+        App.feedIsLoading = false;
+        return;
+    }
+    
+    // Для рекомендаций - бесконечный цикл
     const start = App.feedCurrentOffset;
     const newPosts = getInfiniteFeedPosts(start, App.feedPageSize);
     
@@ -2019,22 +2039,18 @@ async function loadMorePosts() {
         return;
     }
     
-    // Добавляем новые посты
     App.feedDisplayedPosts = [...App.feedDisplayedPosts, ...newPosts];
-    App.feedCurrentOffset = (start + App.feedPageSize) % App.feedAllPostsCache.length;
+    App.feedCurrentOffset = (start + App.feedPageSize) % App.feedRecommendationsPosts.length;
     
-    // Добавляем в DOM
     appendPostsToDOM(newPosts);
     
     App.feedIsLoading = false;
 }
 
-// Добавление постов в конец DOM
 function appendPostsToDOM(posts) {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
     
-    // Удаляем старый сентинел
     removeSentinel();
     
     let html = '';
@@ -2044,17 +2060,20 @@ function appendPostsToDOM(posts) {
         const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
         const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
         const commentsCount = (post.comments || []).length;
+        const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+        const userLiked = post.likes && post.likes[App.currentUser];
         
         html += `
             <div class="post-card" data-post-id="${post.id}">
                 <div class="post-header">
                     <div class="post-avatar">${avatarHtml}</div>
-                    <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                    <div class="post-author" onclick="window.openProfileModal('${post.author}')" style="cursor:pointer;">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
                     <div class="post-time">${new Date(post.time).toLocaleString()}</div>
                 </div>
                 <div class="post-content">${escapeHtml(post.text)}</div>
                 ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
                 <div class="post-actions">
+                    <button class="post-like-btn" onclick="window.toggleLikePost('${post.id}')" style="${userLiked ? 'color:#ff4444;' : 'color:#6b7280;'}">${userLiked ? '❤️' : '🤍'} ${likesCount}</button>
                     <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
                     ${isAuthor && post.author !== 'system' ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
                 </div>
@@ -2071,16 +2090,16 @@ function appendPostsToDOM(posts) {
     
     feedContainer.insertAdjacentHTML('beforeend', html);
     
-    // Заполняем комментарии для новых постов
     for (let post of posts) {
         updateCommentsForPost(post.id);
     }
     
-    // Добавляем новый сентинел для бесконечной прокрутки (всегда добавляем)
-    addSentinel();
+    // Добавляем сентинел только для рекомендаций
+    if (App.feedSubtab === 'recommendations') {
+        addSentinel();
+    }
 }
 
-// Добавление элемента-наблюдателя
 function addSentinel() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
@@ -2097,11 +2116,10 @@ function addSentinel() {
     feedContainer.appendChild(sentinel);
     App.feedSentinel = sentinel;
     
-    // Создаем Intersection Observer
     if (App.feedObserver) App.feedObserver.disconnect();
     
     App.feedObserver = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && !App.feedIsLoading) {
+        if (entries[0].isIntersecting && !App.feedIsLoading && App.feedSubtab === 'recommendations') {
             loadMorePosts();
         }
     }, { threshold: 0.1 });
@@ -2124,20 +2142,23 @@ function renderFeedFull() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
     
-    // Очищаем контейнер
     feedContainer.innerHTML = '';
     
-    // Обновляем кэш
     updateFeedCache();
     
-    // Сбрасываем состояние
-    App.feedCurrentOffset = 0;
-    App.feedDisplayedPosts = getInfiniteFeedPosts(0, App.feedPageSize);
-    App.feedCurrentOffset = App.feedPageSize;
-    
-    if (App.feedDisplayedPosts.length === 0) {
-        feedContainer.innerHTML = '<div class="no-posts">Нет постов 😢</div>';
-        return;
+    if (App.feedSubtab === 'my') {
+        // Мои посты - без бесконечного цикла
+        App.feedDisplayedPosts = [...App.feedMyPosts];
+        
+        if (App.feedDisplayedPosts.length === 0) {
+            feedContainer.innerHTML = '<div class="no-posts">У вас пока нет постов 😢<br>Напишите что-нибудь!</div>';
+            return;
+        }
+    } else {
+        // Рекомендации - с бесконечным циклом
+        App.feedCurrentOffset = 0;
+        App.feedDisplayedPosts = getInfiniteFeedPosts(0, App.feedPageSize);
+        App.feedCurrentOffset = App.feedPageSize;
     }
     
     let html = '';
@@ -2147,17 +2168,20 @@ function renderFeedFull() {
         const authorDisplay = authorStatus ? `<span class="${authorStatus.class}">${post.author}</span>` : post.author;
         const avatarHtml = App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}" style="width:100%;height:100%;object-fit:cover;">` : (post.author[1] || '?');
         const commentsCount = (post.comments || []).length;
+        const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+        const userLiked = post.likes && post.likes[App.currentUser];
         
         html += `
             <div class="post-card" data-post-id="${post.id}">
                 <div class="post-header">
                     <div class="post-avatar">${avatarHtml}</div>
-                    <div class="post-author">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                    <div class="post-author" onclick="window.openProfileModal('${post.author}')" style="cursor:pointer;">${authorDisplay}${App.users[post.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
                     <div class="post-time">${new Date(post.time).toLocaleString()}</div>
                 </div>
                 <div class="post-content">${escapeHtml(post.text)}</div>
                 ${post.image ? `<img src="${post.image}" class="post-image" onclick="window.openImageModal('${post.image}')">` : ''}
                 <div class="post-actions">
+                    <button class="post-like-btn" onclick="window.toggleLikePost('${post.id}')" style="${userLiked ? 'color:#ff4444;' : 'color:#6b7280;'}">${userLiked ? '❤️' : '🤍'} ${likesCount}</button>
                     <button class="post-comment-btn" onclick="window.toggleCommentInput('${post.id}')">💬 ${commentsCount}</button>
                     ${isAuthor && post.author !== 'system' ? `<button class="post-delete-btn" onclick="window.deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
                 </div>
@@ -2174,23 +2198,24 @@ function renderFeedFull() {
     
     feedContainer.innerHTML = html;
     
-    // Заполняем комментарии
     for (let post of App.feedDisplayedPosts) {
         updateCommentsForPost(post.id);
     }
     
-    // Добавляем сентинел для бесконечной прокрутки
-    addSentinel();
+    // Добавляем сентинел только для рекомендаций
+    if (App.feedSubtab === 'recommendations') {
+        addSentinel();
+    }
 }
 
 function initFeedScroll() {
-    // Удаляем старый observer
     if (App.feedObserver) {
         App.feedObserver.disconnect();
     }
     
-    // Добавляем сентинел
-    addSentinel();
+    if (App.feedSubtab === 'recommendations') {
+        addSentinel();
+    }
 }
 
 function escapeHtml(str) {
@@ -2211,6 +2236,7 @@ function loadPostsFromFirebase() {
             App.posts = data;
             for (let id in App.posts) {
                 if (!App.posts[id].comments) App.posts[id].comments = [];
+                if (!App.posts[id].likes) App.posts[id].likes = {};
             }
         } else {
             App.posts = {};
@@ -2225,7 +2251,7 @@ function loadPostsFromFirebase() {
     });
 }
 
-// Добавляем CSS анимацию
+// Добавляем CSS
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideDown {
@@ -2237,6 +2263,36 @@ style.textContent = `
             opacity: 1;
             transform: translateY(0);
         }
+    }
+    
+    .post-author {
+        cursor: pointer;
+    }
+    
+    .post-author:hover {
+        text-decoration: underline;
+    }
+    
+    .post-like-btn, .post-comment-btn, .post-delete-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        transition: 0.2s;
+    }
+    
+    .post-like-btn:hover, .post-comment-btn:hover {
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .post-delete-btn:hover {
+        background: rgba(255, 68, 68, 0.1);
+        color: #ff4444;
     }
 `;
 document.head.appendChild(style);
