@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp</title>
+    <title>Yolkapp · Liquid Glass</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
@@ -423,29 +423,6 @@
         
         .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
         .channel-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-
-        .comments-modal input,
-.comments-modal textarea,
-.add-comment input {
-    background: rgba(0, 0, 0, 0.6) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #ffffff !important;
-    padding: 10px 14px !important;
-    border-radius: 20px !important;
-    font-size: 14px !important;
-    outline: none !important;
-}
-
-.comments-modal input::placeholder,
-.add-comment input::placeholder {
-    color: #aaaaaa !important;
-}
-
-.comments-modal input:focus,
-.add-comment input:focus {
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2) !important;
-}
         
         /* === НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ === */
         .bottom-nav {
@@ -630,12 +607,12 @@
         }
         
         @media (max-width: 768px) {
-            .bottom-nav { display: flex; }
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
         }
-        @media (min-width: 769px) {
-            .bottom-nav { display: none; }
+        /* Панель видна всегда */
+        .bottom-nav {
+            display: flex;
         }
     </style>
 </head>
@@ -1848,6 +1825,10 @@
         function renderFeed() {
             const feedContainer = document.getElementById('feedContainer');
             if (!feedContainer) return;
+            
+            // Сохраняем позицию прокрутки
+            const scrollPos = feedContainer.scrollTop;
+            
             if (App.posts.length === 0) {
                 feedContainer.innerHTML = '<div style="text-align:center; color:#888; padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
                 return;
@@ -1885,6 +1866,11 @@
                 `;
             });
             feedContainer.innerHTML = html;
+            
+            // Восстанавливаем прокрутку
+            if (scrollPos > 0) {
+                feedContainer.scrollTop = scrollPos;
+            }
         }
         
         function toggleLikePost(postId) {
@@ -1920,58 +1906,58 @@
         }
         
         function openCommentsModal(postId) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) return;
-    const modalHtml = `
-        <div class="modal-overlay" id="commentsModal">
-            <div class="comments-modal">
-                <h3 style="color: #ffffff;">💬 Комментарии</h3>
-                <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
-                    ${post.comments?.map(c => `
-                        <div class="comment-item">
-                            <div class="comment-author" onclick="openProfileModal('${c.author}')" style="color: var(--accent); cursor: pointer;">${formatUserNameWithStatus(c.author)}</div>
-                            <div class="comment-text" style="color: #ffffff;">${c.text}</div>
-                            <div class="comment-time" style="color: #888; font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            const modalHtml = `
+                <div class="modal-overlay" id="commentsModal">
+                    <div class="comments-modal">
+                        <h3 style="color: #ffffff;">💬 Комментарии</h3>
+                        <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
+                            ${post.comments?.map(c => `
+                                <div class="comment-item">
+                                    <div class="comment-author" onclick="openProfileModal('${c.author}')" style="color: var(--accent); cursor: pointer;">${formatUserNameWithStatus(c.author)}</div>
+                                    <div class="comment-text" style="color: #ffffff;">${c.text}</div>
+                                    <div class="comment-time" style="color: #888; font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
+                                </div>
+                            `).join('') || '<div style="color: #888; text-align: center;">Нет комментариев</div>'}
                         </div>
-                    `).join('') || '<div style="color: #888; text-align: center;">Нет комментариев</div>'}
+                        <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
+                            <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 10px 14px; color: #ffffff; outline: none;">
+                            <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
+                        </div>
+                        <div class="profile-actions" style="margin-top:12px;">
+                            <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
-                    <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 10px 14px; color: #ffffff; outline: none;">
-                    <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
-                </div>
-                <div class="profile-actions" style="margin-top:12px;">
-                    <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    // Добавляем стили для плейсхолдера через JS
-    const commentInput = document.getElementById('newCommentText');
-    if (commentInput) {
-        commentInput.style.color = '#ffffff';
-        commentInput.placeholder = 'Напишите комментарий...';
-    }
-    
-    document.getElementById('submitCommentBtn').addEventListener('click', () => {
-        const text = document.getElementById('newCommentText').value.trim();
-        if (!text) return;
-        if (!post.comments) post.comments = [];
-        post.comments.push({
-            author: App.currentUser,
-            text: text,
-            time: Date.now()
-        });
-        saveToFirebase();
-        document.getElementById('commentsModal').remove();
-        renderFeed();
-        showNotification('Комментарий добавлен');
-    });
-    document.getElementById('closeCommentsModal').addEventListener('click', () => {
-        document.getElementById('commentsModal').remove();
-    });
-}
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // Убеждаемся, что стили применены
+            const commentInput = document.getElementById('newCommentText');
+            if (commentInput) {
+                commentInput.style.color = '#ffffff';
+                commentInput.placeholder = 'Напишите комментарий...';
+            }
+            
+            document.getElementById('submitCommentBtn').addEventListener('click', () => {
+                const text = document.getElementById('newCommentText').value.trim();
+                if (!text) return;
+                if (!post.comments) post.comments = [];
+                post.comments.push({
+                    author: App.currentUser,
+                    text: text,
+                    time: Date.now()
+                });
+                saveToFirebase();
+                document.getElementById('commentsModal').remove();
+                renderFeed();
+                showNotification('Комментарий добавлен');
+            });
+            document.getElementById('closeCommentsModal').addEventListener('click', () => {
+                document.getElementById('commentsModal').remove();
+            });
+        }
         
         function deletePost(postId) {
             if (!confirm('Удалить пост?')) return;
