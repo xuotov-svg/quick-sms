@@ -1806,7 +1806,7 @@
                 dislikes: {},
                 comments: []
             };
-            App.posts.push(post);
+            App.posts.unshift(post);
             saveToFirebase();
             renderFeed();
             showNotification('Пост опубликован!');
@@ -1826,7 +1826,6 @@
             const feedContainer = document.getElementById('feedContainer');
             if (!feedContainer) return;
             
-            // Сохраняем позицию прокрутки
             const scrollPos = feedContainer.scrollTop;
             
             if (App.posts.length === 0) {
@@ -1866,10 +1865,39 @@
                 `;
             });
             feedContainer.innerHTML = html;
-            
-            // Восстанавливаем прокрутку
             if (scrollPos > 0) {
                 feedContainer.scrollTop = scrollPos;
+            }
+        }
+        
+        function updatePostStats(postId) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if (!postCard) return;
+            
+            const likesCount = Object.keys(post.likes || {}).length;
+            const dislikesCount = Object.keys(post.dislikes || {}).length;
+            const userLiked = post.likes && post.likes[App.currentUser];
+            const userDisliked = post.dislikes && post.dislikes[App.currentUser];
+            
+            const likeBtn = postCard.querySelector('.post-like');
+            const dislikeBtn = postCard.querySelector('.post-dislike');
+            const commentBtn = postCard.querySelector('.post-comment');
+            
+            if (likeBtn) {
+                likeBtn.classList.toggle('active', userLiked);
+                const likeSpan = likeBtn.querySelector('span');
+                if (likeSpan) likeSpan.textContent = likesCount;
+            }
+            if (dislikeBtn) {
+                dislikeBtn.classList.toggle('active', userDisliked);
+                const dislikeSpan = dislikeBtn.querySelector('span');
+                if (dislikeSpan) dislikeSpan.textContent = dislikesCount;
+            }
+            if (commentBtn) {
+                const commentSpan = commentBtn.querySelector('span');
+                if (commentSpan) commentSpan.textContent = post.comments?.length || 0;
             }
         }
         
@@ -1886,7 +1914,7 @@
                 post.likes[user] = true;
             }
             saveToFirebase();
-            renderFeed();
+            updatePostStats(postId);
         }
         
         function toggleDislikePost(postId) {
@@ -1902,7 +1930,7 @@
                 post.dislikes[user] = true;
             }
             saveToFirebase();
-            renderFeed();
+            updatePostStats(postId);
         }
         
         function openCommentsModal(postId) {
@@ -1915,7 +1943,7 @@
                         <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
                             ${post.comments?.map(c => `
                                 <div class="comment-item">
-                                    <div class="comment-author" onclick="openProfileModal('${c.author}')" style="color: var(--accent); cursor: pointer;">${formatUserNameWithStatus(c.author)}</div>
+                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
                                     <div class="comment-text" style="color: #ffffff;">${c.text}</div>
                                     <div class="comment-time" style="color: #888; font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
                                 </div>
@@ -1933,7 +1961,6 @@
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
-            // Убеждаемся, что стили применены
             const commentInput = document.getElementById('newCommentText');
             if (commentInput) {
                 commentInput.style.color = '#ffffff';
@@ -1951,7 +1978,7 @@
                 });
                 saveToFirebase();
                 document.getElementById('commentsModal').remove();
-                renderFeed();
+                updatePostStats(postId);
                 showNotification('Комментарий добавлен');
             });
             document.getElementById('closeCommentsModal').addEventListener('click', () => {
