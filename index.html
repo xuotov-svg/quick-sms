@@ -1107,12 +1107,14 @@
         function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         
         // ========== FEED FUNCTIONS (без возрастных ограничений, без обнуления) ==========
+// Глобальные переменные для ленты (убедись, что они объявлены, или добавь их в начало)
 let feedPosts = [];
 let feedLoading = false;
 let feedHasMore = true;
 let feedLastTimestamp = null;
 let feedChildListener = null;
 
+// Загрузка начальной порции (последние 10 постов)
 async function loadInitialFeed() {
     if (feedPosts.length > 0) {
         renderFeedPosts();
@@ -1136,6 +1138,7 @@ async function loadInitialFeed() {
     } catch (error) { console.error(error); }
 }
 
+// Инкрементальный слушатель (только новые, удалённые, изменённые посты)
 function setupIncrementalFeedListener() {
     if (feedChildListener) return;
     feedChildListener = database.ref('feedPosts').on('child_added', (snapshot) => {
@@ -1165,6 +1168,7 @@ function setupIncrementalFeedListener() {
     });
 }
 
+// Подгрузка старых постов (при скролле)
 async function loadMoreFeed() {
     if (feedLoading || !feedHasMore) return;
     feedLoading = true;
@@ -1188,6 +1192,7 @@ async function loadMoreFeed() {
     } catch (error) { console.error(error); } finally { feedLoading = false; }
 }
 
+// Создание поста (без проверки возраста)
 async function createFeedPost(text, mediaData, mediaType) {
     if (!text && !mediaData) { showNotification('Напишите текст или добавьте медиа', 'error'); return false; }
     if (text && text.length > 500) { showNotification('Текст не более 500 символов', 'error'); return false; }
@@ -1208,6 +1213,7 @@ async function createFeedPost(text, mediaData, mediaType) {
     } catch (error) { console.error(error); showNotification('Ошибка публикации', 'error'); return false; }
 }
 
+// Удаление поста
 async function deleteFeedPost(postId, postAuthor) {
     const currentUser = App.currentUser;
     if (currentUser !== postAuthor && currentUser !== ADMIN_USER) { showNotification('У вас нет прав на удаление', 'error'); return false; }
@@ -1218,6 +1224,7 @@ async function deleteFeedPost(postId, postAuthor) {
     return false;
 }
 
+// Добавление комментария (без проверки возраста)
 async function addCommentToPost(postId, commentText) {
     if (!commentText.trim()) return false;
     const comment = { author: App.currentUser, authorAge: App.users[App.currentUser].age || 14, text: commentText.trim(), timestamp: Date.now() };
@@ -1233,6 +1240,7 @@ async function addCommentToPost(postId, commentText) {
     } catch (error) { console.error(error); return false; }
 }
 
+// Рендер всей ленты (форма + список)
 function renderFeed() {
     const container = document.getElementById('feedContainer');
     if (!container) return;
@@ -1291,6 +1299,7 @@ function renderFeed() {
     });
 }
 
+// Рендер списка постов
 function renderFeedPosts() {
     const postsList = document.getElementById('feedPostsList');
     if (!postsList) return;
@@ -1326,6 +1335,27 @@ function renderFeedPosts() {
     postsList.innerHTML = html;
 }
 
+// Модальное окно комментариев
+window.openCommentsModal = function(postId) {
+    const post = feedPosts.find(p => p.id === postId);
+    if (!post) return;
+    let commentsHtml = '';
+    if (post.comments && post.comments.length) {
+        commentsHtml = post.comments.map(com => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${com.author}')">${com.author}</div><div class="comment-text">${escapeHtml(com.text)}</div><div class="comment-time">${formatTimeAgo(com.timestamp)}</div></div>`).join('');
+    } else { commentsHtml = '<div style="text-align:center; color:#888;">Нет комментариев</div>'; }
+    const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="profile-modal" style="max-width: 500px;"><h3>💬 Комментарии</h3><div class="feed-post" style="margin-bottom:16px;"><div class="feed-post-header"><div class="feed-avatar" onclick="openProfileModal('${post.author}')">${App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}">` : (post.author[1] || '@')}</div><div class="feed-author"><div class="feed-author-name" onclick="openProfileModal('${post.author}')">${post.author}</div><div class="feed-time">${formatTimeAgo(post.timestamp)}</div></div></div><div class="feed-text">${escapeHtml(post.text)}</div>${post.media ? (post.media.type === 'image' ? `<img src="${post.media.url}" class="feed-media" style="max-width:100%;">` : `<video controls style="max-width:100%;"><source src="${post.media.url}"></video>`) : ''}</div><div class="comment-list">${commentsHtml}</div><div class="input-group"><textarea id="newCommentText" placeholder="Ваш комментарий..." rows="2" style="width:100%; background:rgba(0,0,0,0.5); border-radius:12px; padding:8px; color:#fff;"></textarea><button class="profile-btn" id="submitCommentBtn">Отправить</button></div><div class="profile-actions"><button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button></div></div></div>`;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('submitCommentBtn').addEventListener('click', async () => {
+        const commentText = document.getElementById('newCommentText').value.trim();
+        if (!commentText) return;
+        if (await addCommentToPost(postId, commentText)) {
+            document.getElementById('commentsModal').remove();
+        }
+    });
+    document.getElementById('closeCommentsModal').addEventListener('click', () => { document.getElementById('commentsModal').remove(); });
+};
+
+// Вспомогательные функции (если их нет, они должны быть определены выше)
 function formatTimeAgo(timestamp) {
     const seconds = Math.floor((Date.now() - timestamp) / 1000);
     if (seconds < 60) return `${seconds} сек назад`;
@@ -1338,6 +1368,7 @@ function formatTimeAgo(timestamp) {
 }
 function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;'); }
 
+// Обёртка для вызова удаления из onclick
 window.deleteFeedPost = async function(postId, author) { await deleteFeedPost(postId, author); };
 window.openCommentsModal = function(postId) {
     const post = feedPosts.find(p => p.id === postId);
