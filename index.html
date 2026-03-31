@@ -1153,7 +1153,9 @@
         
         function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.tapBalances) App.tapBalances = data.tapBalances; if (data.tapUpgrades) App.tapUpgrades = data.tapUpgrades; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.tapBalances || data.tapUpgrades) saveTapBalances(); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadTapBalances(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         
-        // ========== FEED FUNCTIONS (без лайков, с сохранением) ==========
+                // ========== FEED FUNCTIONS (исправленные, без обнуления) ==========
+        let feedLoaded = false; // Флаг, что лента уже загружена
+
         async function createFeedPost(text, mediaData, mediaType) {
             if (!isUserAdult(App.currentUser)) { showNotification('❌ Доступно только для пользователей 18+', 'error'); return false; }
             if (!text && !mediaData) { showNotification('Напишите текст или добавьте медиа', 'error'); return false; }
@@ -1186,8 +1188,9 @@
         }
         
         async function loadInitialFeed() {
+            if (feedLoaded && feedPosts.length > 0) return; // НЕ перезагружаем, если уже загружено
             feedPosts = []; feedLoading = false; feedHasMore = true; feedLastTimestamp = null;
-            try { const query = database.ref('feedPosts').orderByChild('timestamp').limitToLast(10); const snapshot = await query.once('value'); const items = []; snapshot.forEach(child => { items.push({ id: child.key, ...child.val() }); }); items.sort((a,b) => b.timestamp - a.timestamp); feedPosts = items; if (items.length === 10) { feedHasMore = true; feedLastTimestamp = items[items.length-1].timestamp; } else { feedHasMore = false; } renderFeedPosts(); } catch (error) { console.error(error); }
+            try { const query = database.ref('feedPosts').orderByChild('timestamp').limitToLast(10); const snapshot = await query.once('value'); const items = []; snapshot.forEach(child => { items.push({ id: child.key, ...child.val() }); }); items.sort((a,b) => b.timestamp - a.timestamp); feedPosts = items; if (items.length === 10) { feedHasMore = true; feedLastTimestamp = items[items.length-1].timestamp; } else { feedHasMore = false; } feedLoaded = true; renderFeedPosts(); } catch (error) { console.error(error); }
         }
         
         async function loadMoreFeed() {
@@ -1220,9 +1223,8 @@
                 document.getElementById('publishFeedBtn').addEventListener('click', async () => { const text = document.getElementById('feedPostText').value.trim(); if (!text && !tempMediaData) { showNotification('Напишите текст или добавьте медиа', 'error'); return; } await createFeedPost(text, tempMediaData, tempMediaType); document.getElementById('feedPostText').value = ''; tempMediaData = null; tempMediaType = null; previewDiv.innerHTML = ''; previewDiv.style.display = 'none'; photoInput.value = ''; videoInput.value = ''; });
             }
             if (!feedListenersSet) { setupFeedListeners(); feedListenersSet = true; }
-            // Загружаем посты, если их ещё нет
-            if (feedPosts.length === 0) { loadInitialFeed(); }
-            renderFeedPosts();
+            // Загружаем посты только если они ещё не загружены
+            if (!feedLoaded) { loadInitialFeed(); } else { renderFeedPosts(); }
             const feedContainerDiv = container; feedContainerDiv.addEventListener('scroll', () => { if (feedContainerDiv.scrollTop + feedContainerDiv.clientHeight >= feedContainerDiv.scrollHeight - 100) { loadMoreFeed(); } });
         }
         
@@ -1261,11 +1263,30 @@
             if (post.comments && post.comments.length) { commentsHtml = post.comments.map(com => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${com.author}')">${com.author}</div><div class="comment-text">${escapeHtml(com.text)}</div><div class="comment-time">${formatTimeAgo(com.timestamp)}</div></div>`).join(''); } else { commentsHtml = '<div style="text-align:center; color:#888;">Нет комментариев</div>'; }
             const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="profile-modal" style="max-width: 500px;"><h3>💬 Комментарии</h3><div class="feed-post" style="margin-bottom:16px;"><div class="feed-post-header"><div class="feed-avatar" onclick="openProfileModal('${post.author}')">${App.users[post.author]?.avatar ? `<img src="${App.users[post.author].avatar}">` : (post.author[1] || '@')}</div><div class="feed-author"><div class="feed-author-name" onclick="openProfileModal('${post.author}')">${post.author}</div><div class="feed-time">${formatTimeAgo(post.timestamp)}</div></div></div><div class="feed-text">${escapeHtml(post.text)}</div>${post.media ? (post.media.type === 'image' ? `<img src="${post.media.url}" class="feed-media" style="max-width:100%;">` : `<video controls style="max-width:100%;"><source src="${post.media.url}"></video>`) : ''}</div><div class="comment-list">${commentsHtml}</div>${isAdult ? `<div class="input-group"><textarea id="newCommentText" placeholder="Ваш комментарий..." rows="2" style="width:100%; background:rgba(0,0,0,0.5); border-radius:12px; padding:8px; color:#fff;"></textarea><button class="profile-btn" id="submitCommentBtn">Отправить</button></div>` : '<div class="feed-age-warning">🔞 Только для 18+</div>'}<div class="profile-actions"><button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button></div></div></div>`;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            if (isAdult) { document.getElementById('submitCommentBtn').addEventListener('click', async () => { const commentText = document.getElementById('newCommentText').value.trim(); if (!commentText) return; const success = await addCommentToPost(postId, commentText); if (success) { document.getElementById('commentsModal').remove(); loadInitialFeed(); } }); }
+            if (isAdult) { 
+                document.getElementById('submitCommentBtn').addEventListener('click', async () => { 
+                    const commentText = document.getElementById('newCommentText').value.trim(); 
+                    if (!commentText) return; 
+                    const success = await addCommentToPost(postId, commentText); 
+                    if (success) { 
+                        document.getElementById('commentsModal').remove(); 
+                        // Локально обновляем комментарии, не перезагружая всю ленту
+                        const postIndex = feedPosts.findIndex(p => p.id === postId);
+                        if (postIndex !== -1) {
+                            if (!feedPosts[postIndex].comments) feedPosts[postIndex].comments = [];
+                            feedPosts[postIndex].comments.push({ author: App.currentUser, text: commentText, timestamp: Date.now() });
+                            renderFeedPosts();
+                        }
+                    } 
+                }); 
+            }
             document.getElementById('closeCommentsModal').addEventListener('click', () => { document.getElementById('commentsModal').remove(); });
         };
         
-        function initFeed() { if (!feedListenersSet) { setupFeedListeners(); feedListenersSet = true; } if (feedPosts.length === 0) { loadInitialFeed(); } }
+        function initFeed() { 
+            if (!feedListenersSet) { setupFeedListeners(); feedListenersSet = true; } 
+            if (!feedLoaded) { loadInitialFeed(); } 
+        }
         
         const savedTab = localStorage.getItem('yolk_active_tab'); if (savedTab === 'feed' || savedTab === 'chats') activeTab = savedTab;
         
