@@ -580,7 +580,7 @@
         }
         .comment-author {
             font-weight: 600;
-            color: var(--accent);
+            color: #ffffff; /* белый цвет */
             cursor: pointer;
         }
         .comment-text {
@@ -610,9 +610,14 @@
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
         }
-        /* Панель видна всегда */
+        /* Панель видна только на телефонах */
         .bottom-nav {
-            display: flex;
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .bottom-nav {
+                display: flex;
+            }
         }
     </style>
 </head>
@@ -1174,11 +1179,7 @@
                             <div id="settingsWallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div>
                             <input type="file" id="settingsWallpaper" accept="image/*">
                         </div>
-                        <div class="profile-input-group">
-                            <label>СМЕНА ЮЗЕРНЕЙМА (1500 YC)</label>
-                            <input type="text" id="settingsNewUsername" placeholder="новый юзернейм (только англ буквы и цифры)">
-                            <button class="change-username-btn" id="settingsChangeUsernameBtn" style="margin-top:8px;">СМЕНИТЬ @USERNAME (1500 YC)</button>
-                        </div>
+                        <!-- Блок смены юзернейма УДАЛЁН -->
                         <div class="profile-input-group">
                             <label>🔒 КОНФИДЕНЦИАЛЬНОСТЬ</label>
                             <div class="toggle-switch ${currentPrivacy ? 'active' : ''}" id="privacyToggle">
@@ -1271,16 +1272,6 @@
                 labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
                 saveToFirebase();
                 showNotification(newState ? '2FA включена' : '2FA выключена');
-            });
-            
-            document.getElementById('settingsChangeUsernameBtn').addEventListener('click', () => {
-                const newName = document.getElementById('settingsNewUsername')?.value.trim();
-                if (!newName) {
-                    showNotification('Введите новый юзернейм', 'error');
-                    return;
-                }
-                changeUsername(newName);
-                document.getElementById('settingsModalOverlay')?.remove();
             });
             
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
@@ -1556,7 +1547,7 @@
                             <div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div><button class="tiny-btn" id="createNftBtn" style="margin-top:8px;">+ СОЗДАТЬ ОТКРЫТКУ (50 YC)</button></div>
                             <div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="channel">КАНАЛ</div></div>
                             <div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div>
-                            <div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4><div class="shop-item"><span>🥚 — 0.5 TON</span><button class="gift-donate-btn" data-emoji="🥚" data-ton="0.5">КУПИТЬ</button></div><div class="shop-item"><span>🍳 — 1.5 TON</span><button class="gift-donate-btn" data-emoji="🍳" data-ton="1.5">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
+                            <div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><div class="shop-item"><span>[АКЦИЯ] 555 YC — 1 TON</span><button class="donate-btn" data-yc="555" data-ton="1">КУПИТЬ</button></div><h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4><div class="shop-item"><span>🥚 — 0.5 TON</span><button class="gift-donate-btn" data-emoji="🥚" data-ton="0.5">КУПИТЬ</button></div><div class="shop-item"><span>🍳 — 1.5 TON</span><button class="gift-donate-btn" data-emoji="🍳" data-ton="1.5">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
                             <div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>📢 СОЗДАТЬ КАНАЛ</h4><div class="shop-item"><span>Создание канала — 50 YC</span><button id="createChannelBtn">СОЗДАТЬ</button></div><h4 style="margin-top:12px;">📢 МОИ КАНАЛЫ</h4>${Object.values(App.channels).filter(c => c.owner === App.currentUser).map(c => `<div class="shop-item"><span>${c.name}</span><button class="view-channel-btn" data-channel="${c.name}">👁️ ПРОСМОТР</button></div>`).join('') || '<div style="color:#888;">У вас нет каналов</div>'}</div></div>
                             <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button><button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button></div>
                         </div>
@@ -1943,7 +1934,7 @@
                         <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
                             ${post.comments?.map(c => `
                                 <div class="comment-item">
-                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
+                                    <div class="comment-author" style="color: #ffffff; cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
                                     <div class="comment-text" style="color: #ffffff;">${c.text}</div>
                                     <div class="comment-time" style="color: #888; font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
                                 </div>
@@ -2078,10 +2069,10 @@
                 <div class="chat-area">
                     <div class="chat-header">
                         <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : (App.channels[App.activeChat] ? formatUserNameWithStatus(App.activeChat) : formatUserNameWithStatus(App.activeChat)))}${!App.channels[App.activeChat] && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                        <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">👤</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">🎁</button>` : ''}</div>
+                        <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
                     </div>
                     <div class="messages-container" id="messageList"></div>
-                    ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) && !App.channels[App.activeChat] ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (App.channels[App.activeChat] && App.channels[App.activeChat]?.owner === user ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">📷</label><label for="videoUpload" class="file-label">🎥</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">🔒 ЭТОМУ ЧЕЛОВЕКУ НЕЛЬЗЯ ПИСАТЬ</div></div>`)) : '<div class="input-area" style="justify-content:center; color:#888;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                    ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) && !App.channels[App.activeChat] ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (App.channels[App.activeChat] && App.channels[App.activeChat]?.owner === user ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">🔒 ЭТОМУ ЧЕЛОВЕКУ НЕЛЬЗЯ ПИСАТЬ</div></div>`)) : '<div class="input-area" style="justify-content:center; color:#888;"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                 </div>
                 ` : `
                 <div class="feed-container" id="feedContainer"></div>
