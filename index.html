@@ -134,7 +134,7 @@
         }
         
         body.light-theme .chat-area {
-            background-color: rgba(245, 245, 247, 0.85);
+            background-color: rgba(255, 255, 255, 0.95);
         }
         
         .messages-container {
@@ -596,21 +596,49 @@
             border-top: 1px solid var(--glass-border);
             padding-top: 12px;
         }
-        .post-like, .post-dislike, .post-comment, .post-delete {
-            background: none;
-            border: none;
-            color: #6b7280;
+        /* Улучшенные кнопки ленты */
+        .post-stats button {
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 30px;
+            padding: 8px 16px;
             font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 4px 8px;
-            border-radius: 20px;
-            transition: 0.2s;
+            color: #d4af37;
         }
-        .post-like.active { color: #ff4444; filter: grayscale(0); }
-        .post-dislike.active { color: #44ff44; filter: grayscale(0); }
+        .post-stats button:hover {
+            transform: translateY(-2px);
+            background: rgba(212, 175, 55, 0.25);
+            border-color: #d4af37;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
+        .post-stats button:active {
+            transform: scale(0.96);
+        }
+        .post-like.active, .post-dislike.active {
+            background: rgba(212, 175, 55, 0.35);
+            border-color: #d4af37;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+        }
+        .post-like.active span, .post-dislike.active span {
+            font-weight: bold;
+        }
+        .post-delete {
+            background: rgba(255, 68, 68, 0.12) !important;
+            border-color: rgba(255, 68, 68, 0.3) !important;
+            color: #ff6666 !important;
+        }
+        .post-delete:hover {
+            background: rgba(255, 68, 68, 0.25) !important;
+            border-color: #ff4444 !important;
+        }
+        
         .create-post-btn {
             position: fixed;
             bottom: 80px;
@@ -948,10 +976,10 @@
                     if (!channel.subscribers) channel.subscribers = [];
                     if (channel.subscribers.includes(App.currentUser)) {
                         channel.subscribers = channel.subscribers.filter(s => s !== App.currentUser);
-                        showNotification(`Вы отписались от канала ${channelName}`);
+                        showNotification(`❌ Вы отписались от канала ${channelName}`);
                     } else {
                         channel.subscribers.push(App.currentUser);
-                        showNotification(`Вы подписались на канал ${channelName}`);
+                        showNotification(`✅ Вы подписались на канал ${channelName}`);
                     }
                     saveToFirebase();
                     document.getElementById('channelModalOverlay').remove();
@@ -2180,7 +2208,7 @@
                         <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
                     </div>
                     <div class="messages-container" id="messageList"></div>
-                    ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) && !App.channels[App.activeChat] ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (App.channels[App.activeChat] && App.channels[App.activeChat]?.owner === user ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">🔒 ЭТОМУ ЧЕЛОВЕКУ НЕЛЬЗЯ ПИСАТЬ</div></div>`)) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                    ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) && !App.channels[App.activeChat] ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (App.channels[App.activeChat] && App.channels[App.activeChat]?.owner === user ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">🔒 ЭТО НЕ ВАШ КАНАЛ</div></div>`)) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                 </div>
                 ` : `
                 <div class="feed-container" id="feedContainer"></div>
@@ -2197,7 +2225,7 @@
             const openProfileBtn = document.getElementById('openProfileBtn'); if (openProfileBtn) openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
             const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat]) { openProfileModal(App.activeChat); } else if (App.channels[App.activeChat]) { openChannelModal(App.activeChat); } });
             const giftBtn = document.getElementById('giftBtn'); if (giftBtn) giftBtn.addEventListener('click', openGiftMenu);
-            const subscribeBtn = document.getElementById('subscribeBtn'); if (subscribeBtn) subscribeBtn.addEventListener('click', () => { const channel = App.activeChat; if (App.channels[channel]) { if (!App.channels[channel].subscribers) App.channels[channel].subscribers = []; if (App.channels[channel].subscribers.includes(App.currentUser)) { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== App.currentUser); } else { App.channels[channel].subscribers.push(App.currentUser); } saveToFirebase(); render(); showNotification('Подписка обновлена'); } });
+            const subscribeBtn = document.getElementById('subscribeBtn'); if (subscribeBtn) subscribeBtn.addEventListener('click', () => { const channel = App.activeChat; if (App.channels[channel]) { if (!App.channels[channel].subscribers) App.channels[channel].subscribers = []; if (App.channels[channel].subscribers.includes(App.currentUser)) { App.channels[channel].subscribers = App.channels[channel].subscribers.filter(s => s !== App.currentUser); showNotification(`❌ Вы отписались от канала ${channel}`); } else { App.channels[channel].subscribers.push(App.currentUser); showNotification(`✅ Вы подписались на канал ${channel}`); } saveToFirebase(); render(); } });
             const sendBtn = document.getElementById('sendMsgBtn'); if (sendBtn) sendBtn.addEventListener('click', sendMessage);
             const fileUpload = document.getElementById('fileUpload'); const videoUpload = document.getElementById('videoUpload'); if (fileUpload) fileUpload.addEventListener('change', handleFileSelect); if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect);
             const addUserBtn = document.getElementById('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
