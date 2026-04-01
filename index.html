@@ -300,9 +300,12 @@
         .banner-container { width: 100%; height: 150px; border-radius: 20px; overflow: hidden; border: 1px solid var(--glass-border); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
         .banner-image { width: 100%; height: 100%; object-fit: cover; }
         .banner-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; }
+        body.light-theme .banner-placeholder { background: #f0f0f0; color: #aaa; }
+        body.light-theme .banner-container { background: #f0f0f0; }
         
         .profile-avatar-overlay { position: absolute; bottom: -40px; left: 20px; z-index: 10; }
         .profile-avatar-overlay .avatar-large { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--accent); background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text); overflow: hidden; box-shadow: 0 4px 20px var(--shadow); }
+        body.light-theme .profile-avatar-overlay .avatar-large { background: #e0e0e0; }
         .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
         
         .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; padding-right: 20px; }
@@ -596,7 +599,6 @@
             border-top: 1px solid var(--glass-border);
             padding-top: 12px;
         }
-        /* Улучшенные кнопки ленты */
         .post-stats button {
             background: rgba(212, 175, 55, 0.12);
             border: 1px solid rgba(212, 175, 55, 0.25);
@@ -707,7 +709,6 @@
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
         }
-        /* Панель видна только на телефонах */
         .bottom-nav {
             display: none;
         }
@@ -1265,6 +1266,11 @@
             const currentWallpaper = userData.chatWallpaper || '';
             const currentTheme = localStorage.getItem('yolk_theme') === 'light' ? 'light' : 'dark';
             
+            // Сохраняем текущие значения, чтобы применить их только при сохранении
+            let pendingTheme = currentTheme;
+            let pendingPrivacy = currentPrivacy;
+            let pendingTwoFA = userData.twoFA || false;
+            
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
                     <div class="profile-modal">
@@ -1299,24 +1305,24 @@
                         </div>
                         <div class="profile-input-group">
                             <label>ТЕМА ОФОРМЛЕНИЯ</label>
-                            <div class="toggle-switch ${currentTheme === 'light' ? 'active' : ''}" id="themeToggle">
+                            <div class="toggle-switch ${pendingTheme === 'light' ? 'active' : ''}" id="themeToggle">
                                 <div class="toggle-checkbox"></div>
-                                <span class="toggle-label">${currentTheme === 'light' ? '☀️ Светлая' : '🌙 Тёмная'}</span>
+                                <span class="toggle-label">${pendingTheme === 'light' ? '☀️ Светлая' : '🌙 Тёмная'}</span>
                             </div>
                         </div>
                         <div class="profile-input-group">
                             <label>🔒 КОНФИДЕНЦИАЛЬНОСТЬ</label>
-                            <div class="toggle-switch ${currentPrivacy ? 'active' : ''}" id="privacyToggle">
+                            <div class="toggle-switch ${pendingPrivacy ? 'active' : ''}" id="privacyToggle">
                                 <div class="toggle-checkbox"></div>
-                                <span class="toggle-label">${currentPrivacy ? '☑️ Незнакомцы не могут писать первыми' : '❌ Все могут писать первыми'}</span>
+                                <span class="toggle-label">${pendingPrivacy ? '☑️ Незнакомцы не могут писать первыми' : '❌ Все могут писать первыми'}</span>
                             </div>
                             <small style="color: var(--text-secondary); display:block; margin-top:5px;">Если включено: только те, с кем у вас уже есть чат, могут писать вам.</small>
                         </div>
                         <div class="profile-input-group">
                             <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
-                            <div class="toggle-switch ${userData.twoFA ? 'active' : ''}" id="settingsTwoFAToggle">
+                            <div class="toggle-switch ${pendingTwoFA ? 'active' : ''}" id="settingsTwoFAToggle">
                                 <div class="toggle-checkbox"></div>
-                                <span class="toggle-label">${userData.twoFA ? '☑️ Включена' : '❌ Выключена'}</span>
+                                <span class="toggle-label">${pendingTwoFA ? '☑️ Включена' : '❌ Выключена'}</span>
                             </div>
                         </div>
                         <div class="profile-actions">
@@ -1379,36 +1385,40 @@
                 reader.readAsDataURL(file);
             });
             
+            // Переключатели только меняют внешний вид и запоминают новое состояние
             const themeToggle = document.getElementById('themeToggle');
             if (themeToggle) {
                 themeToggle.addEventListener('click', () => {
                     const isLight = themeToggle.classList.contains('active');
                     const newTheme = isLight ? 'dark' : 'light';
-                    applyTheme(newTheme);
+                    pendingTheme = newTheme;
                     themeToggle.classList.toggle('active', !isLight);
                     const labelSpan = themeToggle.querySelector('.toggle-label');
                     labelSpan.textContent = newTheme === 'light' ? '☀️ Светлая' : '🌙 Тёмная';
                 });
             }
             
-            document.getElementById('privacyToggle').addEventListener('click', () => {
-                const newState = !App.privacySettings[App.currentUser]?.blockNewMessages;
-                updatePrivacySetting(newState);
-                const toggle = document.getElementById('privacyToggle');
-                toggle.classList.toggle('active', newState);
-                const labelSpan = toggle.querySelector('.toggle-label');
-                labelSpan.textContent = newState ? '☑️ Незнакомцы не могут писать первыми' : '❌ Все могут писать первыми';
-            });
+            const privacyToggle = document.getElementById('privacyToggle');
+            if (privacyToggle) {
+                privacyToggle.addEventListener('click', () => {
+                    const newState = !pendingPrivacy;
+                    pendingPrivacy = newState;
+                    privacyToggle.classList.toggle('active', newState);
+                    const labelSpan = privacyToggle.querySelector('.toggle-label');
+                    labelSpan.textContent = newState ? '☑️ Незнакомцы не могут писать первыми' : '❌ Все могут писать первыми';
+                });
+            }
             
-            document.getElementById('settingsTwoFAToggle').addEventListener('click', () => {
-                const newState = !App.users[App.currentUser].twoFA;
-                App.users[App.currentUser].twoFA = newState;
-                document.getElementById('settingsTwoFAToggle').classList.toggle('active', newState);
-                const labelSpan = document.querySelector('#settingsTwoFAToggle .toggle-label');
-                labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
-                saveToFirebase();
-                showNotification(newState ? '2FA включена' : '2FA выключена');
-            });
+            const twoFAToggle = document.getElementById('settingsTwoFAToggle');
+            if (twoFAToggle) {
+                twoFAToggle.addEventListener('click', () => {
+                    const newState = !pendingTwoFA;
+                    pendingTwoFA = newState;
+                    twoFAToggle.classList.toggle('active', newState);
+                    const labelSpan = twoFAToggle.querySelector('.toggle-label');
+                    labelSpan.textContent = newState ? '☑️ Включена' : '❌ Выключена';
+                });
+            }
             
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
                 const newPassword = document.getElementById('settingsPassword')?.value.trim();
@@ -1427,6 +1437,19 @@
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                 if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
+                
+                // Применяем сохранённые настройки
+                if (pendingTheme !== currentTheme) {
+                    applyTheme(pendingTheme);
+                }
+                if (pendingPrivacy !== currentPrivacy) {
+                    updatePrivacySetting(pendingPrivacy);
+                }
+                if (pendingTwoFA !== (userData.twoFA || false)) {
+                    App.users[App.currentUser].twoFA = pendingTwoFA;
+                    saveToFirebase();
+                    showNotification(pendingTwoFA ? '2FA включена' : '2FA выключена');
+                }
                 
                 saveToFirebase();
                 updateUserInterface();
@@ -1655,13 +1678,63 @@
             return true;
         }
 
+        // ========== ФУНКЦИИ ДЛЯ ПОДПИСОК ==========
+        function ensureUserFollowData(username) {
+            if (!App.users[username]) return;
+            if (!App.users[username].followers) App.users[username].followers = [];
+            if (!App.users[username].following) App.users[username].following = [];
+        }
+        
+        function isFollowing(currentUser, targetUser) {
+            ensureUserFollowData(currentUser);
+            ensureUserFollowData(targetUser);
+            return App.users[currentUser].following.includes(targetUser);
+        }
+        
+        function subscribeToUser(currentUser, targetUser) {
+            if (currentUser === targetUser) {
+                showNotification('Нельзя подписаться на самого себя', 'error');
+                return false;
+            }
+            ensureUserFollowData(currentUser);
+            ensureUserFollowData(targetUser);
+            if (App.users[currentUser].following.includes(targetUser)) {
+                showNotification('Вы уже подписаны', 'error');
+                return false;
+            }
+            App.users[currentUser].following.push(targetUser);
+            App.users[targetUser].followers.push(currentUser);
+            saveToFirebase();
+            showNotification(`✅ Вы подписались на ${targetUser}`);
+            return true;
+        }
+        
+        function unsubscribeFromUser(currentUser, targetUser) {
+            ensureUserFollowData(currentUser);
+            ensureUserFollowData(targetUser);
+            const idxFollowing = App.users[currentUser].following.indexOf(targetUser);
+            if (idxFollowing !== -1) App.users[currentUser].following.splice(idxFollowing, 1);
+            const idxFollower = App.users[targetUser].followers.indexOf(currentUser);
+            if (idxFollower !== -1) App.users[targetUser].followers.splice(idxFollower, 1);
+            saveToFirebase();
+            showNotification(`❌ Вы отписались от ${targetUser}`);
+            return true;
+        }
+        
+        function formatSubscribers(count) {
+            if (count % 10 === 1 && count % 100 !== 11) return `${count} подписчик`;
+            if ([2,3,4].includes(count % 10) && ![12,13,14].includes(count % 100)) return `${count} подписчика`;
+            return `${count} подписчиков`;
+        }
+
         // ========== ПРОФИЛЬ ==========
         function openProfileModal(username) { 
-            const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', nfts: [] }) };
+            const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', nfts: [], followers: [], following: [] }) };
             const isOwn = (username === App.currentUser); 
             const isAdmin = (username === ADMIN_USER); 
             const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join(''); 
             const nftsList = (userData.nfts || []).map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join(''); 
+            const followersCount = (userData.followers || []).length;
             
             if (isOwn) {
                 const modalHtml = `
@@ -1676,6 +1749,7 @@
                             </div>
                             <div class="profile-name-section">
                                 <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="star-balance" style="margin-top:5px;">👥 ${formatSubscribers(followersCount)}</div>
                             </div>
                             <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
@@ -1808,7 +1882,7 @@
                 return;
             }
             
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="star-balance" style="margin-top:5px;">👥 ${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
         }
@@ -1971,14 +2045,21 @@
                 const userDisliked = post.dislikes && post.dislikes[App.currentUser];
                 const isOwner = post.author === App.currentUser;
                 const date = new Date(post.time).toLocaleString();
+                
+                // Подписка
+                const isSubscribed = isFollowing(App.currentUser, post.author);
+                const subButtonHtml = (post.author !== App.currentUser) ? 
+                    `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" style="margin-left:auto; padding:4px 10px;" onclick="event.stopPropagation(); if('${isSubscribed}' === 'true') unsubscribeFromUser('${App.currentUser}', '${post.author}'); else subscribeToUser('${App.currentUser}', '${post.author}'); renderFeed();">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
+                
                 html += `
                     <div class="post-card" data-post-id="${post.id}">
                         <div class="post-header" onclick="openProfileModal('${post.author}')">
                             <div class="post-avatar">${avatarHtml}</div>
-                            <div>
+                            <div style="flex:1;">
                                 <div class="post-author">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                 <div class="post-time">${date}</div>
                             </div>
+                            ${subButtonHtml}
                         </div>
                         <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
                         ${mediaHtml}
@@ -2190,7 +2271,7 @@
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { const root = document.getElementById('app'); if (!App.dataLoaded) { root.innerHTML = '<div class="loading-screen"><div class="loading-spinner"></div></div>'; return; } if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); } else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat); else if (App.activeTab === 'feed') renderFeed(); updateChatList(); updateSidebarUser(); applyWallpaper(); }, 100); } }
         function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
-        function attachAuthEvents() { const loginForm = document.getElementById('loginForm'); const regForm = document.getElementById('registerForm'); const errorDiv = document.getElementById('authError'); document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; }); document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); document.getElementById('loginBtn')?.addEventListener('click', () => { let username = document.getElementById('loginUsername').value.trim().toLowerCase(); const pass = document.getElementById('loginPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } const clean = '@' + username; if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; } const user = App.users[clean]; function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); } if (user.twoFA) { send2FACode(clean); const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); document.getElementById('verify2FABtn').addEventListener('click', () => { const inputCode = document.getElementById('twoFactorCode').value.trim(); if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } }); document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); }); document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); } else { loginSuccess(); } }); document.getElementById('registerBtn')?.addEventListener('click', () => { let username = document.getElementById('regUsername').value.trim().toLowerCase(); const pass = document.getElementById('regPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } const clean = '@' + username; if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '' }; database.ref('users/' + clean).set(newUser).then(() => { App.users[clean] = newUser; App.currentUser = clean; App.savedMessages[clean] = []; saveSavedMessages(); localStorage.setItem('yolk_current_user', clean); saveToFirebase(); setupUserListener(clean); render(); showNotification('✅ Аккаунт создан!'); }).catch((err) => { console.error('❌ Ошибка сохранения пользователя:', err); errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); }); }
+        function attachAuthEvents() { const loginForm = document.getElementById('loginForm'); const regForm = document.getElementById('registerForm'); const errorDiv = document.getElementById('authError'); document.getElementById('showRegisterBtn')?.addEventListener('click', () => { loginForm.style.display = 'none'; regForm.style.display = 'block'; }); document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); document.getElementById('loginBtn')?.addEventListener('click', () => { let username = document.getElementById('loginUsername').value.trim().toLowerCase(); const pass = document.getElementById('loginPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } const clean = '@' + username; if (!App.users[clean] || App.users[clean].password !== pass) { errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; return; } const user = App.users[clean]; function loginSuccess() { App.currentUser = clean; localStorage.setItem('yolk_current_user', clean); loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(clean); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); updateLastSeen(clean); render(); } if (user.twoFA) { send2FACode(clean); const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); document.getElementById('verify2FABtn').addEventListener('click', () => { const inputCode = document.getElementById('twoFactorCode').value.trim(); if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } if (verify2FACode(clean, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } }); document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(clean); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); }); document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); } else { loginSuccess(); } }); document.getElementById('registerBtn')?.addEventListener('click', () => { let username = document.getElementById('regUsername').value.trim().toLowerCase(); const pass = document.getElementById('regPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } const clean = '@' + username; if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [] }; database.ref('users/' + clean).set(newUser).then(() => { App.users[clean] = newUser; App.currentUser = clean; App.savedMessages[clean] = []; saveSavedMessages(); localStorage.setItem('yolk_current_user', clean); saveToFirebase(); setupUserListener(clean); render(); showNotification('✅ Аккаунт создан!'); }).catch((err) => { console.error('❌ Ошибка сохранения пользователя:', err); errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); }); }
         function renderMain() { const user = App.currentUser; const userData = App.users[user] || {}; const isChatsActive = App.activeTab === 'chats'; return `
             <div class="main-container">
                 ${isChatsActive ? `
@@ -2291,7 +2372,7 @@
         window.toggleLike = function(chatPartner, messageIdx, event) { event.stopPropagation(); if (App.channels[chatPartner]) { if (!App.channels[chatPartner].messages[messageIdx]) return; const msg = App.channels[chatPartner].messages[messageIdx]; if (!msg.likes) msg.likes = {}; if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser]; else msg.likes[App.currentUser] = true; saveToFirebase(); renderMessages(chatPartner); } };
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         function initBots() { App.systemBots = []; saveToFirebase(); }
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) App.users = data.users; if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) App.users = cache.users; if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); loadTheme(); });
     </script>
 </body>
