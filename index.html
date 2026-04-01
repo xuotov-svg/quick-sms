@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Yolkapp · Liquid Glass</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
-    <style>
+            <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         /* Базовые переменные (тёмная тема по умолчанию) */
@@ -186,7 +186,22 @@
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
         
-        .verified-icon { display: inline-block; width: 18px; height: 18px; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#389df2"/><stop offset="100%" stop-color="#1a73e8"/></linearGradient></defs><path fill="url(%23grad)" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2z"/><path fill="white" d="M9.5 12.5L11.5 14.5L15.5 9.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'); background-size: contain; background-repeat: no-repeat; vertical-align: middle; margin-left: 4px; }
+        .verified-icon { 
+            display: inline-block; 
+            width: 18px; 
+            height: 18px; 
+            background: #389df2; 
+            border-radius: 50%; 
+            color: white; 
+            text-align: center; 
+            line-height: 18px; 
+            font-size: 12px; 
+            margin-left: 4px;
+            font-weight: bold;
+        }
+        .verified-icon::before {
+            content: "✓";
+        }
         
         /* ========== ВСЕ КНОПКИ С ЭМОДЗИ - ТЕМНО-СЕРЫЕ ========== */
         .icon-btn,
@@ -717,7 +732,7 @@
                 display: flex;
             }
         }
-    </style>
+        </style>
 </head>
 <body>
     <div id="app"></div>
