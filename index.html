@@ -308,7 +308,7 @@
         body.light-theme .profile-avatar-overlay .avatar-large { background: #e0e0e0; }
         .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
         
-        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; padding-right: 20px; }
+        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 4px; }
         
         .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; color: var(--text); }
         .settings-icon:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
@@ -1266,7 +1266,6 @@
             const currentWallpaper = userData.chatWallpaper || '';
             const currentTheme = localStorage.getItem('yolk_theme') === 'light' ? 'light' : 'dark';
             
-            // Сохраняем текущие значения, чтобы применить их только при сохранении
             let pendingTheme = currentTheme;
             let pendingPrivacy = currentPrivacy;
             let pendingTwoFA = userData.twoFA || false;
@@ -1385,7 +1384,6 @@
                 reader.readAsDataURL(file);
             });
             
-            // Переключатели только меняют внешний вид и запоминают новое состояние
             const themeToggle = document.getElementById('themeToggle');
             if (themeToggle) {
                 themeToggle.addEventListener('click', () => {
@@ -1438,7 +1436,6 @@
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                 if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
                 
-                // Применяем сохранённые настройки
                 if (pendingTheme !== currentTheme) {
                     applyTheme(pendingTheme);
                 }
@@ -1686,6 +1683,7 @@
         }
         
         function isFollowing(currentUser, targetUser) {
+            if (currentUser === targetUser) return false;
             ensureUserFollowData(currentUser);
             ensureUserFollowData(targetUser);
             return App.users[currentUser].following.includes(targetUser);
@@ -1726,6 +1724,28 @@
             if ([2,3,4].includes(count % 10) && ![12,13,14].includes(count % 100)) return `${count} подписчика`;
             return `${count} подписчиков`;
         }
+        
+        // Локальное обновление кнопки подписки в ленте
+        function toggleFeedSubscription(postId, author) {
+            if (author === App.currentUser) return;
+            const isSubscribed = isFollowing(App.currentUser, author);
+            if (isSubscribed) {
+                unsubscribeFromUser(App.currentUser, author);
+            } else {
+                subscribeToUser(App.currentUser, author);
+            }
+            updatePostSubscribeButton(postId, !isSubscribed);
+        }
+        
+        function updatePostSubscribeButton(postId, isSubscribed) {
+            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if (!postCard) return;
+            const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
+            if (btn) {
+                btn.textContent = isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
+                btn.className = isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn';
+            }
+        }
 
         // ========== ПРОФИЛЬ ==========
         function openProfileModal(username) { 
@@ -1749,7 +1769,7 @@
                             </div>
                             <div class="profile-name-section">
                                 <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                <div class="star-balance" style="margin-top:5px;">👥 ${formatSubscribers(followersCount)}</div>
+                                <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
                             </div>
                             <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
@@ -1882,7 +1902,7 @@
                 return;
             }
             
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="star-balance" style="margin-top:5px;">👥 ${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}${userData.verified ? '<span class="verified-icon" style="width:22px;height:22px;"></span>' : ''}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
         }
@@ -2046,10 +2066,9 @@
                 const isOwner = post.author === App.currentUser;
                 const date = new Date(post.time).toLocaleString();
                 
-                // Подписка
                 const isSubscribed = isFollowing(App.currentUser, post.author);
                 const subButtonHtml = (post.author !== App.currentUser) ? 
-                    `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" style="margin-left:auto; padding:4px 10px;" onclick="event.stopPropagation(); if('${isSubscribed}' === 'true') unsubscribeFromUser('${App.currentUser}', '${post.author}'); else subscribeToUser('${App.currentUser}', '${post.author}'); renderFeed();">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
+                    `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
                 
                 html += `
                     <div class="post-card" data-post-id="${post.id}">
@@ -2312,7 +2331,6 @@
             const addUserBtn = document.getElementById('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
             const messageText = document.getElementById('messageText'); if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
             
-            // Навигация
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const tab = item.dataset.tab;
