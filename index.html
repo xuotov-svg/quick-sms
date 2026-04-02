@@ -2043,12 +2043,11 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-       // ========== ЛЕНТА (с кнопкой "📤" и отправкой от имени автора) ==========
+       // ========== ЛЕНТА (рабочая версия с пересылкой от имени автора) ==========
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedPosts = [];
 
-// Перемешивание постов
 function getShuffledPosts() {
     const shuffled = [...App.posts];
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -2058,7 +2057,6 @@ function getShuffledPosts() {
     return shuffled;
 }
 
-// Инициализация ленты
 function initFeed() {
     feedPage = 0;
     feedPosts = getShuffledPosts();
@@ -2067,26 +2065,21 @@ function initFeed() {
     renderFeed();
 }
 
-// Рендер ленты
 function renderFeed() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
-
     if (feedPosts.length === 0) {
         feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
         return;
     }
-
     const start = feedPage * FEED_PAGE_SIZE;
     const end = start + FEED_PAGE_SIZE;
     const postsToShow = feedPosts.slice(start, end);
-
     if (postsToShow.length === 0) {
         feedPage = 0;
         renderFeed();
         return;
     }
-
     let html = '';
     postsToShow.forEach(post => {
         const author = App.users[post.author] || {};
@@ -2098,11 +2091,9 @@ function renderFeed() {
         const userDisliked = post.dislikes && post.dislikes[App.currentUser];
         const isOwner = post.author === App.currentUser;
         const date = new Date(post.time).toLocaleString();
-
         const isSubscribed = isFollowing(App.currentUser, post.author);
         const subButtonHtml = (post.author !== App.currentUser) ?
             `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
-
         html += `
             <div class="post-card" data-post-id="${post.id}">
                 <div class="post-header" onclick="openProfileModal('${post.author}')">
@@ -2125,10 +2116,8 @@ function renderFeed() {
             </div>
         `;
     });
-
     feedContainer.insertAdjacentHTML('beforeend', html);
     feedPage++;
-
     feedContainer.onscroll = function() {
         if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
             renderFeed();
@@ -2136,31 +2125,25 @@ function renderFeed() {
     };
 }
 
-// ========== ОТКРЫТИЕ МОДАЛКИ СО СПИСКОМ ЧАТОВ ==========
+// Модалка выбора чата
 function openShareModal(postId) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) return;
-
-    // Получаем список всех чатов (пользователи, каналы, избранное)
     let chatList = getChatListForUser(App.currentUser);
-    // Исключаем текущего пользователя (нельзя отправить самому себе)
     chatList = chatList.filter(chat => chat !== App.currentUser);
-
     if (chatList.length === 0) {
         showNotification('Нет доступных чатов для отправки', 'error');
         return;
     }
-
     let chatOptions = '';
     chatList.forEach(chat => {
         let displayName = chat;
         if (chat === 'saved') displayName = '📁 ИЗБРАННОЕ';
         else if (chat === 'yolk') displayName = '🥚 YOLK';
         else if (App.channels[chat]) displayName = '📢 ' + chat;
-        else displayName = chat; // chat уже содержит @, например "@durov"
+        else displayName = chat;
         chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
     });
-
     const modalHtml = `
         <div class="modal-overlay" id="shareModal">
             <div class="profile-modal">
@@ -2176,7 +2159,6 @@ function openShareModal(postId) {
         </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-
     document.querySelectorAll('.share-chat-item').forEach(el => {
         el.addEventListener('click', () => {
             const targetChat = el.dataset.chat;
@@ -2184,27 +2166,26 @@ function openShareModal(postId) {
             sharePostToChat(postId, targetChat);
         });
     });
-
     document.getElementById('closeShareModal').addEventListener('click', () => {
         document.getElementById('shareModal').remove();
     });
 }
 
-// ========== ОТПРАВКА ПОСТА В ВЫБРАННЫЙ ЧАТ (от имени автора) ==========
+// ОТПРАВКА: сообщение идёт в чат между текущим пользователем и получателем, но от имени автора поста
 function sharePostToChat(postId, targetChat) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) {
         showNotification('Пост не найден', 'error');
         return;
     }
-
     let messageText = post.text || '';
     if (messageText === '' && !post.media) messageText = '(пустой пост)';
     else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
 
-    // Отправляем от имени АВТОРА поста
-    const from = post.author;
-    const to = targetChat;
+    const from = post.author;          // отправитель — автор поста
+    const to = targetChat;             // получатель (друг, канал, saved)
+    const currentUser = App.currentUser; // кто шарит
+
     const mediaData = post.media || null;
     const isVideo = post.isVideo || false;
 
@@ -2219,27 +2200,27 @@ function sharePostToChat(postId, targetChat) {
             sharedPost: true
         };
 
-        // 1. Избранное
+        // Избранное
         if (to === 'saved') {
             if (!App.savedMessages[from]) App.savedMessages[from] = [];
             App.savedMessages[from].push(message);
             saveSavedMessages();
             showNotification(`✅ Пост сохранён в Избранное (от имени ${from})`);
         }
-        // 2. Канал
+        // Канал
         else if (App.channels[to]) {
             if (!App.channels[to].messages) App.channels[to].messages = [];
             App.channels[to].messages.push(message);
             saveToFirebase();
             showNotification(`✅ Пост отправлен в канал ${to} от имени ${from}`);
         }
-        // 3. Личный чат (между автором поста и получателем)
+        // Личный чат: создаём/используем чат между текущим пользователем (кто шарит) и получателем
         else {
-            // ВАЖНО: создаём чат между from (автор поста) и to (получатель), если его нет
-            const chatId = [from, to].sort().join('_');
+            // ВАЖНО: чат создаётся между currentUser и to, а сообщение от from
+            const chatId = [currentUser, to].sort().join('_');
             if (!App.chats[chatId]) {
                 App.chats[chatId] = {
-                    user1: from,
+                    user1: currentUser,
                     user2: to,
                     messages: []
                 };
@@ -2249,25 +2230,23 @@ function sharePostToChat(postId, targetChat) {
             showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
         }
 
-        // Если текущий открытый чат совпадает с получателем, обновляем сообщения
         if (App.activeChat === to) renderMessages(to);
         updateChatList();
     } catch (error) {
         console.error('Ошибка отправки поста:', error);
-        showNotification('Ошибка при отправке: ' + error.message, 'error');
+        showNotification('Ошибка при отправке', 'error');
     }
 }
 
-// ========== ОСТАЛЬНЫЕ ФУНКЦИИ ЛЕНТЫ ==========
+// Вспомогательные функции для ленты
 function toggleLikePost(postId) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) return;
     if (!post.likes) post.likes = {};
     if (!post.dislikes) post.dislikes = {};
     const user = App.currentUser;
-    if (post.likes[user]) {
-        delete post.likes[user];
-    } else {
+    if (post.likes[user]) delete post.likes[user];
+    else {
         if (post.dislikes[user]) delete post.dislikes[user];
         post.likes[user] = true;
     }
@@ -2281,9 +2260,8 @@ function toggleDislikePost(postId) {
     if (!post.likes) post.likes = {};
     if (!post.dislikes) post.dislikes = {};
     const user = App.currentUser;
-    if (post.dislikes[user]) {
-        delete post.dislikes[user];
-    } else {
+    if (post.dislikes[user]) delete post.dislikes[user];
+    else {
         if (post.likes[user]) delete post.likes[user];
         post.dislikes[user] = true;
     }
@@ -2296,16 +2274,13 @@ function updatePostStats(postId) {
     if (!post) return;
     const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
     if (!postCard) return;
-
     const likesCount = Object.keys(post.likes || {}).length;
     const dislikesCount = Object.keys(post.dislikes || {}).length;
     const userLiked = post.likes && post.likes[App.currentUser];
     const userDisliked = post.dislikes && post.dislikes[App.currentUser];
-
     const likeBtn = postCard.querySelector('.post-like');
     const dislikeBtn = postCard.querySelector('.post-dislike');
     const commentBtn = postCard.querySelector('.post-comment');
-
     if (likeBtn) {
         likeBtn.classList.toggle('active', userLiked);
         const likeSpan = likeBtn.querySelector('span');
@@ -2401,8 +2376,6 @@ function createPost(text, media, isVideo) {
     saveToFirebase();
     initFeed();
     showNotification('Пост опубликован!');
-    App.tempPostPhoto = null;
-    App.tempPostVideo = null;
 }
 
 function openCreatePostModal() {
@@ -2411,11 +2384,11 @@ function openCreatePostModal() {
             <div class="profile-modal">
                 <h3>📝 СОЗДАТЬ ПОСТ</h3>
                 <div class="profile-input-group">
-                    <label>ТЕКСТ (обязательно)</label>
+                    <label>ТЕКСТ</label>
                     <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
                 </div>
                 <div class="profile-input-group">
-                    <label>ПРИКРЕПИТЬ ФОТО ИЛИ ВИДЕО (необязательно)</label>
+                    <label>ПРИКРЕПИТЬ ФОТО/ВИДЕО</label>
                     <input type="file" id="postMediaFile" accept="image/*,video/*">
                 </div>
                 <div class="profile-actions">
@@ -2466,15 +2439,11 @@ function openCreatePostModal() {
     });
 }
 
-// Функция для подписки/отписки (используется в ленте)
 function toggleFeedSubscription(postId, author) {
     if (author === App.currentUser) return;
     const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-    if (isCurrentlySubscribed) {
-        unsubscribeFromUser(App.currentUser, author);
-    } else {
-        subscribeToUser(App.currentUser, author);
-    }
+    if (isCurrentlySubscribed) unsubscribeFromUser(App.currentUser, author);
+    else subscribeToUser(App.currentUser, author);
     const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
     if (postCard) {
         const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
@@ -2485,7 +2454,6 @@ function toggleFeedSubscription(postId, author) {
         }
     }
 }
-
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { 
             const root = document.getElementById('app'); 
