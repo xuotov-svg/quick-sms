@@ -2198,13 +2198,9 @@ function sharePostToChat(postId, targetChat) {
         return;
     }
 
-    // Только оригинальный текст поста (без каких-либо заголовков)
     let messageText = post.text || '';
-    if (messageText === '' && !post.media) {
-        messageText = '(пустой пост)';
-    } else if (messageText === '' && post.media) {
-        messageText = '📷 Поделился(ась) медиа';
-    }
+    if (messageText === '' && !post.media) messageText = '(пустой пост)';
+    else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
 
     // Отправляем от имени АВТОРА поста
     const from = post.author;
@@ -2223,32 +2219,42 @@ function sharePostToChat(postId, targetChat) {
             sharedPost: true
         };
 
+        // 1. Избранное
         if (to === 'saved') {
             if (!App.savedMessages[from]) App.savedMessages[from] = [];
             App.savedMessages[from].push(message);
             saveSavedMessages();
             showNotification(`✅ Пост сохранён в Избранное (от имени ${from})`);
-        } else if (App.channels[to]) {
+        }
+        // 2. Канал
+        else if (App.channels[to]) {
             if (!App.channels[to].messages) App.channels[to].messages = [];
             App.channels[to].messages.push(message);
             saveToFirebase();
             showNotification(`✅ Пост отправлен в канал ${to} от имени ${from}`);
-        } else {
+        }
+        // 3. Личный чат (между автором поста и получателем)
+        else {
+            // ВАЖНО: создаём чат между from (автор поста) и to (получатель), если его нет
             const chatId = [from, to].sort().join('_');
             if (!App.chats[chatId]) {
-                App.chats[chatId] = { user1: from, user2: to, messages: [] };
+                App.chats[chatId] = {
+                    user1: from,
+                    user2: to,
+                    messages: []
+                };
             }
             App.chats[chatId].messages.push(message);
             saveToFirebase();
             showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
         }
 
-        // Если открыт этот чат, обновляем сообщения
+        // Если текущий открытый чат совпадает с получателем, обновляем сообщения
         if (App.activeChat === to) renderMessages(to);
         updateChatList();
     } catch (error) {
         console.error('Ошибка отправки поста:', error);
-        showNotification('Ошибка при отправке', 'error');
+        showNotification('Ошибка при отправке: ' + error.message, 'error');
     }
 }
 
