@@ -2043,7 +2043,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-       // ========== ЛЕНТА (рабочая версия с пересылкой от имени автора) ==========
+       // ========== ЛЕНТА (только личные чаты, без saved/yolk/каналов) ==========
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedPosts = [];
@@ -2111,7 +2111,7 @@ function renderFeed() {
                     <button class="post-dislike ${userDisliked ? 'active' : ''}" onclick="toggleDislikePost('${post.id}')">👎 <span>${dislikesCount}</span></button>
                     <button class="post-comment" onclick="openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
                     <button class="post-share" onclick="openShareModal('${post.id}')">📤</button>
-                    ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️ УДАЛИТЬ</button>` : ''}
+                    ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️</button>` : ''}
                 </div>
             </div>
         `;
@@ -2125,23 +2125,26 @@ function renderFeed() {
     };
 }
 
-// Модалка выбора чата
+// Модалка выбора чата (только личные чаты с пользователями)
 function openShareModal(postId) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) return;
     let chatList = getChatListForUser(App.currentUser);
-    chatList = chatList.filter(chat => chat !== App.currentUser);
+    // Фильтруем: оставляем только личные чаты с другими пользователями (не saved, не yolk, не каналы)
+    chatList = chatList.filter(chat => {
+        if (chat === 'saved') return false;
+        if (chat === 'yolk') return false;
+        if (App.channels[chat]) return false;
+        if (chat === App.currentUser) return false;
+        return true;
+    });
     if (chatList.length === 0) {
         showNotification('Нет доступных чатов для отправки', 'error');
         return;
     }
     let chatOptions = '';
     chatList.forEach(chat => {
-        let displayName = chat;
-        if (chat === 'saved') displayName = '📁 ИЗБРАННОЕ';
-        else if (chat === 'yolk') displayName = '🥚 YOLK';
-        else if (App.channels[chat]) displayName = '📢 ' + chat;
-        else displayName = chat;
+        let displayName = chat; // уже с @
         chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
     });
     const modalHtml = `
@@ -2149,7 +2152,7 @@ function openShareModal(postId) {
             <div class="profile-modal">
                 <h3>📤 ОТПРАВИТЬ ПОСТ</h3>
                 <div class="profile-input-group">
-                    <label>ВЫБЕРИТЕ ЧАТ:</label>
+                    <label>ВЫБЕРИТЕ ПОЛУЧАТЕЛЯ:</label>
                     <div id="shareChatList" style="max-height: 300px; overflow-y: auto;">${chatOptions}</div>
                 </div>
                 <div class="profile-actions">
@@ -2171,7 +2174,7 @@ function openShareModal(postId) {
     });
 }
 
-// ОТПРАВКА: сообщение идёт в чат между текущим пользователем и получателем, но от имени автора поста
+// Отправка поста в личный чат (только между текущим пользователем и получателем, от имени автора)
 function sharePostToChat(postId, targetChat) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) {
@@ -2183,7 +2186,7 @@ function sharePostToChat(postId, targetChat) {
     else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
 
     const from = post.author;          // отправитель — автор поста
-    const to = targetChat;             // получатель (друг, канал, saved)
+    const to = targetChat;             // получатель (друг)
     const currentUser = App.currentUser; // кто шарит
 
     const mediaData = post.media || null;
@@ -2200,35 +2203,18 @@ function sharePostToChat(postId, targetChat) {
             sharedPost: true
         };
 
-        // Избранное
-        if (to === 'saved') {
-            if (!App.savedMessages[from]) App.savedMessages[from] = [];
-            App.savedMessages[from].push(message);
-            saveSavedMessages();
-            showNotification(`✅ Пост сохранён в Избранное (от имени ${from})`);
+        // Личный чат: создаём/используем чат между currentUser и to
+        const chatId = [currentUser, to].sort().join('_');
+        if (!App.chats[chatId]) {
+            App.chats[chatId] = {
+                user1: currentUser,
+                user2: to,
+                messages: []
+            };
         }
-        // Канал
-        else if (App.channels[to]) {
-            if (!App.channels[to].messages) App.channels[to].messages = [];
-            App.channels[to].messages.push(message);
-            saveToFirebase();
-            showNotification(`✅ Пост отправлен в канал ${to} от имени ${from}`);
-        }
-        // Личный чат: создаём/используем чат между текущим пользователем (кто шарит) и получателем
-        else {
-            // ВАЖНО: чат создаётся между currentUser и to, а сообщение от from
-            const chatId = [currentUser, to].sort().join('_');
-            if (!App.chats[chatId]) {
-                App.chats[chatId] = {
-                    user1: currentUser,
-                    user2: to,
-                    messages: []
-                };
-            }
-            App.chats[chatId].messages.push(message);
-            saveToFirebase();
-            showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
-        }
+        App.chats[chatId].messages.push(message);
+        saveToFirebase();
+        showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
 
         if (App.activeChat === to) renderMessages(to);
         updateChatList();
@@ -2238,7 +2224,7 @@ function sharePostToChat(postId, targetChat) {
     }
 }
 
-// Вспомогательные функции для ленты
+// Вспомогательные функции для ленты (лайки, дизлайки, комментарии, удаление, подписки)
 function toggleLikePost(postId) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) return;
