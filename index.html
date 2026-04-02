@@ -2136,14 +2136,14 @@ function renderFeed() {
     };
 }
 
-// ========== ФУНКЦИЯ ДЛЯ ОТКРЫТИЯ МОДАЛКИ С ЧАТАМИ ==========
+// ========== ОТКРЫТИЕ МОДАЛКИ СО СПИСКОМ ЧАТОВ ==========
 function openShareModal(postId) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) return;
 
     // Получаем список всех чатов (пользователи, каналы, избранное)
     let chatList = getChatListForUser(App.currentUser);
-    // Исключаем текущего пользователя из списка (нельзя отправить самому себе)
+    // Исключаем текущего пользователя (нельзя отправить самому себе)
     chatList = chatList.filter(chat => chat !== App.currentUser);
 
     if (chatList.length === 0) {
@@ -2157,7 +2157,7 @@ function openShareModal(postId) {
         if (chat === 'saved') displayName = '📁 ИЗБРАННОЕ';
         else if (chat === 'yolk') displayName = '🥚 YOLK';
         else if (App.channels[chat]) displayName = '📢 ' + chat;
-        else displayName = chat; // уже с @, так как в списке чатов они с @
+        else displayName = chat; // chat уже содержит @, например "@durov"
         chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
     });
 
@@ -2190,7 +2190,7 @@ function openShareModal(postId) {
     });
 }
 
-// ========== ФУНКЦИЯ ОТПРАВКИ ПОСТА В ЧАТ (от имени автора) ==========
+// ========== ОТПРАВКА ПОСТА В ВЫБРАННЫЙ ЧАТ (от имени автора) ==========
 function sharePostToChat(postId, targetChat) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) {
@@ -2198,15 +2198,19 @@ function sharePostToChat(postId, targetChat) {
         return;
     }
 
-    // Только текст поста (без заголовков и метаданных)
+    // Только оригинальный текст поста (без каких-либо заголовков)
     let messageText = post.text || '';
-    if (messageText === '') messageText = '📷 Поделился(ась) медиа';
+    if (messageText === '' && !post.media) {
+        messageText = '(пустой пост)';
+    } else if (messageText === '' && post.media) {
+        messageText = '📷 Поделился(ась) медиа';
+    }
 
     // Отправляем от имени АВТОРА поста
     const from = post.author;
     const to = targetChat;
-    let mediaData = post.media || null;
-    let isVideo = post.isVideo || false;
+    const mediaData = post.media || null;
+    const isVideo = post.isVideo || false;
 
     try {
         const message = {
@@ -2239,6 +2243,7 @@ function sharePostToChat(postId, targetChat) {
             showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
         }
 
+        // Если открыт этот чат, обновляем сообщения
         if (App.activeChat === to) renderMessages(to);
         updateChatList();
     } catch (error) {
@@ -2247,7 +2252,7 @@ function sharePostToChat(postId, targetChat) {
     }
 }
 
-// Остальные функции ленты (лайки, дизлайки, комментарии, удаление и т.д.)
+// ========== ОСТАЛЬНЫЕ ФУНКЦИИ ЛЕНТЫ ==========
 function toggleLikePost(postId) {
     const post = App.posts.find(p => p.id === postId);
     if (!post) return;
@@ -2455,7 +2460,7 @@ function openCreatePostModal() {
     });
 }
 
-// Функция подписки (для кнопки)
+// Функция для подписки/отписки (используется в ленте)
 function toggleFeedSubscription(postId, author) {
     if (author === App.currentUser) return;
     const isCurrentlySubscribed = isFollowing(App.currentUser, author);
