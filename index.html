@@ -701,6 +701,27 @@
             color: var(--text);
             margin-top: 4px;
         }
+                .post-share {
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 30px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #d4af37;
+}
+.post-share:hover {
+    transform: translateY(-2px);
+    background: rgba(212, 175, 55, 0.25);
+    border-color: #d4af37;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
         .comment-time {
             font-size: 10px;
             color: var(--text-secondary);
@@ -2022,319 +2043,443 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА (исправленная версия) ==========
-        let feedPage = 0;
-        const FEED_PAGE_SIZE = 10;
-        let feedPosts = [];
+       // ========== ЛЕНТА (с кнопкой "ПОДЕЛИТЬСЯ") ==========
+let feedPage = 0;
+const FEED_PAGE_SIZE = 10;
+let feedPosts = [];
 
-        // Перемешивание постов
-        function getShuffledPosts() {
-            const shuffled = [...App.posts];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        }
+// Перемешивание постов
+function getShuffledPosts() {
+    const shuffled = [...App.posts];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
 
-        // Инициализация ленты (сброс страницы и очистка контейнера)
-        function initFeed() {
-            feedPage = 0;
-            feedPosts = getShuffledPosts();
-            const feedContainer = document.getElementById('feedContainer');
-            if (feedContainer) feedContainer.innerHTML = '';
+// Инициализация ленты
+function initFeed() {
+    feedPage = 0;
+    feedPosts = getShuffledPosts();
+    const feedContainer = document.getElementById('feedContainer');
+    if (feedContainer) feedContainer.innerHTML = '';
+    renderFeed();
+}
+
+// Рендер ленты
+function renderFeed() {
+    const feedContainer = document.getElementById('feedContainer');
+    if (!feedContainer) return;
+
+    if (feedPosts.length === 0) {
+        feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
+        return;
+    }
+
+    const start = feedPage * FEED_PAGE_SIZE;
+    const end = start + FEED_PAGE_SIZE;
+    const postsToShow = feedPosts.slice(start, end);
+
+    if (postsToShow.length === 0) {
+        feedPage = 0;
+        renderFeed();
+        return;
+    }
+
+    let html = '';
+    postsToShow.forEach(post => {
+        const author = App.users[post.author] || {};
+        const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (post.author[1] || '?');
+        const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
+        const likesCount = Object.keys(post.likes || {}).length;
+        const dislikesCount = Object.keys(post.dislikes || {}).length;
+        const userLiked = post.likes && post.likes[App.currentUser];
+        const userDisliked = post.dislikes && post.dislikes[App.currentUser];
+        const isOwner = post.author === App.currentUser;
+        const date = new Date(post.time).toLocaleString();
+
+        const isSubscribed = isFollowing(App.currentUser, post.author);
+        const subButtonHtml = (post.author !== App.currentUser) ?
+            `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
+
+        html += `
+            <div class="post-card" data-post-id="${post.id}">
+                <div class="post-header" onclick="openProfileModal('${post.author}')">
+                    <div class="post-avatar">${avatarHtml}</div>
+                    <div style="flex:1;">
+                        <div class="post-author">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                        <div class="post-time">${date}</div>
+                    </div>
+                    ${subButtonHtml}
+                </div>
+                <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
+                ${mediaHtml}
+                <div class="post-stats">
+                    <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')">👍 <span>${likesCount}</span></button>
+                    <button class="post-dislike ${userDisliked ? 'active' : ''}" onclick="toggleDislikePost('${post.id}')">👎 <span>${dislikesCount}</span></button>
+                    <button class="post-comment" onclick="openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
+                    <button class="post-share" onclick="openShareModal('${post.id}')">📤 ПОДЕЛИТЬСЯ</button>
+                    ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️ УДАЛИТЬ</button>` : ''}
+                </div>
+            </div>
+        `;
+    });
+
+    feedContainer.insertAdjacentHTML('beforeend', html);
+    feedPage++;
+
+    feedContainer.onscroll = function() {
+        if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
             renderFeed();
         }
+    };
+}
 
-        // Рендер ленты (добавляет порцию постов, бесконечная прокрутка)
-        function renderFeed() {
-            const feedContainer = document.getElementById('feedContainer');
-            if (!feedContainer) return;
+// ========== ФУНКЦИЯ ДЛЯ ОТКРЫТИЯ МОДАЛКИ С ЧАТАМИ ==========
+function openShareModal(postId) {
+    const post = App.posts.find(p => p.id === postId);
+    if (!post) return;
 
-            if (feedPosts.length === 0) {
-                feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
-                return;
-            }
+    // Получаем список всех чатов (пользователи, каналы, избранное)
+    let chatList = getChatListForUser(App.currentUser);
+    // Исключаем текущего пользователя из списка (нельзя отправить самому себе)
+    chatList = chatList.filter(chat => chat !== App.currentUser);
 
-            const start = feedPage * FEED_PAGE_SIZE;
-            const end = start + FEED_PAGE_SIZE;
-            const postsToShow = feedPosts.slice(start, end);
+    if (chatList.length === 0) {
+        showNotification('Нет доступных чатов для отправки', 'error');
+        return;
+    }
 
-            if (postsToShow.length === 0) {
-                feedPage = 0;
-                renderFeed();
-                return;
-            }
+    let chatOptions = '';
+    chatList.forEach(chat => {
+        let displayName = chat;
+        if (chat === 'saved') displayName = '📁 ИЗБРАННОЕ';
+        else if (chat === 'yolk') displayName = '🥚 YOLK';
+        else if (App.channels[chat]) displayName = '📢 ' + chat;
+        else displayName = '@' + chat;
+        chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
+    });
 
-            let html = '';
-            postsToShow.forEach(post => {
-                const author = App.users[post.author] || {};
-                const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (post.author[1] || '?');
-                const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
-                const likesCount = Object.keys(post.likes || {}).length;
-                const dislikesCount = Object.keys(post.dislikes || {}).length;
-                const userLiked = post.likes && post.likes[App.currentUser];
-                const userDisliked = post.dislikes && post.dislikes[App.currentUser];
-                const isOwner = post.author === App.currentUser;
-                const date = new Date(post.time).toLocaleString();
-
-                const isSubscribed = isFollowing(App.currentUser, post.author);
-                const subButtonHtml = (post.author !== App.currentUser) ?
-                    `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
-
-                html += `
-                    <div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header" onclick="openProfileModal('${post.author}')">
-                            <div class="post-avatar">${avatarHtml}</div>
-                            <div style="flex:1;">
-                                <div class="post-author">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                <div class="post-time">${date}</div>
-                            </div>
-                            ${subButtonHtml}
-                        </div>
-                        <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
-                        ${mediaHtml}
-                        <div class="post-stats">
-                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')">👍 <span>${likesCount}</span></button>
-                            <button class="post-dislike ${userDisliked ? 'active' : ''}" onclick="toggleDislikePost('${post.id}')">👎 <span>${dislikesCount}</span></button>
-                            <button class="post-comment" onclick="openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
-                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️ УДАЛИТЬ</button>` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            feedContainer.insertAdjacentHTML('beforeend', html);
-            feedPage++;
-
-            feedContainer.onscroll = function() {
-                if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
-                    renderFeed();
-                }
-            };
-        }
-
-        // Функция подписки/отписки, обновляющая только одну кнопку
-        function toggleFeedSubscription(postId, author) {
-            if (author === App.currentUser) return;
-            const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-            if (isCurrentlySubscribed) {
-                unsubscribeFromUser(App.currentUser, author);
-            } else {
-                subscribeToUser(App.currentUser, author);
-            }
-            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-            if (postCard) {
-                const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
-                if (btn) {
-                    const newSubStatus = !isCurrentlySubscribed;
-                    btn.textContent = newSubStatus ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
-                    btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
-                }
-            }
-        }
-
-        // Обновление статистики (лайки/дизлайки)
-        function updatePostStats(postId) {
-            const post = App.posts.find(p => p.id === postId);
-            if (!post) return;
-            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-            if (!postCard) return;
-
-            const likesCount = Object.keys(post.likes || {}).length;
-            const dislikesCount = Object.keys(post.dislikes || {}).length;
-            const userLiked = post.likes && post.likes[App.currentUser];
-            const userDisliked = post.dislikes && post.dislikes[App.currentUser];
-
-            const likeBtn = postCard.querySelector('.post-like');
-            const dislikeBtn = postCard.querySelector('.post-dislike');
-            if (likeBtn) {
-                likeBtn.classList.toggle('active', userLiked);
-                const likeSpan = likeBtn.querySelector('span');
-                if (likeSpan) likeSpan.textContent = likesCount;
-            }
-            if (dislikeBtn) {
-                dislikeBtn.classList.toggle('active', userDisliked);
-                const dislikeSpan = dislikeBtn.querySelector('span');
-                if (dislikeSpan) dislikeSpan.textContent = dislikesCount;
-            }
-        }
-
-        function toggleLikePost(postId) {
-            const post = App.posts.find(p => p.id === postId);
-            if (!post) return;
-            if (!post.likes) post.likes = {};
-            if (!post.dislikes) post.dislikes = {};
-            const user = App.currentUser;
-            if (post.likes[user]) {
-                delete post.likes[user];
-            } else {
-                if (post.dislikes[user]) delete post.dislikes[user];
-                post.likes[user] = true;
-            }
-            saveToFirebase();
-            updatePostStats(postId);
-        }
-
-        function toggleDislikePost(postId) {
-            const post = App.posts.find(p => p.id === postId);
-            if (!post) return;
-            if (!post.likes) post.likes = {};
-            if (!post.dislikes) post.dislikes = {};
-            const user = App.currentUser;
-            if (post.dislikes[user]) {
-                delete post.dislikes[user];
-            } else {
-                if (post.likes[user]) delete post.likes[user];
-                post.dislikes[user] = true;
-            }
-            saveToFirebase();
-            updatePostStats(postId);
-        }
-
-        function openCommentsModal(postId) {
-            const post = App.posts.find(p => p.id === postId);
-            if (!post) return;
-            const modalHtml = `
-                <div class="modal-overlay" id="commentsModal">
-                    <div class="comments-modal">
-                        <h3 style="color: var(--text);">💬 Комментарии</h3>
-                        <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
-                            ${post.comments?.map(c => `
-                                <div class="comment-item">
-                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
-                                    <div class="comment-text" style="color: var(--text);">${c.text}</div>
-                                    <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
-                                </div>
-                            `).join('') || '<div style="color: var(--text-secondary); text-align: center;">Нет комментариев</div>'}
-                        </div>
-                        <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
-                            <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
-                            <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
-                        </div>
-                        <div class="profile-actions" style="margin-top:12px;">
-                            <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
-                        </div>
-                    </div>
+    const modalHtml = `
+        <div class="modal-overlay" id="shareModal">
+            <div class="profile-modal">
+                <h3>📤 ОТПРАВИТЬ ПОСТ</h3>
+                <div class="profile-input-group">
+                    <label>ВЫБЕРИТЕ ЧАТ:</label>
+                    <div id="shareChatList" style="max-height: 300px; overflow-y: auto;">${chatOptions}</div>
                 </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            document.getElementById('submitCommentBtn').addEventListener('click', () => {
-                const text = document.getElementById('newCommentText').value.trim();
-                if (!text) return;
-                if (!post.comments) post.comments = [];
-                post.comments.push({
-                    author: App.currentUser,
-                    text: text,
-                    time: Date.now()
+                <div class="profile-actions">
+                    <button class="profile-btn secondary" id="closeShareModal">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Обработчики выбора чата
+    document.querySelectorAll('.share-chat-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const targetChat = el.dataset.chat;
+            document.getElementById('shareModal').remove();
+            sharePostToChat(postId, targetChat);
+        });
+    });
+
+    document.getElementById('closeShareModal').addEventListener('click', () => {
+        document.getElementById('shareModal').remove();
+    });
+}
+
+// ========== ФУНКЦИЯ ОТПРАВКИ ПОСТА В ЧАТ ==========
+function sharePostToChat(postId, targetChat) {
+    const post = App.posts.find(p => p.id === postId);
+    if (!post) {
+        showNotification('Пост не найден', 'error');
+        return;
+    }
+
+    // Формируем текст сообщения
+    let messageText = `📌 **ПОДЕЛИЛИСЬ ПОСТОМ**\n\n`;
+    if (post.text) messageText += `📝 ${post.text}\n\n`;
+    messageText += `👤 Автор: ${post.author}\n`;
+    messageText += `🕒 ${new Date(post.time).toLocaleString()}`;
+
+    // Если есть медиа, отправляем как фото/видео
+    let mediaData = post.media || null;
+    let isVideo = post.isVideo || false;
+
+    // Отправка в зависимости от типа чата
+    const from = App.currentUser;
+    const to = targetChat;
+
+    try {
+        const message = {
+            from: from,
+            text: messageText,
+            time: Date.now(),
+            photo: mediaData,
+            isVideo: isVideo,
+            gift: false,
+            sharedPost: true
+        };
+
+        if (to === 'saved') {
+            if (!App.savedMessages[from]) App.savedMessages[from] = [];
+            App.savedMessages[from].push(message);
+            saveSavedMessages();
+            showNotification('✅ Пост сохранён в Избранное');
+        } else if (App.channels[to]) {
+            if (!App.channels[to].messages) App.channels[to].messages = [];
+            App.channels[to].messages.push(message);
+            saveToFirebase();
+            showNotification(`✅ Пост отправлен в канал ${to}`);
+        } else {
+            const chatId = [from, to].sort().join('_');
+            if (!App.chats[chatId]) {
+                App.chats[chatId] = { user1: from, user2: to, messages: [] };
+            }
+            App.chats[chatId].messages.push(message);
+            saveToFirebase();
+            showNotification(`✅ Пост отправлен пользователю ${to}`);
+        }
+
+        // Если чат открыт, обновляем сообщения
+        if (App.activeChat === to) renderMessages(to);
+        updateChatList();
+    } catch (error) {
+        console.error('Ошибка отправки поста:', error);
+        showNotification('Ошибка при отправке', 'error');
+    }
+}
+
+// Остальные функции ленты (лайки, дизлайки, комментарии, удаление и т.д.)
+function toggleLikePost(postId) {
+    const post = App.posts.find(p => p.id === postId);
+    if (!post) return;
+    if (!post.likes) post.likes = {};
+    if (!post.dislikes) post.dislikes = {};
+    const user = App.currentUser;
+    if (post.likes[user]) {
+        delete post.likes[user];
+    } else {
+        if (post.dislikes[user]) delete post.dislikes[user];
+        post.likes[user] = true;
+    }
+    saveToFirebase();
+    updatePostStats(postId);
+}
+
+function toggleDislikePost(postId) {
+    const post = App.posts.find(p => p.id === postId);
+    if (!post) return;
+    if (!post.likes) post.likes = {};
+    if (!post.dislikes) post.dislikes = {};
+    const user = App.currentUser;
+    if (post.dislikes[user]) {
+        delete post.dislikes[user];
+    } else {
+        if (post.likes[user]) delete post.likes[user];
+        post.dislikes[user] = true;
+    }
+    saveToFirebase();
+    updatePostStats(postId);
+}
+
+function updatePostStats(postId) {
+    const post = App.posts.find(p => p.id === postId);
+    if (!post) return;
+    const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+    if (!postCard) return;
+
+    const likesCount = Object.keys(post.likes || {}).length;
+    const dislikesCount = Object.keys(post.dislikes || {}).length;
+    const userLiked = post.likes && post.likes[App.currentUser];
+    const userDisliked = post.dislikes && post.dislikes[App.currentUser];
+
+    const likeBtn = postCard.querySelector('.post-like');
+    const dislikeBtn = postCard.querySelector('.post-dislike');
+    const commentBtn = postCard.querySelector('.post-comment');
+
+    if (likeBtn) {
+        likeBtn.classList.toggle('active', userLiked);
+        const likeSpan = likeBtn.querySelector('span');
+        if (likeSpan) likeSpan.textContent = likesCount;
+    }
+    if (dislikeBtn) {
+        dislikeBtn.classList.toggle('active', userDisliked);
+        const dislikeSpan = dislikeBtn.querySelector('span');
+        if (dislikeSpan) dislikeSpan.textContent = dislikesCount;
+    }
+    if (commentBtn) {
+        const commentSpan = commentBtn.querySelector('span');
+        if (commentSpan) commentSpan.textContent = post.comments?.length || 0;
+    }
+}
+
+function openCommentsModal(postId) {
+    const post = App.posts.find(p => p.id === postId);
+    if (!post) return;
+    const modalHtml = `
+        <div class="modal-overlay" id="commentsModal">
+            <div class="comments-modal">
+                <h3 style="color: var(--text);">💬 Комментарии</h3>
+                <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
+                    ${post.comments?.map(c => `
+                        <div class="comment-item">
+                            <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
+                            <div class="comment-text" style="color: var(--text);">${c.text}</div>
+                            <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
+                        </div>
+                    `).join('') || '<div style="color: var(--text-secondary); text-align: center;">Нет комментариев</div>'}
+                </div>
+                <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
+                    <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
+                    <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
+                </div>
+                <div class="profile-actions" style="margin-top:12px;">
+                    <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('submitCommentBtn').addEventListener('click', () => {
+        const text = document.getElementById('newCommentText').value.trim();
+        if (!text) return;
+        if (!post.comments) post.comments = [];
+        post.comments.push({
+            author: App.currentUser,
+            text: text,
+            time: Date.now()
+        });
+        saveToFirebase();
+        document.getElementById('commentsModal').remove();
+        updatePostStats(postId);
+        showNotification('Комментарий добавлен');
+    });
+    document.getElementById('closeCommentsModal').addEventListener('click', () => {
+        document.getElementById('commentsModal').remove();
+    });
+}
+
+function deletePost(postId) {
+    if (!confirm('Удалить пост?')) return;
+    const index = App.posts.findIndex(p => p.id === postId);
+    if (index !== -1 && App.posts[index].author === App.currentUser) {
+        App.posts.splice(index, 1);
+        saveToFirebase();
+        initFeed();
+        showNotification('Пост удален');
+    } else {
+        showNotification('Нет прав для удаления', 'error');
+    }
+}
+
+function createPost(text, media, isVideo) {
+    if (!text.trim() && !media) {
+        showNotification('Напишите текст или прикрепите медиа', 'error');
+        return;
+    }
+    const post = {
+        id: generateId(),
+        author: App.currentUser,
+        text: text.trim(),
+        media: media || null,
+        isVideo: isVideo || false,
+        time: Date.now(),
+        likes: {},
+        dislikes: {},
+        comments: []
+    };
+    App.posts.unshift(post);
+    saveToFirebase();
+    initFeed();
+    showNotification('Пост опубликован!');
+    App.tempPostPhoto = null;
+    App.tempPostVideo = null;
+}
+
+function openCreatePostModal() {
+    const modalHtml = `
+        <div class="modal-overlay" id="createPostModal">
+            <div class="profile-modal">
+                <h3>📝 СОЗДАТЬ ПОСТ</h3>
+                <div class="profile-input-group">
+                    <label>ТЕКСТ (обязательно)</label>
+                    <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
+                </div>
+                <div class="profile-input-group">
+                    <label>ПРИКРЕПИТЬ ФОТО ИЛИ ВИДЕО (необязательно)</label>
+                    <input type="file" id="postMediaFile" accept="image/*,video/*">
+                </div>
+                <div class="profile-actions">
+                    <button class="profile-btn" id="confirmCreatePostBtn">ОПУБЛИКОВАТЬ</button>
+                    <button class="profile-btn secondary" id="closeCreatePostModal">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    let tempMedia = null, isVideo = false;
+    document.getElementById('postMediaFile').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
+                    tempMedia = compressed;
+                    isVideo = false;
                 });
-                saveToFirebase();
-                document.getElementById('commentsModal').remove();
-                updatePostStats(postId);
-                showNotification('Комментарий добавлен');
-            });
-            document.getElementById('closeCommentsModal').addEventListener('click', () => {
-                document.getElementById('commentsModal').remove();
-            });
-        }
-
-        function deletePost(postId) {
-            if (!confirm('Удалить пост?')) return;
-            const index = App.posts.findIndex(p => p.id === postId);
-            if (index !== -1 && App.posts[index].author === App.currentUser) {
-                App.posts.splice(index, 1);
-                saveToFirebase();
-                initFeed(); // полное обновление ленты
-                showNotification('Пост удален');
-            } else {
-                showNotification('Нет прав для удаления', 'error');
-            }
-        }
-
-        function createPost(text, media, isVideo) {
-            if (!text.trim() && !media) {
-                showNotification('Напишите текст или прикрепите медиа', 'error');
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type.startsWith('video/')) {
+            if (file.size > 20 * 1024 * 1024) {
+                showNotification('Видео не более 20 МБ', 'error');
                 return;
             }
-            const post = {
-                id: generateId(),
-                author: App.currentUser,
-                text: text.trim(),
-                media: media || null,
-                isVideo: isVideo || false,
-                time: Date.now(),
-                likes: {},
-                dislikes: {},
-                comments: []
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                tempMedia = ev.target.result;
+                isVideo = true;
             };
-            App.posts.unshift(post);
-            saveToFirebase();
-            initFeed(); // обновляем ленту
-            showNotification('Пост опубликован!');
-            App.tempPostPhoto = null;
-            App.tempPostVideo = null;
+            reader.readAsDataURL(file);
         }
+    });
+    document.getElementById('confirmCreatePostBtn').addEventListener('click', () => {
+        const text = document.getElementById('postText').value.trim();
+        if (!text && !tempMedia) {
+            showNotification('Введите текст или прикрепите медиа', 'error');
+            return;
+        }
+        createPost(text, tempMedia, isVideo);
+        document.getElementById('createPostModal').remove();
+    });
+    document.getElementById('closeCreatePostModal').addEventListener('click', () => {
+        document.getElementById('createPostModal').remove();
+    });
+}
 
-        function openCreatePostModal() {
-            const modalHtml = `
-                <div class="modal-overlay" id="createPostModal">
-                    <div class="profile-modal">
-                        <h3>📝 СОЗДАТЬ ПОСТ</h3>
-                        <div class="profile-input-group">
-                            <label>ТЕКСТ (обязательно)</label>
-                            <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
-                        </div>
-                        <div class="profile-input-group">
-                            <label>ПРИКРЕПИТЬ ФОТО ИЛИ ВИДЕО (необязательно)</label>
-                            <input type="file" id="postMediaFile" accept="image/*,video/*">
-                        </div>
-                        <div class="profile-actions">
-                            <button class="profile-btn" id="confirmCreatePostBtn">ОПУБЛИКОВАТЬ</button>
-                            <button class="profile-btn secondary" id="closeCreatePostModal">ОТМЕНА</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            let tempMedia = null, isVideo = false;
-            document.getElementById('postMediaFile').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
-                            tempMedia = compressed;
-                            isVideo = false;
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                } else if (file.type.startsWith('video/')) {
-                    if (file.size > 20 * 1024 * 1024) {
-                        showNotification('Видео не более 20 МБ', 'error');
-                        return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        tempMedia = ev.target.result;
-                        isVideo = true;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-            document.getElementById('confirmCreatePostBtn').addEventListener('click', () => {
-                const text = document.getElementById('postText').value.trim();
-                if (!text && !tempMedia) {
-                    showNotification('Введите текст или прикрепите медиа', 'error');
-                    return;
-                }
-                createPost(text, tempMedia, isVideo);
-                document.getElementById('createPostModal').remove();
-            });
-            document.getElementById('closeCreatePostModal').addEventListener('click', () => {
-                document.getElementById('createPostModal').remove();
-            });
+// Функция подписки (нужна для работы кнопки)
+function toggleFeedSubscription(postId, author) {
+    if (author === App.currentUser) return;
+    const isCurrentlySubscribed = isFollowing(App.currentUser, author);
+    if (isCurrentlySubscribed) {
+        unsubscribeFromUser(App.currentUser, author);
+    } else {
+        subscribeToUser(App.currentUser, author);
+    }
+    const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+    if (postCard) {
+        const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
+        if (btn) {
+            const newSubStatus = !isCurrentlySubscribed;
+            btn.textContent = newSubStatus ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
+            btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
         }
+    }
+}
 
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { 
