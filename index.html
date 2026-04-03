@@ -1585,7 +1585,11 @@
                 if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
-                if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
+                if (tempWallpaper) {
+                    App.users[App.currentUser].chatWallpaper = tempWallpaper;
+                    // Применяем фон глобально
+                    applyGlobalWallpaper();
+                }
                 
                 if (pendingTheme !== currentTheme) {
                     applyTheme(pendingTheme);
@@ -1602,7 +1606,7 @@
                 saveToFirebase();
                 updateUserInterface();
                 updateSidebarUser();
-                applyWallpaper();
+                applyGlobalWallpaper();
                 document.getElementById('settingsModalOverlay').remove();
                 showNotification('Настройки сохранены');
             });
@@ -1643,8 +1647,51 @@
         function isValidPassword(str) { return /^[A-Za-z0-9]+$/.test(str); }
         function isUserOnline(username) { const lastSeen = App.users[username]?.lastSeen; if (!lastSeen) return false; return (Date.now() - lastSeen) < 300000; }
         function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
-        function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
-        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); }
+        function applyGlobalWallpaper() {
+            const wallpaper = App.users[App.currentUser]?.chatWallpaper || '';
+            const bgStyle = wallpaper && wallpaper.startsWith('data:image') ? `url('${wallpaper}')` : 'none';
+            const bgColor = wallpaper ? '' : (document.body.classList.contains('light-theme') ? 'rgba(255,255,255,0.95)' : 'rgba(5,5,5,0.85)');
+            
+            const chatArea = document.querySelector('.chat-area');
+            if (chatArea) {
+                if (wallpaper && wallpaper.startsWith('data:image')) {
+                    chatArea.style.backgroundImage = bgStyle;
+                    chatArea.style.backgroundSize = 'cover';
+                    chatArea.style.backgroundPosition = 'center';
+                    chatArea.style.backgroundColor = 'transparent';
+                } else {
+                    chatArea.style.backgroundImage = 'none';
+                    chatArea.style.backgroundColor = bgColor;
+                }
+            }
+            
+            const feedContainer = document.querySelector('.feed-container');
+            if (feedContainer) {
+                if (wallpaper && wallpaper.startsWith('data:image')) {
+                    feedContainer.style.backgroundImage = bgStyle;
+                    feedContainer.style.backgroundSize = 'cover';
+                    feedContainer.style.backgroundPosition = 'center';
+                    feedContainer.style.backgroundColor = 'transparent';
+                } else {
+                    feedContainer.style.backgroundImage = 'none';
+                    feedContainer.style.backgroundColor = bgColor;
+                }
+            }
+            
+            const gamesContainer = document.querySelector('.games-container');
+            if (gamesContainer) {
+                if (wallpaper && wallpaper.startsWith('data:image')) {
+                    gamesContainer.style.backgroundImage = bgStyle;
+                    gamesContainer.style.backgroundSize = 'cover';
+                    gamesContainer.style.backgroundPosition = 'center';
+                    gamesContainer.style.backgroundColor = 'transparent';
+                } else {
+                    gamesContainer.style.backgroundImage = 'none';
+                    gamesContainer.style.backgroundColor = bgColor;
+                }
+            }
+        }
+        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyGlobalWallpaper(); }
         function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
@@ -2590,7 +2637,7 @@
             initGuessNumber();
         }
         
-        // Виселица (без награды, автоматический рестарт после победы/поражения)
+        // Виселица (без отображения количества попыток в сообщении об ошибке)
         const hangmanWords = ['КОТ', 'СОБАКА', 'МОЛОКО', 'КОМПЬЮТЕР', 'ТЕЛЕФОН', 'ЯБЛОКО', 'МАШИНА', 'СОЛНЦЕ'];
         function initHangman() {
             const word = hangmanWords[Math.floor(Math.random() * hangmanWords.length)];
@@ -2630,7 +2677,7 @@
                     setTimeout(() => initHangman(), 2000);
                     return;
                 } else {
-                    gameState.message = `Буквы "${letter}" нет. Осталось попыток: ${gameState.attempts}`;
+                    gameState.message = `Буквы "${letter}" нет`;
                 }
             } else {
                 if (gameState.guessed.every(g => g === true)) {
@@ -2653,8 +2700,8 @@
             initHangman();
         }
         
-        // Мемори (без отображения ходов, без награды, автоматический рестарт после победы)
-        const memoryIcons = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
+        // Мемори (без отображения ходов, 10 пар карт)
+        const memoryIcons = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯']; // 10 пар
         function initMemory() {
             let cards = [...memoryIcons, ...memoryIcons];
             for (let i = cards.length - 1; i > 0; i--) {
@@ -2817,7 +2864,7 @@
                     }
                     updateChatList(); 
                     updateSidebarUser(); 
-                    applyWallpaper(); 
+                    applyGlobalWallpaper(); 
                 }, 100); 
             } 
         }
@@ -3159,7 +3206,7 @@
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(channel => { if (App.channels[channel].subscribers?.includes(user)) set.add(channel); }); return Array.from(set); }
         function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } if (App.channels[chatPartner]) { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); setupRealtimeListener(chatId, chatPartner); renderMessages(chatPartner); setupUserListener(chatPartner); updateChatHeaderStatus(chatPartner); }
         function setupRealtimeListener(chatId, chatPartner) { const chatRef = database.ref('chats/' + chatId); chatRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { if (!App.chats[chatId]) App.chats[chatId] = data; else App.chats[chatId].messages = data.messages || []; if (App.activeChat === chatPartner) { renderMessages(chatPartner); } } }); }
-        function setupUserListener(username) { if (App.userListeners[username]) return; const userRef = database.ref('users/' + username); userRef.on('value', (snapshot) => { const userData = snapshot.val(); if (userData) { const oldStatus = App.users[username]?.status; App.users[username] = { ...App.users[username], ...userData }; if (username === App.currentUser) { updateUserInterface(); updateSidebarUser(); applyWallpaper(); } if (oldStatus !== userData.status && App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) { renderMessages(App.activeChat); updateChatList(); } if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) { updateChatHeaderStatus(username); } } }); App.userListeners[username] = true; }
+        function setupUserListener(username) { if (App.userListeners[username]) return; const userRef = database.ref('users/' + username); userRef.on('value', (snapshot) => { const userData = snapshot.val(); if (userData) { const oldStatus = App.users[username]?.status; App.users[username] = { ...App.users[username], ...userData }; if (username === App.currentUser) { updateUserInterface(); updateSidebarUser(); applyGlobalWallpaper(); } if (oldStatus !== userData.status && App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) { renderMessages(App.activeChat); updateChatList(); } if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) { updateChatHeaderStatus(username); } } }); App.userListeners[username] = true; }
         function updateLastSeen(username) { if (App.users[username] && username === App.currentUser) { App.users[username].lastSeen = Date.now(); database.ref('users/' + username + '/lastSeen').set(Date.now()); } }
         function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
         function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
