@@ -52,8 +52,6 @@
             --hover-border: rgba(184, 134, 11, 0.3);
         }
         
-        /* Жёлтый фильтр УДАЛЁН — эмодзи обычные */
-        
         body {
             min-height: 100vh;
             display: flex;
@@ -238,9 +236,8 @@
         .post-delete,
         .create-post-btn,
         .game-card,
-        .tap-click-btn,
-        .tap-upgrade-btn,
-        .game-btn {
+        .game-btn,
+        .choice-btn {
             filter: grayscale(0.6) brightness(0.7);
             transition: all 0.2s ease;
         }
@@ -275,9 +272,8 @@
         body.light-theme .post-delete,
         body.light-theme .create-post-btn,
         body.light-theme .game-card,
-        body.light-theme .tap-click-btn,
-        body.light-theme .tap-upgrade-btn,
-        body.light-theme .game-btn {
+        body.light-theme .game-btn,
+        body.light-theme .choice-btn {
             filter: grayscale(0.3) brightness(0.9);
         }
         
@@ -305,9 +301,8 @@
         .post-delete:hover,
         .create-post-btn:hover,
         .game-card:hover,
-        .tap-click-btn:hover,
-        .tap-upgrade-btn:hover,
-        .game-btn:hover {
+        .game-btn:hover,
+        .choice-btn:hover {
             filter: grayscale(0.3) brightness(0.85);
         }
         
@@ -808,64 +803,7 @@
             color: var(--text);
         }
         
-        /* Кликер стили (цвет текста через переменные) */
-        .tap-container {
-            text-align: center;
-            padding: 20px;
-        }
-        .tap-balance {
-            font-size: 48px;
-            font-weight: bold;
-            color: var(--accent);
-            margin: 20px 0;
-        }
-        .tap-click-btn {
-            background: var(--accent);
-            color: #000;
-            font-size: 28px;
-            padding: 20px 40px;
-            border-radius: 60px;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            margin: 20px;
-            width: 200px;
-        }
-        .tap-click-btn:active {
-            transform: scale(0.95);
-        }
-        .tap-upgrade-panel {
-            background: rgba(0,0,0,0.3);
-            border-radius: 24px;
-            padding: 20px;
-            width: 100%;
-            max-width: 350px;
-            margin: 0 auto;
-        }
-        .tap-upgrade-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px;
-            border-bottom: 1px solid var(--glass-border);
-            color: var(--text);
-        }
-        .tap-upgrade-btn {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid var(--glass-border);
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            color: var(--text);
-        }
-        .tap-stats {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin: 10px 0;
-        }
-        
-        /* Дополнительные стили для игр */
+        /* Стили для игр */
         .game-status {
             font-size: 18px;
             font-weight: bold;
@@ -878,24 +816,6 @@
             justify-content: center;
             gap: 10px;
             margin: 20px 0;
-        }
-        .cell {
-            width: 80px;
-            height: 80px;
-            background: var(--input-bg);
-            border: 2px solid var(--glass-border);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 36px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.1s;
-            color: var(--text);
-        }
-        .cell:hover {
-            background: var(--hover-bg);
         }
         .choice-btn {
             background: var(--accent-soft);
@@ -928,6 +848,17 @@
             opacity: 0;
             pointer-events: none;
         }
+        .game-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 10px 20px;
+            border-radius: 30px;
+            margin: 10px 5px;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 14px;
+            font-weight: 500;
+        }
         
         @media (max-width: 768px) {
             .main-container { margin-bottom: 60px; }
@@ -935,7 +866,6 @@
             .bottom-nav {
                 display: flex;
             }
-            .cell { width: 60px; height: 60px; font-size: 28px; }
             .memory-card { width: 50px; height: 50px; font-size: 24px; }
         }
         </style>
@@ -955,7 +885,7 @@
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null, tapData: {} };
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null };
         App.systemBots = []; // полностью удалены боты
         
         // ========== СТАТУСЫ ==========
@@ -1715,7 +1645,7 @@
         function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
         function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
         function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); }
-        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts, tapData: App.tapData }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
+        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
         // ========== ФУНКЦИИ ДЛЯ ОТКРЫТОК ==========
@@ -2621,138 +2551,14 @@
             }
         }
 
-        // ========== ИГРЫ ==========
-        let currentGame = null; // 'clicker', 'tictactoe', 'guess', 'rps', 'hangman', 'memory'
+        // ========== ИГРЫ (только Мемори, Виселица, Угадай число) ==========
+        let currentGame = null;
         let gameState = {};
         
-        function initTapData() {
-            if (!App.currentUser) return;
-            if (!App.tapData[App.currentUser]) {
-                App.tapData[App.currentUser] = {
-                    balance: 0,
-                    level: 1,
-                    totalEarned: 0,
-                    upgradeCost: 10,
-                    clickValue: 1
-                };
-            }
-            const td = App.tapData[App.currentUser];
-            td.clickValue = td.level;
-            td.upgradeCost = Math.floor(10 * Math.pow(1.5, td.level - 1));
-            saveTapData();
-        }
-        
-        function saveTapData() {
-            localStorage.setItem('yolk_tapdata', JSON.stringify(App.tapData));
-            if (App.dataLoaded) {
-                database.ref('tapData').set(App.tapData).catch(e => console.error(e));
-            }
-        }
-        
-        function loadTapData() {
-            const saved = localStorage.getItem('yolk_tapdata');
-            if (saved) {
-                try {
-                    App.tapData = JSON.parse(saved);
-                } catch(e) {
-                    App.tapData = {};
-                }
-            } else {
-                App.tapData = {};
-            }
-            if (App.currentUser && !App.tapData[App.currentUser]) {
-                initTapData();
-            }
-        }
-        
-        // Кликер
-        function handleTap() {
-            const td = App.tapData[App.currentUser];
-            if (!td) return;
-            const gain = td.clickValue;
-            td.balance += gain;
-            td.totalEarned += gain;
-            saveTapData();
-            playHappySound();
-            showNotification(`+${gain} $`, 'success');
-            renderGame('clicker');
-        }
-        
-        function buyTapUpgrade() {
-            const td = App.tapData[App.currentUser];
-            if (!td) return;
-            const cost = td.upgradeCost;
-            if (td.balance >= cost) {
-                td.balance -= cost;
-                td.level++;
-                td.clickValue = td.level;
-                td.upgradeCost = Math.floor(10 * Math.pow(1.5, td.level - 1));
-                saveTapData();
-                showNotification(`💪 Улучшено! Теперь +${td.clickValue} $ за клик`, 'success');
-                renderGame('clicker');
-            } else {
-                showNotification(`Не хватает $! Нужно ${cost} $`, 'error');
-            }
-        }
-        
-        // Крестики-нолики
-        function initTicTacToe() {
-            gameState = {
-                board: Array(9).fill(''),
-                currentPlayer: 'X',
-                gameOver: false,
-                winner: null
-            };
-            renderGame('tictactoe');
-        }
-        
-        function makeMove(index) {
-            if (gameState.gameOver) return;
-            if (gameState.board[index] !== '') return;
-            gameState.board[index] = gameState.currentPlayer;
-            let winner = checkWinner(gameState.board);
-            if (winner) {
-                gameState.gameOver = true;
-                gameState.winner = winner;
-                showNotification(`${winner} победил!`, 'success');
-                renderGame('tictactoe');
-                return;
-            }
-            if (gameState.board.every(cell => cell !== '')) {
-                gameState.gameOver = true;
-                gameState.winner = 'Ничья';
-                showNotification('Ничья!', 'info');
-                renderGame('tictactoe');
-                return;
-            }
-            gameState.currentPlayer = gameState.currentPlayer === 'X' ? 'O' : 'X';
-            renderGame('tictactoe');
-        }
-        
-        function checkWinner(board) {
-            const lines = [
-                [0,1,2], [3,4,5], [6,7,8],
-                [0,3,6], [1,4,7], [2,5,8],
-                [0,4,8], [2,4,6]
-            ];
-            for (let line of lines) {
-                const [a,b,c] = line;
-                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                    return board[a];
-                }
-            }
-            return null;
-        }
-        
-        function resetTicTacToe() {
-            initTicTacToe();
-        }
-        
-        // Угадай число
+        // Угадай число (без отображения попыток, без награды, автоматический рестарт после победы)
         function initGuessNumber() {
             gameState = {
                 secret: Math.floor(Math.random() * 100) + 1,
-                attempts: 0,
                 guessed: false,
                 message: 'Загадано число от 1 до 100'
             };
@@ -2763,21 +2569,18 @@
             const input = document.getElementById('guessInput');
             const guess = parseInt(input.value);
             if (isNaN(guess)) return;
-            gameState.attempts++;
+            if (gameState.guessed) return;
             if (guess === gameState.secret) {
                 gameState.guessed = true;
-                gameState.message = `Поздравляю! Угадал за ${gameState.attempts} попыток!`;
-                showNotification(`+5 $ за победу!`, 'success');
-                const td = App.tapData[App.currentUser];
-                if (td) {
-                    td.balance += 5;
-                    td.totalEarned += 5;
-                    saveTapData();
-                }
+                gameState.message = `Поздравляю! Угадал число ${gameState.secret}!`;
+                renderGame('guess');
+                showConfetti();
+                playHappySound();
+                setTimeout(() => initGuessNumber(), 2000);
             } else if (guess < gameState.secret) {
-                gameState.message = `Загаданное число больше (попытка ${gameState.attempts})`;
+                gameState.message = `Загаданное число больше`;
             } else {
-                gameState.message = `Загаданное число меньше (попытка ${gameState.attempts})`;
+                gameState.message = `Загаданное число меньше`;
             }
             input.value = '';
             renderGame('guess');
@@ -2787,45 +2590,7 @@
             initGuessNumber();
         }
         
-        // Камень, ножницы, бумага
-        function initRPS() {
-            gameState = {
-                result: null,
-                playerChoice: null,
-                computerChoice: null
-            };
-            renderGame('rps');
-        }
-        
-        function playRPS(choice) {
-            const choices = ['камень', 'ножницы', 'бумага'];
-            const computer = choices[Math.floor(Math.random() * 3)];
-            let result;
-            if (choice === computer) result = 'Ничья!';
-            else if (
-                (choice === 'камень' && computer === 'ножницы') ||
-                (choice === 'ножницы' && computer === 'бумага') ||
-                (choice === 'бумага' && computer === 'камень')
-            ) {
-                result = 'Вы победили! +3 $';
-                const td = App.tapData[App.currentUser];
-                if (td) {
-                    td.balance += 3;
-                    td.totalEarned += 3;
-                    saveTapData();
-                }
-            } else {
-                result = 'Вы проиграли!';
-            }
-            gameState = { playerChoice: choice, computerChoice: computer, result: result };
-            renderGame('rps');
-        }
-        
-        function resetRPS() {
-            initRPS();
-        }
-        
-        // Виселица (упрощённая)
+        // Виселица (без награды, автоматический рестарт после победы/поражения)
         const hangmanWords = ['КОТ', 'СОБАКА', 'МОЛОКО', 'КОМПЬЮТЕР', 'ТЕЛЕФОН', 'ЯБЛОКО', 'МАШИНА', 'СОЛНЦЕ'];
         function initHangman() {
             const word = hangmanWords[Math.floor(Math.random() * hangmanWords.length)];
@@ -2859,19 +2624,23 @@
                 if (gameState.attempts <= 0) {
                     gameState.gameOver = true;
                     gameState.message = `Вы проиграли! Слово: ${gameState.word}`;
+                    renderGame('hangman');
+                    showConfetti();
+                    playHappySound();
+                    setTimeout(() => initHangman(), 2000);
+                    return;
                 } else {
                     gameState.message = `Буквы "${letter}" нет. Осталось попыток: ${gameState.attempts}`;
                 }
             } else {
                 if (gameState.guessed.every(g => g === true)) {
                     gameState.gameOver = true;
-                    gameState.message = `Поздравляю! Вы угадали слово ${gameState.word}! +5 $`;
-                    const td = App.tapData[App.currentUser];
-                    if (td) {
-                        td.balance += 5;
-                        td.totalEarned += 5;
-                        saveTapData();
-                    }
+                    gameState.message = `Поздравляю! Вы угадали слово ${gameState.word}!`;
+                    renderGame('hangman');
+                    showConfetti();
+                    playHappySound();
+                    setTimeout(() => initHangman(), 2000);
+                    return;
                 } else {
                     gameState.message = `Есть буква "${letter}"!`;
                 }
@@ -2884,7 +2653,7 @@
             initHangman();
         }
         
-        // Мемори (найди пару)
+        // Мемори (без отображения ходов, без награды, автоматический рестарт после победы)
         const memoryIcons = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'];
         function initMemory() {
             let cards = [...memoryIcons, ...memoryIcons];
@@ -2896,8 +2665,7 @@
                 cards: cards,
                 flipped: [],
                 matched: Array(cards.length).fill(false),
-                lock: false,
-                moves: 0
+                lock: false
             };
             renderGame('memory');
         }
@@ -2916,22 +2684,15 @@
                     gameState.matched[i2] = true;
                     gameState.flipped = [];
                     gameState.lock = false;
-                    gameState.moves++;
                     if (gameState.matched.every(m => m === true)) {
-                        showNotification(`Победа! За ${gameState.moves} ходов! +10 $`, 'success');
-                        const td = App.tapData[App.currentUser];
-                        if (td) {
-                            td.balance += 10;
-                            td.totalEarned += 10;
-                            saveTapData();
-                        }
+                        showConfetti();
+                        playHappySound();
                         setTimeout(() => initMemory(), 1500);
                     }
                 } else {
                     setTimeout(() => {
                         gameState.flipped = [];
                         gameState.lock = false;
-                        gameState.moves++;
                         renderGame('memory');
                     }, 800);
                 }
@@ -2946,66 +2707,15 @@
         function renderGame(game) {
             const container = document.getElementById('gamesPlayArea');
             if (!container) return;
-            if (game === 'clicker') {
-                const td = App.tapData[App.currentUser];
-                if (!td) return;
+            if (game === 'guess') {
                 container.innerHTML = `
-                    <div class="tap-container">
-                        <div class="tap-balance">💰 ${td.balance} $</div>
-                        <button class="tap-click-btn">Кликнуть (+${td.clickValue} $)</button>
-                        <div class="tap-upgrade-panel">
-                            <div class="tap-upgrade-item">
-                                <span>📈 Уровень клика: ${td.level}</span>
-                                <span>💎 Доход: +${td.clickValue} $</span>
-                            </div>
-                            <div class="tap-upgrade-item">
-                                <span>🔧 След. улучшение (+1 $/клик)</span>
-                                <button class="tap-upgrade-btn">${td.upgradeCost} $</button>
-                            </div>
-                            <div class="tap-stats">🏆 Всего заработано: ${td.totalEarned} $</div>
-                            <div class="tap-stats">✨ Чем выше уровень, тем больше $ за клик!</div>
-                        </div>
+                    <div class="game-play-area">
+                        <h3 style="color: var(--text);">Угадай число (1-100)</h3>
+                        <div class="game-status">${gameState.message}</div>
+                        ${!gameState.guessed ? `<input type="number" id="guessInput" placeholder="Введите число" style="background: var(--input-bg); color: var(--text); border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; margin: 10px;">` : ''}
+                        ${!gameState.guessed ? `<button class="game-btn" onclick="makeGuess()">Угадать</button>` : ''}
+                        <button class="game-btn" onclick="resetGuessNumber()">Новая игра</button>
                     </div>
-                `;
-                const clickBtn = container.querySelector('.tap-click-btn');
-                const upgradeBtn = container.querySelector('.tap-upgrade-btn');
-                if (clickBtn) clickBtn.addEventListener('click', handleTap);
-                if (upgradeBtn) upgradeBtn.addEventListener('click', buyTapUpgrade);
-            } else if (game === 'tictactoe') {
-                let boardHtml = '<div class="game-board">';
-                for (let i = 0; i < 9; i++) {
-                    boardHtml += `<div class="cell" onclick="makeMove(${i})">${gameState.board[i]}</div>`;
-                }
-                boardHtml += '</div>';
-                let status = gameState.gameOver ? (gameState.winner === 'Ничья' ? 'Ничья!' : `Победитель: ${gameState.winner}`) : `Ходит: ${gameState.currentPlayer}`;
-                container.innerHTML = `
-                    <h3>Крестики-нолики</h3>
-                    ${boardHtml}
-                    <div class="game-status">${status}</div>
-                    <button class="game-btn" onclick="resetTicTacToe()">Новая игра</button>
-                `;
-            } else if (game === 'guess') {
-                container.innerHTML = `
-                    <h3>Угадай число (1-100)</h3>
-                    <div class="game-status">${gameState.message}</div>
-                    <input type="number" id="guessInput" placeholder="Введите число">
-                    <button class="game-btn" onclick="makeGuess()">Угадать</button>
-                    <button class="game-btn" onclick="resetGuessNumber()">Новая игра</button>
-                `;
-            } else if (game === 'rps') {
-                let resultHtml = '';
-                if (gameState.result) {
-                    resultHtml = `<div class="game-status">Ваш выбор: ${gameState.playerChoice}<br>Выбор компьютера: ${gameState.computerChoice}<br>${gameState.result}</div>`;
-                }
-                container.innerHTML = `
-                    <h3>Камень, ножницы, бумага</h3>
-                    <div>
-                        <button class="choice-btn" onclick="playRPS('камень')">🪨 Камень</button>
-                        <button class="choice-btn" onclick="playRPS('ножницы')">✂️ Ножницы</button>
-                        <button class="choice-btn" onclick="playRPS('бумага')">📄 Бумага</button>
-                    </div>
-                    ${resultHtml}
-                    <button class="game-btn" onclick="resetRPS()">Новая игра</button>
                 `;
             } else if (game === 'hangman') {
                 let wordDisplay = '';
@@ -3014,13 +2724,15 @@
                     wordDisplay += ' ';
                 }
                 container.innerHTML = `
-                    <h3>Виселица</h3>
-                    <div class="game-status">${gameState.message}</div>
-                    <div style="font-size: 28px; letter-spacing: 8px;">${wordDisplay}</div>
-                    <div>Осталось попыток: ${gameState.attempts}</div>
-                    <input type="text" id="hangmanLetter" maxlength="1" placeholder="Буква">
-                    <button class="game-btn" onclick="guessLetter()">Угадать</button>
-                    <button class="game-btn" onclick="resetHangman()">Новая игра</button>
+                    <div class="game-play-area">
+                        <h3 style="color: var(--text);">Виселица</h3>
+                        <div class="game-status">${gameState.message}</div>
+                        <div style="font-size: 28px; letter-spacing: 8px; color: var(--text);">${wordDisplay}</div>
+                        <div style="color: var(--text);">Осталось попыток: ${gameState.attempts}</div>
+                        ${!gameState.gameOver ? `<input type="text" id="hangmanLetter" maxlength="1" placeholder="Буква" style="background: var(--input-bg); color: var(--text); border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; margin: 10px;">` : ''}
+                        ${!gameState.gameOver ? `<button class="game-btn" onclick="guessLetter()">Угадать</button>` : ''}
+                        <button class="game-btn" onclick="resetHangman()">Новая игра</button>
+                    </div>
                 `;
             } else if (game === 'memory') {
                 let cardsHtml = '<div class="game-board" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">';
@@ -3030,11 +2742,13 @@
                     let extraClass = gameState.matched[i] ? 'matched' : '';
                     cardsHtml += `<div class="memory-card ${extraClass}" onclick="flipCard(${i})">${content}</div>`;
                 }
-                cardsHtml += '</div><div>Ходов: ${gameState.moves}</div>';
+                cardsHtml += '</div>';
                 container.innerHTML = `
-                    <h3>Мемори (найди пару)</h3>
-                    ${cardsHtml}
-                    <button class="game-btn" onclick="resetMemory()">Новая игра</button>
+                    <div class="game-play-area">
+                        <h3 style="color: var(--text);">Мемори (найди пару)</h3>
+                        ${cardsHtml}
+                        <button class="game-btn" onclick="resetMemory()">Новая игра</button>
+                    </div>
                 `;
             }
         }
@@ -3045,29 +2759,17 @@
             if (!container) return;
             container.innerHTML = `
                 <div class="games-grid">
-                    <div class="game-card" onclick="startGame('clicker')">
-                        <h3>Кликер</h3>
-                        <p>Кликай и зарабатывай $, улучшай доход</p>
-                    </div>
-                    <div class="game-card" onclick="startGame('tictactoe')">
-                        <h3>Крестики-нолики</h3>
-                        <p>Играй против себя</p>
-                    </div>
-                    <div class="game-card" onclick="startGame('guess')">
-                        <h3>Угадай число</h3>
-                        <p>Угадай число от 1 до 100</p>
-                    </div>
-                    <div class="game-card" onclick="startGame('rps')">
-                        <h3>Камень, ножницы, бумага</h3>
-                        <p>Сыграй с компьютером</p>
+                    <div class="game-card" onclick="startGame('memory')">
+                        <h3>Мемори</h3>
+                        <p>Найди пары карточек</p>
                     </div>
                     <div class="game-card" onclick="startGame('hangman')">
                         <h3>Виселица</h3>
                         <p>Угадай слово по буквам</p>
                     </div>
-                    <div class="game-card" onclick="startGame('memory')">
-                        <h3>Мемори</h3>
-                        <p>Найди пары карточек</p>
+                    <div class="game-card" onclick="startGame('guess')">
+                        <h3>Угадай число</h3>
+                        <p>Угадай число от 1 до 100</p>
                     </div>
                 </div>
                 <div id="gamesPlayArea"></div>
@@ -3076,15 +2778,8 @@
         
         function startGame(game) {
             currentGame = game;
-            if (game === 'clicker') {
-                initTapData();
-                renderGame('clicker');
-            } else if (game === 'tictactoe') {
-                initTicTacToe();
-            } else if (game === 'guess') {
+            if (game === 'guess') {
                 initGuessNumber();
-            } else if (game === 'rps') {
-                initRPS();
             } else if (game === 'hangman') {
                 initHangman();
             } else if (game === 'memory') {
@@ -3149,8 +2844,6 @@
                     loadYolkChatMessages(); 
                     loadStreaks(); 
                     loadPrivacySettings(); 
-                    loadTapData();
-                    initTapData();
                     setupUserListener(clean); 
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
                     App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); 
@@ -3186,8 +2879,6 @@
                     App.savedMessages[clean] = []; 
                     saveSavedMessages(); 
                     localStorage.setItem('yolk_current_user', clean); 
-                    loadTapData();
-                    initTapData();
                     saveToFirebase(); 
                     setupUserListener(clean); 
                     render(); 
@@ -3483,7 +3174,7 @@
         window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         function initBots() { App.systemBots = []; saveToFirebase(); }
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; if (data.tapData) App.tapData = data.tapData; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); if (data.tapData) saveTapData(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); loadTapData(); initTapData(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); loadTapData(); initTapData(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); loadTheme(); });
     </script>
 </body>
