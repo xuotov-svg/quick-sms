@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Yolkapp</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
-            <style>
+    <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         /* Базовые переменные (тёмная тема по умолчанию) */
@@ -52,6 +52,15 @@
             --hover-border: rgba(184, 134, 11, 0.3);
         }
         
+        /* Желтоватый оттенок для всех эмодзи и иконок */
+        body * {
+            filter: brightness(1.02) sepia(0.12) hue-rotate(2deg);
+        }
+        /* Но для изображений и видео убираем фильтр, чтобы они не искажались */
+        img, video, canvas, .post-media, .avatar-img, .banner-image, .channel-avatar-small, .media-preview {
+            filter: none;
+        }
+        
         body {
             min-height: 100vh;
             display: flex;
@@ -96,7 +105,8 @@
         .nft-collection,
         .feed-container,
         .post-card,
-        .comments-modal {
+        .comments-modal,
+        .tap-container {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -105,7 +115,6 @@
             transition: background 0.2s ease, border-color 0.2s ease;
         }
         
-        /* Дополнительный эффект свечения для активных элементов */
         .chat-item:hover,
         .chat-item.active,
         .btn:hover,
@@ -232,7 +241,9 @@
         .post-dislike,
         .post-comment,
         .post-delete,
-        .create-post-btn {
+        .create-post-btn,
+        .tap-click-btn,
+        .tap-upgrade-btn {
             filter: grayscale(0.6) brightness(0.7);
             transition: all 0.2s ease;
         }
@@ -265,7 +276,9 @@
         body.light-theme .post-dislike,
         body.light-theme .post-comment,
         body.light-theme .post-delete,
-        body.light-theme .create-post-btn {
+        body.light-theme .create-post-btn,
+        body.light-theme .tap-click-btn,
+        body.light-theme .tap-upgrade-btn {
             filter: grayscale(0.3) brightness(0.9);
         }
         
@@ -291,7 +304,9 @@
         .post-dislike:hover,
         .post-comment:hover,
         .post-delete:hover,
-        .create-post-btn:hover {
+        .create-post-btn:hover,
+        .tap-click-btn:hover,
+        .tap-upgrade-btn:hover {
             filter: grayscale(0.3) brightness(0.85);
         }
         
@@ -701,27 +716,27 @@
             color: var(--text);
             margin-top: 4px;
         }
-                .post-share {
-    background: rgba(212, 175, 55, 0.12);
-    border: 1px solid rgba(212, 175, 55, 0.25);
-    border-radius: 30px;
-    padding: 8px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    backdrop-filter: blur(4px);
-    transition: all 0.2s ease;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: #d4af37;
-}
-.post-share:hover {
-    transform: translateY(-2px);
-    background: rgba(212, 175, 55, 0.25);
-    border-color: #d4af37;
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
-}
+        .post-share {
+            background: rgba(212, 175, 55, 0.12);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #d4af37;
+        }
+        .post-share:hover {
+            transform: translateY(-2px);
+            background: rgba(212, 175, 55, 0.25);
+            border-color: #d4af37;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        }
         .comment-time {
             font-size: 10px;
             color: var(--text-secondary);
@@ -741,14 +756,72 @@
             color: var(--text);
         }
         
+        /* === КЛИКЕР БОТ @tap_bot === */
+        .tap-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            background: var(--glass-bg);
+            margin: 16px;
+            border-radius: 32px;
+        }
+        .tap-balance {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 20px 0;
+        }
+        .tap-click-btn {
+            background: var(--accent);
+            color: #000;
+            font-size: 28px;
+            padding: 20px 40px;
+            border-radius: 60px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            margin: 20px;
+            width: 200px;
+        }
+        .tap-click-btn:active {
+            transform: scale(0.95);
+        }
+        .tap-upgrade-panel {
+            background: rgba(0,0,0,0.3);
+            border-radius: 24px;
+            padding: 20px;
+            width: 100%;
+            max-width: 350px;
+            margin-top: 20px;
+        }
+        .tap-upgrade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .tap-upgrade-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .tap-stats {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin: 10px 0;
+        }
+        
         @media (max-width: 768px) {
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
-        }
-        .bottom-nav {
-            display: none;
-        }
-        @media (max-width: 768px) {
             .bottom-nav {
                 display: flex;
             }
@@ -770,7 +843,7 @@
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null };
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null, tapData: {} };
         App.systemBots = []; // полностью удалены боты
         
         // ========== СТАТУСЫ ==========
@@ -1513,7 +1586,7 @@
             if (minutes < 60) return '30 мин назад';
             if (hours < 2) return '1 час назад';
             if (hours < 5) return `${hours} часа назад`;
-            if (hours < 24) return `${hours} часов назад`;
+            if (hours < 24) return `${hours} часов назад';
             if (days === 1) return '1 день назад';
             if (days < 5) return `${days} дня назад`;
             return `${days} дней назад`;
@@ -1530,7 +1603,7 @@
         function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
         function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
         function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); }
-        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
+        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts, tapData: App.tapData }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
         // ========== ФУНКЦИИ ДЛЯ ОТКРЫТОК ==========
@@ -1781,7 +1854,7 @@
             }
         }
 
-                // ========== ПРОФИЛЬ ==========
+        // ========== ПРОФИЛЬ ==========
         function openProfileModal(username) { 
             const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', nfts: [], followers: [], following: [] }) };
             const isOwn = (username === App.currentUser); 
@@ -2010,6 +2083,7 @@
                 openAdminPanel(); 
             } 
         };
+        
         // ========== ОБНОВЛЕНИЕ СТАТУСА В ЧАТЕ ==========
         function updateChatHeaderStatus(username) { 
             if (App.channels[username]) return;
@@ -2043,403 +2117,509 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-       // ========== ЛЕНТА (только личные чаты, без saved/yolk/каналов) ==========
-let feedPage = 0;
-const FEED_PAGE_SIZE = 10;
-let feedPosts = [];
+        // ========== ЛЕНТА (только личные чаты, без saved/yolk/каналов) ==========
+        let feedPage = 0;
+        const FEED_PAGE_SIZE = 10;
+        let feedPosts = [];
 
-function getShuffledPosts() {
-    const shuffled = [...App.posts];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-}
+        function getShuffledPosts() {
+            const shuffled = [...App.posts];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
 
-function initFeed() {
-    feedPage = 0;
-    feedPosts = getShuffledPosts();
-    const feedContainer = document.getElementById('feedContainer');
-    if (feedContainer) feedContainer.innerHTML = '';
-    renderFeed();
-}
-
-function renderFeed() {
-    const feedContainer = document.getElementById('feedContainer');
-    if (!feedContainer) return;
-    if (feedPosts.length === 0) {
-        feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
-        return;
-    }
-    const start = feedPage * FEED_PAGE_SIZE;
-    const end = start + FEED_PAGE_SIZE;
-    const postsToShow = feedPosts.slice(start, end);
-    if (postsToShow.length === 0) {
-        feedPage = 0;
-        renderFeed();
-        return;
-    }
-    let html = '';
-    postsToShow.forEach(post => {
-        const author = App.users[post.author] || {};
-        const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (post.author[1] || '?');
-        const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
-        const likesCount = Object.keys(post.likes || {}).length;
-        const dislikesCount = Object.keys(post.dislikes || {}).length;
-        const userLiked = post.likes && post.likes[App.currentUser];
-        const userDisliked = post.dislikes && post.dislikes[App.currentUser];
-        const isOwner = post.author === App.currentUser;
-        const date = new Date(post.time).toLocaleString();
-        const isSubscribed = isFollowing(App.currentUser, post.author);
-        const subButtonHtml = (post.author !== App.currentUser) ?
-            `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
-        html += `
-            <div class="post-card" data-post-id="${post.id}">
-                <div class="post-header" onclick="openProfileModal('${post.author}')">
-                    <div class="post-avatar">${avatarHtml}</div>
-                    <div style="flex:1;">
-                        <div class="post-author">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                        <div class="post-time">${date}</div>
-                    </div>
-                    ${subButtonHtml}
-                </div>
-                <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
-                ${mediaHtml}
-                <div class="post-stats">
-                    <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')">👍 <span>${likesCount}</span></button>
-                    <button class="post-dislike ${userDisliked ? 'active' : ''}" onclick="toggleDislikePost('${post.id}')">👎 <span>${dislikesCount}</span></button>
-                    <button class="post-comment" onclick="openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
-                    <button class="post-share" onclick="openShareModal('${post.id}')">📤</button>
-                    ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️</button>` : ''}
-                </div>
-            </div>
-        `;
-    });
-    feedContainer.insertAdjacentHTML('beforeend', html);
-    feedPage++;
-    feedContainer.onscroll = function() {
-        if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
+        function initFeed() {
+            feedPage = 0;
+            feedPosts = getShuffledPosts();
+            const feedContainer = document.getElementById('feedContainer');
+            if (feedContainer) feedContainer.innerHTML = '';
             renderFeed();
         }
-    };
-}
 
-// Модалка выбора чата (только личные чаты с пользователями)
-function openShareModal(postId) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) return;
-    let chatList = getChatListForUser(App.currentUser);
-    // Фильтруем: оставляем только личные чаты с другими пользователями (не saved, не yolk, не каналы)
-    chatList = chatList.filter(chat => {
-        if (chat === 'saved') return false;
-        if (chat === 'yolk') return false;
-        if (App.channels[chat]) return false;
-        if (chat === App.currentUser) return false;
-        return true;
-    });
-    if (chatList.length === 0) {
-        showNotification('Нет доступных чатов для отправки', 'error');
-        return;
-    }
-    let chatOptions = '';
-    chatList.forEach(chat => {
-        let displayName = chat; // уже с @
-        chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
-    });
-    const modalHtml = `
-        <div class="modal-overlay" id="shareModal">
-            <div class="profile-modal">
-                <h3>📤 ОТПРАВИТЬ ПОСТ</h3>
-                <div class="profile-input-group">
-                    <label>ВЫБЕРИТЕ ПОЛУЧАТЕЛЯ:</label>
-                    <div id="shareChatList" style="max-height: 300px; overflow-y: auto;">${chatOptions}</div>
-                </div>
-                <div class="profile-actions">
-                    <button class="profile-btn secondary" id="closeShareModal">ОТМЕНА</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.querySelectorAll('.share-chat-item').forEach(el => {
-        el.addEventListener('click', () => {
-            const targetChat = el.dataset.chat;
-            document.getElementById('shareModal').remove();
-            sharePostToChat(postId, targetChat);
-        });
-    });
-    document.getElementById('closeShareModal').addEventListener('click', () => {
-        document.getElementById('shareModal').remove();
-    });
-}
-
-// Отправка поста в личный чат (только между текущим пользователем и получателем, от имени автора)
-function sharePostToChat(postId, targetChat) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) {
-        showNotification('Пост не найден', 'error');
-        return;
-    }
-    let messageText = post.text || '';
-    if (messageText === '' && !post.media) messageText = '(пустой пост)';
-    else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
-
-    const from = post.author;          // отправитель — автор поста
-    const to = targetChat;             // получатель (друг)
-    const currentUser = App.currentUser; // кто шарит
-
-    const mediaData = post.media || null;
-    const isVideo = post.isVideo || false;
-
-    try {
-        const message = {
-            from: from,
-            text: messageText,
-            time: Date.now(),
-            photo: mediaData,
-            isVideo: isVideo,
-            gift: false,
-            sharedPost: true
-        };
-
-        // Личный чат: создаём/используем чат между currentUser и to
-        const chatId = [currentUser, to].sort().join('_');
-        if (!App.chats[chatId]) {
-            App.chats[chatId] = {
-                user1: currentUser,
-                user2: to,
-                messages: []
-            };
-        }
-        App.chats[chatId].messages.push(message);
-        saveToFirebase();
-        showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
-
-        if (App.activeChat === to) renderMessages(to);
-        updateChatList();
-    } catch (error) {
-        console.error('Ошибка отправки поста:', error);
-        showNotification('Ошибка при отправке', 'error');
-    }
-}
-
-// Вспомогательные функции для ленты (лайки, дизлайки, комментарии, удаление, подписки)
-function toggleLikePost(postId) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) return;
-    if (!post.likes) post.likes = {};
-    if (!post.dislikes) post.dislikes = {};
-    const user = App.currentUser;
-    if (post.likes[user]) delete post.likes[user];
-    else {
-        if (post.dislikes[user]) delete post.dislikes[user];
-        post.likes[user] = true;
-    }
-    saveToFirebase();
-    updatePostStats(postId);
-}
-
-function toggleDislikePost(postId) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) return;
-    if (!post.likes) post.likes = {};
-    if (!post.dislikes) post.dislikes = {};
-    const user = App.currentUser;
-    if (post.dislikes[user]) delete post.dislikes[user];
-    else {
-        if (post.likes[user]) delete post.likes[user];
-        post.dislikes[user] = true;
-    }
-    saveToFirebase();
-    updatePostStats(postId);
-}
-
-function updatePostStats(postId) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) return;
-    const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-    if (!postCard) return;
-    const likesCount = Object.keys(post.likes || {}).length;
-    const dislikesCount = Object.keys(post.dislikes || {}).length;
-    const userLiked = post.likes && post.likes[App.currentUser];
-    const userDisliked = post.dislikes && post.dislikes[App.currentUser];
-    const likeBtn = postCard.querySelector('.post-like');
-    const dislikeBtn = postCard.querySelector('.post-dislike');
-    const commentBtn = postCard.querySelector('.post-comment');
-    if (likeBtn) {
-        likeBtn.classList.toggle('active', userLiked);
-        const likeSpan = likeBtn.querySelector('span');
-        if (likeSpan) likeSpan.textContent = likesCount;
-    }
-    if (dislikeBtn) {
-        dislikeBtn.classList.toggle('active', userDisliked);
-        const dislikeSpan = dislikeBtn.querySelector('span');
-        if (dislikeSpan) dislikeSpan.textContent = dislikesCount;
-    }
-    if (commentBtn) {
-        const commentSpan = commentBtn.querySelector('span');
-        if (commentSpan) commentSpan.textContent = post.comments?.length || 0;
-    }
-}
-
-function openCommentsModal(postId) {
-    const post = App.posts.find(p => p.id === postId);
-    if (!post) return;
-    const modalHtml = `
-        <div class="modal-overlay" id="commentsModal">
-            <div class="comments-modal">
-                <h3 style="color: var(--text);">💬 Комментарии</h3>
-                <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
-                    ${post.comments?.map(c => `
-                        <div class="comment-item">
-                            <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
-                            <div class="comment-text" style="color: var(--text);">${c.text}</div>
-                            <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
-                        </div>
-                    `).join('') || '<div style="color: var(--text-secondary); text-align: center;">Нет комментариев</div>'}
-                </div>
-                <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
-                    <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
-                    <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
-                </div>
-                <div class="profile-actions" style="margin-top:12px;">
-                    <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('submitCommentBtn').addEventListener('click', () => {
-        const text = document.getElementById('newCommentText').value.trim();
-        if (!text) return;
-        if (!post.comments) post.comments = [];
-        post.comments.push({
-            author: App.currentUser,
-            text: text,
-            time: Date.now()
-        });
-        saveToFirebase();
-        document.getElementById('commentsModal').remove();
-        updatePostStats(postId);
-        showNotification('Комментарий добавлен');
-    });
-    document.getElementById('closeCommentsModal').addEventListener('click', () => {
-        document.getElementById('commentsModal').remove();
-    });
-}
-
-function deletePost(postId) {
-    if (!confirm('Удалить пост?')) return;
-    const index = App.posts.findIndex(p => p.id === postId);
-    if (index !== -1 && App.posts[index].author === App.currentUser) {
-        App.posts.splice(index, 1);
-        saveToFirebase();
-        initFeed();
-        showNotification('Пост удален');
-    } else {
-        showNotification('Нет прав для удаления', 'error');
-    }
-}
-
-function createPost(text, media, isVideo) {
-    if (!text.trim() && !media) {
-        showNotification('Напишите текст или прикрепите медиа', 'error');
-        return;
-    }
-    const post = {
-        id: generateId(),
-        author: App.currentUser,
-        text: text.trim(),
-        media: media || null,
-        isVideo: isVideo || false,
-        time: Date.now(),
-        likes: {},
-        dislikes: {},
-        comments: []
-    };
-    App.posts.unshift(post);
-    saveToFirebase();
-    initFeed();
-    showNotification('Пост опубликован!');
-}
-
-function openCreatePostModal() {
-    const modalHtml = `
-        <div class="modal-overlay" id="createPostModal">
-            <div class="profile-modal">
-                <h3>📝 СОЗДАТЬ ПОСТ</h3>
-                <div class="profile-input-group">
-                    <label>ТЕКСТ</label>
-                    <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
-                </div>
-                <div class="profile-input-group">
-                    <label>ПРИКРЕПИТЬ ФОТО/ВИДЕО</label>
-                    <input type="file" id="postMediaFile" accept="image/*,video/*">
-                </div>
-                <div class="profile-actions">
-                    <button class="profile-btn" id="confirmCreatePostBtn">ОПУБЛИКОВАТЬ</button>
-                    <button class="profile-btn secondary" id="closeCreatePostModal">ОТМЕНА</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    let tempMedia = null, isVideo = false;
-    document.getElementById('postMediaFile').addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
-                    tempMedia = compressed;
-                    isVideo = false;
-                });
-            };
-            reader.readAsDataURL(file);
-        } else if (file.type.startsWith('video/')) {
-            if (file.size > 20 * 1024 * 1024) {
-                showNotification('Видео не более 20 МБ', 'error');
+        function renderFeed() {
+            const feedContainer = document.getElementById('feedContainer');
+            if (!feedContainer) return;
+            if (feedPosts.length === 0) {
+                feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                tempMedia = ev.target.result;
-                isVideo = true;
+            const start = feedPage * FEED_PAGE_SIZE;
+            const end = start + FEED_PAGE_SIZE;
+            const postsToShow = feedPosts.slice(start, end);
+            if (postsToShow.length === 0) {
+                feedPage = 0;
+                renderFeed();
+                return;
+            }
+            let html = '';
+            postsToShow.forEach(post => {
+                const author = App.users[post.author] || {};
+                const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (post.author[1] || '?');
+                const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
+                const likesCount = Object.keys(post.likes || {}).length;
+                const dislikesCount = Object.keys(post.dislikes || {}).length;
+                const userLiked = post.likes && post.likes[App.currentUser];
+                const userDisliked = post.dislikes && post.dislikes[App.currentUser];
+                const isOwner = post.author === App.currentUser;
+                const date = new Date(post.time).toLocaleString();
+                const isSubscribed = isFollowing(App.currentUser, post.author);
+                const subButtonHtml = (post.author !== App.currentUser) ?
+                    `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
+                html += `
+                    <div class="post-card" data-post-id="${post.id}">
+                        <div class="post-header" onclick="openProfileModal('${post.author}')">
+                            <div class="post-avatar">${avatarHtml}</div>
+                            <div style="flex:1;">
+                                <div class="post-author">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="post-time">${date}</div>
+                            </div>
+                            ${subButtonHtml}
+                        </div>
+                        <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
+                        ${mediaHtml}
+                        <div class="post-stats">
+                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')">👍 <span>${likesCount}</span></button>
+                            <button class="post-dislike ${userDisliked ? 'active' : ''}" onclick="toggleDislikePost('${post.id}')">👎 <span>${dislikesCount}</span></button>
+                            <button class="post-comment" onclick="openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
+                            <button class="post-share" onclick="openShareModal('${post.id}')">📤</button>
+                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            feedContainer.insertAdjacentHTML('beforeend', html);
+            feedPage++;
+            feedContainer.onscroll = function() {
+                if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
+                    renderFeed();
+                }
             };
-            reader.readAsDataURL(file);
         }
-    });
-    document.getElementById('confirmCreatePostBtn').addEventListener('click', () => {
-        const text = document.getElementById('postText').value.trim();
-        if (!text && !tempMedia) {
-            showNotification('Введите текст или прикрепите медиа', 'error');
-            return;
-        }
-        createPost(text, tempMedia, isVideo);
-        document.getElementById('createPostModal').remove();
-    });
-    document.getElementById('closeCreatePostModal').addEventListener('click', () => {
-        document.getElementById('createPostModal').remove();
-    });
-}
 
-function toggleFeedSubscription(postId, author) {
-    if (author === App.currentUser) return;
-    const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-    if (isCurrentlySubscribed) unsubscribeFromUser(App.currentUser, author);
-    else subscribeToUser(App.currentUser, author);
-    const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-    if (postCard) {
-        const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
-        if (btn) {
-            const newSubStatus = !isCurrentlySubscribed;
-            btn.textContent = newSubStatus ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
-            btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
+        function openShareModal(postId) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            let chatList = getChatListForUser(App.currentUser);
+            chatList = chatList.filter(chat => {
+                if (chat === 'saved') return false;
+                if (chat === 'yolk') return false;
+                if (App.channels[chat]) return false;
+                if (chat === App.currentUser) return false;
+                return true;
+            });
+            if (chatList.length === 0) {
+                showNotification('Нет доступных чатов для отправки', 'error');
+                return;
+            }
+            let chatOptions = '';
+            chatList.forEach(chat => {
+                let displayName = chat;
+                chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
+            });
+            const modalHtml = `
+                <div class="modal-overlay" id="shareModal">
+                    <div class="profile-modal">
+                        <h3>📤 ОТПРАВИТЬ ПОСТ</h3>
+                        <div class="profile-input-group">
+                            <label>ВЫБЕРИТЕ ПОЛУЧАТЕЛЯ:</label>
+                            <div id="shareChatList" style="max-height: 300px; overflow-y: auto;">${chatOptions}</div>
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-btn secondary" id="closeShareModal">ОТМЕНА</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.querySelectorAll('.share-chat-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const targetChat = el.dataset.chat;
+                    document.getElementById('shareModal').remove();
+                    sharePostToChat(postId, targetChat);
+                });
+            });
+            document.getElementById('closeShareModal').addEventListener('click', () => {
+                document.getElementById('shareModal').remove();
+            });
         }
-    }
-}
+
+        function sharePostToChat(postId, targetChat) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) {
+                showNotification('Пост не найден', 'error');
+                return;
+            }
+            let messageText = post.text || '';
+            if (messageText === '' && !post.media) messageText = '(пустой пост)';
+            else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
+
+            const from = post.author;
+            const to = targetChat;
+            const currentUser = App.currentUser;
+
+            const mediaData = post.media || null;
+            const isVideo = post.isVideo || false;
+
+            try {
+                const message = {
+                    from: from,
+                    text: messageText,
+                    time: Date.now(),
+                    photo: mediaData,
+                    isVideo: isVideo,
+                    gift: false,
+                    sharedPost: true
+                };
+
+                const chatId = [currentUser, to].sort().join('_');
+                if (!App.chats[chatId]) {
+                    App.chats[chatId] = {
+                        user1: currentUser,
+                        user2: to,
+                        messages: []
+                    };
+                }
+                App.chats[chatId].messages.push(message);
+                saveToFirebase();
+                showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
+
+                if (App.activeChat === to) renderMessages(to);
+                updateChatList();
+            } catch (error) {
+                console.error('Ошибка отправки поста:', error);
+                showNotification('Ошибка при отправке', 'error');
+            }
+        }
+
+        function toggleLikePost(postId) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            if (!post.likes) post.likes = {};
+            if (!post.dislikes) post.dislikes = {};
+            const user = App.currentUser;
+            if (post.likes[user]) delete post.likes[user];
+            else {
+                if (post.dislikes[user]) delete post.dislikes[user];
+                post.likes[user] = true;
+            }
+            saveToFirebase();
+            updatePostStats(postId);
+        }
+
+        function toggleDislikePost(postId) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            if (!post.likes) post.likes = {};
+            if (!post.dislikes) post.dislikes = {};
+            const user = App.currentUser;
+            if (post.dislikes[user]) delete post.dislikes[user];
+            else {
+                if (post.likes[user]) delete post.likes[user];
+                post.dislikes[user] = true;
+            }
+            saveToFirebase();
+            updatePostStats(postId);
+        }
+
+        function updatePostStats(postId) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if (!postCard) return;
+            const likesCount = Object.keys(post.likes || {}).length;
+            const dislikesCount = Object.keys(post.dislikes || {}).length;
+            const userLiked = post.likes && post.likes[App.currentUser];
+            const userDisliked = post.dislikes && post.dislikes[App.currentUser];
+            const likeBtn = postCard.querySelector('.post-like');
+            const dislikeBtn = postCard.querySelector('.post-dislike');
+            const commentBtn = postCard.querySelector('.post-comment');
+            if (likeBtn) {
+                likeBtn.classList.toggle('active', userLiked);
+                const likeSpan = likeBtn.querySelector('span');
+                if (likeSpan) likeSpan.textContent = likesCount;
+            }
+            if (dislikeBtn) {
+                dislikeBtn.classList.toggle('active', userDisliked);
+                const dislikeSpan = dislikeBtn.querySelector('span');
+                if (dislikeSpan) dislikeSpan.textContent = dislikesCount;
+            }
+            if (commentBtn) {
+                const commentSpan = commentBtn.querySelector('span');
+                if (commentSpan) commentSpan.textContent = post.comments?.length || 0;
+            }
+        }
+
+        function openCommentsModal(postId) {
+            const post = App.posts.find(p => p.id === postId);
+            if (!post) return;
+            const modalHtml = `
+                <div class="modal-overlay" id="commentsModal">
+                    <div class="comments-modal">
+                        <h3 style="color: var(--text);">💬 Комментарии</h3>
+                        <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
+                            ${post.comments?.map(c => `
+                                <div class="comment-item">
+                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
+                                    <div class="comment-text" style="color: var(--text);">${c.text}</div>
+                                    <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
+                                </div>
+                            `).join('') || '<div style="color: var(--text-secondary); text-align: center;">Нет комментариев</div>'}
+                        </div>
+                        <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
+                            <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
+                            <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
+                        </div>
+                        <div class="profile-actions" style="margin-top:12px;">
+                            <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.getElementById('submitCommentBtn').addEventListener('click', () => {
+                const text = document.getElementById('newCommentText').value.trim();
+                if (!text) return;
+                if (!post.comments) post.comments = [];
+                post.comments.push({
+                    author: App.currentUser,
+                    text: text,
+                    time: Date.now()
+                });
+                saveToFirebase();
+                document.getElementById('commentsModal').remove();
+                updatePostStats(postId);
+                showNotification('Комментарий добавлен');
+            });
+            document.getElementById('closeCommentsModal').addEventListener('click', () => {
+                document.getElementById('commentsModal').remove();
+            });
+        }
+
+        function deletePost(postId) {
+            if (!confirm('Удалить пост?')) return;
+            const index = App.posts.findIndex(p => p.id === postId);
+            if (index !== -1 && App.posts[index].author === App.currentUser) {
+                App.posts.splice(index, 1);
+                saveToFirebase();
+                initFeed();
+                showNotification('Пост удален');
+            } else {
+                showNotification('Нет прав для удаления', 'error');
+            }
+        }
+
+        function createPost(text, media, isVideo) {
+            if (!text.trim() && !media) {
+                showNotification('Напишите текст или прикрепите медиа', 'error');
+                return;
+            }
+            const post = {
+                id: generateId(),
+                author: App.currentUser,
+                text: text.trim(),
+                media: media || null,
+                isVideo: isVideo || false,
+                time: Date.now(),
+                likes: {},
+                dislikes: {},
+                comments: []
+            };
+            App.posts.unshift(post);
+            saveToFirebase();
+            initFeed();
+            showNotification('Пост опубликован!');
+        }
+
+        function openCreatePostModal() {
+            const modalHtml = `
+                <div class="modal-overlay" id="createPostModal">
+                    <div class="profile-modal">
+                        <h3>📝 СОЗДАТЬ ПОСТ</h3>
+                        <div class="profile-input-group">
+                            <label>ТЕКСТ</label>
+                            <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
+                        </div>
+                        <div class="profile-input-group">
+                            <label>ПРИКРЕПИТЬ ФОТО/ВИДЕО</label>
+                            <input type="file" id="postMediaFile" accept="image/*,video/*">
+                        </div>
+                        <div class="profile-actions">
+                            <button class="profile-btn" id="confirmCreatePostBtn">ОПУБЛИКОВАТЬ</button>
+                            <button class="profile-btn secondary" id="closeCreatePostModal">ОТМЕНА</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            let tempMedia = null, isVideo = false;
+            document.getElementById('postMediaFile').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
+                            tempMedia = compressed;
+                            isVideo = false;
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file.type.startsWith('video/')) {
+                    if (file.size > 20 * 1024 * 1024) {
+                        showNotification('Видео не более 20 МБ', 'error');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        tempMedia = ev.target.result;
+                        isVideo = true;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            document.getElementById('confirmCreatePostBtn').addEventListener('click', () => {
+                const text = document.getElementById('postText').value.trim();
+                if (!text && !tempMedia) {
+                    showNotification('Введите текст или прикрепите медиа', 'error');
+                    return;
+                }
+                createPost(text, tempMedia, isVideo);
+                document.getElementById('createPostModal').remove();
+            });
+            document.getElementById('closeCreatePostModal').addEventListener('click', () => {
+                document.getElementById('createPostModal').remove();
+            });
+        }
+
+        function toggleFeedSubscription(postId, author) {
+            if (author === App.currentUser) return;
+            const isCurrentlySubscribed = isFollowing(App.currentUser, author);
+            if (isCurrentlySubscribed) unsubscribeFromUser(App.currentUser, author);
+            else subscribeToUser(App.currentUser, author);
+            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+            if (postCard) {
+                const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
+                if (btn) {
+                    const newSubStatus = !isCurrentlySubscribed;
+                    btn.textContent = newSubStatus ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
+                    btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
+                }
+            }
+        }
+
+        // ========== БОТ @tap_bot (Кликер) ==========
+        function initTapData() {
+            if (!App.currentUser) return;
+            if (!App.tapData[App.currentUser]) {
+                App.tapData[App.currentUser] = {
+                    balance: 0,       // текущая валюта $
+                    level: 1,         // уровень клика (влияет на доход)
+                    totalEarned: 0,   // всего заработано $
+                    upgradeCost: 10,  // стоимость следующего улучшения (доход +1)
+                    clickValue: 1     // доход за клик
+                };
+            }
+            // синхронизируем clickValue с уровнем
+            const td = App.tapData[App.currentUser];
+            td.clickValue = td.level; // доход за клик = уровень
+            td.upgradeCost = Math.floor(10 * Math.pow(1.5, td.level - 1)); // прогрессивная цена
+            saveTapData();
+        }
+        
+        function saveTapData() {
+            localStorage.setItem('yolk_tapdata', JSON.stringify(App.tapData));
+            if (App.dataLoaded) {
+                database.ref('tapData').set(App.tapData).catch(e => console.error(e));
+            }
+        }
+        
+        function loadTapData() {
+            const saved = localStorage.getItem('yolk_tapdata');
+            if (saved) {
+                try {
+                    App.tapData = JSON.parse(saved);
+                } catch(e) {
+                    App.tapData = {};
+                }
+            } else {
+                App.tapData = {};
+            }
+            if (App.currentUser && !App.tapData[App.currentUser]) {
+                initTapData();
+            }
+        }
+        
+        function handleTap() {
+            const td = App.tapData[App.currentUser];
+            if (!td) return;
+            const gain = td.clickValue;
+            td.balance += gain;
+            td.totalEarned += gain;
+            saveTapData();
+            // анимация + звук
+            playHappySound();
+            const btn = document.querySelector('.tap-click-btn');
+            if (btn) {
+                btn.style.transform = 'scale(0.9)';
+                setTimeout(() => { if(btn) btn.style.transform = ''; }, 100);
+            }
+            showNotification(`+${gain} $`, 'success');
+            renderTapGame(); // обновляем интерфейс
+        }
+        
+        function buyTapUpgrade() {
+            const td = App.tapData[App.currentUser];
+            if (!td) return;
+            const cost = td.upgradeCost;
+            if (td.balance >= cost) {
+                td.balance -= cost;
+                td.level++;
+                td.clickValue = td.level;
+                td.upgradeCost = Math.floor(10 * Math.pow(1.5, td.level - 1));
+                saveTapData();
+                showNotification(`💪 Улучшено! Теперь +${td.clickValue} $ за клик`, 'success');
+                renderTapGame();
+            } else {
+                showNotification(`Не хватает $! Нужно ${cost} $`, 'error');
+            }
+        }
+        
+        function renderTapGame() {
+            const container = document.getElementById('tapContainer');
+            if (!container) return;
+            const td = App.tapData[App.currentUser];
+            if (!td) {
+                container.innerHTML = '<div style="text-align:center; padding:20px;">Загрузка...</div>';
+                return;
+            }
+            container.innerHTML = `
+                <div class="tap-container">
+                    <h2>🐣 @tap_bot</h2>
+                    <div class="tap-balance">💰 ${td.balance} $</div>
+                    <button class="tap-click-btn">Кликнуть (+${td.clickValue} $)</button>
+                    <div class="tap-upgrade-panel">
+                        <div class="tap-upgrade-item">
+                            <span>📈 Уровень клика: ${td.level}</span>
+                            <span>💎 Доход: +${td.clickValue} $</span>
+                        </div>
+                        <div class="tap-upgrade-item">
+                            <span>🔧 След. улучшение (+1 $/клик)</span>
+                            <button class="tap-upgrade-btn">${td.upgradeCost} $</button>
+                        </div>
+                        <div class="tap-stats">🏆 Всего заработано: ${td.totalEarned} $</div>
+                        <div class="tap-stats">✨ Чем выше уровень, тем больше $ за клик!</div>
+                    </div>
+                </div>
+            `;
+            const clickBtn = container.querySelector('.tap-click-btn');
+            const upgradeBtn = container.querySelector('.tap-upgrade-btn');
+            if (clickBtn) clickBtn.addEventListener('click', handleTap);
+            if (upgradeBtn) upgradeBtn.addEventListener('click', buyTapUpgrade);
+        }
+
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { 
             const root = document.getElementById('app'); 
@@ -2456,7 +2636,9 @@ function toggleFeedSubscription(postId, author) {
                     attachMainEvents(); 
                     if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                     else if (App.activeTab === 'feed') {
-                        initFeed(); // Инициализируем ленту при переключении
+                        initFeed();
+                    } else if (App.activeTab === 'tap') {
+                        renderTapGame();
                     }
                     updateChatList(); 
                     updateSidebarUser(); 
@@ -2487,6 +2669,8 @@ function toggleFeedSubscription(postId, author) {
                     loadYolkChatMessages(); 
                     loadStreaks(); 
                     loadPrivacySettings(); 
+                    loadTapData();
+                    initTapData();
                     setupUserListener(clean); 
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
                     App.lastSeenInterval = setInterval(() => { updateLastSeen(clean); }, 30000); 
@@ -2522,6 +2706,8 @@ function toggleFeedSubscription(postId, author) {
                     App.savedMessages[clean] = []; 
                     saveSavedMessages(); 
                     localStorage.setItem('yolk_current_user', clean); 
+                    loadTapData();
+                    initTapData();
                     saveToFirebase(); 
                     setupUserListener(clean); 
                     render(); 
@@ -2534,35 +2720,73 @@ function toggleFeedSubscription(postId, author) {
             const user = App.currentUser; 
             const userData = App.users[user] || {}; 
             const isChatsActive = App.activeTab === 'chats'; 
-            return `
-                <div class="main-container">
-                    ${isChatsActive ? `
-                    <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
-                        <div class="user-profile" id="openProfileBtn">
-                            <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
-                            <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+            const isFeedActive = App.activeTab === 'feed';
+            const isTapActive = App.activeTab === 'tap';
+            
+            if (isChatsActive) {
+                // Проверка, может ли текущий пользователь писать в активный чат
+                let canWrite = true;
+                let blockReason = '';
+                if (App.activeChat && !App.channels[App.activeChat] && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
+                    if (!canUserMessage(user, App.activeChat)) {
+                        canWrite = false;
+                        blockReason = '🔒 Этому пользователю нельзя писать первым';
+                    }
+                } else if (App.channels[App.activeChat] && App.channels[App.activeChat].owner !== user) {
+                    canWrite = false;
+                    blockReason = '🔒 Это не ваш канал';
+                }
+                
+                return `
+                    <div class="main-container">
+                        <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
+                            <div class="user-profile" id="openProfileBtn">
+                                <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
+                                <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                            </div>
+                            <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
+                            <div class="chats-list" id="chatsList"></div>
                         </div>
-                        <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
-                        <div class="chats-list" id="chatsList"></div>
-                    </div>
-                    <div class="chat-area">
-                        <div class="chat-header">
-                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : (App.channels[App.activeChat] ? formatUserNameWithStatus(App.activeChat) : formatUserNameWithStatus(App.activeChat)))}${!App.channels[App.activeChat] && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                            <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
+                        <div class="chat-area">
+                            <div class="chat-header">
+                                <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : (App.channels[App.activeChat] ? formatUserNameWithStatus(App.activeChat) : formatUserNameWithStatus(App.activeChat)))}${!App.channels[App.activeChat] && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                                <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
+                            </div>
+                            <div class="messages-container" id="messageList"></div>
+                            ${App.activeChat !== 'yolk' ? (canWrite ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">${blockReason}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                         </div>
-                        <div class="messages-container" id="messageList"></div>
-                        ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) && !App.channels[App.activeChat] ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (App.channels[App.activeChat] && App.channels[App.activeChat]?.owner === user ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">🔒 ЭТО НЕ ВАШ КАНАЛ</div></div>`)) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
                     </div>
-                    ` : `
-                    <div class="feed-container" id="feedContainer"></div>
-                    <button class="create-post-btn" id="createPostBtn">+</button>
-                    `}
-                </div>
-                <div class="bottom-nav">
-                    <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
-                    <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
-                </div>
-            `; 
+                    <div class="bottom-nav">
+                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
+                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
+                        <div class="nav-item ${App.activeTab === 'tap' ? 'active' : ''}" data-tab="tap">ТАП</div>
+                    </div>
+                `;
+            } else if (isFeedActive) {
+                return `
+                    <div class="main-container">
+                        <div class="feed-container" id="feedContainer"></div>
+                        <button class="create-post-btn" id="createPostBtn">+</button>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
+                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
+                        <div class="nav-item ${App.activeTab === 'tap' ? 'active' : ''}" data-tab="tap">ТАП</div>
+                    </div>
+                `;
+            } else if (isTapActive) {
+                return `
+                    <div class="main-container">
+                        <div id="tapContainer" style="flex:1; display:flex; flex-direction:column;"></div>
+                    </div>
+                    <div class="bottom-nav">
+                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
+                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
+                        <div class="nav-item ${App.activeTab === 'tap' ? 'active' : ''}" data-tab="tap">ТАП</div>
+                    </div>
+                `;
+            }
+            return '';
         }
         
         function attachMainEvents() { 
@@ -2584,10 +2808,14 @@ function toggleFeedSubscription(postId, author) {
                         if (window.innerWidth < 768) App.sidebarOpen = false;
                     } else if (tab === 'feed') {
                         App.activeTab = 'feed';
+                    } else if (tab === 'tap') {
+                        App.activeTab = 'tap';
                     }
                     render();
                     if (App.activeTab === 'feed') {
                         setTimeout(() => initFeed(), 50);
+                    } else if (App.activeTab === 'tap') {
+                        setTimeout(() => renderTapGame(), 50);
                     }
                 });
             });
@@ -2673,16 +2901,60 @@ function toggleFeedSubscription(postId, author) {
             else canDelete = isMe; 
             let mediaHtml = ''; 
             if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
-            const likesCount = msg.likes ? Object.keys(msg.likes).length : 0; 
-            const userLiked = msg.likes && msg.likes[currentUser]; 
+            
+            // Для каналов: реакции 👍 👎 вместо сердечка
+            let reactionHtml = '';
+            if (isChannel) {
+                const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
+                const dislikesCount = msg.dislikes ? Object.keys(msg.dislikes).length : 0;
+                const userLiked = msg.likes && msg.likes[currentUser];
+                const userDisliked = msg.dislikes && msg.dislikes[currentUser];
+                reactionHtml = `
+                    <div style="display: flex; gap: 12px; margin-top: 4px;">
+                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleChannelReaction('${chatPartner}', ${idx}, 'like', event)">👍 <span>${likesCount}</span></button>
+                        <button class="like-btn ${userDisliked ? 'liked' : ''}" onclick="window.toggleChannelReaction('${chatPartner}', ${idx}, 'dislike', event)">👎 <span>${dislikesCount}</span></button>
+                    </div>
+                `;
+            } else {
+                // Обычные чаты: никаких реакций
+                reactionHtml = '';
+            }
+            
             let messageText = msg.text || ''; 
             if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2); 
             const displayName = fromUserStatusClass ? `<span class="${fromUserStatusClass}">${msg.from}</span>` : msg.from; 
             const messageClass = isMe ? 'me' : ''; 
-            // формат даты и времени, как в ленте
             const fullDate = new Date(msg.time).toLocaleString();
-            return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: space-between; margin-top: 4px;">${(isChannel) ? `<button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLike('${chatPartner}', ${idx}, event)">❤️ <span>${likesCount}</span></button>` : '<div></div>'}${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`; 
+            return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div>${reactionHtml}${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div>`; 
         }
+        
+        // Новая функция для реакций в каналах
+        window.toggleChannelReaction = function(channelName, messageIdx, type, event) {
+            if (event) event.stopPropagation();
+            const channel = App.channels[channelName];
+            if (!channel || !channel.messages[messageIdx]) return;
+            const msg = channel.messages[messageIdx];
+            if (!msg.likes) msg.likes = {};
+            if (!msg.dislikes) msg.dislikes = {};
+            const user = App.currentUser;
+            if (type === 'like') {
+                if (msg.likes[user]) {
+                    delete msg.likes[user];
+                } else {
+                    if (msg.dislikes[user]) delete msg.dislikes[user];
+                    msg.likes[user] = true;
+                }
+            } else if (type === 'dislike') {
+                if (msg.dislikes[user]) {
+                    delete msg.dislikes[user];
+                } else {
+                    if (msg.likes[user]) delete msg.likes[user];
+                    msg.dislikes[user] = true;
+                }
+            }
+            saveToFirebase();
+            renderMessages(channelName);
+        };
         
         function updateChatList() { 
             const chatsContainer = document.getElementById('chatsList'); 
@@ -2735,10 +3007,9 @@ function toggleFeedSubscription(postId, author) {
         function addUserBySearch() { let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); if (!query) { showNotification('Введите имя пользователя', 'error'); return; } if (!query.startsWith('@')) query = '@' + query; if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; } if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${query} создан`); }
         window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${chat}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.channels[chat] && App.channels[chat].subscribers) App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user); if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToFirebase(); render(); showNotification('Чат удален'); };
         window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
-        window.toggleLike = function(chatPartner, messageIdx, event) { event.stopPropagation(); if (App.channels[chatPartner]) { if (!App.channels[chatPartner].messages[messageIdx]) return; const msg = App.channels[chatPartner].messages[messageIdx]; if (!msg.likes) msg.likes = {}; if (msg.likes[App.currentUser]) delete msg.likes[App.currentUser]; else msg.likes[App.currentUser] = true; saveToFirebase(); renderMessages(chatPartner); } };
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         function initBots() { App.systemBots = []; saveToFirebase(); }
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; if (data.tapData) App.tapData = data.tapData; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); if (data.tapData) saveTapData(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); loadTapData(); initTapData(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); loadTapData(); initTapData(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); loadTheme(); });
     </script>
 </body>
