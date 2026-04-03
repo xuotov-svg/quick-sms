@@ -1572,26 +1572,25 @@
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function formatLastSeen(lastSeen, chatPartner) {
-            if (chatPartner === 'saved' || chatPartner === 'yolk') return '';
-            if (!lastSeen) return 'очень давно';
-            const now = Date.now();
-            const diff = now - lastSeen;
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
-            const days = Math.floor(diff / 86400000);
-            if (minutes < 1) return 'только что';
-            if (minutes < 5) return `${minutes} мин назад`;
-            if (minutes < 15) return '5 мин назад';
-            if (minutes < 30) return '15 мин назад';
-            if (minutes < 60) return '30 мин назад';
-            if (hours < 2) return '1 час назад';
-            if (hours < 5) return `${hours} часа назад`;
-            if (hours < 24) return `${hours} часов назад';
-            if (days === 1) return '1 день назад';
-            if (days < 5) return `${days} дня назад`;
-            return `${days} дней назад`;
-        }
-
+    if (chatPartner === 'saved' || chatPartner === 'yolk') return '';
+    if (!lastSeen) return 'очень давно';
+    const now = Date.now();
+    const diff = now - lastSeen;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (minutes < 1) return 'только что';
+    if (minutes < 5) return `${minutes} мин назад`;
+    if (minutes < 15) return '5 мин назад';
+    if (minutes < 30) return '15 мин назад';
+    if (minutes < 60) return '30 мин назад';
+    if (hours < 2) return '1 час назад';
+    if (hours < 5) return `${hours} часа назад`;
+    if (hours < 24) return `${hours} часов назад`;
+    if (days === 1) return '1 день назад';
+    if (days < 5) return `${days} дня назад`;
+    return `${days} дней назад`;
+}
         function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx; const now = ctx.currentTime; const osc1 = ctx.createOscillator(); const gain = ctx.createGain(); osc1.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc1.frequency.value = 880; osc1.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc1.stop(now + 0.3); } catch(e) { console.log('Sound error:', e); } }
         function showConfetti() { const confettiDiv = document.createElement('div'); confettiDiv.className = 'confetti'; for (let i = 0; i < 50; i++) { const piece = document.createElement('div'); piece.className = 'confetti-piece'; piece.style.left = Math.random() * 100 + '%'; piece.style.animationDelay = Math.random() * 2 + 's'; piece.style.background = ['#ffd700', '#ffb347', '#ff8c00', '#d4af37'][Math.floor(Math.random() * 4)]; confettiDiv.appendChild(piece); } document.body.appendChild(confettiDiv); setTimeout(() => confettiDiv.remove(), 3000); }
         function showNotification(message, type = 'success') { const notification = document.createElement('div'); notification.className = 'notification' + (type === 'error' ? ' error' : ''); notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 3000); }
