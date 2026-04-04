@@ -96,9 +96,7 @@
         .nft-collection,
         .feed-container,
         .post-card,
-        .comments-modal,
-        .games-container,
-        .game-card {
+        .comments-modal {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -116,8 +114,7 @@
         .tab:hover,
         .tab.active,
         .nav-item:hover,
-        .nav-item.active,
-        .game-card:hover {
+        .nav-item.active {
             background: var(--hover-bg);
             border-color: var(--hover-border);
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
@@ -216,6 +213,7 @@
         .subscribe-btn,
         .unsubscribe-btn,
         .like-btn,
+        .dislike-btn,
         .settings-icon,
         .delete-chat-icon,
         .tab,
@@ -234,10 +232,7 @@
         .post-dislike,
         .post-comment,
         .post-delete,
-        .create-post-btn,
-        .game-card,
-        .game-btn,
-        .choice-btn {
+        .create-post-btn {
             filter: grayscale(0.6) brightness(0.7);
             transition: all 0.2s ease;
         }
@@ -252,6 +247,7 @@
         body.light-theme .subscribe-btn,
         body.light-theme .unsubscribe-btn,
         body.light-theme .like-btn,
+        body.light-theme .dislike-btn,
         body.light-theme .settings-icon,
         body.light-theme .delete-chat-icon,
         body.light-theme .tab,
@@ -270,10 +266,7 @@
         body.light-theme .post-dislike,
         body.light-theme .post-comment,
         body.light-theme .post-delete,
-        body.light-theme .create-post-btn,
-        body.light-theme .game-card,
-        body.light-theme .game-btn,
-        body.light-theme .choice-btn {
+        body.light-theme .create-post-btn {
             filter: grayscale(0.3) brightness(0.9);
         }
         
@@ -287,6 +280,7 @@
         .subscribe-btn:hover,
         .unsubscribe-btn:hover,
         .like-btn:hover,
+        .dislike-btn:hover,
         .settings-icon:hover,
         .delete-chat-icon:hover,
         .tab:hover,
@@ -299,10 +293,7 @@
         .post-dislike:hover,
         .post-comment:hover,
         .post-delete:hover,
-        .create-post-btn:hover,
-        .game-card:hover,
-        .game-btn:hover,
-        .choice-btn:hover {
+        .create-post-btn:hover {
             filter: grayscale(0.3) brightness(0.85);
         }
         
@@ -430,8 +421,11 @@
         .msg-actions button { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 500; filter: grayscale(0.6); }
         .msg-actions button:hover { background: #ff4444; color: white; filter: grayscale(0); }
         
-        .like-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: flex; align-items: center; gap: 4px; filter: grayscale(0.6); }
-        .like-btn.liked { color: #ff4444; filter: grayscale(0); }
+        .like-btn, .dislike-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 4px; filter: grayscale(0.6); padding: 4px 8px; border-radius: 20px; transition: 0.2s; }
+        .like-btn.liked, .dislike-btn.disliked { filter: grayscale(0); color: var(--accent); }
+        .like-btn.liked { color: #4CAF50; }
+        .dislike-btn.disliked { color: #ff6666; }
+        .like-btn:hover, .dislike-btn:hover { background: rgba(212, 175, 55, 0.2); filter: grayscale(0.2); }
         
         .media-preview { max-width: 200px; max-height: 200px; border-radius: 12px; margin-top: 4px; border: 1px solid var(--glass-border); cursor: pointer; }
         video.media-preview { max-width: 200px; max-height: 200px; }
@@ -562,6 +556,10 @@
             position: relative;
             z-index: 5;
             width: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 0.3s ease;
         }
         .post-card {
             background: var(--glass-bg);
@@ -752,123 +750,19 @@
             color: var(--text);
         }
         
-        /* === ИГРЫ === */
-        .games-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: var(--glass-bg);
-        }
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .game-card {
-            background: var(--glass-bg);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s;
-            border: 1px solid var(--glass-border);
-        }
-        .game-card:hover {
-            transform: translateY(-5px);
-        }
-        .game-card h3 {
-            color: var(--text);
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-        .game-card p {
-            color: var(--text-secondary);
-            font-size: 12px;
-        }
-        .game-play-area {
-            background: var(--glass-bg);
-            border-radius: 24px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid var(--glass-border);
-        }
-        .game-back-btn {
-            background: rgba(212, 175, 55, 0.2);
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            margin-bottom: 16px;
-            color: var(--text);
-        }
-        
-        /* Стили для игр */
-        .game-status {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--accent);
-            margin: 15px 0;
-        }
-        .game-board {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .choice-btn {
-            background: var(--accent-soft);
-            border: 1px solid var(--glass-border);
-            padding: 12px 24px;
-            margin: 5px;
-            border-radius: 30px;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text);
-        }
-        .memory-card {
-            width: 70px;
-            height: 70px;
-            background: var(--accent-soft);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            cursor: pointer;
-            transition: 0.2s;
-            color: var(--text);
-        }
-        .memory-card.flipped {
-            background: var(--accent);
-        }
-        .memory-card.matched {
-            visibility: hidden;
-            opacity: 0;
-            pointer-events: none;
-        }
-        .game-btn {
-            background: rgba(212, 175, 55, 0.2);
-            border: 1px solid var(--glass-border);
-            padding: 10px 20px;
-            border-radius: 30px;
-            margin: 10px 5px;
-            cursor: pointer;
-            color: var(--text);
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
         @media (max-width: 768px) {
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
+        }
+        .bottom-nav {
+            display: none;
+        }
+        @media (max-width: 768px) {
             .bottom-nav {
                 display: flex;
             }
-            .memory-card { width: 50px; height: 50px; font-size: 24px; }
         }
-        </style>
+    </style>
 </head>
 <body>
     <div id="app"></div>
@@ -1585,11 +1479,7 @@
                 if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
-                if (tempWallpaper) {
-                    App.users[App.currentUser].chatWallpaper = tempWallpaper;
-                    // Применяем фон глобально
-                    applyGlobalWallpaper();
-                }
+                if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
                 
                 if (pendingTheme !== currentTheme) {
                     applyTheme(pendingTheme);
@@ -1606,7 +1496,8 @@
                 saveToFirebase();
                 updateUserInterface();
                 updateSidebarUser();
-                applyGlobalWallpaper();
+                applyWallpaper();
+                applyWallpaperToFeed();
                 document.getElementById('settingsModalOverlay').remove();
                 showNotification('Настройки сохранены');
             });
@@ -1614,6 +1505,22 @@
             document.getElementById('closeSettingsBtn').addEventListener('click', () => {
                 document.getElementById('settingsModalOverlay').remove();
             });
+        }
+
+        // ========== ФОН ДЛЯ ЛЕНТЫ ==========
+        function applyWallpaperToFeed() {
+            const feedContainer = document.querySelector('.feed-container');
+            if (!feedContainer) return;
+            const wallpaper = App.users[App.currentUser]?.chatWallpaper || '';
+            if (wallpaper && wallpaper.startsWith('data:image')) {
+                feedContainer.style.backgroundImage = `url('${wallpaper}')`;
+                feedContainer.style.backgroundSize = 'cover';
+                feedContainer.style.backgroundPosition = 'center';
+                feedContainer.style.backgroundRepeat = 'no-repeat';
+            } else {
+                feedContainer.style.backgroundImage = 'none';
+                feedContainer.style.backgroundColor = 'rgba(5, 5, 5, 0.85)';
+            }
         }
 
         // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
@@ -1647,51 +1554,8 @@
         function isValidPassword(str) { return /^[A-Za-z0-9]+$/.test(str); }
         function isUserOnline(username) { const lastSeen = App.users[username]?.lastSeen; if (!lastSeen) return false; return (Date.now() - lastSeen) < 300000; }
         function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
-        function applyGlobalWallpaper() {
-            const wallpaper = App.users[App.currentUser]?.chatWallpaper || '';
-            const bgStyle = wallpaper && wallpaper.startsWith('data:image') ? `url('${wallpaper}')` : 'none';
-            const bgColor = wallpaper ? '' : (document.body.classList.contains('light-theme') ? 'rgba(255,255,255,0.95)' : 'rgba(5,5,5,0.85)');
-            
-            const chatArea = document.querySelector('.chat-area');
-            if (chatArea) {
-                if (wallpaper && wallpaper.startsWith('data:image')) {
-                    chatArea.style.backgroundImage = bgStyle;
-                    chatArea.style.backgroundSize = 'cover';
-                    chatArea.style.backgroundPosition = 'center';
-                    chatArea.style.backgroundColor = 'transparent';
-                } else {
-                    chatArea.style.backgroundImage = 'none';
-                    chatArea.style.backgroundColor = bgColor;
-                }
-            }
-            
-            const feedContainer = document.querySelector('.feed-container');
-            if (feedContainer) {
-                if (wallpaper && wallpaper.startsWith('data:image')) {
-                    feedContainer.style.backgroundImage = bgStyle;
-                    feedContainer.style.backgroundSize = 'cover';
-                    feedContainer.style.backgroundPosition = 'center';
-                    feedContainer.style.backgroundColor = 'transparent';
-                } else {
-                    feedContainer.style.backgroundImage = 'none';
-                    feedContainer.style.backgroundColor = bgColor;
-                }
-            }
-            
-            const gamesContainer = document.querySelector('.games-container');
-            if (gamesContainer) {
-                if (wallpaper && wallpaper.startsWith('data:image')) {
-                    gamesContainer.style.backgroundImage = bgStyle;
-                    gamesContainer.style.backgroundSize = 'cover';
-                    gamesContainer.style.backgroundPosition = 'center';
-                    gamesContainer.style.backgroundColor = 'transparent';
-                } else {
-                    gamesContainer.style.backgroundImage = 'none';
-                    gamesContainer.style.backgroundColor = bgColor;
-                }
-            }
-        }
-        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyGlobalWallpaper(); }
+        function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
+        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
         function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
@@ -1923,6 +1787,7 @@
             return `${count} подписчиков`;
         }
         
+        // Локальное обновление кнопки подписки в ленте
         function toggleFeedSubscription(postId, author) {
             if (author === App.currentUser) return;
             const isCurrentlySubscribed = isFollowing(App.currentUser, author);
@@ -2225,6 +2090,7 @@
             const feedContainer = document.getElementById('feedContainer');
             if (feedContainer) feedContainer.innerHTML = '';
             renderFeed();
+            applyWallpaperToFeed();
         }
 
         function renderFeed() {
@@ -2287,10 +2153,12 @@
             };
         }
 
+        // Модалка выбора чата (только личные чаты с пользователями)
         function openShareModal(postId) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) return;
             let chatList = getChatListForUser(App.currentUser);
+            // Фильтруем: оставляем только личные чаты с другими пользователями (не saved, не yolk, не каналы)
             chatList = chatList.filter(chat => {
                 if (chat === 'saved') return false;
                 if (chat === 'yolk') return false;
@@ -2304,7 +2172,7 @@
             }
             let chatOptions = '';
             chatList.forEach(chat => {
-                let displayName = chat;
+                let displayName = chat; // уже с @
                 chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
             });
             const modalHtml = `
@@ -2334,6 +2202,7 @@
             });
         }
 
+        // Отправка поста в личный чат (только между текущим пользователем и получателем, от имени автора)
         function sharePostToChat(postId, targetChat) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) {
@@ -2344,9 +2213,9 @@
             if (messageText === '' && !post.media) messageText = '(пустой пост)';
             else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
 
-            const from = post.author;
-            const to = targetChat;
-            const currentUser = App.currentUser;
+            const from = post.author;          // отправитель — автор поста
+            const to = targetChat;             // получатель (друг)
+            const currentUser = App.currentUser; // кто шарит
 
             const mediaData = post.media || null;
             const isVideo = post.isVideo || false;
@@ -2362,6 +2231,7 @@
                     sharedPost: true
                 };
 
+                // Личный чат: создаём/используем чат между currentUser и to
                 const chatId = [currentUser, to].sort().join('_');
                 if (!App.chats[chatId]) {
                     App.chats[chatId] = {
@@ -2382,6 +2252,7 @@
             }
         }
 
+        // Вспомогательные функции для ленты (лайки, дизлайки, комментарии, удаление, подписки)
         function toggleLikePost(postId) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) return;
@@ -2597,250 +2468,45 @@
                 }
             }
         }
-
-        // ========== ИГРЫ (только Мемори, Виселица, Угадай число) ==========
-        let currentGame = null;
-        let gameState = {};
         
-        // Угадай число (без отображения попыток, без награды, автоматический рестарт после победы)
-        function initGuessNumber() {
-            gameState = {
-                secret: Math.floor(Math.random() * 100) + 1,
-                guessed: false,
-                message: 'Загадано число от 1 до 100'
-            };
-            renderGame('guess');
-        }
-        
-        function makeGuess() {
-            const input = document.getElementById('guessInput');
-            const guess = parseInt(input.value);
-            if (isNaN(guess)) return;
-            if (gameState.guessed) return;
-            if (guess === gameState.secret) {
-                gameState.guessed = true;
-                gameState.message = `Поздравляю! Угадал число ${gameState.secret}!`;
-                renderGame('guess');
-                showConfetti();
-                playHappySound();
-                setTimeout(() => initGuessNumber(), 2000);
-            } else if (guess < gameState.secret) {
-                gameState.message = `Загаданное число больше`;
+        // ========== РЕАКЦИИ В КАНАЛАХ (👍 / 👎) ==========
+        window.toggleLikeChannel = function(chatPartner, messageIdx, event) {
+            event.stopPropagation();
+            if (!App.channels[chatPartner]) return;
+            const msg = App.channels[chatPartner].messages[messageIdx];
+            if (!msg) return;
+            if (!msg.likes) msg.likes = {};
+            if (!msg.dislikes) msg.dislikes = {};
+            const user = App.currentUser;
+            // Если уже лайкнут, убираем лайк
+            if (msg.likes[user]) {
+                delete msg.likes[user];
             } else {
-                gameState.message = `Загаданное число меньше`;
+                // Если был дизлайк, убираем его
+                if (msg.dislikes[user]) delete msg.dislikes[user];
+                msg.likes[user] = true;
             }
-            input.value = '';
-            renderGame('guess');
-        }
+            saveToFirebase();
+            renderMessages(chatPartner);
+        };
         
-        function resetGuessNumber() {
-            initGuessNumber();
-        }
-        
-        // Виселица (без отображения количества попыток в сообщении об ошибке)
-        const hangmanWords = ['КОТ', 'СОБАКА', 'МОЛОКО', 'КОМПЬЮТЕР', 'ТЕЛЕФОН', 'ЯБЛОКО', 'МАШИНА', 'СОЛНЦЕ'];
-        function initHangman() {
-            const word = hangmanWords[Math.floor(Math.random() * hangmanWords.length)];
-            gameState = {
-                word: word,
-                guessed: Array(word.length).fill(false),
-                attempts: 6,
-                gameOver: false,
-                message: 'Угадайте букву'
-            };
-            renderGame('hangman');
-        }
-        
-        function guessLetter() {
-            if (gameState.gameOver) return;
-            const input = document.getElementById('hangmanLetter');
-            let letter = input.value.toUpperCase();
-            if (!letter || letter.length !== 1 || !/[А-ЯA-Z]/.test(letter)) {
-                showNotification('Введите одну русскую букву', 'error');
-                return;
-            }
-            let found = false;
-            for (let i = 0; i < gameState.word.length; i++) {
-                if (gameState.word[i] === letter && !gameState.guessed[i]) {
-                    gameState.guessed[i] = true;
-                    found = true;
-                }
-            }
-            if (!found) {
-                gameState.attempts--;
-                if (gameState.attempts <= 0) {
-                    gameState.gameOver = true;
-                    gameState.message = `Вы проиграли! Слово: ${gameState.word}`;
-                    renderGame('hangman');
-                    showConfetti();
-                    playHappySound();
-                    setTimeout(() => initHangman(), 2000);
-                    return;
-                } else {
-                    gameState.message = `Буквы "${letter}" нет`;
-                }
+        window.toggleDislikeChannel = function(chatPartner, messageIdx, event) {
+            event.stopPropagation();
+            if (!App.channels[chatPartner]) return;
+            const msg = App.channels[chatPartner].messages[messageIdx];
+            if (!msg) return;
+            if (!msg.likes) msg.likes = {};
+            if (!msg.dislikes) msg.dislikes = {};
+            const user = App.currentUser;
+            if (msg.dislikes[user]) {
+                delete msg.dislikes[user];
             } else {
-                if (gameState.guessed.every(g => g === true)) {
-                    gameState.gameOver = true;
-                    gameState.message = `Поздравляю! Вы угадали слово ${gameState.word}!`;
-                    renderGame('hangman');
-                    showConfetti();
-                    playHappySound();
-                    setTimeout(() => initHangman(), 2000);
-                    return;
-                } else {
-                    gameState.message = `Есть буква "${letter}"!`;
-                }
+                if (msg.likes[user]) delete msg.likes[user];
+                msg.dislikes[user] = true;
             }
-            input.value = '';
-            renderGame('hangman');
-        }
-        
-        function resetHangman() {
-            initHangman();
-        }
-        
-        // Мемори (без отображения ходов, 10 пар карт)
-        const memoryIcons = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯']; // 10 пар
-        function initMemory() {
-            let cards = [...memoryIcons, ...memoryIcons];
-            for (let i = cards.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cards[i], cards[j]] = [cards[j], cards[i]];
-            }
-            gameState = {
-                cards: cards,
-                flipped: [],
-                matched: Array(cards.length).fill(false),
-                lock: false
-            };
-            renderGame('memory');
-        }
-        
-        function flipCard(index) {
-            if (gameState.lock) return;
-            if (gameState.matched[index]) return;
-            if (gameState.flipped.includes(index)) return;
-            if (gameState.flipped.length === 2) return;
-            gameState.flipped.push(index);
-            if (gameState.flipped.length === 2) {
-                gameState.lock = true;
-                const [i1, i2] = gameState.flipped;
-                if (gameState.cards[i1] === gameState.cards[i2]) {
-                    gameState.matched[i1] = true;
-                    gameState.matched[i2] = true;
-                    gameState.flipped = [];
-                    gameState.lock = false;
-                    if (gameState.matched.every(m => m === true)) {
-                        showConfetti();
-                        playHappySound();
-                        setTimeout(() => initMemory(), 1500);
-                    }
-                } else {
-                    setTimeout(() => {
-                        gameState.flipped = [];
-                        gameState.lock = false;
-                        renderGame('memory');
-                    }, 800);
-                }
-            }
-            renderGame('memory');
-        }
-        
-        function resetMemory() {
-            initMemory();
-        }
-        
-        function renderGame(game) {
-            const container = document.getElementById('gamesPlayArea');
-            if (!container) return;
-            if (game === 'guess') {
-                container.innerHTML = `
-                    <div class="game-play-area">
-                        <h3 style="color: var(--text);">Угадай число (1-100)</h3>
-                        <div class="game-status">${gameState.message}</div>
-                        ${!gameState.guessed ? `<input type="number" id="guessInput" placeholder="Введите число" style="background: var(--input-bg); color: var(--text); border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; margin: 10px;">` : ''}
-                        ${!gameState.guessed ? `<button class="game-btn" onclick="makeGuess()">Угадать</button>` : ''}
-                        <button class="game-btn" onclick="resetGuessNumber()">Новая игра</button>
-                    </div>
-                `;
-            } else if (game === 'hangman') {
-                let wordDisplay = '';
-                for (let i = 0; i < gameState.word.length; i++) {
-                    wordDisplay += gameState.guessed[i] ? gameState.word[i] : '_';
-                    wordDisplay += ' ';
-                }
-                container.innerHTML = `
-                    <div class="game-play-area">
-                        <h3 style="color: var(--text);">Виселица</h3>
-                        <div class="game-status">${gameState.message}</div>
-                        <div style="font-size: 28px; letter-spacing: 8px; color: var(--text);">${wordDisplay}</div>
-                        <div style="color: var(--text);">Осталось попыток: ${gameState.attempts}</div>
-                        ${!gameState.gameOver ? `<input type="text" id="hangmanLetter" maxlength="1" placeholder="Буква" style="background: var(--input-bg); color: var(--text); border: 1px solid var(--glass-border); padding: 10px; border-radius: 12px; margin: 10px;">` : ''}
-                        ${!gameState.gameOver ? `<button class="game-btn" onclick="guessLetter()">Угадать</button>` : ''}
-                        <button class="game-btn" onclick="resetHangman()">Новая игра</button>
-                    </div>
-                `;
-            } else if (game === 'memory') {
-                let cardsHtml = '<div class="game-board" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">';
-                for (let i = 0; i < gameState.cards.length; i++) {
-                    let isFlipped = gameState.flipped.includes(i) || gameState.matched[i];
-                    let content = isFlipped ? gameState.cards[i] : '?';
-                    let extraClass = gameState.matched[i] ? 'matched' : '';
-                    cardsHtml += `<div class="memory-card ${extraClass}" onclick="flipCard(${i})">${content}</div>`;
-                }
-                cardsHtml += '</div>';
-                container.innerHTML = `
-                    <div class="game-play-area">
-                        <h3 style="color: var(--text);">Мемори (найди пару)</h3>
-                        ${cardsHtml}
-                        <button class="game-btn" onclick="resetMemory()">Новая игра</button>
-                    </div>
-                `;
-            }
-        }
-        
-        function showGamesList() {
-            currentGame = null;
-            const container = document.getElementById('gamesContainer');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="games-grid">
-                    <div class="game-card" onclick="startGame('memory')">
-                        <h3>Мемори</h3>
-                        <p>Найди пары карточек</p>
-                    </div>
-                    <div class="game-card" onclick="startGame('hangman')">
-                        <h3>Виселица</h3>
-                        <p>Угадай слово по буквам</p>
-                    </div>
-                    <div class="game-card" onclick="startGame('guess')">
-                        <h3>Угадай число</h3>
-                        <p>Угадай число от 1 до 100</p>
-                    </div>
-                </div>
-                <div id="gamesPlayArea"></div>
-            `;
-        }
-        
-        function startGame(game) {
-            currentGame = game;
-            if (game === 'guess') {
-                initGuessNumber();
-            } else if (game === 'hangman') {
-                initHangman();
-            } else if (game === 'memory') {
-                initMemory();
-            }
-            const container = document.getElementById('gamesContainer');
-            if (container) {
-                container.innerHTML = `
-                    <button class="game-back-btn" onclick="showGamesList()">← Назад к играм</button>
-                    <div id="gamesPlayArea"></div>
-                `;
-                renderGame(game);
-            }
-        }
+            saveToFirebase();
+            renderMessages(chatPartner);
+        };
 
         // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { 
@@ -2858,13 +2524,12 @@
                     attachMainEvents(); 
                     if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                     else if (App.activeTab === 'feed') {
-                        initFeed();
-                    } else if (App.activeTab === 'games') {
-                        showGamesList();
+                        initFeed(); // Инициализируем ленту при переключении
                     }
                     updateChatList(); 
                     updateSidebarUser(); 
-                    applyGlobalWallpaper(); 
+                    applyWallpaper();
+                    applyWallpaperToFeed();
                 }, 100); 
             } 
         }
@@ -2938,72 +2603,42 @@
             const user = App.currentUser; 
             const userData = App.users[user] || {}; 
             const isChatsActive = App.activeTab === 'chats'; 
-            const isFeedActive = App.activeTab === 'feed';
-            const isGamesActive = App.activeTab === 'games';
-            
-            if (isChatsActive) {
-                let canWrite = true;
-                let blockReason = '';
-                if (App.activeChat && !App.channels[App.activeChat] && App.activeChat !== 'saved' && App.activeChat !== 'yolk') {
-                    if (!canUserMessage(user, App.activeChat)) {
-                        canWrite = false;
-                        blockReason = '🔒 Этому пользователю нельзя писать первым';
-                    }
-                } else if (App.channels[App.activeChat] && App.channels[App.activeChat].owner !== user) {
-                    canWrite = false;
-                    blockReason = '🔒 Это не ваш канал';
-                }
-                
-                return `
-                    <div class="main-container">
-                        <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
-                            <div class="user-profile" id="openProfileBtn">
-                                <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
-                                <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
-                            </div>
-                            <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
-                            <div class="chats-list" id="chatsList"></div>
-                        </div>
-                        <div class="chat-area">
-                            <div class="chat-header">
-                                <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : (App.channels[App.activeChat] ? formatUserNameWithStatus(App.activeChat) : formatUserNameWithStatus(App.activeChat)))}${!App.channels[App.activeChat] && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                                <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
-                            </div>
-                            <div class="messages-container" id="messageList"></div>
-                            ${App.activeChat !== 'yolk' ? (canWrite ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">${blockReason}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
-                        </div>
-                    </div>
-                    <div class="bottom-nav">
-                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
-                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
-                        <div class="nav-item ${App.activeTab === 'games' ? 'active' : ''}" data-tab="games">ИГРЫ</div>
-                    </div>
-                `;
-            } else if (isFeedActive) {
-                return `
-                    <div class="main-container">
-                        <div class="feed-container" id="feedContainer"></div>
-                        <button class="create-post-btn" id="createPostBtn">+</button>
-                    </div>
-                    <div class="bottom-nav">
-                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
-                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
-                        <div class="nav-item ${App.activeTab === 'games' ? 'active' : ''}" data-tab="games">ИГРЫ</div>
-                    </div>
-                `;
-            } else if (isGamesActive) {
-                return `
-                    <div class="main-container">
-                        <div class="games-container" id="gamesContainer"></div>
-                    </div>
-                    <div class="bottom-nav">
-                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
-                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
-                        <div class="nav-item ${App.activeTab === 'games' ? 'active' : ''}" data-tab="games">ИГРЫ</div>
-                    </div>
-                `;
+            // Определяем сообщение для заблокированного чата
+            let blockedMessage = '';
+            if (App.activeChat && !App.channels[App.activeChat] && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
+                blockedMessage = '🔒 Этому пользователю нельзя писать первым';
+            } else if (App.activeChat && App.channels[App.activeChat] && App.channels[App.activeChat].owner !== user) {
+                blockedMessage = '🔒 ЭТО НЕ ВАШ КАНАЛ';
             }
-            return '';
+            return `
+                <div class="main-container">
+                    ${isChatsActive ? `
+                    <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
+                        <div class="user-profile" id="openProfileBtn">
+                            <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
+                            <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                        </div>
+                        <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
+                        <div class="chats-list" id="chatsList"></div>
+                    </div>
+                    <div class="chat-area">
+                        <div class="chat-header">
+                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : (App.channels[App.activeChat] ? formatUserNameWithStatus(App.activeChat) : formatUserNameWithStatus(App.activeChat)))}${!App.channels[App.activeChat] && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                            <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.channels[App.activeChat] ? `<button class="${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'unsubscribe-btn' : 'subscribe-btn'}" id="subscribeBtn">${App.channels[App.activeChat]?.subscribers?.includes(user) ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !App.channels[App.activeChat] && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
+                        </div>
+                        <div class="messages-container" id="messageList"></div>
+                        ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) && !App.channels[App.activeChat] ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : (App.channels[App.activeChat] && App.channels[App.activeChat]?.owner === user ? `<div class="input-area"><input type="text" id="messageText" placeholder="ПОСТ..." autofocus><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`)) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                    </div>
+                    ` : `
+                    <div class="feed-container" id="feedContainer"></div>
+                    <button class="create-post-btn" id="createPostBtn">+</button>
+                    `}
+                </div>
+                <div class="bottom-nav">
+                    <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
+                    <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
+                </div>
+            `; 
         }
         
         function attachMainEvents() { 
@@ -3025,14 +2660,10 @@
                         if (window.innerWidth < 768) App.sidebarOpen = false;
                     } else if (tab === 'feed') {
                         App.activeTab = 'feed';
-                    } else if (tab === 'games') {
-                        App.activeTab = 'games';
                     }
                     render();
                     if (App.activeTab === 'feed') {
                         setTimeout(() => initFeed(), 50);
-                    } else if (App.activeTab === 'games') {
-                        setTimeout(() => showGamesList(), 50);
                     }
                 });
             });
@@ -3055,7 +2686,7 @@
                 let isVideoMsg = false; 
                 if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } 
                 else if (App.tempPhoto) { mediaData = App.tempPhoto; } 
-                const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg }; 
+                const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg, likes: {}, dislikes: {} }; // добавили поля для реакций
                 if (to === 'saved') { 
                     if (!App.savedMessages[from]) App.savedMessages[from] = []; 
                     App.savedMessages[from].push(message); 
@@ -3118,55 +2749,29 @@
             else canDelete = isMe; 
             let mediaHtml = ''; 
             if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
-            
-            let reactionHtml = '';
-            if (isChannel) {
-                const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
-                const dislikesCount = msg.dislikes ? Object.keys(msg.dislikes).length : 0;
-                const userLiked = msg.likes && msg.likes[currentUser];
-                const userDisliked = msg.dislikes && msg.dislikes[currentUser];
-                reactionHtml = `
-                    <div style="display: flex; gap: 12px; margin-top: 4px;">
-                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleChannelReaction('${chatPartner}', ${idx}, 'like', event)">👍 <span>${likesCount}</span></button>
-                        <button class="like-btn ${userDisliked ? 'liked' : ''}" onclick="window.toggleChannelReaction('${chatPartner}', ${idx}, 'dislike', event)">👎 <span>${dislikesCount}</span></button>
-                    </div>
-                `;
-            }
-            
+            const likesCount = msg.likes ? Object.keys(msg.likes).length : 0;
+            const dislikesCount = msg.dislikes ? Object.keys(msg.dislikes).length : 0;
+            const userLiked = msg.likes && msg.likes[currentUser];
+            const userDisliked = msg.dislikes && msg.dislikes[currentUser];
             let messageText = msg.text || ''; 
             if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2); 
             const displayName = fromUserStatusClass ? `<span class="${fromUserStatusClass}">${msg.from}</span>` : msg.from; 
             const messageClass = isMe ? 'me' : ''; 
             const fullDate = new Date(msg.time).toLocaleString();
-            return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div>${reactionHtml}${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div>`; 
-        }
-        
-        window.toggleChannelReaction = function(channelName, messageIdx, type, event) {
-            if (event) event.stopPropagation();
-            const channel = App.channels[channelName];
-            if (!channel || !channel.messages[messageIdx]) return;
-            const msg = channel.messages[messageIdx];
-            if (!msg.likes) msg.likes = {};
-            if (!msg.dislikes) msg.dislikes = {};
-            const user = App.currentUser;
-            if (type === 'like') {
-                if (msg.likes[user]) {
-                    delete msg.likes[user];
-                } else {
-                    if (msg.dislikes[user]) delete msg.dislikes[user];
-                    msg.likes[user] = true;
-                }
-            } else if (type === 'dislike') {
-                if (msg.dislikes[user]) {
-                    delete msg.dislikes[user];
-                } else {
-                    if (msg.likes[user]) delete msg.likes[user];
-                    msg.dislikes[user] = true;
-                }
+            
+            // Реакции для каналов
+            let reactionsHtml = '';
+            if (isChannel) {
+                reactionsHtml = `
+                    <div style="display: flex; gap: 12px; margin-top: 6px;">
+                        <button class="like-btn ${userLiked ? 'liked' : ''}" onclick="window.toggleLikeChannel('${chatPartner}', ${idx}, event)">👍 <span>${likesCount}</span></button>
+                        <button class="dislike-btn ${userDisliked ? 'disliked' : ''}" onclick="window.toggleDislikeChannel('${chatPartner}', ${idx}, event)">👎 <span>${dislikesCount}</span></button>
+                    </div>
+                `;
             }
-            saveToFirebase();
-            renderMessages(channelName);
-        };
+            
+            return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div>${reactionsHtml}<div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`; 
+        }
         
         function updateChatList() { 
             const chatsContainer = document.getElementById('chatsList'); 
@@ -3206,7 +2811,7 @@
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); Object.keys(App.channels || {}).forEach(channel => { if (App.channels[channel].subscribers?.includes(user)) set.add(channel); }); return Array.from(set); }
         function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } if (App.channels[chatPartner]) { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); setupRealtimeListener(chatId, chatPartner); renderMessages(chatPartner); setupUserListener(chatPartner); updateChatHeaderStatus(chatPartner); }
         function setupRealtimeListener(chatId, chatPartner) { const chatRef = database.ref('chats/' + chatId); chatRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { if (!App.chats[chatId]) App.chats[chatId] = data; else App.chats[chatId].messages = data.messages || []; if (App.activeChat === chatPartner) { renderMessages(chatPartner); } } }); }
-        function setupUserListener(username) { if (App.userListeners[username]) return; const userRef = database.ref('users/' + username); userRef.on('value', (snapshot) => { const userData = snapshot.val(); if (userData) { const oldStatus = App.users[username]?.status; App.users[username] = { ...App.users[username], ...userData }; if (username === App.currentUser) { updateUserInterface(); updateSidebarUser(); applyGlobalWallpaper(); } if (oldStatus !== userData.status && App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) { renderMessages(App.activeChat); updateChatList(); } if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) { updateChatHeaderStatus(username); } } }); App.userListeners[username] = true; }
+        function setupUserListener(username) { if (App.userListeners[username]) return; const userRef = database.ref('users/' + username); userRef.on('value', (snapshot) => { const userData = snapshot.val(); if (userData) { const oldStatus = App.users[username]?.status; App.users[username] = { ...App.users[username], ...userData }; if (username === App.currentUser) { updateUserInterface(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); } if (oldStatus !== userData.status && App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) { renderMessages(App.activeChat); updateChatList(); } if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) { updateChatHeaderStatus(username); } } }); App.userListeners[username] = true; }
         function updateLastSeen(username) { if (App.users[username] && username === App.currentUser) { App.users[username].lastSeen = Date.now(); database.ref('users/' + username + '/lastSeen').set(Date.now()); } }
         function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
         function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
