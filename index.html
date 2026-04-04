@@ -850,7 +850,7 @@
             App.privacySettings[App.currentUser] = App.privacySettings[App.currentUser] || {};
             App.privacySettings[App.currentUser].blockNewMessages = value;
             savePrivacySettings();
-            showNotification(value ? '✅ Включено: новые пользователи не могут писать первыми' : '❌ Выключено: все могут писать вам');
+            showNotification(value ? 'Включено: новые пользователи не могут писать первыми' : 'Выключено: все могут писать вам');
         }
         
         function savePrivacySettings() {
@@ -2606,9 +2606,9 @@
             // Определяем сообщение для заблокированного чата
             let blockedMessage = '';
             if (App.activeChat && !App.channels[App.activeChat] && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
-                blockedMessage = '🔒 Этому пользователю нельзя писать первым';
+                blockedMessage = 'Этому пользователю нельзя писать первым';
             } else if (App.activeChat && App.channels[App.activeChat] && App.channels[App.activeChat].owner !== user) {
-                blockedMessage = '🔒 ЭТО НЕ ВАШ КАНАЛ';
+                blockedMessage = 'ЭТО НЕ ВАШ КАНАЛ';
             }
             return `
                 <div class="main-container">
