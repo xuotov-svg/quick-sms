@@ -1333,7 +1333,7 @@
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
                     <div class="profile-modal">
-                        <h3>⚙️ НАСТРОЙКИ</h3>
+                        <h3>НАСТРОЙКИ</h3>
                         <div class="profile-input-group">
                             <label>ПАРОЛЬ</label>
                             <div class="password-wrapper">
@@ -1370,7 +1370,7 @@
                             </div>
                         </div>
                         <div class="profile-input-group">
-                            <label>🔒 КОНФИДЕНЦИАЛЬНОСТЬ</label>
+                            <label>КОНФИДЕНЦИАЛЬНОСТЬ</label>
                             <div class="toggle-switch ${pendingPrivacy ? 'active' : ''}" id="privacyToggle">
                                 <div class="toggle-checkbox"></div>
                                 <span class="toggle-label">${pendingPrivacy ? 'Незнакомцы не могут писать первыми' : 'Все могут писать первыми'}</span>
@@ -1780,7 +1780,7 @@
             App.users[currentUser].following.push(targetUser);
             App.users[targetUser].followers.push(currentUser);
             saveToFirebase();
-            showNotification(`✅ Вы подписались на ${targetUser}`);
+            showNotification(`Вы подписались на ${targetUser}`);
             return true;
         }
         
@@ -1792,7 +1792,7 @@
             const idxFollower = App.users[targetUser].followers.indexOf(currentUser);
             if (idxFollower !== -1) App.users[targetUser].followers.splice(idxFollower, 1);
             saveToFirebase();
-            showNotification(`❌ Вы отписались от ${targetUser}`);
+            showNotification(`Вы отписались от ${targetUser}`);
             return true;
         }
         
@@ -2226,7 +2226,7 @@
             }
             let messageText = post.text || '';
             if (messageText === '' && !post.media) messageText = '(пустой пост)';
-            else if (messageText === '' && post.media) messageText = '📷 Поделился(ась) медиа';
+            else if (messageText === '' && post.media) messageText = 'Поделился(ась) медиа';
 
             const from = post.author;          // отправитель — автор поста
             const to = targetChat;             // получатель (друг)
@@ -2257,7 +2257,7 @@
                 }
                 App.chats[chatId].messages.push(message);
                 saveToFirebase();
-                showNotification(`✅ Пост отправлен пользователю ${to} от имени ${from}`);
+                showNotification(`Пост отправлен пользователю ${to} от имени ${from}`);
 
                 if (App.activeChat === to) renderMessages(to);
                 updateChatList();
@@ -2805,7 +2805,7 @@
         function renderChatItem(u, active, currentUser) { 
             let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u); 
             let avatarHtml = '<div class="chat-avatar">📁</div>'; 
-            if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🥚</div>'; 
+            if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🐣</div>'; 
             else if (u !== 'saved') { 
                 if (App.channels[u]) { 
                     const channelAvatar = App.channels[u]?.avatar; 
