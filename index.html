@@ -120,20 +120,105 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        .chat-area {
-            position: relative;
+        /* ===== ОБОИ В ЗАВИСИМОСТИ ОТ ТЕМЫ ===== */
+        /* Тёмная тема (по умолчанию) */
+        body:not(.light-theme) .chat-area,
+        body:not(.light-theme) .feed-container {
+            background-image: url('https://i.imgur.com/CUAFdcS.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: background-image 0.3s ease;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: rgba(5, 5, 5, 0.85);
+            background-attachment: fixed;
+        }
+
+        /* Светлая тема */
+        body.light-theme .chat-area,
+        body.light-theme .feed-container {
+            background-image: url('https://i.imgur.com/N3Aq8nq.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        /* Убираем старый фон */
+        .chat-area, .feed-container {
+            background-color: transparent !important;
+            position: relative;
+        }
+
+        /* Затемнение для читаемости текста */
+        body:not(.light-theme) .chat-area::before,
+        body:not(.light-theme) .feed-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body.light-theme .chat-area::before,
+        body.light-theme .feed-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Чтобы сообщения были поверх затемнения */
+        .messages-container,
+        .feed-container > * {
+            position: relative;
+            z-index: 1;
         }
         
-        body.light-theme .chat-area {
-            background-color: rgba(255, 255, 255, 0.95);
+        /* ===== МОНЕТКА YC (ваша картинка) ===== */
+        .yc-currency {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background-image: url('https://i.imgur.com/wpzqwSb.png');
+            background-size: cover;
+            background-position: center;
+            margin-right: 4px;
+            position: relative;
+        }
+        .yc-currency::after {
+            content: "";
+            display: none;
+        }
+
+        /* Большая монетка в профиле */
+        .star-balance-large .yc-currency {
+            width: 28px;
+            height: 28px;
+        }
+
+        /* ===== ГАЛОЧКА VERIFIED (ваша картинка) ===== */
+        .verified-icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-image: url('https://i.imgur.com/i6.png');
+            background-size: cover;
+            background-position: center;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+        .verified-icon::before {
+            content: "";
+            display: none;
         }
         
         .messages-container {
@@ -184,23 +269,6 @@
         .message-text { color: var(--text); }
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
-        
-        .verified-icon { 
-            display: inline-block; 
-            width: 18px; 
-            height: 18px; 
-            background: #389df2; 
-            border-radius: 50%; 
-            color: white; 
-            text-align: center; 
-            line-height: 18px; 
-            font-size: 12px; 
-            margin-left: 4px;
-            font-weight: bold;
-        }
-        .verified-icon::before {
-            content: "✓";
-        }
         
         /* ========== ВСЕ КНОПКИ С ЭМОДЗИ - ТЕМНО-СЕРЫЕ ========== */
         .icon-btn,
@@ -304,25 +372,6 @@
         .nav-item.active {
             filter: grayscale(0) brightness(1);
             color: var(--accent);
-        }
-        
-        /* Монета YC - чисто жёлтая с белыми буквами */
-        .yc-currency {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            background: #d4af37;
-            border-radius: 50%;
-            margin-right: 2px;
-            position: relative;
-        }
-        .yc-currency::after {
-            content: "YC";
-            font-size: 8px;
-            font-weight: bold;
-            color: #ffffff;
         }
         
         .star-balance, .star-balance-large { display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
@@ -470,7 +519,12 @@
         .profile-input-group input, .profile-input-group textarea, .profile-password-row { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
         .profile-input-group input:focus, .profile-input-group textarea:focus { border-color: var(--accent); }
         
-        .wallpaper-preview { width: 100%; height: 150px; background-size: cover; background-position: center; border-radius: 12px; border: 1px solid var(--glass-border); cursor: pointer; margin-bottom: 16px; }
+        /* Скрываем выбор обоев в настройках */
+        .wallpaper-preview,
+        #settingsWallpaper,
+        .profile-input-group:has(#settingsWallpaper) {
+            display: none !important;
+        }
         
         .password-wrapper { position: relative; display: flex; align-items: center; }
         .password-wrapper input { flex: 1; padding-right: 40px; }
@@ -571,10 +625,6 @@
             position: relative;
             z-index: 5;
             width: 100%;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            transition: background-image 0.3s ease;
         }
         .post-card {
             background: var(--glass-bg);
