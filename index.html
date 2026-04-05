@@ -120,25 +120,19 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        /* ===== ОБОИ – СПЛОШНОЙ ЦВЕТ (БЕЗ КАРТИНОК) ===== */
+        /* ===== ОБОИ – СПЛОШНОЙ ЦВЕТ ===== */
         .chat-area, .feed-container {
             background-color: transparent !important;
             position: relative;
         }
-        
-        /* Тёмная тема – чёрный фон */
         body:not(.light-theme) .chat-area,
         body:not(.light-theme) .feed-container {
             background-color: #0a0a0a !important;
         }
-        
-        /* Светлая тема – белый фон */
         body.light-theme .chat-area,
         body.light-theme .feed-container {
             background-color: #ffffff !important;
         }
-        
-        /* Убираем старые псевдоэлементы с затемнением (они не нужны) */
         .chat-area::before,
         .feed-container::before {
             display: none;
@@ -161,14 +155,12 @@
             content: "";
             display: none;
         }
-
-        /* Большая монетка в профиле */
         .star-balance-large .yc-currency {
             width: 28px;
             height: 28px;
         }
 
-        /* ===== ГАЛОЧКА VERIFIED (синий кружок с белой галочкой) ===== */
+        /* ===== ГАЛОЧКА VERIFIED (синий кружок) ===== */
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -235,7 +227,7 @@
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
         
-        /* ========== ВСЕ КНОПКИ И ИКОНКИ (КРОМЕ ПОДАРКОВ-ЭМОДЗИ) - ТЕМНО-СЕРЫЕ ========== */
+        /* ========== ВСЕ КНОПКИ (СЕРЫЕ) ========== */
         .icon-btn,
         .send-btn,
         .file-label,
@@ -269,18 +261,6 @@
             transition: all 0.2s ease;
         }
         
-        /* Подарки-эмодзи (gift-item) – без фильтра, жёлтые */
-        .gift-item {
-            filter: none !important;
-            transition: all 0.2s ease;
-        }
-        
-        /* Для светлой темы тоже убираем фильтр с подарков */
-        body.light-theme .gift-item {
-            filter: none !important;
-        }
-        
-        /* Остальные элементы при светлой теме – с лёгким фильтром */
         body.light-theme .icon-btn,
         body.light-theme .send-btn,
         body.light-theme .file-label,
@@ -313,11 +293,21 @@
             filter: grayscale(0.3) brightness(0.9);
         }
         
-        /* При наведении на подарок – лёгкое увеличение и подсветка, но без серости */
+        /* ===== ЭМОДЗИ-ПОДАРКИ – ПОЛНОСТЬЮ ЖЁЛТЫЕ ===== */
+        .gift-item {
+            filter: brightness(0) saturate(100%) invert(0.8) sepia(1) hue-rotate(30deg) brightness(1.2) !important;
+            transition: all 0.2s ease;
+            font-size: 28px; /* увеличим размер для наглядности */
+        }
+        /* При наведении – лёгкое увеличение, но цвет остаётся жёлтым */
         .gift-item:hover {
-            background: rgba(212, 175, 55, 0.3);
-            transform: scale(1.05);
-            filter: none !important;
+            transform: scale(1.1);
+            filter: brightness(0) saturate(100%) invert(0.8) sepia(1) hue-rotate(30deg) brightness(1.3) !important;
+        }
+        
+        /* Для светлой темы то же самое */
+        body.light-theme .gift-item {
+            filter: brightness(0) saturate(100%) invert(0.8) sepia(1) hue-rotate(30deg) brightness(1.2) !important;
         }
         
         /* Остальные hover-эффекты */
@@ -356,6 +346,7 @@
             color: var(--accent);
         }
         
+        /* Остальные стили без изменений (сохраняем всё остальное как было) */
         .star-balance, .star-balance-large { display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
         .star-balance-large { font-size: 24px; background: var(--glass-bg); padding: 12px; border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); backdrop-filter: blur(8px); }
         
@@ -514,10 +505,9 @@
         
         .gifts-collection, .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
         .gift-item, .nft-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border); min-width: 60px; text-align: center; cursor: pointer; transition: all 0.1s ease; color: #6b7280; }
-        .nft-item { font-size: 0; padding: 4px; width: 64px; height: 64px; filter: grayscale(0.6) brightness(0.7); } /* nft-items оставляем серыми */
+        .nft-item { font-size: 0; padding: 4px; width: 64px; height: 64px; filter: grayscale(0.6) brightness(0.7); }
         .nft-item canvas, .nft-item img { width: 100%; height: 100%; image-rendering: crisp-edges; }
         .gift-item:hover, .nft-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
-        .gift-item:hover { filter: none !important; }
         .nft-item:hover { filter: grayscale(0.3) brightness(0.85); }
         
         .shop-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
