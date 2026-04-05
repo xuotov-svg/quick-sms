@@ -168,7 +168,7 @@
             height: 28px;
         }
 
-        /* ===== ГАЛОЧКА VERIFIED (синий кружок с белой галочкой, как было раньше) ===== */
+        /* ===== ГАЛОЧКА VERIFIED (синий кружок с белой галочкой) ===== */
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -235,7 +235,7 @@
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
         
-        /* ========== ВСЕ КНОПКИ С ЭМОДЗИ - ТЕМНО-СЕРЫЕ ========== */
+        /* ========== ВСЕ КНОПКИ И ИКОНКИ (КРОМЕ ПОДАРКОВ-ЭМОДЗИ) - ТЕМНО-СЕРЫЕ ========== */
         .icon-btn,
         .send-btn,
         .file-label,
@@ -250,7 +250,6 @@
         .settings-icon,
         .delete-chat-icon,
         .tab,
-        .gift-item,
         .nft-item,
         .msg-actions button,
         .back-btn,
@@ -270,6 +269,18 @@
             transition: all 0.2s ease;
         }
         
+        /* Подарки-эмодзи (gift-item) – без фильтра, жёлтые */
+        .gift-item {
+            filter: none !important;
+            transition: all 0.2s ease;
+        }
+        
+        /* Для светлой темы тоже убираем фильтр с подарков */
+        body.light-theme .gift-item {
+            filter: none !important;
+        }
+        
+        /* Остальные элементы при светлой теме – с лёгким фильтром */
         body.light-theme .icon-btn,
         body.light-theme .send-btn,
         body.light-theme .file-label,
@@ -284,7 +295,6 @@
         body.light-theme .settings-icon,
         body.light-theme .delete-chat-icon,
         body.light-theme .tab,
-        body.light-theme .gift-item,
         body.light-theme .nft-item,
         body.light-theme .msg-actions button,
         body.light-theme .back-btn,
@@ -303,6 +313,14 @@
             filter: grayscale(0.3) brightness(0.9);
         }
         
+        /* При наведении на подарок – лёгкое увеличение и подсветка, но без серости */
+        .gift-item:hover {
+            background: rgba(212, 175, 55, 0.3);
+            transform: scale(1.05);
+            filter: none !important;
+        }
+        
+        /* Остальные hover-эффекты */
         .icon-btn:hover,
         .send-btn:hover,
         .file-label:hover,
@@ -317,7 +335,6 @@
         .settings-icon:hover,
         .delete-chat-icon:hover,
         .tab:hover,
-        .gift-item:hover,
         .nft-item:hover,
         .msg-actions button:hover,
         .shop-item button:hover,
@@ -496,10 +513,12 @@
         .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; filter: grayscale(0.6); }
         
         .gifts-collection, .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
-        .gift-item, .nft-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border); min-width: 60px; text-align: center; cursor: pointer; transition: all 0.1s ease; color: #6b7280; filter: grayscale(0.6); }
-        .nft-item { font-size: 0; padding: 4px; width: 64px; height: 64px; }
+        .gift-item, .nft-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border); min-width: 60px; text-align: center; cursor: pointer; transition: all 0.1s ease; color: #6b7280; }
+        .nft-item { font-size: 0; padding: 4px; width: 64px; height: 64px; filter: grayscale(0.6) brightness(0.7); } /* nft-items оставляем серыми */
         .nft-item canvas, .nft-item img { width: 100%; height: 100%; image-rendering: crisp-edges; }
-        .gift-item:hover, .nft-item:hover { background: rgba(212, 175, 55, 0.3); filter: grayscale(0.3); transform: scale(1.05); }
+        .gift-item:hover, .nft-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
+        .gift-item:hover { filter: none !important; }
+        .nft-item:hover { filter: grayscale(0.3) brightness(0.85); }
         
         .shop-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
         .shop-section h4 { color: var(--text); margin-bottom: 12px; }
