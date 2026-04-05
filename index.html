@@ -801,6 +801,63 @@
                 display: flex;
             }
         }
+
+        /* ===== ПРИНУДИТЕЛЬНОЕ ЗАКРАШИВАНИЕ ВСЕХ ЭМОДЗИ-ПОДАРКОВ ===== */
+/* Магазин и донат */
+.shop-item,
+.donate-item,
+.gift-donate-item,
+.status-donate-item {
+    filter: brightness(0) saturate(100%) invert(83%) sepia(57%) saturate(5400%) hue-rotate(2deg) brightness(105%) contrast(101%);
+}
+
+/* Отменяем фильтр для текста и кнопок, чтобы они остались читаемыми */
+.shop-item *:not(button),
+.donate-item *:not(button),
+.gift-donate-item *:not(button),
+.status-donate-item *:not(button) {
+    filter: brightness(0) saturate(100%) invert(83%) sepia(57%) saturate(5400%) hue-rotate(2deg) brightness(105%) contrast(101%);
+}
+
+/* Возвращаем нормальный цвет кнопкам и их тексту */
+.shop-item button,
+.donate-item button,
+.gift-donate-item button,
+.status-donate-item button,
+.shop-item button *,
+.donate-item button *,
+.gift-donate-item button *,
+.status-donate-item button * {
+    filter: none !important;
+}
+
+/* Для меню выбора подарка (gift-modal) */
+.gift-item,
+#giftModalOverlay .gift-item,
+#giftModalOverlay .gift-item * {
+    filter: brightness(0) saturate(100%) invert(83%) sepia(57%) saturate(5400%) hue-rotate(2deg) brightness(105%) contrast(101%);
+}
+
+/* Возвращаем нормальный цвет для NFT и кнопок внутри модалки */
+#giftModalOverlay .nft-item,
+#giftModalOverlay .nft-item *,
+#giftModalOverlay button,
+#giftModalOverlay button * {
+    filter: none !important;
+}
+
+/* Для сообщений о подарке в чате */
+.gift-message .message-text,
+.gift-message .message-text * {
+    filter: brightness(0) saturate(100%) invert(83%) sepia(57%) saturate(5400%) hue-rotate(2deg) brightness(105%) contrast(101%);
+}
+
+/* Возвращаем нормальный цвет для текста "ПОДАРОК ОТ" */
+.gift-message .message-text strong,
+.gift-message .message-text strong * {
+    filter: none !important;
+    color: var(--text) !important;
+}
 </style>
 </head>
 <body>
