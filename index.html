@@ -120,65 +120,28 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        /* ===== ОБОИ В ЗАВИСИМОСТИ ОТ ТЕМЫ ===== */
-        /* Тёмная тема (по умолчанию) */
-        body:not(.light-theme) .chat-area,
-        body:not(.light-theme) .feed-container {
-            background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/CUAFdcS-go-aBgQw67mAag-9uMIUirtg2cF_iM6Y31cqqbDAQtFTmNG3iTRFgtqQr0SRQgKDUfdadP1G3of_Olt1E.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-
-        /* Светлая тема */
-        body.light-theme .chat-area,
-        body.light-theme .feed-container {
-            background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/N3Aq8nqPejn22_ZgpSjrGWEOzKry2p451riYRIXHKnvvpeLrti5bP1LZqC1PU_IqB-usF8kWSbpwIGmQjYP5OU80.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-
-        /* Убираем старый фон */
+        /* ===== ОБОИ – СПЛОШНОЙ ЦВЕТ (БЕЗ КАРТИНОК) ===== */
         .chat-area, .feed-container {
             background-color: transparent !important;
             position: relative;
         }
-
-        /* Затемнение для читаемости текста */
-        body:not(.light-theme) .chat-area::before,
-        body:not(.light-theme) .feed-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-            z-index: 0;
+        
+        /* Тёмная тема – чёрный фон */
+        body:not(.light-theme) .chat-area,
+        body:not(.light-theme) .feed-container {
+            background-color: #0a0a0a !important;
         }
-
-        body.light-theme .chat-area::before,
-        body.light-theme .feed-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.4);
-            pointer-events: none;
-            z-index: 0;
+        
+        /* Светлая тема – белый фон */
+        body.light-theme .chat-area,
+        body.light-theme .feed-container {
+            background-color: #ffffff !important;
         }
-
-        /* Чтобы сообщения были поверх затемнения */
-        .messages-container,
-        .feed-container > * {
-            position: relative;
-            z-index: 1;
+        
+        /* Убираем старые псевдоэлементы с затемнением (они не нужны) */
+        .chat-area::before,
+        .feed-container::before {
+            display: none;
         }
         
         /* ===== МОНЕТКА YC (ваша картинка) ===== */
@@ -205,20 +168,22 @@
             height: 28px;
         }
 
-        /* ===== ГАЛОЧКА VERIFIED (ваша картинка) ===== */
+        /* ===== ГАЛОЧКА VERIFIED (синий кружок с белой галочкой, как было раньше) ===== */
         .verified-icon {
             display: inline-block;
             width: 18px;
             height: 18px;
-            background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/i6.png');
-            background-size: cover;
-            background-position: center;
+            background: #389df2;
+            border-radius: 50%;
+            color: white;
+            text-align: center;
+            line-height: 18px;
+            font-size: 12px;
             margin-left: 4px;
-            vertical-align: middle;
+            font-weight: bold;
         }
         .verified-icon::before {
-            content: "";
-            display: none;
+            content: "✓";
         }
         
         .messages-container {
