@@ -818,12 +818,18 @@
         }
         
         function formatUserNameWithStatus(username) {
-            const status = getUserStatus(username);
-            if (status) {
-                return `<span class="${status.class}">${username}</span>`;
-            }
-            return username;
-        }
+    const status = getUserStatus(username);
+    if (status) {
+        // Разбиваем имя на символы и оборачиваем каждый в span с задержкой
+        const chars = username.split('');
+        const charsHtml = chars.map((char, index) => {
+            const delay = index * 0.08; // задержка 0.08 секунды на каждый следующий символ
+            return `<span class="albumen-char" style="animation-delay: ${delay}s;">${char}</span>`;
+        }).join('');
+        return `<span class="${status.class}">${charsHtml}</span>`;
+    }
+    return username;
+}
 
         function applyTheme(theme) {
             const body = document.body;
@@ -1857,7 +1863,7 @@
                         adminBtn.style.background = '#ff9800';
                         adminBtn.style.color = '#000000';
                         adminBtn.style.border = '1px solid rgba(255,255,255,0.2)';
-                        adminBtn.textContent = '👑 АДМИН-ПАНЕЛЬ';
+                        adminBtn.textContent = 'АДМИН-ПАНЕЛЬ';
                         adminBtn.onclick = () => {
                             document.getElementById('profileModalOverlay')?.remove();
                             openAdminPanel();
