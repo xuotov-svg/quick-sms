@@ -201,15 +201,22 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes goldGlow { 0% { text-shadow: 0 0 0 #ffd700; } 50% { text-shadow: 0 0 5px #ffd700; } 100% { text-shadow: 0 0 0 #ffd700; } }
-        @keyframes rubyGlow { 0% { text-shadow: 0 0 0 #ff4444; } 50% { text-shadow: 0 0 5px #ff4444; } 100% { text-shadow: 0 0 0 #ff4444; } }
-        @keyframes emeraldGlow { 0% { text-shadow: 0 0 0 #44ff44; } 50% { text-shadow: 0 0 5px #44ff44; } 100% { text-shadow: 0 0 0 #44ff44; } }
-        @keyframes amethystGlow { 0% { text-shadow: 0 0 0 #aa66ff; } 50% { text-shadow: 0 0 5px #aa66ff; } 100% { text-shadow: 0 0 0 #aa66ff; } }
         
-        .gold-name { background: linear-gradient(135deg, #ffd700, #ffb347); background-clip: text; -webkit-background-clip: text; color: transparent; animation: goldGlow 1.5s infinite; font-weight: bold; }
-        .ruby-name { background: linear-gradient(135deg, #ff4444, #ff6666); background-clip: text; -webkit-background-clip: text; color: transparent; animation: rubyGlow 1.5s infinite; font-weight: bold; }
-        .emerald-name { background: linear-gradient(135deg, #44ff44, #66ff66); background-clip: text; -webkit-background-clip: text; color: transparent; animation: emeraldGlow 1.5s infinite; font-weight: bold; }
-        .amethyst-name { background: linear-gradient(135deg, #aa66ff, #cc88ff); background-clip: text; -webkit-background-clip: text; color: transparent; animation: amethystGlow 1.5s infinite; font-weight: bold; }
+        /* ALBUMEN STATUS ANIMATION - белый с переливом в голубой */
+        @keyframes albumenGlow {
+            0% { text-shadow: 0 0 0 #ffffff; color: #ffffff; }
+            50% { text-shadow: 0 0 5px #88ccff; color: #aaddff; }
+            100% { text-shadow: 0 0 0 #ffffff; color: #ffffff; }
+        }
+        
+        .albumen-name {
+            background: linear-gradient(120deg, #ffffff, #88ccff, #ffffff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: albumenGlow 2s ease-in-out infinite;
+            font-weight: bold;
+        }
         
         .message-text { color: var(--text); }
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
@@ -383,7 +390,7 @@
         .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
         .username-display { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
         .age-badge { display: inline-block; margin-left: 5px; color: var(--text-secondary); font-size: 12px; }
-        .star-balance { display: flex; align-items: center; gap: 4px; color: var(--text); font-weight: 600; margin-top: 4px; }
+        /* Убрали отображение валюты в сайдбаре */
         
         .search-add { padding: 12px; border-bottom: 1px solid var(--glass-border); display: flex; gap: 8px; background: var(--glass-bg); }
         .search-add input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 15px; color: var(--text); outline: none; }
@@ -455,6 +462,24 @@
         .profile-input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
         .profile-input-group input, .profile-input-group textarea, .profile-password-row { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
         .profile-input-group input:focus, .profile-input-group textarea:focus { border-color: var(--accent); }
+        
+        /* Стили для кнопки изменения аватара/баннера без текста о файле */
+        .change-file-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 10px 14px;
+            border-radius: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .change-file-btn:hover {
+            background: rgba(212, 175, 55, 0.3);
+            filter: grayscale(0.2);
+        }
         
         .wallpaper-preview,
         #settingsWallpaper,
@@ -754,20 +779,13 @@
         const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null, donationRequests: {} };
         App.systemBots = [];
         
-        const STATUS_TYPES = {
-            GOLD: { name: 'GOLD', class: 'gold-name', messageClass: '', color: '#ffd700' },
-            RUBY: { name: 'RUBY', class: 'ruby-name', messageClass: '', color: '#ff4444' },
-            EMERALD: { name: 'EMERALD', class: 'emerald-name', messageClass: '', color: '#44ff44' },
-            AMETHYST: { name: 'AMETHYST', class: 'amethyst-name', messageClass: '', color: '#aa66ff' }
-        };
+        // Только один статус - ALBUMEN
+        const STATUS_ALBUMEN = { name: 'ALBUMEN', class: 'albumen-name', messageClass: '', color: '#88ccff' };
         
         function getUserStatus(username) {
             const user = App.users[username];
             if (!user) return null;
-            if (user.status === 'RUBY') return STATUS_TYPES.RUBY;
-            if (user.status === 'EMERALD') return STATUS_TYPES.EMERALD;
-            if (user.status === 'AMETHYST') return STATUS_TYPES.AMETHYST;
-            if (user.status === 'GOLD') return STATUS_TYPES.GOLD;
+            if (user.status === 'ALBUMEN') return STATUS_ALBUMEN;
             return null;
         }
         
@@ -819,7 +837,7 @@
             App.privacySettings[App.currentUser] = App.privacySettings[App.currentUser] || {};
             App.privacySettings[App.currentUser].blockNewMessages = value;
             savePrivacySettings();
-            showNotification(value ? 'Включено: новые пользователи не могут писать первыми' : 'Выключено: все могут писать вам');
+            showNotification(value ? 'Включено: новые пользователи не могут писать первыми' : 'Выключено: все могут писать первыми');
         }
         
         function savePrivacySettings() {
@@ -1129,7 +1147,7 @@
         
         function openAdminPanel() {
             const usersList = Object.keys(App.users).filter(u => !App.systemBots.includes(u));
-            const statusList = ['GOLD', 'RUBY', 'EMERALD', 'AMETHYST'];
+            const statusList = ['ALBUMEN']; // только один статус
             
             const modalHtml = `
                 <div class="modal-overlay" id="adminModalOverlay">
@@ -1148,19 +1166,13 @@
                                 <label>ТИП ПРЕДМЕТА</label>
                                 <select id="adminItemType">
                                     <option value="yc">YC (валюта)</option>
-                                    <option value="status">СТАТУС</option>
+                                    <option value="status">СТАТУС ALBUMEN</option>
                                     <option value="verified">VERIFIED СТАТУС</option>
                                 </select>
                             </div>
                             <div id="adminYcAmount" class="input-group">
                                 <label>КОЛИЧЕСТВО YC</label>
                                 <input type="number" id="adminYcValue" value="100" min="1">
-                            </div>
-                            <div id="adminStatusSelect" class="input-group hidden">
-                                <label>ВЫБЕРИТЕ СТАТУС</label>
-                                <select id="adminStatusValue">
-                                    ${statusList.map(s => `<option value="${s}">${s}</option>`).join('')}
-                                </select>
                             </div>
                             <button class="profile-btn" id="adminGiveBtn">✅ ВЫДАТЬ</button>
                         </div>
@@ -1174,13 +1186,12 @@
             
             const itemType = document.getElementById('adminItemType');
             const ycDiv = document.getElementById('adminYcAmount');
-            const statusDiv = document.getElementById('adminStatusSelect');
             
             itemType.addEventListener('change', () => {
-                ycDiv.classList.add('hidden');
-                statusDiv.classList.add('hidden');
+                ycDiv.classList.remove('hidden');
                 if (itemType.value === 'yc') ycDiv.classList.remove('hidden');
-                else if (itemType.value === 'status') statusDiv.classList.remove('hidden');
+                else if (itemType.value === 'status') ycDiv.classList.add('hidden');
+                else if (itemType.value === 'verified') ycDiv.classList.add('hidden');
             });
             
             document.getElementById('adminGiveBtn').addEventListener('click', () => {
@@ -1207,9 +1218,8 @@
                     showNotification(`✅ Выдано ${amount} YC пользователю ${targetUser}`);
                 }
                 else if (type === 'status') {
-                    const status = document.getElementById('adminStatusValue').value;
-                    App.users[targetUser].status = status;
-                    showNotification(`✨ СТАТУС ${status} выдан пользователю ${targetUser}! ✨`);
+                    App.users[targetUser].status = 'ALBUMEN';
+                    showNotification(`✨ СТАТУС ALBUMEN выдан пользователю ${targetUser}! ✨`);
                     updateUserInterface();
                     if (App.activeChat && App.activeChat !== 'saved' && !App.channels[App.activeChat]) renderMessages(App.activeChat);
                     updateChatList();
@@ -1263,11 +1273,13 @@
                         </div>
                         <div class="profile-input-group">
                             <label>АВАТАР</label>
-                            <input type="file" id="settingsAvatar" accept="image/*">
+                            <button class="change-file-btn" id="changeAvatarBtn">ИЗМЕНИТЬ</button>
+                            <input type="file" id="settingsAvatar" accept="image/*" style="display:none;">
                         </div>
                         <div class="profile-input-group">
                             <label>БАННЕР</label>
-                            <input type="file" id="settingsBanner" accept="image/*">
+                            <button class="change-file-btn" id="changeBannerBtn">ИЗМЕНИТЬ</button>
+                            <input type="file" id="settingsBanner" accept="image/*" style="display:none;">
                         </div>
                         <div class="profile-input-group">
                             <label>ФОН ЧАТА</label>
@@ -1319,6 +1331,9 @@
             
             let tempAvatar = null, tempBanner = null, tempWallpaper = null;
             
+            document.getElementById('changeAvatarBtn').addEventListener('click', () => {
+                document.getElementById('settingsAvatar').click();
+            });
             document.getElementById('settingsAvatar').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1326,11 +1341,15 @@
                 reader.onload = (ev) => {
                     compressImage(ev.target.result, 200, 200, 0.7, (compressed) => {
                         tempAvatar = compressed;
+                        showNotification('Аватар выбран');
                     });
                 };
                 reader.readAsDataURL(file);
             });
             
+            document.getElementById('changeBannerBtn').addEventListener('click', () => {
+                document.getElementById('settingsBanner').click();
+            });
             document.getElementById('settingsBanner').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -1338,6 +1357,7 @@
                 reader.onload = (ev) => {
                     compressImage(ev.target.result, 800, 200, 0.7, (compressed) => {
                         tempBanner = compressed;
+                        showNotification('Баннер выбран');
                     });
                 };
                 reader.readAsDataURL(file);
@@ -1478,9 +1498,27 @@
         function isValidUsername(str) { return /^[a-z0-9]{4,15}$/.test(str); }
         function isValidPassword(str) { return /^[A-Za-z0-9]+$/.test(str); }
         function isUserOnline(username) { const lastSeen = App.users[username]?.lastSeen; if (!lastSeen) return false; return (Date.now() - lastSeen) < 300000; }
-        function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
+        function updateSidebarUser() { 
+            const userData = App.users[App.currentUser]; 
+            if (!userData) return; 
+            const sidebarUser = document.querySelector('.user-profile .username-display'); 
+            if (sidebarUser) { 
+                sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
+            } 
+            const sidebarAvatar = document.querySelector('.user-profile .avatar'); 
+            if (sidebarAvatar) { 
+                if (userData.avatar) { 
+                    sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; 
+                } else { 
+                    sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; 
+                } 
+            } 
+            // Убираем отображение валюты в сайдбаре
+            const starBalanceDiv = document.querySelector('.user-profile .star-balance');
+            if (starBalanceDiv) starBalanceDiv.remove();
+        }
         function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
-        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
+        function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance:not(.user-profile .star-balance)'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
         function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts, donationRequests: App.donationRequests }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
@@ -1710,8 +1748,8 @@
                             <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
                             <div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div><button class="tiny-btn" id="createNftBtn" style="margin-top:8px;">+ СОЗДАТЬ ОТКРЫТКУ (50 YC)</button></div>
-                            <div class="tabs"><div class="tab active" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="channel">КАНАЛЫ</div></div>
-                            <div id="tabDonate" class="tab-content"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><div class="shop-item"><span>333 YC — 0.3 TON</span><button class="donate-btn" data-yc="333" data-ton="0.3">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
+                            <div class="tabs"><div class="tab active" data-tab="donate">YАГАЗИН</div><div class="tab" data-tab="channel">YАНАЛЫ</div></div>
+                            <div id="tabDonate" class="tab-content"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">КУПИТЬ</button></div><div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ ПРЕМИУМ ПОДПИСКА (НАВСЕГДА) ✨</h4><div class="shop-item"><span>💎 ALBUMEN СТАТУС — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
                             <div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>📢 СОЗДАТЬ КАНАЛ</h4><div class="shop-item"><span>Создание канала — 50 YC</span><button id="createChannelBtn">СОЗДАТЬ</button></div><h4 style="margin-top:12px;">📢 МОИ КАНАЛЫ</h4>${Object.values(App.channels).filter(c => c.owner === App.currentUser).map(c => `<div class="shop-item"><span>${c.name}</span><button class="view-channel-btn" data-channel="${c.name}">👁️ ПРОСМОТР</button></div>`).join('') || '<div style="color: var(--text-secondary);">У вас нет каналов</div>'}</div></div>
                             <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button><button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button></div>
                         </div>
@@ -2137,8 +2175,9 @@
                             <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
                         </div>
                         <div class="profile-input-group">
-                            <label>ПРИКРЕПИТЬ ФОТО/ВИДЕО</label>
-                            <input type="file" id="postMediaFile" accept="image/*,video/*">
+                            <label>ДОБАВИТЬ ФОТО/ВИДЕО</label>
+                            <button class="change-file-btn" id="addPostMediaBtn">ДОБАВИТЬ</button>
+                            <input type="file" id="postMediaFile" accept="image/*,video/*" style="display:none;">
                         </div>
                         <div class="profile-actions">
                             <button class="profile-btn" id="confirmCreatePostBtn">ОПУБЛИКОВАТЬ</button>
@@ -2149,6 +2188,11 @@
             `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             let tempMedia = null, isVideo = false;
+            
+            document.getElementById('addPostMediaBtn').addEventListener('click', () => {
+                document.getElementById('postMediaFile').click();
+            });
+            
             document.getElementById('postMediaFile').addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -2158,6 +2202,7 @@
                         compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
                             tempMedia = compressed;
                             isVideo = false;
+                            showNotification('Изображение добавлено');
                         });
                     };
                     reader.readAsDataURL(file);
@@ -2170,6 +2215,7 @@
                     reader.onload = (ev) => {
                         tempMedia = ev.target.result;
                         isVideo = true;
+                        showNotification('Видео добавлено');
                     };
                     reader.readAsDataURL(file);
                 }
@@ -2330,7 +2376,7 @@
                     <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                         <div class="user-profile" id="openProfileBtn">
                             <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
-                            <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}<div class="star-balance"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                            <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}</div>
                         </div>
                         <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
                         <div class="chats-list" id="chatsList"></div>
@@ -2349,8 +2395,8 @@
                     `}
                 </div>
                 <div class="bottom-nav">
-                    <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">ЧАТЫ</div>
-                    <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">ЛЕНТА</div>
+                    <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">YАТЫ</div>
+                    <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">YЕНТА</div>
                 </div>
             `; 
         }
@@ -2531,8 +2577,8 @@
         function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
         function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
         function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error(e)); } }
-        function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; sendMessage(); }); }; reader.readAsDataURL(file); }
-        function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; sendMessage(true); }; reader.readAsDataURL(file); }
+        function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Фото добавлено, напишите текст и отправьте'); }); }; reader.readAsDataURL(file); }
+        function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Видео добавлено, напишите текст и отправьте'); }; reader.readAsDataURL(file); }
         function addUserBySearch() { let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); if (!query) { showNotification('Введите имя пользователя', 'error'); return; } if (!query.startsWith('@')) query = '@' + query; if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } if (App.channels[query]) { if (!App.channels[query].subscribers) App.channels[query].subscribers = []; if (!App.channels[query].subscribers.includes(App.currentUser)) { App.channels[query].subscribers.push(App.currentUser); saveToFirebase(); } App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); return; } if (!App.users[query]) { showNotification('Пользователь не найден', 'error'); return; } if (query === App.currentUser) { showNotification('Это вы', 'error'); return; } if (!canUserMessage(App.currentUser, query)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } ensureChat(App.currentUser, query); App.activeChat = query; localStorage.setItem('yolk_active_chat', query); if (window.innerWidth < 768) App.sidebarOpen = false; document.getElementById('searchUserInput').value = ''; render(); showNotification(`Чат с ${query} создан`); }
         window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${chat}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.channels[chat] && App.channels[chat].subscribers) App.channels[chat].subscribers = App.channels[chat].subscribers.filter(s => s !== user); if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToFirebase(); render(); showNotification('Чат удален'); };
         window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
