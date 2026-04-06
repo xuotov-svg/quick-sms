@@ -8,7 +8,6 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
-        /* Базовые переменные (тёмная тема по умолчанию) */
         :root {
             --bg: #0a0a0a;
             --bg-panel: #0f0f0f;
@@ -31,7 +30,6 @@
             --hover-border: rgba(212, 175, 55, 0.4);
         }
         
-        /* Светлая тема */
         body.light-theme {
             --bg: #f5f5f7;
             --bg-panel: #ffffff;
@@ -79,7 +77,6 @@
             transition: background 0.2s ease;
         }
         
-        /* Эффект жидкого стекла для всех элементов */
         .chat-area,
         .sidebar,
         .chat-header,
@@ -92,7 +89,6 @@
         .search-add,
         .two-factor-box,
         .shop-section,
-        .gifts-collection,
         .nft-collection,
         .feed-container,
         .post-card,
@@ -120,31 +116,21 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        /* ===== ОБОИ – СПЛОШНОЙ ЦВЕТ (БЕЗ КАРТИНОК) ===== */
         .chat-area, .feed-container {
             background-color: transparent !important;
             position: relative;
         }
         
-        /* Тёмная тема – чёрный фон */
         body:not(.light-theme) .chat-area,
         body:not(.light-theme) .feed-container {
             background-color: #0a0a0a !important;
         }
         
-        /* Светлая тема – белый фон */
         body.light-theme .chat-area,
         body.light-theme .feed-container {
             background-color: #ffffff !important;
         }
         
-        /* Убираем старые псевдоэлементы с затемнением (они не нужны) */
-        .chat-area::before,
-        .feed-container::before {
-            display: none;
-        }
-        
-        /* ===== МОНЕТКА YC (ваша картинка) ===== */
         .yc-currency {
             display: inline-flex;
             align-items: center;
@@ -157,18 +143,12 @@
             margin-right: 4px;
             position: relative;
         }
-        .yc-currency::after {
-            content: "";
-            display: none;
-        }
-
-        /* Большая монетка в профиле */
+        
         .star-balance-large .yc-currency {
             width: 28px;
             height: 28px;
         }
-
-        /* ===== ГАЛОЧКА VERIFIED (синий кружок с белой галочкой, как было раньше) ===== */
+        
         .verified-icon {
             display: inline-block;
             width: 18px;
@@ -235,7 +215,6 @@
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
         
-        /* ========== ВСЕ КНОПКИ С ЭМОДЗИ - ТЕМНО-СЕРЫЕ ========== */
         .icon-btn,
         .send-btn,
         .file-label,
@@ -250,7 +229,6 @@
         .settings-icon,
         .delete-chat-icon,
         .tab,
-        .gift-item,
         .nft-item,
         .msg-actions button,
         .back-btn,
@@ -284,7 +262,6 @@
         body.light-theme .settings-icon,
         body.light-theme .delete-chat-icon,
         body.light-theme .tab,
-        body.light-theme .gift-item,
         body.light-theme .nft-item,
         body.light-theme .msg-actions button,
         body.light-theme .back-btn,
@@ -317,7 +294,6 @@
         .settings-icon:hover,
         .delete-chat-icon:hover,
         .tab:hover,
-        .gift-item:hover,
         .nft-item:hover,
         .msg-actions button:hover,
         .shop-item button:hover,
@@ -459,10 +435,6 @@
         .media-preview { max-width: 200px; max-height: 200px; border-radius: 12px; margin-top: 4px; border: 1px solid var(--glass-border); cursor: pointer; }
         video.media-preview { max-width: 200px; max-height: 200px; }
         
-        .inline-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .inline-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 12px; cursor: pointer; color: #6b7280; font-size: 13px; font-weight: 500; filter: grayscale(0.6); }
-        .inline-btn:hover { background: rgba(212, 175, 55, 0.2); filter: grayscale(0.3); }
-        
         .message-username { cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 2px; color: var(--accent); }
         .message-username:hover { text-decoration: underline; }
         
@@ -484,7 +456,6 @@
         .profile-input-group input, .profile-input-group textarea, .profile-password-row { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
         .profile-input-group input:focus, .profile-input-group textarea:focus { border-color: var(--accent); }
         
-        /* Скрываем выбор обоев в настройках */
         .wallpaper-preview,
         #settingsWallpaper,
         .profile-input-group:has(#settingsWallpaper) {
@@ -495,11 +466,10 @@
         .password-wrapper input { flex: 1; padding-right: 40px; }
         .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; filter: grayscale(0.6); }
         
-        .gifts-collection, .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
-        .gift-item, .nft-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border); min-width: 60px; text-align: center; cursor: pointer; transition: all 0.1s ease; color: #6b7280; filter: grayscale(0.6); }
-        .nft-item { font-size: 0; padding: 4px; width: 64px; height: 64px; }
+        .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
+        .nft-item { background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border); width: 64px; height: 64px; cursor: pointer; transition: all 0.1s ease; filter: grayscale(0.6); }
         .nft-item canvas, .nft-item img { width: 100%; height: 100%; image-rendering: crisp-edges; }
-        .gift-item:hover, .nft-item:hover { background: rgba(212, 175, 55, 0.3); filter: grayscale(0.3); transform: scale(1.05); }
+        .nft-item:hover { background: rgba(212, 175, 55, 0.3); filter: grayscale(0.3); transform: scale(1.05); }
         
         .shop-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
         .shop-section h4 { color: var(--text); margin-bottom: 12px; }
@@ -550,7 +520,6 @@
         .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
         .channel-avatar-small { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
         
-        /* === НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ === */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -581,7 +550,6 @@
             background: rgba(212, 175, 55, 0.2);
         }
         
-        /* === ЛЕНТА === */
         .feed-container {
             flex: 1;
             overflow-y: auto;
@@ -681,9 +649,6 @@
             background: rgba(212, 175, 55, 0.35);
             border-color: #d4af37;
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
-        }
-        .post-like.active span, .post-dislike.active span {
-            font-weight: bold;
         }
         .post-delete {
             background: rgba(255, 68, 68, 0.12) !important;
@@ -792,7 +757,7 @@
                 display: flex;
             }
         }
-</style>
+    </style>
 </head>
 <body>
     <div id="app"></div>
@@ -800,19 +765,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
-        // ========== FIREBASE ==========
         const firebaseConfig = { apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4", authDomain: "quick-sms-772c4.firebaseapp.com", databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com", projectId: "quick-sms-772c4", storageBucket: "quick-sms-772c4.firebasestorage.app", messagingSenderId: "722370764251", appId: "1:722370764251:web:1f93437108ee3d54f15bfe" };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
-        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null };
-        App.systemBots = []; // полностью удалены боты
+        const App = { users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, channels: {}, sidebarOpen: false, dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null, savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null, streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null, donationRequests: {} };
+        App.systemBots = [];
         
-        // ========== СТАТУСЫ ==========
         const STATUS_TYPES = {
             GOLD: { name: 'GOLD', class: 'gold-name', messageClass: '', color: '#ffd700' },
             RUBY: { name: 'RUBY', class: 'ruby-name', messageClass: '', color: '#ff4444' },
@@ -838,7 +800,6 @@
             return username;
         }
 
-        // ========== ТЕМА ОФОРМЛЕНИЯ ==========
         function applyTheme(theme) {
             const body = document.body;
             if (theme === 'light') {
@@ -858,7 +819,6 @@
             }
         }
         
-        // ========== ПРИВАТНОСТЬ ==========
         function canUserMessage(fromUser, toUser) {
             if (fromUser === toUser) return true;
             if (App.channels[toUser]) return true;
@@ -895,7 +855,6 @@
             } else { App.privacySettings = {}; }
         }
 
-        // ========== КАНАЛЫ ==========
         function createChannel() {
             const user = App.currentUser;
             if (App.users[user].stars < 50) {
@@ -1068,7 +1027,6 @@
             }
         }
 
-        // ========== СИСТЕМА STREAK ==========
         function updateStreak(chatPartner) {
             const user = App.currentUser;
             if (!user || !chatPartner || chatPartner === 'saved' || chatPartner === 'yolk' || 
@@ -1190,31 +1148,8 @@
             }
         }
         
-        function getStreakForDisplay(chatPartner) {
-            const streak = getStreak(chatPartner);
-            return streak > 0 ? streak : 0;
-        }
-        
-        function syncStreak(chatPartner) {
-            const user = App.currentUser;
-            if (!user || !chatPartner) return;
-            const chatId = [user, chatPartner].sort().join('_');
-            if (!App.streaks[chatId]) return;
-            const streakData = App.streaks[chatId];
-            const userStreak = streakData.users[user]?.streak || 0;
-            const partnerStreak = streakData.users[chatPartner]?.streak || 0;
-            const commonStreak = streakData.streak || 0;
-            const maxStreak = Math.max(userStreak, partnerStreak, commonStreak);
-            streakData.streak = maxStreak;
-            if (streakData.users[user]) streakData.users[user].streak = maxStreak;
-            if (streakData.users[chatPartner]) streakData.users[chatPartner].streak = maxStreak;
-            saveStreaks();
-        }
-
-        // ========== АДМИН-ПАНЕЛЬ ==========
         function openAdminPanel() {
             const usersList = Object.keys(App.users).filter(u => !App.systemBots.includes(u));
-            const giftsList = ['🔥', '🌊', '🍭', '🍬', '🥚', '🍳', '💩', '🐇', '🐣'];
             const statusList = ['GOLD', 'RUBY', 'EMERALD', 'AMETHYST'];
             
             const modalHtml = `
@@ -1234,7 +1169,6 @@
                                 <label>ТИП ПРЕДМЕТА</label>
                                 <select id="adminItemType">
                                     <option value="yc">YC (валюта)</option>
-                                    <option value="gift">Подарок (эмодзи)</option>
                                     <option value="status">СТАТУС</option>
                                     <option value="verified">VERIFIED СТАТУС</option>
                                 </select>
@@ -1242,12 +1176,6 @@
                             <div id="adminYcAmount" class="input-group">
                                 <label>КОЛИЧЕСТВО YC</label>
                                 <input type="number" id="adminYcValue" value="100" min="1">
-                            </div>
-                            <div id="adminGiftSelect" class="input-group hidden">
-                                <label>ВЫБЕРИТЕ ПОДАРОК</label>
-                                <select id="adminGiftValue">
-                                    ${giftsList.map(g => `<option value="${g}">${g}</option>`).join('')}
-                                </select>
                             </div>
                             <div id="adminStatusSelect" class="input-group hidden">
                                 <label>ВЫБЕРИТЕ СТАТУС</label>
@@ -1267,15 +1195,12 @@
             
             const itemType = document.getElementById('adminItemType');
             const ycDiv = document.getElementById('adminYcAmount');
-            const giftDiv = document.getElementById('adminGiftSelect');
             const statusDiv = document.getElementById('adminStatusSelect');
             
             itemType.addEventListener('change', () => {
                 ycDiv.classList.add('hidden');
-                giftDiv.classList.add('hidden');
                 statusDiv.classList.add('hidden');
                 if (itemType.value === 'yc') ycDiv.classList.remove('hidden');
-                else if (itemType.value === 'gift') giftDiv.classList.remove('hidden');
                 else if (itemType.value === 'status') statusDiv.classList.remove('hidden');
             });
             
@@ -1301,12 +1226,6 @@
                     }
                     App.users[targetUser].stars = (App.users[targetUser].stars || 0) + amount;
                     showNotification(`✅ Выдано ${amount} YC пользователю ${targetUser}`);
-                } 
-                else if (type === 'gift') {
-                    const gift = document.getElementById('adminGiftValue').value;
-                    if (!App.users[targetUser].gifts) App.users[targetUser].gifts = [];
-                    App.users[targetUser].gifts.push(gift);
-                    showNotification(`✅ Выдан подарок ${gift} пользователю ${targetUser}`);
                 }
                 else if (type === 'status') {
                     const status = document.getElementById('adminStatusValue').value;
@@ -1334,7 +1253,6 @@
             });
         }
 
-        // ========== НАСТРОЙКИ ПРОФИЛЯ ==========
         function openProfileSettings() {
             const userData = App.users[App.currentUser];
             const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
@@ -1537,7 +1455,6 @@
             });
         }
 
-        // ========== ФОН ДЛЯ ЛЕНТЫ ==========
         function applyWallpaperToFeed() {
             const feedContainer = document.querySelector('.feed-container');
             if (!feedContainer) return;
@@ -1553,7 +1470,6 @@
             }
         }
 
-        // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
         function formatLastSeen(lastSeen, chatPartner) {
             if (chatPartner === 'saved' || chatPartner === 'yolk') return '';
             if (!lastSeen) return 'очень давно';
@@ -1586,10 +1502,9 @@
         function updateSidebarUser() { const userData = App.users[App.currentUser]; if (!userData) return; const sidebarUser = document.querySelector('.user-profile .username-display'); if (sidebarUser) { sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); } const sidebarAvatar = document.querySelector('.user-profile .avatar'); if (sidebarAvatar) { if (userData.avatar) { sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; } else { sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; } } }
         function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
         function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
-        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
+        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts, donationRequests: App.donationRequests }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk' || App.channels[userB]) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
-        // ========== ФУНКЦИИ ДЛЯ ОТКРЫТОК ==========
         async function createNft(grid, owner) {
             if (!App.users[owner]) return false;
             if (App.users[owner].stars < 50) { showNotification('Недостаточно YC (нужно 50)', 'error'); return false; }
@@ -1605,33 +1520,17 @@
         
         function openNftCreator() { if (App.users[App.currentUser].stars < 50) { showNotification('Не хватает 50 YC для создания открытки', 'error'); return; } const modalHtml = `<div class="modal-overlay" id="nftCreatorModal"><div class="profile-modal" style="max-width: 500px;"><h3>🎨 СОЗДАТЬ ОТКРЫТКУ (10x10)</h3><div class="pixel-canvas" id="pixelCanvas" style="display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 1px; background: #2a2a2a;"></div><div class="color-palette" id="colorPalette"></div><button class="create-nft-btn" id="confirmCreateNftBtn">СОЗДАТЬ (50 YC)</button><div class="profile-actions"><button class="profile-btn secondary" id="closeNftCreator">ОТМЕНА</button></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); let grid = Array(10).fill().map(() => Array(10).fill('#ffffff')); let currentColor = '#000000'; const canvasDiv = document.getElementById('pixelCanvas'); const paletteDiv = document.getElementById('colorPalette'); const colors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080']; colors.forEach(col => { const btn = document.createElement('div'); btn.className = `color-option ${col === currentColor ? 'active' : ''}`; btn.style.backgroundColor = col; btn.addEventListener('click', () => { currentColor = col; document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active')); btn.classList.add('active'); }); paletteDiv.appendChild(btn); }); function renderCanvas() { canvasDiv.innerHTML = ''; for (let i = 0; i < 10; i++) { for (let j = 0; j < 10; j++) { const pixel = document.createElement('div'); pixel.className = 'pixel'; pixel.style.backgroundColor = grid[i][j]; pixel.style.width = '30px'; pixel.style.height = '30px'; pixel.addEventListener('click', () => { grid[i][j] = currentColor; renderCanvas(); }); canvasDiv.appendChild(pixel); } } } renderCanvas(); document.getElementById('confirmCreateNftBtn').addEventListener('click', async () => { const success = await createNft(grid, App.currentUser); if (success) document.getElementById('nftCreatorModal').remove(); }); document.getElementById('closeNftCreator').addEventListener('click', () => { document.getElementById('nftCreatorModal').remove(); }); }
 
-        // ========== ОТКРЫТИЕ ПОДАРКОВ ==========
         function openGiftMenu() { 
             const target = App.activeChat; 
             if (!target || target === 'saved' || target === 'yolk' || App.channels[target]) { 
-                showNotification('Нельзя отправить подарок сюда', 'error'); 
+                showNotification('Нельзя отправить открытку сюда', 'error'); 
                 return; 
             } 
-            const gifts = App.users[App.currentUser].gifts || []; 
             const nfts = App.users[App.currentUser].nfts || []; 
             const hasNfts = nfts.length > 0; 
-            const giftList = gifts.map(g => `<div class="gift-item" onclick="window.sendGiftToUser('${target}', '${g}')">${g}</div>`).join(''); 
-            const nftListHtml = hasNfts ? `<div class="nft-collection" style="margin-top:10px;">${nfts.map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 32; canvas.height = 32; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 3.2, i * 3.2, 3.2, 3.2); return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
-            const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ПОДАРОК</h3><div class="tabs" style="margin-bottom:8px;"><div class="tab active" data-tab="emoji">ПОДАРКИ</div><div class="tab" data-tab="nft">ОТКРЫТКИ</div></div><div id="emojiTab" class="tab-content">${giftList || 'Нет подарков'}</div><div id="nftTab" class="tab-content hidden">${nftListHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; 
+            const nftListHtml = hasNfts ? `<div class="nft-collection" style="margin-top:10px;">${nfts.map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
+            const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ОТКРЫТКУ</h3><div id="nftTab">${nftListHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
-            document.querySelectorAll('.tab').forEach(tab => { 
-                tab.addEventListener('click', () => { 
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); 
-                    tab.classList.add('active'); 
-                    if (tab.dataset.tab === 'emoji') { 
-                        document.getElementById('emojiTab').classList.remove('hidden'); 
-                        document.getElementById('nftTab').classList.add('hidden'); 
-                    } else { 
-                        document.getElementById('emojiTab').classList.add('hidden'); 
-                        document.getElementById('nftTab').classList.remove('hidden'); 
-                    } 
-                }); 
-            }); 
             if (hasNfts) { 
                 document.querySelectorAll('.nft-item').forEach(el => { 
                     el.addEventListener('click', (e) => { 
@@ -1646,7 +1545,7 @@
                         saveToFirebase(); 
                         const chatId = [fromUser, toUser].sort().join('_'); 
                         if (!App.chats[chatId]) App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] }; 
-                        App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ОТКРЫТКА 🖼️ ОТ ${fromUser}`, time: Date.now(), gift: true, nftData: nft }); 
+                        App.chats[chatId].messages.push({ from: fromUser, text: `ОТКРЫТКА 🖼️ ОТ ${fromUser}`, time: Date.now(), gift: true, nftData: nft }); 
                         saveToFirebase(); 
                         showConfetti(); 
                         playHappySound(); 
@@ -1661,35 +1560,7 @@
                 document.getElementById('giftModalOverlay').remove(); 
             }); 
         }
-        
-        window.sendGiftToUser = function(toUser, giftEmoji) { 
-            const fromUser = App.currentUser; 
-            const userGifts = [...(App.users[fromUser].gifts || [])];
-            const hasGift = userGifts.includes(giftEmoji);
-            if (!hasGift) {
-                showNotification('У вас нет такого подарка!', 'error');
-                return;
-            }
-            const indexToRemove = userGifts.indexOf(giftEmoji); 
-            if (indexToRemove !== -1) userGifts.splice(indexToRemove, 1); 
-            App.users[fromUser].gifts = userGifts; 
-            if (!App.users[toUser].gifts) App.users[toUser].gifts = []; 
-            App.users[toUser].gifts.push(giftEmoji); 
-            const chatId = ensureChat(fromUser, toUser); 
-            if (chatId && App.chats[chatId]) { 
-                App.chats[chatId].messages.push({ from: fromUser, text: `ПОДАРОК ${giftEmoji} ОТ ${fromUser}`, time: Date.now(), gift: true }); 
-                showConfetti(); 
-                playHappySound(); 
-            } 
-            saveToFirebase(); 
-            if (App.activeChat === toUser) renderMessages(toUser); 
-            updateUserInterface(); 
-            const giftModal = document.getElementById('giftModalOverlay');
-            if (giftModal) giftModal.remove();
-            showNotification(`Подарок ${giftEmoji} отправлен ${toUser}!`); 
-        };
 
-        // ========== СМЕНА ЮЗЕРНЕЙМА ==========
         function changeUsername(newUsername) {
             const oldUsername = App.currentUser;
             const newName = '@' + newUsername.toLowerCase();
@@ -1767,7 +1638,6 @@
             return true;
         }
 
-        // ========== ФУНКЦИИ ДЛЯ ПОДПИСОК ==========
         function ensureUserFollowData(username) {
             if (!App.users[username]) return;
             if (!App.users[username].followers) App.users[username].followers = [];
@@ -1817,7 +1687,6 @@
             return `${count} подписчиков`;
         }
         
-        // Локальное обновление кнопки подписки в ленте
         function toggleFeedSubscription(postId, author) {
             if (author === App.currentUser) return;
             const isCurrentlySubscribed = isFollowing(App.currentUser, author);
@@ -1837,12 +1706,10 @@
             }
         }
 
-        // ========== ПРОФИЛЬ ==========
         function openProfileModal(username) { 
-            const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, gifts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', nfts: [], followers: [], following: [] }) };
+            const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', nfts: [], followers: [], following: [] }) };
             const isOwn = (username === App.currentUser); 
             const isAdmin = (username === ADMIN_USER); 
-            const giftsList = (userData.gifts || []).map(g => `<div class="gift-item">${g}</div>`).join(''); 
             const nftsList = (userData.nfts || []).map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join(''); 
             const followersCount = (userData.followers || []).length;
             
@@ -1863,11 +1730,9 @@
                             </div>
                             <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
-                            <div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>
                             <div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div><button class="tiny-btn" id="createNftBtn" style="margin-top:8px;">+ СОЗДАТЬ ОТКРЫТКУ (50 YC)</button></div>
-                            <div class="tabs"><div class="tab active" data-tab="shop">МАГАЗИН</div><div class="tab" data-tab="donate">ДОНАТ</div></div>
-                            <div id="tabShop" class="tab-content"><div class="shop-section"><h4>КУПИТЬ ПОДАРКИ</h4>${[{ emoji: '🔥', price: 15 }, { emoji: '🌊', price: 15 }, { emoji: '🍭', price: 25 }, { emoji: '🍬', price: 25 }, { emoji: '💩', price: 45 }].map(item => `<div class="shop-item"><span>${item.emoji} ${item.price} YC</span><button class="buy-gift-btn" data-gift="${item.emoji}" data-price="${item.price}">КУПИТЬ</button></div>`).join('')}</div></div>
-                            <div id="tabDonate" class="tab-content hidden"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><div class="shop-item"><span>333 YC — 0.3 TON</span><button class="donate-btn" data-yc="333" data-ton="0.3">КУПИТЬ</button></div><h4 style="margin-top:12px;">КУПИТЬ ПОДАРКИ</h4><div class="shop-item"><span>🥚 — 0.5 TON</span><button class="gift-donate-btn" data-emoji="🥚" data-ton="0.5">КУПИТЬ</button></div><div class="shop-item"><span>🍳 — 1.5 TON</span><button class="gift-donate-btn" data-emoji="🍳" data-ton="1.5">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
+                            <div class="tabs"><div class="tab active" data-tab="donate">ДОНАТ</div><div class="tab" data-tab="channel">КАНАЛЫ</div></div>
+                            <div id="tabDonate" class="tab-content"><div class="shop-section"><h4>ПОПОЛНИТЬ YC</h4><div class="shop-item"><span>100 YC — 1.41 TON</span><button class="donate-btn" data-yc="100" data-ton="1.41">КУПИТЬ</button></div><div class="shop-item"><span>200 YC — 2.64 TON</span><button class="donate-btn" data-yc="200" data-ton="2.64">КУПИТЬ</button></div><div class="shop-item"><span>500 YC — 6.3 TON</span><button class="donate-btn" data-yc="500" data-ton="6.3">КУПИТЬ</button></div><div class="shop-item"><span>333 YC — 0.3 TON</span><button class="donate-btn" data-yc="333" data-ton="0.3">КУПИТЬ</button></div><h4 style="margin-top:12px;">✨ СТАТУСЫ (НАВСЕГДА) ✨</h4><div class="shop-item"><span>🔴 RUBY СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="RUBY" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟢 EMERALD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="EMERALD" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟣 AMETHYST СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="AMETHYST" data-ton="3">КУПИТЬ</button></div><div class="shop-item"><span>🟡 GOLD СТАТУС — 3 TON</span><button class="status-donate-btn" data-status="GOLD" data-ton="3">КУПИТЬ</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ При покупке нового статуса, старый заменяется!</small></div></div>
                             <div id="tabChannel" class="tab-content hidden"><div class="shop-section"><h4>📢 СОЗДАТЬ КАНАЛ</h4><div class="shop-item"><span>Создание канала — 50 YC</span><button id="createChannelBtn">СОЗДАТЬ</button></div><h4 style="margin-top:12px;">📢 МОИ КАНАЛЫ</h4>${Object.values(App.channels).filter(c => c.owner === App.currentUser).map(c => `<div class="shop-item"><span>${c.name}</span><button class="view-channel-btn" data-channel="${c.name}">👁️ ПРОСМОТР</button></div>`).join('') || '<div style="color: var(--text-secondary);">У вас нет каналов</div>'}</div></div>
                             <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button><button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button></div>
                         </div>
@@ -1895,29 +1760,8 @@
                         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                         e.target.classList.add('active');
                         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                        if (e.target.dataset.tab === 'shop') document.getElementById('tabShop').classList.remove('hidden');
                         if (e.target.dataset.tab === 'donate') document.getElementById('tabDonate').classList.remove('hidden');
                         if (e.target.dataset.tab === 'channel') document.getElementById('tabChannel').classList.remove('hidden');
-                    });
-                });
-                
-                document.querySelectorAll('.buy-gift-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const gift = e.target.dataset.gift;
-                        const price = parseInt(e.target.dataset.price);
-                        const user = App.currentUser;
-                        if (App.users[user].stars >= price) {
-                            App.users[user].stars -= price;
-                            if (!App.users[user].gifts) App.users[user].gifts = [];
-                            App.users[user].gifts.push(gift);
-                            saveToFirebase();
-                            updateUserInterface();
-                            document.getElementById('profileModalOverlay').remove();
-                            openProfileModal(user);
-                            showNotification(`Куплен подарок ${gift}`);
-                        } else {
-                            showNotification('Недостаточно YC', 'error');
-                        }
                     });
                 });
                 
@@ -1926,15 +1770,6 @@
                         const yc = parseInt(e.target.dataset.yc);
                         const ton = parseFloat(e.target.dataset.ton);
                         openDonationModal({ yc, ton, price: `${ton} TON` });
-                        document.getElementById('profileModalOverlay')?.remove();
-                    });
-                });
-                
-                document.querySelectorAll('.gift-donate-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const emoji = e.target.dataset.emoji;
-                        const ton = parseFloat(e.target.dataset.ton);
-                        openDonationModal({ yc: 0, ton: ton, price: `${ton} TON`, giftEmoji: emoji });
                         document.getElementById('profileModalOverlay')?.remove();
                     });
                 });
@@ -1992,12 +1827,11 @@
                 return;
             }
             
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ПОДАРКИ</label><div class="gifts-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
         }
 
-        // ========== ДОНАТ ==========
         function openDonationModal(pack) { 
             const modalHtml = `<div class="modal-overlay" id="donationModalOverlay"><div class="profile-modal"><h3>💸 ПОПОЛНЕНИЕ YC</h3><div class="qr-code" id="donationQrCode"></div><div class="profile-input-group"><label>📤 АДРЕС КОШЕЛЬКА TON</label><input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Адрес скопирован!')"></div><div class="profile-input-group"><label>💰 СУММА</label><input type="text" value="${pack.ton} TON" readonly></div><div class="profile-input-group"><label>📝 ВАШ ЮЗЕРНЕЙМ (обязательно!)</label><input type="text" id="donationComment" placeholder="Например: @durov" value="${App.currentUser}"></div><div class="profile-input-group"><label>🔗 TXID (хеш транзакции)</label><input type="text" id="donationTxid" placeholder="Вставьте TXID из TON Keeper"></div><div class="profile-actions"><button class="profile-btn" id="submitDonationBtn">✅ Я ОТПРАВИЛ TON</button><button class="profile-btn secondary" id="closeDonationModal">ОТМЕНА</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ В комментарии к переводу ОБЯЗАТЕЛЬНО укажите свой юзернейм с @</small></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
@@ -2009,7 +1843,7 @@
                 if (!comment || !comment.startsWith('@')) { showNotification('Укажите ваш юзернейм с @ в комментарии', 'error'); return; } 
                 const requestId = generateId(); 
                 if (!App.donationRequests) App.donationRequests = {};
-                App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), giftEmoji: pack.giftEmoji || null, statusType: pack.status || null }; 
+                App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), statusType: pack.status || null }; 
                 saveToFirebase(); 
                 document.getElementById('donationModalOverlay')?.remove(); 
                 showNotification(`✅ Заявка отправлена! Ожидайте начисления. ID: ${requestId.slice(-6)}`); 
@@ -2030,11 +1864,6 @@
                         renderMessages(App.activeChat); 
                         updateChatList(); 
                     } 
-                } else if (request.giftEmoji) { 
-                    if (!App.users[targetUser].gifts) App.users[targetUser].gifts = []; 
-                    App.users[targetUser].gifts.push(request.giftEmoji); 
-                    showNotification(`✅ Подарок ${request.giftEmoji} отправлен ${request.username}`); 
-                    updateUserInterface(); 
                 } else { 
                     App.users[targetUser].stars = (App.users[targetUser].stars || 0) + request.yc; 
                     showNotification(`✅ Начислено ${request.yc} YC пользователю ${request.username}`); 
@@ -2044,7 +1873,7 @@
                 request.completedAt = Date.now(); 
                 saveToFirebase(); 
                 if (!App.yolkChatMessages[targetUser]) App.yolkChatMessages[targetUser] = []; 
-                let messageText = request.statusType ? `✨ Вы получили СТАТУС ${request.statusType} НАВСЕГДА! ✨` : (request.giftEmoji ? `🎁 Вам отправили подарок ${request.giftEmoji}!` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`); 
+                let messageText = request.statusType ? `✨ Вы получили СТАТУС ${request.statusType} НАВСЕГДА! ✨` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`; 
                 App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: messageText, time: Date.now() }); 
                 saveToFirebase(); 
                 if (App.currentUser === ADMIN_USER) { 
@@ -2067,7 +1896,6 @@
             } 
         };
         
-        // ========== ОБНОВЛЕНИЕ СТАТУСА В ЧАТЕ ==========
         function updateChatHeaderStatus(username) { 
             if (App.channels[username]) return;
             const headerInfo = document.querySelector('.chat-header-info'); 
@@ -2100,7 +1928,6 @@
             headerInfo.appendChild(statusDiv); 
         }
 
-        // ========== ЛЕНТА (только личные чаты, без saved/yolk/каналов) ==========
         let feedPage = 0;
         const FEED_PAGE_SIZE = 10;
         let feedPosts = [];
@@ -2183,12 +2010,10 @@
             };
         }
 
-        // Модалка выбора чата (только личные чаты с пользователями)
         function openShareModal(postId) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) return;
             let chatList = getChatListForUser(App.currentUser);
-            // Фильтруем: оставляем только личные чаты с другими пользователями (не saved, не yolk, не каналы)
             chatList = chatList.filter(chat => {
                 if (chat === 'saved') return false;
                 if (chat === 'yolk') return false;
@@ -2202,7 +2027,7 @@
             }
             let chatOptions = '';
             chatList.forEach(chat => {
-                let displayName = chat; // уже с @
+                let displayName = chat;
                 chatOptions += `<div class="chat-item share-chat-item" data-chat="${chat}" style="cursor:pointer; margin:5px 0;">${displayName}</div>`;
             });
             const modalHtml = `
@@ -2232,7 +2057,6 @@
             });
         }
 
-        // Отправка поста в личный чат (только между текущим пользователем и получателем, от имени автора)
         function sharePostToChat(postId, targetChat) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) {
@@ -2243,9 +2067,9 @@
             if (messageText === '' && !post.media) messageText = '(пустой пост)';
             else if (messageText === '' && post.media) messageText = 'Поделился(ась) медиа';
 
-            const from = post.author;          // отправитель — автор поста
-            const to = targetChat;             // получатель (друг)
-            const currentUser = App.currentUser; // кто шарит
+            const from = post.author;
+            const to = targetChat;
+            const currentUser = App.currentUser;
 
             const mediaData = post.media || null;
             const isVideo = post.isVideo || false;
@@ -2261,7 +2085,6 @@
                     sharedPost: true
                 };
 
-                // Личный чат: создаём/используем чат между currentUser и to
                 const chatId = [currentUser, to].sort().join('_');
                 if (!App.chats[chatId]) {
                     App.chats[chatId] = {
@@ -2282,7 +2105,6 @@
             }
         }
 
-        // Вспомогательные функции для ленты (лайки, дизлайки, комментарии, удаление, подписки)
         function toggleLikePost(postId) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) return;
@@ -2483,23 +2305,6 @@
             });
         }
 
-        function toggleFeedSubscription(postId, author) {
-            if (author === App.currentUser) return;
-            const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-            if (isCurrentlySubscribed) unsubscribeFromUser(App.currentUser, author);
-            else subscribeToUser(App.currentUser, author);
-            const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-            if (postCard) {
-                const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
-                if (btn) {
-                    const newSubStatus = !isCurrentlySubscribed;
-                    btn.textContent = newSubStatus ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
-                    btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
-                }
-            }
-        }
-        
-        // ========== РЕАКЦИИ В КАНАЛАХ (👍 / 👎) ==========
         window.toggleLikeChannel = function(chatPartner, messageIdx, event) {
             event.stopPropagation();
             if (!App.channels[chatPartner]) return;
@@ -2508,11 +2313,9 @@
             if (!msg.likes) msg.likes = {};
             if (!msg.dislikes) msg.dislikes = {};
             const user = App.currentUser;
-            // Если уже лайкнут, убираем лайк
             if (msg.likes[user]) {
                 delete msg.likes[user];
             } else {
-                // Если был дизлайк, убираем его
                 if (msg.dislikes[user]) delete msg.dislikes[user];
                 msg.likes[user] = true;
             }
@@ -2538,7 +2341,6 @@
             renderMessages(chatPartner);
         };
 
-        // ========== РЕНДЕР И ОСНОВНЫЕ ФУНКЦИИ ==========
         function render() { 
             const root = document.getElementById('app'); 
             if (!App.dataLoaded) { 
@@ -2554,7 +2356,7 @@
                     attachMainEvents(); 
                     if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                     else if (App.activeTab === 'feed') {
-                        initFeed(); // Инициализируем ленту при переключении
+                        initFeed();
                     }
                     updateChatList(); 
                     updateSidebarUser(); 
@@ -2614,7 +2416,7 @@
                 if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } 
                 const clean = '@' + username; 
                 if (App.users[clean] || App.systemBots.includes(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
-                const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [] }; 
+                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [] }; 
                 database.ref('users/' + clean).set(newUser).then(() => { 
                     App.users[clean] = newUser; 
                     App.currentUser = clean; 
@@ -2633,7 +2435,6 @@
             const user = App.currentUser; 
             const userData = App.users[user] || {}; 
             const isChatsActive = App.activeTab === 'chats'; 
-            // Определяем сообщение для заблокированного чата
             let blockedMessage = '';
             if (App.activeChat && !App.channels[App.activeChat] && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
                 blockedMessage = 'Этому пользователю нельзя писать первым';
@@ -2716,7 +2517,7 @@
                 let isVideoMsg = false; 
                 if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } 
                 else if (App.tempPhoto) { mediaData = App.tempPhoto; } 
-                const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg, likes: {}, dislikes: {} }; // добавили поля для реакций
+                const message = { from, text: text || '', time: Date.now(), photo: mediaData, gift: false, isVideo: isVideoMsg, likes: {}, dislikes: {} };
                 if (to === 'saved') { 
                     if (!App.savedMessages[from]) App.savedMessages[from] = []; 
                     App.savedMessages[from].push(message); 
@@ -2784,12 +2585,10 @@
             const userLiked = msg.likes && msg.likes[currentUser];
             const userDisliked = msg.dislikes && msg.dislikes[currentUser];
             let messageText = msg.text || ''; 
-            if (isGift && messageText.startsWith('🎁 ')) messageText = messageText.substring(2); 
             const displayName = fromUserStatusClass ? `<span class="${fromUserStatusClass}">${msg.from}</span>` : msg.from; 
             const messageClass = isMe ? 'me' : ''; 
             const fullDate = new Date(msg.time).toLocaleString();
             
-            // Реакции для каналов
             let reactionsHtml = '';
             if (isChannel) {
                 reactionsHtml = `
@@ -2856,7 +2655,7 @@
         window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else if (App.channels[chatPartner]) { if (App.channels[chatPartner].owner !== from) { showNotification('Только владелец может удалять', 'error'); return; } const msgs = App.channels[chatPartner].messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         function initBots() { App.systemBots = []; saveToFirebase(); }
-        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
+        function loadFromFirebase() { console.log('🔄 Загрузка данных из Firebase...'); try { database.ref().get().then(snapshot => { if (snapshot.exists()) { const data = snapshot.val(); if (data.users) { App.users = data.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; if (!App.users[u].nfts) App.users[u].nfts = []; }); } if (data.chats) App.chats = data.chats; if (data.blocked) App.blocked = data.blocked; if (data.channels) App.channels = data.channels; if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; if (data.streaks) App.streaks = data.streaks; if (data.privacySettings) App.privacySettings = data.privacySettings; if (data.posts) App.posts = data.posts; if (data.donationRequests) App.donationRequests = data.donationRequests; localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, channels: App.channels })); if (data.yolkChatMessages) saveYolkChatMessages(); if (data.streaks) saveStreaks(); if (data.privacySettings) savePrivacySettings(); } else { console.log('⚠️ База данных пуста'); } const savedUser = localStorage.getItem('yolk_current_user'); const savedChat = localStorage.getItem('yolk_active_chat'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat] || App.channels[savedChat]) ? savedChat : 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); updateLastSeen(App.currentUser); } App.dataLoaded = true; render(); }).catch(error => { console.error('❌ Ошибка Firebase:', error); const cachedData = localStorage.getItem('yolk_cache'); if (cachedData) { try { const cache = JSON.parse(cachedData); if (cache.users) { App.users = cache.users; Object.keys(App.users).forEach(u => { if (!App.users[u].followers) App.users[u].followers = []; if (!App.users[u].following) App.users[u].following = []; if (!App.users[u].nfts) App.users[u].nfts = []; }); } if (cache.chats) App.chats = cache.chats; if (cache.blocked) App.blocked = cache.blocked; if (cache.channels) App.channels = cache.channels; console.log('📦 Загружено из кэша:', Object.keys(App.users).length); } catch(e) { } } const savedUser = localStorage.getItem('yolk_current_user'); if (savedUser && App.users[savedUser]) { App.currentUser = savedUser; App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; loadSavedMessages(); loadYolkChatMessages(); loadStreaks(); loadPrivacySettings(); setupUserListener(App.currentUser); } App.dataLoaded = true; render(); }); } catch (error) { console.error('❌ Ошибка Firebase:', error); } }
         window.addEventListener('load', () => { initBots(); loadFromFirebase(); loadTheme(); });
     </script>
 </body>
