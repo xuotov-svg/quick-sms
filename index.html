@@ -31,7 +31,6 @@
             --hover-border: rgba(212, 175, 55, 0.4);
         }
         
-        /* === ИЗМЕНЕНИЕ: убираем серые фильтры в светлой теме, делаем чисто белый фон === */
         body.light-theme {
             --bg: #ffffff;
             --bg-panel: #f8f9fa;
@@ -206,31 +205,11 @@
         
         /* ALBUMEN STATUS ANIMATION */
         @keyframes albumenCharGlow {
-            0% { 
-                text-shadow: 0 0 0 #ffffff; 
-                color: #ffffff;
-                opacity: 0.7;
-            }
-            15% { 
-                text-shadow: 0 0 8px #88ccff, 0 0 3px #aaddff; 
-                color: #cceeff;
-                opacity: 1;
-            }
-            30% { 
-                text-shadow: 0 0 12px #88ccff, 0 0 5px #66bbff; 
-                color: #ffffff;
-                opacity: 1;
-            }
-            50% { 
-                text-shadow: 0 0 5px #88ccff; 
-                color: #ddeeff;
-                opacity: 0.9;
-            }
-            100% { 
-                text-shadow: 0 0 0 #ffffff; 
-                color: #ffffff;
-                opacity: 0.7;
-            }
+            0% { text-shadow: 0 0 0 #ffffff; color: #ffffff; opacity: 0.7; }
+            15% { text-shadow: 0 0 8px #88ccff, 0 0 3px #aaddff; color: #cceeff; opacity: 1; }
+            30% { text-shadow: 0 0 12px #88ccff, 0 0 5px #66bbff; color: #ffffff; opacity: 1; }
+            50% { text-shadow: 0 0 5px #88ccff; color: #ddeeff; opacity: 0.9; }
+            100% { text-shadow: 0 0 0 #ffffff; color: #ffffff; opacity: 0.7; }
         }
         
         .albumen-name {
@@ -281,7 +260,7 @@
             30% { transform: translateY(-6px); opacity: 1; }
         }
         
-        /* === ИЗМЕНЕНИЕ: загрузочный экран теперь виден минимум 1 секунду === */
+        /* === ИСПРАВЛЕНИЕ: загрузочный экран виден и плавно исчезает === */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -345,7 +324,7 @@
             50% { opacity: 1; transform: translateY(-5px); }
         }
         
-        /* === ИЗМЕНЕНИЕ: убираем серые фильтры со всех кнопок в светлой теме === */
+        /* Убираем серые фильтры в светлой теме */
         body.light-theme .icon-btn,
         body.light-theme .send-btn,
         body.light-theme .file-label,
@@ -609,16 +588,67 @@
         .password-wrapper input { flex: 1; padding-right: 40px; }
         .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; }
         
-        .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
-        .nft-item { background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border); width: 64px; height: 64px; cursor: pointer; transition: all 0.1s ease; }
+        /* === ИСПРАВЛЕНИЕ: коллекция NFT и магазин без серого фона в светлой теме === */
+        .nft-collection { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            margin: 16px 0; 
+            padding: 12px; 
+            background: transparent; 
+            border-radius: 16px; 
+            justify-content: center; 
+            border: 1px solid var(--glass-border); 
+        }
+        body.light-theme .nft-collection {
+            background: transparent;
+        }
+        .nft-item { 
+            background: var(--glass-bg); 
+            padding: 4px; 
+            border-radius: 12px; 
+            border: 1px solid var(--glass-border); 
+            width: 64px; 
+            height: 64px; 
+            cursor: pointer; 
+            transition: all 0.1s ease; 
+        }
         .nft-item canvas, .nft-item img { width: 100%; height: 100%; image-rendering: crisp-edges; }
-        .nft-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
+        .nft-item:hover { background: var(--hover-bg); transform: scale(1.05); }
         
-        .shop-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
+        .shop-section { 
+            background: transparent; 
+            border-radius: 16px; 
+            padding: 16px; 
+            margin: 16px 0; 
+            border: 1px solid var(--glass-border); 
+        }
+        body.light-theme .shop-section {
+            background: transparent;
+        }
         .shop-section h4 { color: var(--text); margin-bottom: 12px; }
-        .shop-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--glass-border); color: var(--text); }
-        .shop-item button { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; padding: 6px 12px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 12px; }
-        .shop-item button:hover { background: rgba(212, 175, 55, 0.4); }
+        .shop-item { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            background: var(--glass-bg); 
+            padding: 10px 14px; 
+            border-radius: 12px; 
+            margin-bottom: 8px; 
+            border: 1px solid var(--glass-border); 
+            color: var(--text); 
+        }
+        .shop-item button { 
+            background: var(--accent); 
+            border: none; 
+            color: #000000; 
+            padding: 6px 12px; 
+            border-radius: 12px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 12px; 
+        }
+        .shop-item button:hover { filter: brightness(1.1); }
         
         .profile-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
         .profile-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; flex: 1; cursor: pointer; text-align: center; }
@@ -915,9 +945,9 @@
             color: white;
         }
         
-        /* === ИЗМЕНЕНИЕ: стиль для отображения дополнительных юзернеймов через запятую === */
+        /* === ИСПРАВЛЕНИЕ: дополнительные юзернеймы такого же размера === */
         .additional-names {
-            font-size: 12px;
+            font-size: inherit;
             color: var(--text-secondary);
             margin-left: 4px;
             font-weight: normal;
@@ -969,7 +999,7 @@
         };
         App.systemBots = [];
         
-        // === ИЗМЕНЕНИЕ: переменные для контроля времени загрузки ===
+        // === ИСПРАВЛЕНИЕ: переменные для загрузки ===
         let loadingStartTime = Date.now();
         const MIN_LOADING_TIME = 1000; // 1 секунда
         
@@ -996,7 +1026,7 @@
             return username;
         }
 
-        // === ИЗМЕНЕНИЕ: функция для получения строки с основным и дополнительными юзернеймами ===
+        // === ИСПРАВЛЕНИЕ: форматирование с доп. юзернеймами ===
         function formatUsernameWithAliases(username) {
             const user = App.users[username];
             if (!user) return formatUserNameWithStatus(username);
@@ -1463,7 +1493,6 @@
             if (!userData) return; 
             const sidebarUser = document.querySelector('.user-profile .username-display'); 
             if (sidebarUser) { 
-                // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases для отображения доп. имён ===
                 sidebarUser.innerHTML = formatUsernameWithAliases(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
             } 
             const sidebarAvatar = document.querySelector('.user-profile .avatar'); 
@@ -1583,7 +1612,7 @@
             }); 
         }
 
-        // === ИЗМЕНЕНИЕ: функция удаления NFT (исправлена) ===
+        // === ИСПРАВЛЕНИЕ: функция удаления NFT (исправлена) ===
         function deleteNft(index) {
             const user = App.users[App.currentUser];
             if (!user.nfts || index >= user.nfts.length) return;
@@ -1740,7 +1769,7 @@
             const isOwn = (username === App.currentUser); 
             const isAdmin = (username === ADMIN_USER); 
             
-            // === ИЗМЕНЕНИЕ: кнопка удаления под каждой открыткой ===
+            // === ИСПРАВЛЕНИЕ: кнопка удаления под каждой открыткой ===
             const nftsList = (userData.nfts || []).map((nft, idx) => { 
                 const canvas = document.createElement('canvas'); 
                 canvas.width = 48; 
@@ -1929,7 +1958,6 @@
             
             const existingNameStrong = headerInfo.querySelector('strong'); 
             if (existingNameStrong) { 
-                // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases для отображения доп. имён в заголовке чата ===
                 existingNameStrong.innerHTML = formatUsernameWithAliases(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
             } 
             
@@ -2004,7 +2032,6 @@
                 const subButtonHtml = (post.author !== App.currentUser) ?
                     `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
                 
-                // === ИЗМЕНЕНИЕ: отображаем доп. имена в ленте ===
                 const authorDisplay = formatUsernameWithAliases(post.author);
                 
                 html += `
@@ -2245,10 +2272,11 @@
             });
         }
 
-        // === ИЗМЕНЕНИЕ: рендер с учётом минимального времени загрузки ===
+        // === ИСПРАВЛЕНИЕ: рендер с плавной загрузкой ===
         function render() { 
             const root = document.getElementById('app'); 
             if (!App.dataLoaded) { 
+                // Загрузочный экран с фоном темы
                 root.innerHTML = `
                     <div class="loading-screen" id="loadingScreen">
                         <div class="loading-logo">🍳</div>
@@ -2391,7 +2419,6 @@
                 blockedMessage = 'Этому пользователю нельзя писать первым';
             }
             
-            // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases для отображения в заголовке чата ===
             const chatTitle = App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : formatUsernameWithAliases(App.activeChat));
             
             return `
@@ -2554,7 +2581,6 @@
                 avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; 
             } 
             const userData = App.users[u] || {}; 
-            // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases ===
             const displayName = formatUsernameWithAliases(name); 
             const streak = getStreak(u); 
             const streakHtml = streak > 0 ? `<span class="streak-badge" style="font-size:10px; padding:1px 4px; margin-left:5px;">🔥${streak}</span>` : ''; 
@@ -2843,7 +2869,7 @@
             } 
         }
         
-        // === ИЗМЕНЕНИЕ: глобальная функция удаления NFT ===
+        // === ИСПРАВЛЕНИЕ: глобальная функция удаления NFT ===
         window.deleteNft = function(index) {
             deleteNft(index);
         };
