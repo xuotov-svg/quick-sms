@@ -7,7 +7,6 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
-        /* ... весь CSS без изменений ... */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -32,24 +31,25 @@
             --hover-border: rgba(212, 175, 55, 0.4);
         }
         
+        /* === ИЗМЕНЕНИЕ: убираем серые фильтры в светлой теме, делаем чисто белый фон === */
         body.light-theme {
-            --bg: #f5f5f7;
-            --bg-panel: #ffffff;
+            --bg: #ffffff;
+            --bg-panel: #f8f9fa;
             --text: #1a1a1a;
             --text-secondary: #4a4a4a;
-            --soft: #e0e0e0;
-            --border: #cccccc;
+            --soft: #e9ecef;
+            --border: #dee2e6;
             --accent: #b8860b;
-            --accent-soft: #f0e6d2;
+            --accent-soft: #fff3cd;
             --message-me: #e3f2fd;
-            --message-other: #f5f5f5;
+            --message-other: #f1f3f4;
             --header: #ffffff;
-            --shadow: rgba(0,0,0,0.1);
-            --input-bg: rgba(255,255,255,0.8);
-            --glass-bg: rgba(255, 255, 255, 0.85);
+            --shadow: rgba(0,0,0,0.08);
+            --input-bg: rgba(0,0,0,0.03);
+            --glass-bg: rgba(255, 255, 255, 0.95);
             --glass-border: rgba(0, 0, 0, 0.1);
-            --hover-bg: rgba(184, 134, 11, 0.1);
-            --hover-border: rgba(184, 134, 11, 0.3);
+            --hover-bg: rgba(184, 134, 11, 0.08);
+            --hover-border: rgba(184, 134, 11, 0.25);
         }
         
         body {
@@ -204,7 +204,7 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* ALBUMEN STATUS ANIMATION - последовательное переливание каждого символа */
+        /* ALBUMEN STATUS ANIMATION */
         @keyframes albumenCharGlow {
             0% { 
                 text-shadow: 0 0 0 #ffffff; 
@@ -281,7 +281,7 @@
             30% { transform: translateY(-6px); opacity: 1; }
         }
         
-        /* Загрузочный экран */
+        /* === ИЗМЕНЕНИЕ: загрузочный экран теперь виден минимум 1 секунду === */
         .loading-screen {
             position: fixed;
             top: 0;
@@ -295,7 +295,7 @@
             z-index: 9999;
             flex-direction: column;
             gap: 20px;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease;
         }
         .loading-screen.hide {
             opacity: 0;
@@ -345,38 +345,7 @@
             50% { opacity: 1; transform: translateY(-5px); }
         }
         
-        .icon-btn,
-        .send-btn,
-        .file-label,
-        .tiny-btn,
-        .inline-btn,
-        .profile-btn,
-        .subscribe-btn,
-        .unsubscribe-btn,
-        .like-btn,
-        .dislike-btn,
-        .settings-icon,
-        .delete-chat-icon,
-        .tab,
-        .nft-item,
-        .msg-actions button,
-        .back-btn,
-        .create-nft-btn,
-        .change-username-btn,
-        .toggle-password,
-        .resend-link,
-        .shop-item button,
-        .close-btn,
-        .nav-item,
-        .post-like,
-        .post-dislike,
-        .post-comment,
-        .post-delete,
-        .create-post-btn {
-            filter: grayscale(0.6) brightness(0.7);
-            transition: all 0.2s ease;
-        }
-        
+        /* === ИЗМЕНЕНИЕ: убираем серые фильтры со всех кнопок в светлой теме === */
         body.light-theme .icon-btn,
         body.light-theme .send-btn,
         body.light-theme .file-label,
@@ -406,7 +375,38 @@
         body.light-theme .post-comment,
         body.light-theme .post-delete,
         body.light-theme .create-post-btn {
-            filter: grayscale(0.3) brightness(0.9);
+            filter: none !important;
+        }
+        
+        .icon-btn,
+        .send-btn,
+        .file-label,
+        .tiny-btn,
+        .inline-btn,
+        .profile-btn,
+        .subscribe-btn,
+        .unsubscribe-btn,
+        .like-btn,
+        .dislike-btn,
+        .settings-icon,
+        .delete-chat-icon,
+        .tab,
+        .nft-item,
+        .msg-actions button,
+        .back-btn,
+        .create-nft-btn,
+        .change-username-btn,
+        .toggle-password,
+        .resend-link,
+        .shop-item button,
+        .close-btn,
+        .nav-item,
+        .post-like,
+        .post-dislike,
+        .post-comment,
+        .post-delete,
+        .create-post-btn {
+            transition: all 0.2s ease;
         }
         
         .icon-btn:hover,
@@ -432,7 +432,7 @@
         .post-comment:hover,
         .post-delete:hover,
         .create-post-btn:hover {
-            filter: grayscale(0.3) brightness(0.85);
+            filter: brightness(1.05);
         }
         
         .tab.active,
@@ -440,7 +440,6 @@
         .icon-btn:active,
         .send-btn:active,
         .nav-item.active {
-            filter: grayscale(0) brightness(1);
             color: var(--accent);
         }
         
@@ -480,9 +479,9 @@
         .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 12px 16px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 15px; outline: none; transition: all 0.2s; }
         .input-group input:focus, .input-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
         
-        .btn { background: var(--accent); color: #000000; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 8px; filter: grayscale(0.3); }
-        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--glass-border); filter: grayscale(0.5); }
-        .btn:hover { transform: translateY(-2px); filter: grayscale(0); }
+        .btn { background: var(--accent); color: #000000; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--glass-border); }
+        .btn:hover { transform: translateY(-2px); }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
         .auth-error { color: #ff6666; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
@@ -493,7 +492,7 @@
         .two-factor-box h3 { color: var(--accent); margin-bottom: 20px; }
         .two-factor-box p { margin-bottom: 20px; color: var(--text); }
         .code-input { font-size: 24px; letter-spacing: 10px; text-align: center; padding: 15px; border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; width: 100%; background: var(--input-bg); color: var(--text); }
-        .resend-link { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; filter: grayscale(0.5); }
+        .resend-link { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
         
         .main-container { flex-direction: row; position: relative; flex: 1; overflow: hidden; }
         .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
@@ -501,9 +500,9 @@
         
         .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--glass-bg); position: relative; z-index: 5; width: 100%; }
         
-        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; font-size: 24px; cursor: pointer; margin-right: 10px; display: none; width: 40px; height: 40px; border-radius: 12px; filter: grayscale(0.6); }
+        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; font-size: 24px; cursor: pointer; margin-right: 10px; display: none; width: 40px; height: 40px; border-radius: 12px; }
         .back-btn.visible { display: block; }
-        .back-btn:hover { filter: grayscale(0.2); }
+        .back-btn:hover { background: var(--hover-bg); }
         
         @media (min-width: 768px) { .sidebar { position: relative; transform: translateX(0); width: 300px; } .back-btn { display: none !important; } }
         
@@ -517,8 +516,8 @@
         .search-add input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 15px; color: var(--text); outline: none; }
         .search-add input::placeholder { color: var(--text-secondary); }
         
-        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; filter: grayscale(0.6) brightness(0.7); }
-        .icon-btn:hover { background: rgba(212, 175, 55, 0.3); filter: grayscale(0.3) brightness(0.85); }
+        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: rgba(212, 175, 55, 0.3); }
         
         .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
         .chat-item { padding: 12px 16px; border-radius: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text); background: var(--glass-bg); border: 1px solid var(--glass-border); transition: all 0.2s; }
@@ -527,8 +526,8 @@
         
         .chat-avatar { width: 40px; height: 40px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border); color: var(--text); }
         .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; filter: grayscale(0.6); }
-        .delete-chat-icon:hover { color: #ff6666; filter: grayscale(0); }
+        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; }
+        .delete-chat-icon:hover { color: #ff6666; }
         
         .chat-header { padding: 12px 16px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; color: var(--text); }
         .chat-header-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -537,13 +536,13 @@
         .chat-user-status.offline { color: #888; }
         
         .chat-actions { display: flex; gap: 8px; align-items: center; }
-        .tiny-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; filter: grayscale(0.6) brightness(0.7); }
-        .tiny-btn:hover { background: rgba(212, 175, 55, 0.2); filter: grayscale(0.3) brightness(0.85); }
+        .tiny-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
+        .tiny-btn:hover { background: rgba(212, 175, 55, 0.2); }
         
-        .subscribe-btn { background: #ff4444; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; filter: grayscale(0.3); }
-        .subscribe-btn:hover { filter: grayscale(0); }
-        .unsubscribe-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; filter: grayscale(0.6); }
-        .unsubscribe-btn:hover { background: rgba(212, 175, 55, 0.2); filter: grayscale(0.3); }
+        .subscribe-btn { background: #ff4444; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; }
+        .subscribe-btn:hover { filter: brightness(1.1); }
+        .unsubscribe-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
+        .unsubscribe-btn:hover { background: rgba(212, 175, 55, 0.2); }
         
         .gift-message { animation: giftGlow 1.5s infinite; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--accent); }
         @keyframes giftGlow { 0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } 50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); } 100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } }
@@ -551,14 +550,14 @@
         .system-message { background: rgba(40, 40, 45, 0.7); border: 1px solid var(--glass-border); color: #aaaaaa; font-style: italic; }
         
         .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
-        .msg-actions button { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 500; filter: grayscale(0.6); }
-        .msg-actions button:hover { background: #ff4444; color: white; filter: grayscale(0); }
+        .msg-actions button { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 500; }
+        .msg-actions button:hover { background: #ff4444; color: white; }
         
-        .like-btn, .dislike-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 4px; filter: grayscale(0.6); padding: 4px 8px; border-radius: 20px; transition: 0.2s; }
-        .like-btn.liked, .dislike-btn.disliked { filter: grayscale(0); color: var(--accent); }
+        .like-btn, .dislike-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 20px; transition: 0.2s; }
+        .like-btn.liked, .dislike-btn.disliked { color: var(--accent); }
         .like-btn.liked { color: #4CAF50; }
         .dislike-btn.disliked { color: #ff6666; }
-        .like-btn:hover, .dislike-btn:hover { background: rgba(212, 175, 55, 0.2); filter: grayscale(0.2); }
+        .like-btn:hover, .dislike-btn:hover { background: rgba(212, 175, 55, 0.2); }
         
         .media-preview { max-width: 200px; max-height: 200px; border-radius: 12px; margin-top: 4px; border: 1px solid var(--glass-border); cursor: pointer; }
         video.media-preview { max-width: 200px; max-height: 200px; }
@@ -570,10 +569,10 @@
         .input-area input[type="text"] { flex: 2; min-width: 120px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 12px 16px; color: var(--text); font-family: inherit; outline: none; font-size: 14px; }
         .input-area input[type="text"]::placeholder { color: var(--text-secondary); }
         .input-area input[type="file"] { display: none; }
-        .file-label { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 24px; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500; filter: grayscale(0.6); }
-        .file-label:hover { background: rgba(212, 175, 55, 0.2); filter: grayscale(0.3); }
-        .send-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); width: 44px; height: 44px; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; filter: grayscale(0.6) brightness(0.7); }
-        .send-btn:hover { background: rgba(212, 175, 55, 0.3); filter: grayscale(0.3) brightness(0.85); }
+        .file-label { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 24px; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .file-label:hover { background: rgba(212, 175, 55, 0.2); }
+        .send-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); width: 44px; height: 44px; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .send-btn:hover { background: rgba(212, 175, 55, 0.3); }
         
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s ease; backdrop-filter: blur(8px); }
         .profile-modal { background: var(--glass-bg); border-radius: 24px; width: 90%; max-width: 400px; padding: 24px; box-shadow: 0 20px 40px var(--shadow); border: 1px solid var(--glass-border); color: var(--text); max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease; }
@@ -598,7 +597,6 @@
         }
         .change-file-btn:hover {
             background: rgba(212, 175, 55, 0.3);
-            filter: grayscale(0.2);
         }
         
         .wallpaper-preview,
@@ -609,25 +607,25 @@
         
         .password-wrapper { position: relative; display: flex; align-items: center; }
         .password-wrapper input { flex: 1; padding-right: 40px; }
-        .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; filter: grayscale(0.6); }
+        .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; }
         
         .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
-        .nft-item { background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border); width: 64px; height: 64px; cursor: pointer; transition: all 0.1s ease; filter: grayscale(0.6); }
+        .nft-item { background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border); width: 64px; height: 64px; cursor: pointer; transition: all 0.1s ease; }
         .nft-item canvas, .nft-item img { width: 100%; height: 100%; image-rendering: crisp-edges; }
-        .nft-item:hover { background: rgba(212, 175, 55, 0.3); filter: grayscale(0.3); transform: scale(1.05); }
+        .nft-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
         
         .shop-section { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
         .shop-section h4 { color: var(--text); margin-bottom: 12px; }
         .shop-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--glass-border); color: var(--text); }
-        .shop-item button { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; padding: 6px 12px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 12px; filter: grayscale(0.6); }
-        .shop-item button:hover { background: rgba(212, 175, 55, 0.4); filter: grayscale(0.3); }
+        .shop-item button { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; padding: 6px 12px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 12px; }
+        .shop-item button:hover { background: rgba(212, 175, 55, 0.4); }
         
         .profile-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
-        .profile-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; flex: 1; cursor: pointer; text-align: center; filter: grayscale(0.6); }
+        .profile-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; flex: 1; cursor: pointer; text-align: center; }
         .profile-btn.secondary { background: rgba(255,255,255,0.1); color: #6b7280; }
-        .profile-btn.logout { background: #ff4444; color: #ffffff; filter: grayscale(0.2); }
-        .profile-btn.warning { background: #ff9800; color: #000000; filter: grayscale(0.2); }
-        .profile-btn:hover { filter: grayscale(0.2); transform: translateY(-2px); }
+        .profile-btn.logout { background: #ff4444; color: #ffffff; }
+        .profile-btn.warning { background: #ff9800; color: #000000; }
+        .profile-btn:hover { transform: translateY(-2px); }
         
         .currency-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
         .hidden { display: none; }
@@ -644,11 +642,11 @@
         .color-option { width: 30px; height: 30px; border-radius: 8px; border: 2px solid #fff; cursor: pointer; }
         .color-option.active { border: 3px solid var(--accent); transform: scale(1.1); }
         
-        .create-nft-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); padding: 10px; width: 100%; font-weight: bold; cursor: pointer; color: #6b7280; border-radius: 12px; filter: grayscale(0.6); }
-        .create-nft-btn:hover { filter: grayscale(0.3); background: rgba(212, 175, 55, 0.3); }
+        .create-nft-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); padding: 10px; width: 100%; font-weight: bold; cursor: pointer; color: #6b7280; border-radius: 12px; }
+        .create-nft-btn:hover { background: rgba(212, 175, 55, 0.3); }
         
-        .change-username-btn { background: #ff9800; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; color: #000000; filter: grayscale(0.2); }
-        .change-username-btn:hover { filter: grayscale(0); }
+        .change-username-btn { background: #ff9800; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; color: #000000; }
+        .change-username-btn:hover { filter: brightness(1.1); }
         
         .admin-give-form { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--glass-border); }
         
@@ -814,11 +812,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            filter: grayscale(0.3);
         }
         .create-post-btn:hover {
             transform: scale(1.05);
-            filter: grayscale(0);
         }
         .comments-modal {
             background: var(--glass-bg);
@@ -918,6 +914,14 @@
             background: #ff4444;
             color: white;
         }
+        
+        /* === ИЗМЕНЕНИЕ: стиль для отображения дополнительных юзернеймов через запятую === */
+        .additional-names {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -926,6 +930,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
+        // === КОНФИГУРАЦИЯ FIREBASE ===
         const firebaseConfig = { apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4", authDomain: "quick-sms-772c4.firebaseapp.com", databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com", projectId: "quick-sms-772c4", storageBucket: "quick-sms-772c4.firebasestorage.app", messagingSenderId: "722370764251", appId: "1:722370764251:web:1f93437108ee3d54f15bfe" };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
@@ -964,11 +969,11 @@
         };
         App.systemBots = [];
         
-        // Время начала загрузки для минимального показа лоадера
+        // === ИЗМЕНЕНИЕ: переменные для контроля времени загрузки ===
         let loadingStartTime = Date.now();
         const MIN_LOADING_TIME = 1000; // 1 секунда
         
-        // Только один статус - ALBUMEN
+        // Статус ALBUMEN
         const STATUS_ALBUMEN = { name: 'ALBUMEN', class: 'albumen-name', messageClass: '', color: '#88ccff' };
         
         function getUserStatus(username) {
@@ -989,6 +994,20 @@
                 return `<span class="${status.class}">${charsHtml}</span>`;
             }
             return username;
+        }
+
+        // === ИЗМЕНЕНИЕ: функция для получения строки с основным и дополнительными юзернеймами ===
+        function formatUsernameWithAliases(username) {
+            const user = App.users[username];
+            if (!user) return formatUserNameWithStatus(username);
+            
+            let display = formatUserNameWithStatus(username);
+            const aliases = user.additionalUsernames || [];
+            if (aliases.length > 0) {
+                const aliasStr = aliases.join(', ');
+                display += `<span class="additional-names">, ${aliasStr}</span>`;
+            }
+            return display;
         }
 
         function applyTheme(theme) {
@@ -1076,12 +1095,10 @@
             });
         }
         
-        // Функция для поиска основного аккаунта по любому юзернейму (основному или дополнительному)
+        // Поиск основного аккаунта по любому юзернейму
         function findMainUsername(inputUsername) {
             if (!inputUsername) return null;
-            // Если точное совпадение с основным
             if (App.users[inputUsername]) return inputUsername;
-            // Ищем среди дополнительных
             for (let mainName in App.users) {
                 const user = App.users[mainName];
                 if (user.additionalUsernames && user.additionalUsernames.includes(inputUsername)) {
@@ -1101,7 +1118,6 @@
             let pendingPrivacy = currentPrivacy;
             let pendingTwoFA = userData.twoFA || false;
             
-            // Подготавливаем список дополнительных юзернеймов
             const additionalUsernames = userData.additionalUsernames || [];
             const additionalUsernamesHtml = additionalUsernames.map(name => `
                 <div class="additional-username-item">
@@ -1177,7 +1193,7 @@
                             <small style="color: var(--text-secondary); display:block; margin-top:5px;">Максимум 2 дополнительных имени. Стоимость: 100 YC за каждый.</small>
                         </div>
                         
-                        <!-- Инструкция по установке на главный экран -->
+                        <!-- Инструкция по установке -->
                         <div style="margin-top: 20px; padding: 16px; background: rgba(212,175,55,0.1); border-radius: 16px; border: 1px solid var(--glass-border);">
                             <h4 style="margin:0 0 8px 0; color: var(--accent);">📱 Как добавить Yolkapp на экран домой?</h4>
                             <ol style="margin:0; padding-left:20px; color: var(--text); font-size:14px; line-height:1.5;">
@@ -1292,7 +1308,6 @@
                 });
             }
             
-            // Добавление дополнительного юзернейма
             document.getElementById('addAdditionalUsernameBtn').addEventListener('click', () => {
                 const additionalCount = (App.users[App.currentUser].additionalUsernames || []).length;
                 if (additionalCount >= 2) {
@@ -1310,12 +1325,10 @@
                     showNotification('Неверный формат юзернейма', 'error');
                     return;
                 }
-                // Проверяем, не занято ли имя
                 if (App.users[cleanName] || findMainUsername(cleanName)) {
                     showNotification('Этот юзернейм уже занят', 'error');
                     return;
                 }
-                // Проверяем, не используется ли как дополнительное у кого-то
                 let usedAsAdditional = false;
                 for (let u in App.users) {
                     if (App.users[u].additionalUsernames && App.users[u].additionalUsernames.includes(cleanName)) {
@@ -1328,19 +1341,16 @@
                     return;
                 }
                 
-                // Всё ок, списываем YC и добавляем
                 App.users[App.currentUser].stars -= 100;
                 if (!App.users[App.currentUser].additionalUsernames) App.users[App.currentUser].additionalUsernames = [];
                 App.users[App.currentUser].additionalUsernames.push(cleanName);
                 saveToFirebase();
                 updateUserInterface();
                 showNotification(`Дополнительный юзернейм ${cleanName} добавлен!`);
-                // Обновляем модалку
                 document.getElementById('settingsModalOverlay').remove();
                 openProfileSettings();
             });
             
-            // Удаление дополнительного юзернейма через делегирование
             document.getElementById('settingsModalOverlay').addEventListener('click', (e) => {
                 if (e.target.classList.contains('delete-username-btn')) {
                     const username = e.target.dataset.username;
@@ -1447,12 +1457,14 @@
         function isValidUsername(str) { return /^[a-z0-9]{4,15}$/.test(str); }
         function isValidPassword(str) { return /^[A-Za-z0-9]+$/.test(str); }
         function isUserOnline(username) { const lastSeen = App.users[username]?.lastSeen; if (!lastSeen) return false; return (Date.now() - lastSeen) < 300000; }
+        
         function updateSidebarUser() { 
             const userData = App.users[App.currentUser]; 
             if (!userData) return; 
             const sidebarUser = document.querySelector('.user-profile .username-display'); 
             if (sidebarUser) { 
-                sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
+                // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases для отображения доп. имён ===
+                sidebarUser.innerHTML = formatUsernameWithAliases(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
             } 
             const sidebarAvatar = document.querySelector('.user-profile .avatar'); 
             if (sidebarAvatar) { 
@@ -1463,9 +1475,13 @@
                 } 
             } 
         }
+        
         function applyWallpaper() { const chatArea = document.querySelector('.chat-area'); if (!chatArea) return; const wallpaper = App.users[App.currentUser]?.chatWallpaper || ''; if (wallpaper && wallpaper.startsWith('data:image')) { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; chatArea.style.backgroundRepeat = 'no-repeat'; } else if (wallpaper === '') { chatArea.style.backgroundImage = 'none'; chatArea.style.backgroundColor = 'rgba(5, 5, 5, 0.85)'; } else if (wallpaper && wallpaper !== '') { chatArea.style.backgroundImage = `url('${wallpaper}')`; chatArea.style.backgroundSize = 'cover'; chatArea.style.backgroundPosition = 'center'; } }
+        
         function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance:not(.user-profile .star-balance)'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
+        
         function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts, donationRequests: App.donationRequests }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
+        
         function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
 
         async function createNft(grid, owner) {
@@ -1481,7 +1497,43 @@
             return true;
         }
         
-        function openNftCreator() { if (App.users[App.currentUser].stars < 50) { showNotification('Не хватает 50 YC для создания открытки', 'error'); return; } const modalHtml = `<div class="modal-overlay" id="nftCreatorModal"><div class="profile-modal" style="max-width: 500px;"><h3>🎨 СОЗДАТЬ ОТКРЫТКУ (10x10)</h3><div class="pixel-canvas" id="pixelCanvas" style="display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 1px; background: #2a2a2a;"></div><div class="color-palette" id="colorPalette"></div><button class="create-nft-btn" id="confirmCreateNftBtn">СОЗДАТЬ (50 YC)</button><div class="profile-actions"><button class="profile-btn secondary" id="closeNftCreator">ОТМЕНА</button></div></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); let grid = Array(10).fill().map(() => Array(10).fill('#ffffff')); let currentColor = '#000000'; const canvasDiv = document.getElementById('pixelCanvas'); const paletteDiv = document.getElementById('colorPalette'); const colors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080']; colors.forEach(col => { const btn = document.createElement('div'); btn.className = `color-option ${col === currentColor ? 'active' : ''}`; btn.style.backgroundColor = col; btn.addEventListener('click', () => { currentColor = col; document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active')); btn.classList.add('active'); }); paletteDiv.appendChild(btn); }); function renderCanvas() { canvasDiv.innerHTML = ''; for (let i = 0; i < 10; i++) { for (let j = 0; j < 10; j++) { const pixel = document.createElement('div'); pixel.className = 'pixel'; pixel.style.backgroundColor = grid[i][j]; pixel.style.width = '30px'; pixel.style.height = '30px'; pixel.addEventListener('click', () => { grid[i][j] = currentColor; renderCanvas(); }); canvasDiv.appendChild(pixel); } } } renderCanvas(); document.getElementById('confirmCreateNftBtn').addEventListener('click', async () => { const success = await createNft(grid, App.currentUser); if (success) document.getElementById('nftCreatorModal').remove(); }); document.getElementById('closeNftCreator').addEventListener('click', () => { document.getElementById('nftCreatorModal').remove(); }); }
+        function openNftCreator() { 
+            if (App.users[App.currentUser].stars < 50) { showNotification('Не хватает 50 YC для создания открытки', 'error'); return; } 
+            const modalHtml = `<div class="modal-overlay" id="nftCreatorModal"><div class="profile-modal" style="max-width: 500px;"><h3>🎨 СОЗДАТЬ ОТКРЫТКУ (10x10)</h3><div class="pixel-canvas" id="pixelCanvas" style="display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 1px; background: #2a2a2a;"></div><div class="color-palette" id="colorPalette"></div><button class="create-nft-btn" id="confirmCreateNftBtn">СОЗДАТЬ (50 YC)</button><div class="profile-actions"><button class="profile-btn secondary" id="closeNftCreator">ОТМЕНА</button></div></div></div>`; 
+            document.body.insertAdjacentHTML('beforeend', modalHtml); 
+            let grid = Array(10).fill().map(() => Array(10).fill('#ffffff')); 
+            let currentColor = '#000000'; 
+            const canvasDiv = document.getElementById('pixelCanvas'); 
+            const paletteDiv = document.getElementById('colorPalette'); 
+            const colors = ['#000000', '#ffffff', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080']; 
+            colors.forEach(col => { 
+                const btn = document.createElement('div'); 
+                btn.className = `color-option ${col === currentColor ? 'active' : ''}`; 
+                btn.style.backgroundColor = col; 
+                btn.addEventListener('click', () => { currentColor = col; document.querySelectorAll('.color-option').forEach(c => c.classList.remove('active')); btn.classList.add('active'); }); 
+                paletteDiv.appendChild(btn); 
+            }); 
+            function renderCanvas() { 
+                canvasDiv.innerHTML = ''; 
+                for (let i = 0; i < 10; i++) { 
+                    for (let j = 0; j < 10; j++) { 
+                        const pixel = document.createElement('div'); 
+                        pixel.className = 'pixel'; 
+                        pixel.style.backgroundColor = grid[i][j]; 
+                        pixel.style.width = '30px'; 
+                        pixel.style.height = '30px'; 
+                        pixel.addEventListener('click', () => { grid[i][j] = currentColor; renderCanvas(); }); 
+                        canvasDiv.appendChild(pixel); 
+                    } 
+                } 
+            } 
+            renderCanvas(); 
+            document.getElementById('confirmCreateNftBtn').addEventListener('click', async () => { 
+                const success = await createNft(grid, App.currentUser); 
+                if (success) document.getElementById('nftCreatorModal').remove(); 
+            }); 
+            document.getElementById('closeNftCreator').addEventListener('click', () => { document.getElementById('nftCreatorModal').remove(); }); 
+        }
 
         function openGiftMenu() { 
             const target = App.activeChat; 
@@ -1491,7 +1543,14 @@
             } 
             const nfts = App.users[App.currentUser].nfts || []; 
             const hasNfts = nfts.length > 0; 
-            const nftListHtml = hasNfts ? `<div class="nft-collection" style="margin-top:10px;">${nfts.map((nft, idx) => { const canvas = document.createElement('canvas'); canvas.width = 48; canvas.height = 48; const ctx = canvas.getContext('2d'); for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
+            const nftListHtml = hasNfts ? `<div class="nft-collection" style="margin-top:10px;">${nfts.map((nft, idx) => { 
+                const canvas = document.createElement('canvas'); 
+                canvas.width = 48; 
+                canvas.height = 48; 
+                const ctx = canvas.getContext('2d'); 
+                for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); 
+                return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; 
+            }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
             const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ОТКРЫТКУ</h3><div id="nftTab">${nftListHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             if (hasNfts) { 
@@ -1522,6 +1581,24 @@
             document.getElementById('closeGiftModal').addEventListener('click', () => { 
                 document.getElementById('giftModalOverlay').remove(); 
             }); 
+        }
+
+        // === ИЗМЕНЕНИЕ: функция удаления NFT (исправлена) ===
+        function deleteNft(index) {
+            const user = App.users[App.currentUser];
+            if (!user.nfts || index >= user.nfts.length) return;
+            if (confirm('Удалить эту открытку?')) {
+                user.nfts.splice(index, 1);
+                saveToFirebase();
+                updateUserInterface();
+                showNotification('Открытка удалена');
+                // Обновляем модальное окно профиля
+                const modal = document.getElementById('profileModalOverlay');
+                if (modal) {
+                    modal.remove();
+                    openProfileModal(App.currentUser);
+                }
+            }
         }
 
         function changeUsername(newUsername) {
@@ -1658,28 +1735,12 @@
             }
         }
 
-        // Функция удаления NFT (открытки)
-        function deleteNft(index) {
-            const user = App.users[App.currentUser];
-            if (!user.nfts || index >= user.nfts.length) return;
-            if (confirm('Удалить эту открытку?')) {
-                user.nfts.splice(index, 1);
-                saveToFirebase();
-                updateUserInterface();
-                showNotification('Открытка удалена');
-                // Если модальное окно профиля открыто, обновим его
-                const modal = document.getElementById('profileModalOverlay');
-                if (modal) {
-                    modal.remove();
-                    openProfileModal(App.currentUser);
-                }
-            }
-        }
-
         function openProfileModal(username) { 
             const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', nfts: [], followers: [], following: [] }) };
             const isOwn = (username === App.currentUser); 
             const isAdmin = (username === ADMIN_USER); 
+            
+            // === ИЗМЕНЕНИЕ: кнопка удаления под каждой открыткой ===
             const nftsList = (userData.nfts || []).map((nft, idx) => { 
                 const canvas = document.createElement('canvas'); 
                 canvas.width = 48; 
@@ -1689,6 +1750,7 @@
                 const deleteBtn = isOwn ? `<button class="delete-nft-btn" onclick="window.deleteNft(${idx})">УДАЛИТЬ</button>` : '';
                 return `<div style="display: flex; flex-direction: column; align-items: center;"><div class="nft-item"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>${deleteBtn}</div>`; 
             }).join(''); 
+            
             const followersCount = (userData.followers || []).length;
             
             if (isOwn) {
@@ -1703,14 +1765,13 @@
                                 </div>
                             </div>
                             <div class="profile-name-section">
-                                <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="username-display" style="font-size:20px;">${formatUsernameWithAliases(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                 <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
                             </div>
                             <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
                             <div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div><button class="tiny-btn" id="createNftBtn" style="margin-top:8px;">+ СОЗДАТЬ ОТКРЫТКУ (50 YC)</button></div>
                             
-                            <!-- Без вкладок, просто список покупок -->
                             <div class="shop-section">
                                 <h4>ПОПОЛНИТЬ YC</h4>
                                 <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">КУПИТЬ</button></div>
@@ -1789,7 +1850,7 @@
                 return;
             }
             
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUsernameWithAliases(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
         }
@@ -1868,7 +1929,8 @@
             
             const existingNameStrong = headerInfo.querySelector('strong'); 
             if (existingNameStrong) { 
-                existingNameStrong.innerHTML = formatUserNameWithStatus(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
+                // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases для отображения доп. имён в заголовке чата ===
+                existingNameStrong.innerHTML = formatUsernameWithAliases(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
             } 
             
             const streak = getStreak(username);
@@ -1889,6 +1951,7 @@
             headerInfo.appendChild(statusDiv); 
         }
 
+        // ===== ЛЕНТА =====
         let feedPage = 0;
         const FEED_PAGE_SIZE = 10;
         let feedPosts = [];
@@ -1940,12 +2003,16 @@
                 const isSubscribed = isFollowing(App.currentUser, post.author);
                 const subButtonHtml = (post.author !== App.currentUser) ?
                     `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
+                
+                // === ИЗМЕНЕНИЕ: отображаем доп. имена в ленте ===
+                const authorDisplay = formatUsernameWithAliases(post.author);
+                
                 html += `
                     <div class="post-card" data-post-id="${post.id}">
                         <div class="post-header" onclick="openProfileModal('${post.author}')">
                             <div class="post-avatar">${avatarHtml}</div>
                             <div style="flex:1;">
-                                <div class="post-author">${formatUserNameWithStatus(post.author)}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="post-author">${authorDisplay}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                 <div class="post-time">${date}</div>
                             </div>
                             ${subButtonHtml}
@@ -2038,7 +2105,7 @@
                         <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
                             ${post.comments?.map(c => `
                                 <div class="comment-item">
-                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
+                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUsernameWithAliases(c.author)}</div>
                                     <div class="comment-text" style="color: var(--text);">${c.text}</div>
                                     <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
                                 </div>
@@ -2178,6 +2245,7 @@
             });
         }
 
+        // === ИЗМЕНЕНИЕ: рендер с учётом минимального времени загрузки ===
         function render() { 
             const root = document.getElementById('app'); 
             if (!App.dataLoaded) { 
@@ -2198,7 +2266,6 @@
             const loadingScreen = document.getElementById('loadingScreen');
             if (loadingScreen) {
                 loadingScreen.classList.add('hide');
-                // Задержка перед полным удалением и рендером основного интерфейса
                 const elapsed = Date.now() - loadingStartTime;
                 const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
                 setTimeout(() => {
@@ -2255,7 +2322,6 @@
                 if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ'; return; } 
                 const clean = '@' + username;
                 
-                // Поиск основного аккаунта по возможному дополнительному имени
                 let mainUsername = findMainUsername(clean);
                 if (!mainUsername) {
                     if (App.users[clean]) mainUsername = clean;
@@ -2324,20 +2390,24 @@
             if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
                 blockedMessage = 'Этому пользователю нельзя писать первым';
             }
+            
+            // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases для отображения в заголовке чата ===
+            const chatTitle = App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : formatUsernameWithAliases(App.activeChat));
+            
             return `
                 <div class="main-container">
                     ${isChatsActive ? `
                     <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                         <div class="user-profile" id="openProfileBtn">
                             <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
-                            <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}</div>
+                            <div><div class="username-display">${formatUsernameWithAliases(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}</div>
                         </div>
                         <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
                         <div class="chats-list" id="chatsList"></div>
                     </div>
                     <div class="chat-area">
                         <div class="chat-header">
-                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : formatUserNameWithStatus(App.activeChat))}${!App.channels && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                            <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatTitle}${!App.channels && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
                             <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
                         </div>
                         <div class="messages-container" id="messageList"></div>
@@ -2484,7 +2554,8 @@
                 avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; 
             } 
             const userData = App.users[u] || {}; 
-            const displayName = formatUserNameWithStatus(name); 
+            // === ИЗМЕНЕНИЕ: используем formatUsernameWithAliases ===
+            const displayName = formatUsernameWithAliases(name); 
             const streak = getStreak(u); 
             const streakHtml = streak > 0 ? `<span class="streak-badge" style="font-size:10px; padding:1px 4px; margin-left:5px;">🔥${streak}</span>` : ''; 
             return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`; 
@@ -2509,7 +2580,6 @@
             if (!query.startsWith('@')) query = '@' + query; 
             if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } 
             
-            // Поиск с учётом дополнительных юзернеймов
             let mainUser = findMainUsername(query);
             if (!mainUser) {
                 if (App.users[query]) mainUser = query;
@@ -2773,7 +2843,7 @@
             } 
         }
         
-        // Глобальная функция удаления NFT
+        // === ИЗМЕНЕНИЕ: глобальная функция удаления NFT ===
         window.deleteNft = function(index) {
             deleteNft(index);
         };
