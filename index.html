@@ -1043,6 +1043,11 @@
                     <div class="profile-modal">
                         <h3>НАСТРОЙКИ</h3>
                         <div class="profile-input-group">
+                            <label>ВАШ ЮЗЕРНЕЙМ</label>
+                            <input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2); cursor: default; opacity: 0.8;">
+                            <small style="color: var(--text-secondary);">Не редактируется</small>
+                        </div>
+                        <div class="profile-input-group">
                             <label>ИМЯ (до 6 символов)</label>
                             <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Ваше имя">
                             <small style="color: var(--text-secondary);">Англ/рус буквы и цифры</small>
