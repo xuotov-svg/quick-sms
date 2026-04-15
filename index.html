@@ -252,7 +252,6 @@
             30% { transform: translateY(-6px); opacity: 1; }
         }
         
-        /* Загрузочный экран – только надпись */
         .loading-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -287,7 +286,6 @@
             50% { opacity: 1; transform: translateY(-5px); }
         }
         
-        /* Убираем серые фильтры в светлой теме */
         body.light-theme .icon-btn,
         body.light-theme .send-btn,
         body.light-theme .file-label,
@@ -468,8 +466,9 @@
         
         .chat-avatar { width: 40px; height: 40px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border); color: var(--text); }
         .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; }
-        .delete-chat-icon:hover { color: #ff6666; }
+        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; }
+        .delete-chat-icon img { width: 20px; height: 20px; object-fit: contain; }
+        .delete-chat-icon:hover { opacity: 0.8; }
         
         .chat-header { padding: 12px 16px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; color: var(--text); }
         .chat-header-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
@@ -481,10 +480,10 @@
         .tiny-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
         .tiny-btn:hover { background: rgba(212, 175, 55, 0.2); }
         
-        .subscribe-btn { background: #ff4444; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; }
+        .subscribe-btn { background: #DBBA00; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #000000; font-weight: 500; }
         .subscribe-btn:hover { filter: brightness(1.1); }
-        .unsubscribe-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
-        .unsubscribe-btn:hover { background: rgba(212, 175, 55, 0.2); }
+        .unsubscribe-btn { background: #818181; border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; }
+        .unsubscribe-btn:hover { background: #6a6a6a; }
         
         .gift-message { animation: giftGlow 1.5s infinite; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--accent); }
         @keyframes giftGlow { 0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } 50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); } 100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } }
@@ -592,8 +591,8 @@
         
         .admin-give-form { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--glass-border); }
         
-        .streak-badge { display: inline-flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; color: #ff8c00; margin-left: 6px; animation: flameFlicker 1s infinite; }
-        @keyframes flameFlicker { 0% { text-shadow: 0 0 2px #ff6b00; } 50% { text-shadow: 0 0 8px #ff4500; } 100% { text-shadow: 0 0 2px #ff6b00; } }
+        .streak-badge { display: inline-flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; color: #ff8c00; margin-left: 6px; }
+        .streak-badge img { width: 14px; height: 14px; object-fit: contain; }
         
         .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
         
@@ -697,6 +696,7 @@
             margin-top: 12px;
             border-top: 1px solid var(--glass-border);
             padding-top: 12px;
+            align-items: center;
         }
         .post-stats button {
             background: rgba(212, 175, 55, 0.12);
@@ -727,10 +727,16 @@
             border-color: #d4af37;
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
+        .post-like img, .post-comment img, .post-delete img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
         .post-delete {
             background: rgba(255, 68, 68, 0.12) !important;
             border-color: rgba(255, 68, 68, 0.3) !important;
             color: #ff6666 !important;
+            padding: 8px 12px !important;
         }
         .post-delete:hover {
             background: rgba(255, 68, 68, 0.25) !important;
@@ -859,6 +865,15 @@
 
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
+        
+        // Иконки
+        const ICONS = {
+            LIKE_OFF: 'https://github.com/xuotov-svg/quick-sms/blob/main/a1%20(1).png?raw=true',
+            LIKE_ON: 'https://github.com/xuotov-svg/quick-sms/blob/main/а2.png?raw=true',
+            COMMENT: 'https://github.com/xuotov-svg/quick-sms/blob/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png?raw=true',
+            DELETE: 'https://github.com/xuotov-svg/quick-sms/blob/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png?raw=true',
+            FIRE: 'https://github.com/xuotov-svg/quick-sms/blob/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png?raw=true'
+        };
         
         const App = { 
             users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
@@ -1479,8 +1494,6 @@
                 document.getElementById('giftModalOverlay').remove(); 
             }); 
         }
-
-        // Функция удаления NFT удалена, кнопка не отображается
         
         function ensureUserFollowData(username) {
             if (!App.users[username]) return;
@@ -1749,7 +1762,7 @@
             if (streak > 0) {
                 const streakDiv = document.createElement('span');
                 streakDiv.className = 'streak-badge';
-                streakDiv.innerHTML = `🔥 ${streak}`;
+                streakDiv.innerHTML = `<img src="${ICONS.FIRE}" style="width:14px;height:14px;"> ${streak}`;
                 existingNameStrong?.appendChild(streakDiv);
             }
             
@@ -1807,9 +1820,8 @@
                 const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (post.author[1] || '?');
                 const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
                 const likesCount = Object.keys(post.likes || {}).length;
-                const dislikesCount = Object.keys(post.dislikes || {}).length;
+                const commentsCount = post.comments?.length || 0;
                 const userLiked = post.likes && post.likes[App.currentUser];
-                const userDisliked = post.dislikes && post.dislikes[App.currentUser];
                 const isOwner = post.author === App.currentUser;
                 const date = new Date(post.time).toLocaleString();
                 const isSubscribed = isFollowing(App.currentUser, post.author);
@@ -1817,6 +1829,7 @@
                     `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
                 
                 const authorDisplay = formatUsernameWithAliases(post.author);
+                const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
                 
                 html += `
                     <div class="post-card" data-post-id="${post.id}">
@@ -1831,10 +1844,9 @@
                         <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
                         ${mediaHtml}
                         <div class="post-stats">
-                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')">👍 <span>${likesCount}</span></button>
-                            <button class="post-dislike ${userDisliked ? 'active' : ''}" onclick="toggleDislikePost('${post.id}')">👎 <span>${dislikesCount}</span></button>
-                            <button class="post-comment" onclick="openCommentsModal('${post.id}')">💬 <span>${post.comments?.length || 0}</span></button>
-                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')">🗑️</button>` : ''}
+                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:20px;height:20px;"> <span>${likesCount}</span></button>
+                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:20px;height:20px;"> <span>${commentsCount}</span></button>
+                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1863,42 +1875,21 @@
             updatePostStats(postId);
         }
 
-        function toggleDislikePost(postId) {
-            const post = App.posts.find(p => p.id === postId);
-            if (!post) return;
-            if (!post.likes) post.likes = {};
-            if (!post.dislikes) post.dislikes = {};
-            const user = App.currentUser;
-            if (post.dislikes[user]) delete post.dislikes[user];
-            else {
-                if (post.likes[user]) delete post.likes[user];
-                post.dislikes[user] = true;
-            }
-            saveToFirebase();
-            updatePostStats(postId);
-        }
-
         function updatePostStats(postId) {
             const post = App.posts.find(p => p.id === postId);
             if (!post) return;
             const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
             if (!postCard) return;
             const likesCount = Object.keys(post.likes || {}).length;
-            const dislikesCount = Object.keys(post.dislikes || {}).length;
             const userLiked = post.likes && post.likes[App.currentUser];
-            const userDisliked = post.dislikes && post.dislikes[App.currentUser];
             const likeBtn = postCard.querySelector('.post-like');
-            const dislikeBtn = postCard.querySelector('.post-dislike');
             const commentBtn = postCard.querySelector('.post-comment');
             if (likeBtn) {
                 likeBtn.classList.toggle('active', userLiked);
+                const likeIcon = likeBtn.querySelector('img');
+                if (likeIcon) likeIcon.src = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
                 const likeSpan = likeBtn.querySelector('span');
                 if (likeSpan) likeSpan.textContent = likesCount;
-            }
-            if (dislikeBtn) {
-                dislikeBtn.classList.toggle('active', userDisliked);
-                const dislikeSpan = dislikeBtn.querySelector('span');
-                if (dislikeSpan) dislikeSpan.textContent = dislikesCount;
             }
             if (commentBtn) {
                 const commentSpan = commentBtn.querySelector('span');
@@ -2363,8 +2354,8 @@
             const userData = App.users[u] || {}; 
             const displayName = formatUsernameWithAliases(name); 
             const streak = getStreak(u); 
-            const streakHtml = streak > 0 ? `<span class="streak-badge" style="font-size:10px; padding:1px 4px; margin-left:5px;">🔥${streak}</span>` : ''; 
-            return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)">🗑️</span>` : ''}</div>`; 
+            const streakHtml = streak > 0 ? `<span class="streak-badge"><img src="${ICONS.FIRE}" style="width:12px;height:12px;"> ${streak}</span>` : ''; 
+            return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
         }
         
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
