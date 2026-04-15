@@ -204,11 +204,11 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         @keyframes albumenCharGlow {
-            0% { text-shadow: 0 0 0 #ffffff; color: #ffffff; opacity: 0.7; }
-            15% { text-shadow: 0 0 8px #88ccff, 0 0 3px #aaddff; color: #cceeff; opacity: 1; }
-            30% { text-shadow: 0 0 12px #88ccff, 0 0 5px #66bbff; color: #ffffff; opacity: 1; }
-            50% { text-shadow: 0 0 5px #88ccff; color: #ddeeff; opacity: 0.9; }
-            100% { text-shadow: 0 0 0 #ffffff; color: #ffffff; opacity: 0.7; }
+            0% { text-shadow: 0 0 0 #0066cc; color: #0066cc; opacity: 0.8; }
+            15% { text-shadow: 0 0 8px #88ccff, 0 0 3px #aaddff; color: #3399ff; opacity: 1; }
+            30% { text-shadow: 0 0 12px #88ccff, 0 0 5px #66bbff; color: #0066cc; opacity: 1; }
+            50% { text-shadow: 0 0 5px #88ccff; color: #2277dd; opacity: 0.9; }
+            100% { text-shadow: 0 0 0 #0066cc; color: #0066cc; opacity: 0.8; }
         }
         
         .albumen-name {
@@ -591,7 +591,7 @@
         
         .admin-give-form { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--glass-border); }
         
-        .streak-badge { display: inline-flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; color: #ff8c00; margin-left: 6px; }
+        .streak-badge { display: inline-flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; color: #DBBA00; margin-left: 6px; }
         .streak-badge img { width: 14px; height: 14px; object-fit: contain; }
         
         .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
@@ -887,7 +887,7 @@
         let loadingStartTime = Date.now();
         const MIN_LOADING_TIME = 1000;
         
-        const STATUS_ALBUMEN = { name: 'ALBUMEN', class: 'albumen-name', messageClass: '', color: '#88ccff' };
+        const STATUS_ALBUMEN = { name: 'ALBUMEN', class: 'albumen-name', messageClass: '', color: '#0066cc' };
         
         function getUserStatus(username) {
             const user = App.users[username];
@@ -896,28 +896,37 @@
             return null;
         }
         
+        function getDisplayName(username) {
+            const user = App.users[username];
+            if (!user) return username;
+            // Возвращаем displayName, если задан, иначе имя без @
+            if (user.displayName && user.displayName.trim().length > 0) {
+                return user.displayName.trim();
+            }
+            return username.substring(1); // убираем @
+        }
+        
         function formatUserNameWithStatus(username) {
+            const user = App.users[username];
+            const displayName = getDisplayName(username);
             const status = getUserStatus(username);
             if (status) {
-                const chars = username.split('');
+                const chars = displayName.split('');
                 const charsHtml = chars.map((char, index) => {
                     const delay = index * 0.08;
                     return `<span class="albumen-char" style="animation-delay: ${delay}s;">${char}</span>`;
                 }).join('');
                 return `<span class="${status.class}">${charsHtml}</span>`;
             }
-            return username;
+            return displayName;
         }
 
         function formatUsernameWithAliases(username) {
+            // В новом дизайне доп.юзернеймы не используются, оставляем для совместимости
             const user = App.users[username];
             if (!user) return formatUserNameWithStatus(username);
             let display = formatUserNameWithStatus(username);
-            const aliases = user.additionalUsernames || [];
-            if (aliases.length > 0) {
-                const aliasStr = aliases.join(', ');
-                display += `<span class="additional-names">, ${aliasStr}</span>`;
-            }
+            // (доп. имена убраны, оставляем пусто)
             return display;
         }
 
@@ -995,7 +1004,7 @@
                     if (!existingTyping) {
                         const typingDiv = document.createElement('div');
                         typingDiv.className = 'typing-indicator';
-                        typingDiv.innerHTML = `<span>${data.from} печатает</span><div class="typing-dots"><span></span><span></span><span></span></div>`;
+                        typingDiv.innerHTML = `<span>${getDisplayName(data.from)} печатает</span><div class="typing-dots"><span></span><span></span><span></span></div>`;
                         messagesContainer.appendChild(typingDiv);
                         messagesContainer.scrollTop = messagesContainer.scrollHeight;
                     }
@@ -1008,6 +1017,7 @@
         function findMainUsername(inputUsername) {
             if (!inputUsername) return null;
             if (App.users[inputUsername]) return inputUsername;
+            // поиск по дополнительным юзернеймам (оставлен для совместимости, но не используется)
             for (let mainName in App.users) {
                 const user = App.users[mainName];
                 if (user.additionalUsernames && user.additionalUsernames.includes(inputUsername)) {
@@ -1026,21 +1036,17 @@
             let pendingTheme = currentTheme;
             let pendingPrivacy = currentPrivacy;
             let pendingTwoFA = userData.twoFA || false;
-            
-            const additionalUsernames = userData.additionalUsernames || [];
-            const additionalUsernamesHtml = additionalUsernames.map(name => `
-                <div class="additional-username-item">
-                    <span>${name}</span>
-                    <button class="delete-username-btn" data-username="${name}">УДАЛИТЬ</button>
-                </div>
-            `).join('');
-            
-            const MAX_ADDITIONAL = 1;
+            let pendingDisplayName = userData.displayName || getDisplayName(App.currentUser);
             
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
                     <div class="profile-modal">
                         <h3>НАСТРОЙКИ</h3>
+                        <div class="profile-input-group">
+                            <label>ИМЯ (до 6 символов)</label>
+                            <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Ваше имя">
+                            <small style="color: var(--text-secondary);">Англ/рус буквы и цифры</small>
+                        </div>
                         <div class="profile-input-group">
                             <label>ПАРОЛЬ</label>
                             <div class="password-wrapper">
@@ -1092,16 +1098,6 @@
                                 <div class="toggle-checkbox"></div>
                                 <span class="toggle-label">${pendingTwoFA ? 'Включена' : 'Выключена'}</span>
                             </div>
-                        </div>
-                        
-                        <div class="profile-input-group">
-                            <label>ДОПОЛНИТЕЛЬНЫЙ ЮЗЕРНЕЙМ</label>
-                            <div id="additionalUsernamesList">
-                                ${additionalUsernamesHtml || '<div style="color: var(--text-secondary);">Нет дополнительного юзернейма</div>'}
-                            </div>
-                            ${additionalUsernames.length < MAX_ADDITIONAL ? 
-                                `<button class="change-file-btn" id="addAdditionalUsernameBtn" style="margin-top:8px;">ДОБАВИТЬ ЮЗЕРНЕЙМ (100 YC)</button>` : ''}
-                            <small style="color: var(--text-secondary); display:block; margin-top:5px;">Можно добавить только один дополнительный юзернейм. Стоимость: 100 YC.</small>
                         </div>
                         
                         <div style="margin-top: 20px; padding: 16px; background: rgba(212,175,55,0.1); border-radius: 16px; border: 1px solid var(--glass-border);">
@@ -1218,71 +1214,15 @@
                 });
             }
             
-            const addBtn = document.getElementById('addAdditionalUsernameBtn');
-            if (addBtn) {
-                addBtn.addEventListener('click', () => {
-                    const additionalCount = (App.users[App.currentUser].additionalUsernames || []).length;
-                    if (additionalCount >= MAX_ADDITIONAL) {
-                        showNotification('Достигнут лимит дополнительных юзернеймов (максимум 1)', 'error');
-                        return;
-                    }
-                    if (App.users[App.currentUser].stars < 100) {
-                        showNotification('Недостаточно YC (нужно 100)', 'error');
-                        return;
-                    }
-                    const newName = prompt('Введите дополнительный юзернейм (только английские буквы и цифры, 4-15 символов, начинается с буквы, без @):');
-                    if (!newName) return;
-                    const cleanName = '@' + newName.toLowerCase();
-                    if (!isValidUsername(newName)) {
-                        showNotification('Неверный формат: только a-z0-9, 4-15 символов, первая — буква', 'error');
-                        return;
-                    }
-                    if (App.users[cleanName] || findMainUsername(cleanName)) {
-                        showNotification('Этот юзернейм уже занят', 'error');
-                        return;
-                    }
-                    let usedAsAdditional = false;
-                    for (let u in App.users) {
-                        if (App.users[u].additionalUsernames && App.users[u].additionalUsernames.includes(cleanName)) {
-                            usedAsAdditional = true;
-                            break;
-                        }
-                    }
-                    if (usedAsAdditional) {
-                        showNotification('Этот юзернейм уже используется как дополнительный', 'error');
-                        return;
-                    }
-                    
-                    App.users[App.currentUser].stars -= 100;
-                    if (!App.users[App.currentUser].additionalUsernames) App.users[App.currentUser].additionalUsernames = [];
-                    App.users[App.currentUser].additionalUsernames.push(cleanName);
-                    saveToFirebase();
-                    updateUserInterface();
-                    showNotification(`Дополнительный юзернейм ${cleanName} добавлен!`);
-                    document.getElementById('settingsModalOverlay').remove();
-                    openProfileSettings();
-                });
-            }
-            
-            document.getElementById('settingsModalOverlay').addEventListener('click', (e) => {
-                if (e.target.classList.contains('delete-username-btn')) {
-                    const username = e.target.dataset.username;
-                    if (!username) return;
-                    if (confirm(`Удалить дополнительный юзернейм ${username}?`)) {
-                        const user = App.users[App.currentUser];
-                        if (user.additionalUsernames) {
-                            const idx = user.additionalUsernames.indexOf(username);
-                            if (idx !== -1) user.additionalUsernames.splice(idx, 1);
-                            saveToFirebase();
-                            showNotification(`Юзернейм ${username} удалён`);
-                            document.getElementById('settingsModalOverlay').remove();
-                            openProfileSettings();
-                        }
-                    }
-                }
-            });
-            
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
+                // валидация: только буквы русского/английского и цифры, макс 6
+                if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
+                    showNotification('Имя должно содержать только буквы (рус/англ) и цифры, до 6 символов', 'error');
+                    return;
+                }
+                if (newDisplayName) App.users[App.currentUser].displayName = newDisplayName;
+                
                 const newPassword = document.getElementById('settingsPassword')?.value.trim();
                 const newBio = document.getElementById('settingsBio')?.value.trim().slice(0, 50);
                 const newAge = parseInt(document.getElementById('settingsAge')?.value);
@@ -1376,14 +1316,14 @@
             if (!userData) return; 
             const sidebarUser = document.querySelector('.user-profile .username-display'); 
             if (sidebarUser) { 
-                sidebarUser.innerHTML = formatUsernameWithAliases(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
+                sidebarUser.innerHTML = formatUserNameWithStatus(App.currentUser) + (userData.verified ? '<span class="verified-icon"></span>' : ''); 
             } 
             const sidebarAvatar = document.querySelector('.user-profile .avatar'); 
             if (sidebarAvatar) { 
                 if (userData.avatar) { 
                     sidebarAvatar.innerHTML = `<img src="${userData.avatar}" class="avatar-img">`; 
                 } else { 
-                    sidebarAvatar.innerHTML = App.currentUser[1] ? App.currentUser[1].toUpperCase() : '?'; 
+                    sidebarAvatar.innerHTML = getDisplayName(App.currentUser)[0]?.toUpperCase() || '?'; 
                 } 
             } 
         }
@@ -1479,14 +1419,14 @@
                         saveToFirebase(); 
                         const chatId = [fromUser, toUser].sort().join('_'); 
                         if (!App.chats[chatId]) App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] }; 
-                        App.chats[chatId].messages.push({ from: fromUser, text: `ОТКРЫТКА 🖼️ ОТ ${fromUser}`, time: Date.now(), gift: true, nftData: nft }); 
+                        App.chats[chatId].messages.push({ from: fromUser, text: `ОТКРЫТКА 🖼️ ОТ ${getDisplayName(fromUser)}`, time: Date.now(), gift: true, nftData: nft }); 
                         saveToFirebase(); 
                         showConfetti(); 
                         playHappySound(); 
                         if (App.activeChat === toUser) renderMessages(toUser); 
                         updateUserInterface(); 
                         document.getElementById('giftModalOverlay').remove(); 
-                        showNotification(`Открытка подарена ${toUser}!`); 
+                        showNotification(`Открытка подарена ${getDisplayName(toUser)}!`); 
                     }); 
                 }); 
             } 
@@ -1522,7 +1462,7 @@
             App.users[currentUser].following.push(targetUser);
             App.users[targetUser].followers.push(currentUser);
             saveToFirebase();
-            showNotification(`Вы подписались на ${targetUser}`);
+            showNotification(`Вы подписались на ${getDisplayName(targetUser)}`);
             return true;
         }
         
@@ -1534,7 +1474,7 @@
             const idxFollower = App.users[targetUser].followers.indexOf(currentUser);
             if (idxFollower !== -1) App.users[targetUser].followers.splice(idxFollower, 1);
             saveToFirebase();
-            showNotification(`Вы отписались от ${targetUser}`);
+            showNotification(`Вы отписались от ${getDisplayName(targetUser)}`);
             return true;
         }
         
@@ -1578,6 +1518,7 @@
             }).join(''); 
             
             const followersCount = (userData.followers || []).length;
+            const displayName = getDisplayName(username);
             
             if (isOwn) {
                 const modalHtml = `
@@ -1591,7 +1532,7 @@
                                 </div>
                             </div>
                             <div class="profile-name-section">
-                                <div class="username-display" style="font-size:20px;">${formatUsernameWithAliases(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                 <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
                             </div>
                             <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
@@ -1676,7 +1617,7 @@
                 return;
             }
             
-            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${username}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUsernameWithAliases(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
+            const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${displayName}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>ОТКРЫТКИ</label><div class="nft-collection">${nftsList || 'НЕТ ОТКРЫТОК'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
             document.body.insertAdjacentHTML('beforeend', modalHtml); 
             document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
         }
@@ -1755,7 +1696,7 @@
             
             const existingNameStrong = headerInfo.querySelector('strong'); 
             if (existingNameStrong) { 
-                existingNameStrong.innerHTML = formatUsernameWithAliases(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
+                existingNameStrong.innerHTML = formatUserNameWithStatus(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
             } 
             
             const streak = getStreak(username);
@@ -1817,7 +1758,7 @@
             let html = '';
             postsToShow.forEach(post => {
                 const author = App.users[post.author] || {};
-                const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (post.author[1] || '?');
+                const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (getDisplayName(post.author)[0] || '?');
                 const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
                 const likesCount = Object.keys(post.likes || {}).length;
                 const commentsCount = post.comments?.length || 0;
@@ -1828,7 +1769,7 @@
                 const subButtonHtml = (post.author !== App.currentUser) ?
                     `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
                 
-                const authorDisplay = formatUsernameWithAliases(post.author);
+                const authorDisplay = formatUserNameWithStatus(post.author);
                 const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
                 
                 html += `
@@ -1907,7 +1848,7 @@
                         <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
                             ${post.comments?.map(c => `
                                 <div class="comment-item">
-                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUsernameWithAliases(c.author)}</div>
+                                    <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
                                     <div class="comment-text" style="color: var(--text);">${c.text}</div>
                                     <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
                                 </div>
@@ -2166,7 +2107,7 @@
                 if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } 
                 const clean = '@' + username; 
                 if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
-                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [] }; 
+                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username }; 
                 database.ref('users/' + clean).set(newUser).then(() => { 
                     App.users[clean] = newUser; 
                     App.currentUser = clean; 
@@ -2190,15 +2131,15 @@
                 blockedMessage = 'Этому пользователю нельзя писать первым';
             }
             
-            const chatTitle = App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : formatUsernameWithAliases(App.activeChat));
+            const chatTitle = App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : formatUserNameWithStatus(App.activeChat));
             
             return `
                 <div class="main-container">
                     ${isChatsActive ? `
                     <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                         <div class="user-profile" id="openProfileBtn">
-                            <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (user[1] ? user[1].toUpperCase() : '?')}</div>
-                            <div><div class="username-display">${formatUsernameWithAliases(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}</div>
+                            <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (getDisplayName(user)[0]?.toUpperCase() || '?')}</div>
+                            <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}</div>
                         </div>
                         <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
                         <div class="chats-list" id="chatsList"></div>
@@ -2314,7 +2255,7 @@
             const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser); 
             const isGift = msg.gift ? true : false; 
             const isSystem = msg.from === 'SYSTEM'; 
-            const fromUserStatusClass = getUserStatus(msg.from)?.class || ''; 
+            const fromUserDisplay = isSystem ? 'СИСТЕМА' : formatUserNameWithStatus(msg.from);
             let canDelete = false; 
             if (chatPartner === 'saved') canDelete = true; 
             else if (chatPartner === 'yolk') canDelete = false; 
@@ -2322,11 +2263,10 @@
             let mediaHtml = ''; 
             if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
             let messageText = msg.text || ''; 
-            const displayName = fromUserStatusClass ? `<span class="${fromUserStatusClass}">${msg.from}</span>` : msg.from; 
             const messageClass = isMe ? 'me' : ''; 
             const fullDate = new Date(msg.time).toLocaleString();
             
-            return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${displayName}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`; 
+            return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`; 
         }
         
         function updateChatList() { 
@@ -2345,17 +2285,17 @@
         
         function renderChatItem(u, active, currentUser) { 
             let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u); 
+            let display = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
             let avatarHtml = '<div class="chat-avatar">📁</div>'; 
             if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🐣</div>'; 
             else if (u !== 'saved') { 
                 const avatarUrl = App.users[u]?.avatar; 
-                avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${u[1] || '@'}</div>`; 
+                avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
             } 
             const userData = App.users[u] || {}; 
-            const displayName = formatUsernameWithAliases(name); 
             const streak = getStreak(u); 
             const streakHtml = streak > 0 ? `<span class="streak-badge"><img src="${ICONS.FIRE}" style="width:12px;height:12px;"> ${streak}</span>` : ''; 
-            return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${displayName}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
+            return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
         }
         
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
@@ -2391,9 +2331,9 @@
             if (window.innerWidth < 768) App.sidebarOpen = false; 
             document.getElementById('searchUserInput').value = ''; 
             render(); 
-            showNotification(`Чат с ${mainUser} создан`); 
+            showNotification(`Чат с ${getDisplayName(mainUser)} создан`); 
         }
-        window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${chat}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToFirebase(); render(); showNotification('Чат удален'); };
+        window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToFirebase(); render(); showNotification('Чат удален'); };
         window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         
@@ -2492,7 +2432,7 @@
                                 <label>ПОЛЬЗОВАТЕЛЬ</label>
                                 <select id="adminTargetUser">
                                     <option value="">Выберите пользователя</option>
-                                    ${usersList.map(u => `<option value="${u}">${u}</option>`).join('')}
+                                    ${usersList.map(u => `<option value="${u}">${u} (${getDisplayName(u)})</option>`).join('')}
                                 </select>
                             </div>
                             <div class="input-group">
@@ -2533,16 +2473,16 @@
                     const amount = parseInt(document.getElementById('adminYcValue').value);
                     if (isNaN(amount) || amount <= 0) { showNotification('Введите корректное количество YC', 'error'); return; }
                     App.users[targetUser].stars = (App.users[targetUser].stars || 0) + amount;
-                    showNotification(`✅ Выдано ${amount} YC пользователю ${targetUser}`);
+                    showNotification(`✅ Выдано ${amount} YC пользователю ${getDisplayName(targetUser)}`);
                 } else if (type === 'status') {
                     App.users[targetUser].status = 'ALBUMEN';
-                    showNotification(`✨ СТАТУС ALBUMEN выдан пользователю ${targetUser}! ✨`);
+                    showNotification(`✨ СТАТУС ALBUMEN выдан пользователю ${getDisplayName(targetUser)}! ✨`);
                     updateUserInterface();
                     if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') renderMessages(App.activeChat);
                     updateChatList();
                 } else if (type === 'verified') {
                     App.users[targetUser].verified = true;
-                    showNotification(`✅ VERIFIED СТАТУС выдан пользователю ${targetUser}!`);
+                    showNotification(`✅ VERIFIED СТАТУС выдан пользователю ${getDisplayName(targetUser)}!`);
                     updateUserInterface();
                     if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') renderMessages(App.activeChat);
                     updateChatList();
@@ -2570,6 +2510,7 @@
                                 if (!App.users[u].following) App.users[u].following = []; 
                                 if (!App.users[u].nfts) App.users[u].nfts = []; 
                                 if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                             }); 
                         } 
                         if (data.chats) App.chats = data.chats; 
@@ -2615,6 +2556,7 @@
                                     if (!App.users[u].following) App.users[u].following = []; 
                                     if (!App.users[u].nfts) App.users[u].nfts = []; 
                                     if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                 }); 
                             } 
                             if (cache.chats) App.chats = cache.chats; 
