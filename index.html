@@ -7,7 +7,6 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
-        /* весь CSS без изменений, добавлены только стили для иконки настроек */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -730,8 +729,8 @@
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
         .post-like img, .post-comment img, .post-delete img {
-            width: 18px;
-            height: 18px;
+            width: 24px;
+            height: 24px;
             object-fit: contain;
         }
         .post-delete {
@@ -1026,6 +1025,19 @@
             return null;
         }
         
+        function isEmailTaken(email, excludeUsername = null) {
+            if (!email) return false;
+            const lowerEmail = email.toLowerCase();
+            for (let username in App.users) {
+                if (excludeUsername && username === excludeUsername) continue;
+                const userEmail = App.users[username]?.email;
+                if (userEmail && userEmail.toLowerCase() === lowerEmail) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
         function openProfileSettings() {
             const userData = App.users[App.currentUser];
             const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
@@ -1208,6 +1220,10 @@
                 const newEmail = document.getElementById('settingsEmail')?.value.trim();
                 if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) {
                     showNotification('Некорректный email', 'error');
+                    return;
+                }
+                if (newEmail && isEmailTaken(newEmail, App.currentUser)) {
+                    showNotification('Этот email уже используется другим пользователем', 'error');
                     return;
                 }
                 if (newEmail) App.users[App.currentUser].email = newEmail;
@@ -1780,9 +1796,9 @@
                         <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
                         ${mediaHtml}
                         <div class="post-stats">
-                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:20px;height:20px;"> <span>${likesCount}</span></button>
-                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:20px;height:20px;"> <span>${commentsCount}</span></button>
-                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></button>` : ''}
+                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:24px;height:24px;"> <span>${likesCount}</span></button>
+                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${commentsCount}</span></button>
+                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -2081,7 +2097,7 @@
                     if (App.users[clean]) mainUsername = clean;
                 }
                 
-                if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass || (App.users[mainUsername].email && App.users[mainUsername].email !== email)) { 
+                if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass || (App.users[mainUsername].email && App.users[mainUsername].email.toLowerCase() !== email.toLowerCase())) { 
                     errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН, EMAIL ИЛИ ПАРОЛЬ'; 
                     return; 
                 } 
@@ -2123,6 +2139,7 @@
                 if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } 
                 const clean = '@' + username; 
                 if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
+                if (isEmailTaken(email)) { errorDiv.innerText = '! ЭТОТ EMAIL УЖЕ ИСПОЛЬЗУЕТСЯ'; return; }
                 const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
                 database.ref('users/' + clean).set(newUser).then(() => { 
                     App.users[clean] = newUser; 
