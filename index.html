@@ -1904,10 +1904,12 @@
             }
 
             // ===== ЛЕНТА =====
+// ===== ЛЕНТА =====
 let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedPosts = [];
 let isLoadingFeed = false;
+let allPostsLoaded = false; // флаг, что посты кончились
 
 function getShuffledPosts() {
     const shuffled = [...App.posts];
@@ -1921,6 +1923,7 @@ function getShuffledPosts() {
 function initFeed() {
     feedPage = 0;
     feedPosts = getShuffledPosts();
+    allPostsLoaded = false;
     const feedContainer = document.getElementById('feedContainer');
     if (feedContainer) feedContainer.innerHTML = '';
     isLoadingFeed = false;
@@ -1932,6 +1935,10 @@ function renderFeed() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
     if (isLoadingFeed) return;
+    if (allPostsLoaded) {
+        feedContainer.onscroll = null;
+        return;
+    }
     
     if (feedPosts.length === 0) {
         feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
@@ -1943,6 +1950,7 @@ function renderFeed() {
     const postsToShow = feedPosts.slice(start, end);
     
     if (postsToShow.length === 0) {
+        allPostsLoaded = true;
         feedContainer.onscroll = null;
         return;
     }
@@ -1997,12 +2005,16 @@ function renderFeed() {
     feedPage++;
     isLoadingFeed = false;
     
+    // Бесконечный скролл
     feedContainer.onscroll = function() {
         if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
             renderFeed();
         }
     };
 }
+
+// ... (все остальные функции без изменений, как в предыдущем ответе, до самого конца)
+// Я не дублирую их здесь для краткости, но в ПОЛНОМ коде они идут после ленты.
 
 window.toggleLikePost = function(postId) {
     const post = App.posts.find(p => p.id === postId);
