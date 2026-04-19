@@ -402,6 +402,7 @@
         
         .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; color: var(--text); }
         .settings-icon:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
+        .settings-icon-img { width: 28px; height: 28px; object-fit: contain; cursor: pointer; }
         
         .toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .toggle-switch .toggle-label { font-size: 14px; color: var(--text); }
@@ -728,8 +729,8 @@
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
         .post-like img, .post-comment img, .post-delete img {
-            width: 18px;
-            height: 18px;
+            width: 24px;
+            height: 24px;
             object-fit: contain;
         }
         .post-delete {
@@ -855,14 +856,29 @@
 </head>
 <body>
     <div id="app"></div>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyDHddUllNs1CllRVOoR8MDP9qo3bfZnqM4", authDomain: "quick-sms-772c4.firebaseapp.com", databaseURL: "https://quick-sms-772c4-default-rtdb.firebaseio.com", projectId: "quick-sms-772c4", storageBucket: "quick-sms-772c4.firebasestorage.app", messagingSenderId: "722370764251", appId: "1:722370764251:web:1f93437108ee3d54f15bfe" };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        // === SUPABASE INIT ===
+        const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            db: { schema: 'public' },
+            realtime: { params: { eventsPerSecond: 10 } }
+        });
 
+        // Глобальные переменные приложения
+        const App = { 
+            users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
+            tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
+            savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
+            streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null,
+            donationRequests: {}, typingTimeouts: {}, lastPostTime: {} 
+        };
+        App.systemBots = [];
+        
         const ADMIN_USER = '@durov';
         const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
         
@@ -872,18 +888,215 @@
             LIKE_ON: 'https://github.com/xuotov-svg/quick-sms/blob/main/а2.png?raw=true',
             COMMENT: 'https://github.com/xuotov-svg/quick-sms/blob/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png?raw=true',
             DELETE: 'https://github.com/xuotov-svg/quick-sms/blob/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png?raw=true',
-            FIRE: 'https://github.com/xuotov-svg/quick-sms/blob/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png?raw=true'
+            FIRE: 'https://github.com/xuotov-svg/quick-sms/blob/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png?raw=true',
+            SETTINGS: 'https://github.com/xuotov-svg/quick-sms/blob/main/XkuAnaeE3mA.png?raw=true'
         };
         
-        const App = { 
-            users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
-            tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
-            savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
-            streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null,
-            donationRequests: {}, typingTimeouts: {} 
-        };
-        App.systemBots = [];
+        // === Supabase функции вместо Firebase ===
+        const STATE_ROW_ID = 1; // фиксированный id для единственной записи в app_state
         
+        async function loadAppState() {
+            const { data, error } = await supabase
+                .from('app_state')
+                .select('data')
+                .eq('id', STATE_ROW_ID)
+                .single();
+                
+            if (error) {
+                console.warn('Ошибка загрузки состояния, создаём новое:', error);
+                return null;
+            }
+            return data?.data || null;
+        }
+        
+        async function saveAppState(stateData) {
+            const { error } = await supabase
+                .from('app_state')
+                .upsert({ id: STATE_ROW_ID, data: stateData }, { onConflict: 'id' });
+            if (error) console.error('Ошибка сохранения состояния:', error);
+        }
+        
+        function subscribeToAppState() {
+            supabase
+                .channel('app_state_changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'app_state', filter: `id=eq.${STATE_ROW_ID}` },
+                    async (payload) => {
+                        console.log('🔄 Обновление из Supabase Realtime');
+                        const newData = payload.new?.data;
+                        if (newData) {
+                            if (newData.users) {
+                                App.users = newData.users;
+                                Object.keys(App.users).forEach(u => {
+                                    if (!App.users[u].followers) App.users[u].followers = [];
+                                    if (!App.users[u].following) App.users[u].following = [];
+                                    if (!App.users[u].nfts) App.users[u].nfts = [];
+                                    if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                                });
+                            }
+                            if (newData.chats) App.chats = newData.chats;
+                            if (newData.blocked) App.blocked = newData.blocked;
+                            if (newData.yolkChatMessages) App.yolkChatMessages = newData.yolkChatMessages;
+                            if (newData.streaks) App.streaks = newData.streaks;
+                            if (newData.privacySettings) App.privacySettings = newData.privacySettings;
+                            if (newData.posts) App.posts = newData.posts;
+                            if (newData.donationRequests) App.donationRequests = newData.donationRequests;
+                            
+                            localStorage.setItem('yolk_cache', JSON.stringify({
+                                users: App.users, chats: App.chats, blocked: App.blocked
+                            }));
+                            
+                            if (App.currentUser) {
+                                updateUserInterface();
+                                updateSidebarUser();
+                                applyWallpaper();
+                                applyWallpaperToFeed();
+                                if (App.activeChat) renderMessages(App.activeChat);
+                                updateChatList();
+                            }
+                        }
+                    })
+                .subscribe();
+        }
+
+        // Основная функция сохранения (аналог saveToFirebase)
+        async function saveToSupabase() {
+            if (!App.dataLoaded) return;
+            const state = {
+                users: App.users,
+                chats: App.chats,
+                blocked: App.blocked,
+                yolkChatMessages: App.yolkChatMessages,
+                streaks: App.streaks,
+                privacySettings: App.privacySettings,
+                posts: App.posts,
+                donationRequests: App.donationRequests
+            };
+            try {
+                await saveAppState(state);
+                localStorage.setItem('yolk_cache', JSON.stringify({
+                    users: App.users, chats: App.chats, blocked: App.blocked
+                }));
+            } catch (e) {
+                console.error('Ошибка сохранения в Supabase:', e);
+            }
+        }
+
+        // Переопределяем глобальную функцию
+        window.saveToFirebase = saveToSupabase;
+
+        // Загрузка данных из Supabase
+        async function loadFromSupabase() {
+            console.log('🔄 Загрузка данных из Supabase...');
+            try {
+                const state = await loadAppState();
+                if (state) {
+                    if (state.users) {
+                        App.users = state.users;
+                        Object.keys(App.users).forEach(u => {
+                            if (!App.users[u].followers) App.users[u].followers = [];
+                            if (!App.users[u].following) App.users[u].following = [];
+                            if (!App.users[u].nfts) App.users[u].nfts = [];
+                            if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                            if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                            if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                        });
+                    }
+                    if (state.chats) App.chats = state.chats;
+                    if (state.blocked) App.blocked = state.blocked;
+                    if (state.yolkChatMessages) App.yolkChatMessages = state.yolkChatMessages;
+                    if (state.streaks) App.streaks = state.streaks;
+                    if (state.privacySettings) App.privacySettings = state.privacySettings;
+                    if (state.posts) App.posts = state.posts;
+                    if (state.donationRequests) App.donationRequests = state.donationRequests;
+                    
+                    localStorage.setItem('yolk_cache', JSON.stringify({
+                        users: App.users, chats: App.chats, blocked: App.blocked
+                    }));
+                    if (state.yolkChatMessages) saveYolkChatMessages();
+                    if (state.streaks) saveStreaks();
+                    if (state.privacySettings) savePrivacySettings();
+                } else {
+                    console.log('⚠️ База данных пуста, инициализация...');
+                    await saveAppState({
+                        users: {},
+                        chats: {},
+                        blocked: {},
+                        yolkChatMessages: {},
+                        streaks: {},
+                        privacySettings: {},
+                        posts: [],
+                        donationRequests: {}
+                    });
+                }
+                
+                const savedUser = localStorage.getItem('yolk_current_user');
+                const savedChat = localStorage.getItem('yolk_active_chat');
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat]) ? savedChat : 'saved';
+                    loadSavedMessages();
+                    loadYolkChatMessages();
+                    loadStreaks();
+                    loadPrivacySettings();
+                    setupUserListener(App.currentUser);
+                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
+                    App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
+                    updateLastSeen(App.currentUser);
+                }
+                App.dataLoaded = true;
+                render();
+            } catch (error) {
+                console.error('❌ Ошибка Supabase:', error);
+                const cachedData = localStorage.getItem('yolk_cache');
+                if (cachedData) {
+                    try {
+                        const cache = JSON.parse(cachedData);
+                        if (cache.users) {
+                            App.users = cache.users;
+                            Object.keys(App.users).forEach(u => {
+                                if (!App.users[u].followers) App.users[u].followers = [];
+                                if (!App.users[u].following) App.users[u].following = [];
+                                if (!App.users[u].nfts) App.users[u].nfts = [];
+                                if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                            });
+                        }
+                        if (cache.chats) App.chats = cache.chats;
+                        if (cache.blocked) App.blocked = cache.blocked;
+                        console.log('📦 Загружено из кэша');
+                    } catch(e) {}
+                }
+                const savedUser = localStorage.getItem('yolk_current_user');
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
+                    loadSavedMessages();
+                    loadYolkChatMessages();
+                    loadStreaks();
+                    loadPrivacySettings();
+                    setupUserListener(App.currentUser);
+                }
+                App.dataLoaded = true;
+                render();
+            }
+        }
+
+        // Заглушки для слушателей (Realtime теперь через subscribeToAppState)
+        function setupRealtimeListener(chatId, chatPartner) {}
+        function setupUserListener(username) {}
+        
+        function updateLastSeen(username) {
+            if (App.users[username] && username === App.currentUser) {
+                App.users[username].lastSeen = Date.now();
+                saveToSupabase();
+            }
+        }
+
+        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (без изменений) ===
         let loadingStartTime = Date.now();
         const MIN_LOADING_TIME = 1000;
         
@@ -899,11 +1112,10 @@
         function getDisplayName(username) {
             const user = App.users[username];
             if (!user) return username;
-            // Возвращаем displayName, если задан, иначе имя без @
             if (user.displayName && user.displayName.trim().length > 0) {
                 return user.displayName.trim();
             }
-            return username.substring(1); // убираем @
+            return username.substring(1);
         }
         
         function formatUserNameWithStatus(username) {
@@ -922,11 +1134,9 @@
         }
 
         function formatUsernameWithAliases(username) {
-            // В новом дизайне доп.юзернеймы не используются, оставляем для совместимости
             const user = App.users[username];
             if (!user) return formatUserNameWithStatus(username);
             let display = formatUserNameWithStatus(username);
-            // (доп. имена убраны, оставляем пусто)
             return display;
         }
 
@@ -968,7 +1178,7 @@
         
         function savePrivacySettings() {
             localStorage.setItem('yolk_privacy', JSON.stringify(App.privacySettings));
-            if (App.dataLoaded) database.ref('privacySettings').set(App.privacySettings).catch(e => console.error(e));
+            if (App.dataLoaded) saveToSupabase();
         }
         
         function loadPrivacySettings() {
@@ -981,43 +1191,20 @@
         function sendTypingIndicator(toUser) {
             if (!toUser || toUser === 'saved' || toUser === 'yolk') return;
             const chatId = [App.currentUser, toUser].sort().join('_');
-            database.ref('typing/' + chatId).set({
-                from: App.currentUser,
-                timestamp: Date.now()
-            });
+            // В Supabase можно добавить отдельную таблицу typing, но для простоты оставим локально
             if (App.typingTimeouts[chatId]) clearTimeout(App.typingTimeouts[chatId]);
             App.typingTimeouts[chatId] = setTimeout(() => {
-                database.ref('typing/' + chatId).remove();
+                // Заглушка
             }, 2000);
         }
 
         function setupTypingListener(chatPartner) {
-            if (!chatPartner || chatPartner === 'saved' || chatPartner === 'yolk') return;
-            const chatId = [App.currentUser, chatPartner].sort().join('_');
-            const typingRef = database.ref('typing/' + chatId);
-            typingRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                const messagesContainer = document.getElementById('messageList');
-                if (!messagesContainer) return;
-                const existingTyping = document.querySelector('.typing-indicator');
-                if (data && data.from && data.from !== App.currentUser && (Date.now() - data.timestamp) < 3000) {
-                    if (!existingTyping) {
-                        const typingDiv = document.createElement('div');
-                        typingDiv.className = 'typing-indicator';
-                        typingDiv.innerHTML = `<span>${getDisplayName(data.from)} печатает</span><div class="typing-dots"><span></span><span></span><span></span></div>`;
-                        messagesContainer.appendChild(typingDiv);
-                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    }
-                } else {
-                    if (existingTyping) existingTyping.remove();
-                }
-            });
+            // Можно реализовать при необходимости
         }
         
         function findMainUsername(inputUsername) {
             if (!inputUsername) return null;
             if (App.users[inputUsername]) return inputUsername;
-            // поиск по дополнительным юзернеймам (оставлен для совместимости, но не используется)
             for (let mainName in App.users) {
                 const user = App.users[mainName];
                 if (user.additionalUsernames && user.additionalUsernames.includes(inputUsername)) {
@@ -1025,6 +1212,19 @@
                 }
             }
             return null;
+        }
+        
+        function isEmailTaken(email, excludeUsername = null) {
+            if (!email) return false;
+            const lowerEmail = email.toLowerCase();
+            for (let username in App.users) {
+                if (excludeUsername && username === excludeUsername) continue;
+                const userEmail = App.users[username]?.email;
+                if (userEmail && userEmail.toLowerCase() === lowerEmail) {
+                    return true;
+                }
+            }
+            return false;
         }
         
         function openProfileSettings() {
@@ -1037,6 +1237,7 @@
             let pendingPrivacy = currentPrivacy;
             let pendingTwoFA = userData.twoFA || false;
             let pendingDisplayName = userData.displayName || getDisplayName(App.currentUser);
+            let pendingEmail = userData.email || `${App.currentUser.substring(1)}@yolkapp.com`;
             
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
@@ -1045,7 +1246,11 @@
                         <div class="profile-input-group">
                             <label>ВАШ ЮЗЕРНЕЙМ</label>
                             <input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2); cursor: default; opacity: 0.8;">
-                            <small style="color: var(--text-secondary);">Не редактируется</small>
+                        </div>
+                        <div class="profile-input-group">
+                            <label>EMAIL</label>
+                            <input type="email" id="settingsEmail" value="${pendingEmail}" placeholder="example@mail.com">
+                            <small style="color: var(--text-secondary);">Используется для входа</small>
                         </div>
                         <div class="profile-input-group">
                             <label>ИМЯ (до 6 символов)</label>
@@ -1078,11 +1283,6 @@
                             <input type="file" id="settingsBanner" accept="image/*" style="display:none;">
                         </div>
                         <div class="profile-input-group">
-                            <label>ФОН ЧАТА</label>
-                            <div id="settingsWallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div>
-                            <input type="file" id="settingsWallpaper" accept="image/*">
-                        </div>
-                        <div class="profile-input-group">
                             <label>ТЕМА ОФОРМЛЕНИЯ</label>
                             <div class="toggle-switch ${pendingTheme === 'light' ? 'active' : ''}" id="themeToggle">
                                 <div class="toggle-checkbox"></div>
@@ -1095,7 +1295,6 @@
                                 <div class="toggle-checkbox"></div>
                                 <span class="toggle-label">${pendingPrivacy ? 'Незнакомцы не могут писать первыми' : 'Все могут писать первыми'}</span>
                             </div>
-                            <small style="color: var(--text-secondary); display:block; margin-top:5px;">Если включено: только те, с кем у вас уже есть чат, могут писать вам.</small>
                         </div>
                         <div class="profile-input-group">
                             <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
@@ -1138,7 +1337,7 @@
                 }
             };
             
-            let tempAvatar = null, tempBanner = null, tempWallpaper = null;
+            let tempAvatar = null, tempBanner = null;
             
             document.getElementById('changeAvatarBtn').addEventListener('click', () => {
                 document.getElementById('settingsAvatar').click();
@@ -1167,19 +1366,6 @@
                     compressImage(ev.target.result, 800, 200, 0.7, (compressed) => {
                         tempBanner = compressed;
                         showNotification('Баннер выбран');
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-            
-            document.getElementById('settingsWallpaper').addEventListener('change', (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    compressImage(ev.target.result, 1920, 1080, 0.8, (compressed) => {
-                        document.getElementById('settingsWallpaperPreview').style.backgroundImage = `url('${compressed}')`;
-                        tempWallpaper = compressed;
                     });
                 };
                 reader.readAsDataURL(file);
@@ -1220,8 +1406,18 @@
             }
             
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+                const newEmail = document.getElementById('settingsEmail')?.value.trim();
+                if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) {
+                    showNotification('Некорректный email', 'error');
+                    return;
+                }
+                if (newEmail && isEmailTaken(newEmail, App.currentUser)) {
+                    showNotification('Этот email уже используется другим пользователем', 'error');
+                    return;
+                }
+                if (newEmail) App.users[App.currentUser].email = newEmail;
+                
                 const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
-                // валидация: только буквы русского/английского и цифры, макс 6
                 if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
                     showNotification('Имя должно содержать только буквы (рус/англ) и цифры, до 6 символов', 'error');
                     return;
@@ -1243,7 +1439,6 @@
                 if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
-                if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
                 
                 if (pendingTheme !== currentTheme) {
                     applyTheme(pendingTheme);
@@ -1253,11 +1448,11 @@
                 }
                 if (pendingTwoFA !== (userData.twoFA || false)) {
                     App.users[App.currentUser].twoFA = pendingTwoFA;
-                    saveToFirebase();
+                    saveToSupabase();
                     showNotification(pendingTwoFA ? '2FA включена' : '2FA выключена');
                 }
                 
-                saveToFirebase();
+                saveToSupabase();
                 updateUserInterface();
                 updateSidebarUser();
                 applyWallpaper();
@@ -1337,9 +1532,7 @@
         
         function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; const starBalanceElements = document.querySelectorAll('.star-balance:not(.user-profile .star-balance)'); starBalanceElements.forEach(el => { el.innerHTML = `<span class="yc-currency"></span> ${userData.stars || 0} YC`; }); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
         
-        function saveToFirebase() { if (!App.dataLoaded) return; const firebaseData = { users: App.users, chats: App.chats, blocked: App.blocked, yolkChatMessages: App.yolkChatMessages, streaks: App.streaks, privacySettings: App.privacySettings, posts: App.posts, donationRequests: App.donationRequests }; database.ref().set(firebaseData).catch(error => console.error('Ошибка сохранения:', error)); }
-        
-        function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToFirebase(); } return chatId; }
+        function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToSupabase(); } return chatId; }
 
         async function createNft(grid, owner) {
             if (!App.users[owner]) return false;
@@ -1348,7 +1541,7 @@
             if (!App.users[owner].nfts) App.users[owner].nfts = [];
             App.users[owner].nfts.push(nftObj);
             App.users[owner].stars -= 50;
-            saveToFirebase();
+            saveToSupabase();
             updateUserInterface();
             showNotification('Открытка создана!');
             return true;
@@ -1421,11 +1614,11 @@
                         App.users[fromUser].nfts.splice(idx, 1); 
                         if (!App.users[toUser].nfts) App.users[toUser].nfts = []; 
                         App.users[toUser].nfts.push(nft); 
-                        saveToFirebase(); 
+                        saveToSupabase(); 
                         const chatId = [fromUser, toUser].sort().join('_'); 
                         if (!App.chats[chatId]) App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] }; 
                         App.chats[chatId].messages.push({ from: fromUser, text: `ОТКРЫТКА 🖼️ ОТ ${getDisplayName(fromUser)}`, time: Date.now(), gift: true, nftData: nft }); 
-                        saveToFirebase(); 
+                        saveToSupabase(); 
                         showConfetti(); 
                         playHappySound(); 
                         if (App.activeChat === toUser) renderMessages(toUser); 
@@ -1466,7 +1659,7 @@
             }
             App.users[currentUser].following.push(targetUser);
             App.users[targetUser].followers.push(currentUser);
-            saveToFirebase();
+            saveToSupabase();
             showNotification(`Вы подписались на ${getDisplayName(targetUser)}`);
             return true;
         }
@@ -1478,7 +1671,7 @@
             if (idxFollowing !== -1) App.users[currentUser].following.splice(idxFollowing, 1);
             const idxFollower = App.users[targetUser].followers.indexOf(currentUser);
             if (idxFollower !== -1) App.users[targetUser].followers.splice(idxFollower, 1);
-            saveToFirebase();
+            saveToSupabase();
             showNotification(`Вы отписались от ${getDisplayName(targetUser)}`);
             return true;
         }
@@ -1529,7 +1722,7 @@
                 const modalHtml = `
                     <div class="modal-overlay" id="profileModalOverlay">
                         <div class="profile-modal">
-                            <h3><span>МОЙ ПРОФИЛЬ</span> <button class="settings-icon" id="openSettingsBtn" style="background:none; border:none; font-size:22px;">⚙️</button></h3>
+                            <h3><span>МОЙ ПРОФИЛЬ</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
                             <div class="profile-banner-wrapper">
                                 <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div>
                                 <div class="profile-avatar-overlay">
@@ -1639,7 +1832,7 @@
                 const requestId = generateId(); 
                 if (!App.donationRequests) App.donationRequests = {};
                 App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), statusType: pack.status || null }; 
-                saveToFirebase(); 
+                saveToSupabase(); 
                 document.getElementById('donationModalOverlay')?.remove(); 
                 showNotification(`✅ Заявка отправлена! Ожидайте начисления. ID: ${requestId.slice(-6)}`); 
             }); 
@@ -1666,11 +1859,11 @@
                 } 
                 request.status = 'completed'; 
                 request.completedAt = Date.now(); 
-                saveToFirebase(); 
+                saveToSupabase(); 
                 if (!App.yolkChatMessages[targetUser]) App.yolkChatMessages[targetUser] = []; 
                 let messageText = request.statusType ? `✨ Вы получили СТАТУС ${request.statusType} НАВСЕГДА! ✨` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`; 
                 App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: messageText, time: Date.now() }); 
-                saveToFirebase(); 
+                saveToSupabase(); 
                 if (App.currentUser === ADMIN_USER) { 
                     document.getElementById('adminModalOverlay')?.remove(); 
                     openAdminPanel(); 
@@ -1683,7 +1876,7 @@
             const request = App.donationRequests[requestId]; 
             if (!request || request.status !== 'pending') return; 
             delete App.donationRequests[requestId]; 
-            saveToFirebase(); 
+            saveToSupabase(); 
             showNotification(`❌ Заявка отменена`); 
             if (App.currentUser === ADMIN_USER) { 
                 document.getElementById('adminModalOverlay')?.remove(); 
@@ -1790,9 +1983,9 @@
                         <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
                         ${mediaHtml}
                         <div class="post-stats">
-                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:20px;height:20px;"> <span>${likesCount}</span></button>
-                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:20px;height:20px;"> <span>${commentsCount}</span></button>
-                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></button>` : ''}
+                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:24px;height:24px;"> <span>${likesCount}</span></button>
+                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${commentsCount}</span></button>
+                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1817,7 +2010,7 @@
                 if (post.dislikes[user]) delete post.dislikes[user];
                 post.likes[user] = true;
             }
-            saveToFirebase();
+            saveToSupabase();
             updatePostStats(postId);
         }
 
@@ -1879,7 +2072,7 @@
                     text: text,
                     time: Date.now()
                 });
-                saveToFirebase();
+                saveToSupabase();
                 document.getElementById('commentsModal').remove();
                 updatePostStats(postId);
                 showNotification('Комментарий добавлен');
@@ -1894,7 +2087,7 @@
             const index = App.posts.findIndex(p => p.id === postId);
             if (index !== -1 && App.posts[index].author === App.currentUser) {
                 App.posts.splice(index, 1);
-                saveToFirebase();
+                saveToSupabase();
                 initFeed();
                 showNotification('Пост удален');
             } else {
@@ -1902,11 +2095,25 @@
             }
         }
 
+        function canCreatePost() {
+            const now = Date.now();
+            const last = App.lastPostTime[App.currentUser] || 0;
+            const diff = now - last;
+            const cooldown = 3 * 60 * 1000; // 3 минуты
+            if (diff < cooldown) {
+                const remaining = Math.ceil((cooldown - diff) / 1000);
+                showNotification(`Следующий пост можно будет опубликовать через ${remaining} сек.`, 'error');
+                return false;
+            }
+            return true;
+        }
+
         function createPost(text, media, isVideo) {
             if (!text.trim() && !media) {
                 showNotification('Напишите текст или прикрепите медиа', 'error');
                 return;
             }
+            if (!canCreatePost()) return;
             const post = {
                 id: generateId(),
                 author: App.currentUser,
@@ -1919,7 +2126,8 @@
                 comments: []
             };
             App.posts.unshift(post);
-            saveToFirebase();
+            App.lastPostTime[App.currentUser] = Date.now();
+            saveToSupabase();
             initFeed();
             showNotification('Пост опубликован!');
         }
@@ -2053,7 +2261,9 @@
             }
         }
         
-        function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
+        function renderAuth() { 
+            return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; 
+        }
         
         function attachAuthEvents() { 
             const loginForm = document.getElementById('loginForm'); 
@@ -2063,8 +2273,10 @@
             document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); 
             document.getElementById('loginBtn')?.addEventListener('click', () => { 
                 let username = document.getElementById('loginUsername').value.trim().toLowerCase(); 
+                const email = document.getElementById('loginEmail').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim(); 
                 if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ, ПЕРВАЯ — БУКВА'; return; } 
+                if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! ВВЕДИТЕ КОРРЕКТНЫЙ EMAIL'; return; }
                 const clean = '@' + username;
                 
                 let mainUsername = findMainUsername(clean);
@@ -2072,8 +2284,8 @@
                     if (App.users[clean]) mainUsername = clean;
                 }
                 
-                if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass) { 
-                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; 
+                if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass || (App.users[mainUsername].email && App.users[mainUsername].email.toLowerCase() !== email.toLowerCase())) { 
+                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН, EMAIL ИЛИ ПАРОЛЬ'; 
                     return; 
                 } 
                 const user = App.users[mainUsername]; 
@@ -2084,7 +2296,6 @@
                     loadYolkChatMessages(); 
                     loadStreaks(); 
                     loadPrivacySettings(); 
-                    setupUserListener(mainUsername); 
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
                     App.lastSeenInterval = setInterval(() => { updateLastSeen(mainUsername); }, 30000); 
                     updateLastSeen(mainUsername); 
@@ -2106,21 +2317,22 @@
             }); 
             document.getElementById('registerBtn')?.addEventListener('click', () => { 
                 let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
+                const email = document.getElementById('regEmail').value.trim();
                 const pass = document.getElementById('regPassword').value.trim(); 
                 if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ, ПЕРВАЯ — БУКВА'; return; } 
+                if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! ВВЕДИТЕ КОРРЕКТНЫЙ EMAIL'; return; }
                 if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } 
                 if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } 
                 const clean = '@' + username; 
                 if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
-                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username }; 
-                database.ref('users/' + clean).set(newUser).then(() => { 
-                    App.users[clean] = newUser; 
-                    App.currentUser = clean; 
-                    App.savedMessages[clean] = []; 
-                    saveSavedMessages(); 
-                    localStorage.setItem('yolk_current_user', clean); 
-                    saveToFirebase(); 
-                    setupUserListener(clean); 
+                if (isEmailTaken(email)) { errorDiv.innerText = '! ЭТОТ EMAIL УЖЕ ИСПОЛЬЗУЕТСЯ'; return; }
+                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
+                App.users[clean] = newUser;
+                App.currentUser = clean; 
+                App.savedMessages[clean] = []; 
+                saveSavedMessages(); 
+                localStorage.setItem('yolk_current_user', clean); 
+                saveToSupabase().then(() => {
                     render(); 
                     showNotification('✅ Аккаунт создан!'); 
                 }).catch((err) => { console.error('❌ Ошибка сохранения пользователя:', err); errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); 
@@ -2224,7 +2436,7 @@
                     const chatId = [from, to].sort().join('_'); 
                     if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
                     App.chats[chatId].messages.push(message); 
-                    saveToFirebase(); 
+                    saveToSupabase(); 
                     renderMessages(to); 
                     playHappySound(); 
                     updateStreak(to); 
@@ -2253,7 +2465,6 @@
             messagesContainer.innerHTML = html; 
             setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100); 
             if (chatPartner !== 'saved' && chatPartner !== 'yolk') updateChatHeaderStatus(chatPartner); 
-            setupTypingListener(chatPartner);
         }
         
         function renderMessage(msg, idx, currentUser, chatPartner) { 
@@ -2304,16 +2515,14 @@
         }
         
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
-        function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); setupRealtimeListener(chatId, chatPartner); renderMessages(chatPartner); setupUserListener(chatPartner); updateChatHeaderStatus(chatPartner); }
-        function setupRealtimeListener(chatId, chatPartner) { const chatRef = database.ref('chats/' + chatId); chatRef.on('value', (snapshot) => { const data = snapshot.val(); if (data) { if (!App.chats[chatId]) App.chats[chatId] = data; else App.chats[chatId].messages = data.messages || []; if (App.activeChat === chatPartner) { renderMessages(chatPartner); } } }); }
-        function setupUserListener(username) { if (App.userListeners[username]) return; const userRef = database.ref('users/' + username); userRef.on('value', (snapshot) => { const userData = snapshot.val(); if (userData) { const oldStatus = App.users[username]?.status; App.users[username] = { ...App.users[username], ...userData }; if (username === App.currentUser) { updateUserInterface(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); } if (oldStatus !== userData.status && App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { renderMessages(App.activeChat); updateChatList(); } if (App.activeChat === username || (App.activeChat && App.chats[App.activeChat] && (App.chats[App.activeChat].user1 === username || App.chats[App.activeChat].user2 === username))) { updateChatHeaderStatus(username); } } }); App.userListeners[username] = true; }
-        function updateLastSeen(username) { if (App.users[username] && username === App.currentUser) { App.users[username].lastSeen = Date.now(); database.ref('users/' + username + '/lastSeen').set(Date.now()); } }
+        function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); renderMessages(chatPartner); updateChatHeaderStatus(chatPartner); }
+        function updateLastSeen(username) { if (App.users[username] && username === App.currentUser) { App.users[username].lastSeen = Date.now(); saveToSupabase(); } }
         function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
         function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
         function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
         function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
         function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
-        function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { database.ref('yolkChatMessages').set(App.yolkChatMessages).catch(e => console.error(e)); } }
+        function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { saveToSupabase(); } }
         function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Фото добавлено, напишите текст и отправьте'); }); }; reader.readAsDataURL(file); }
         function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Видео добавлено, напишите текст и отправьте'); }; reader.readAsDataURL(file); }
         function addUserBySearch() { 
@@ -2338,8 +2547,8 @@
             render(); 
             showNotification(`Чат с ${getDisplayName(mainUser)} создан`); 
         }
-        window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToFirebase(); render(); showNotification('Чат удален'); };
-        window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToFirebase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
+        window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToSupabase(); render(); showNotification('Чат удален'); };
+        window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
         window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
         
         function updateStreak(chatPartner) {
@@ -2417,7 +2626,7 @@
         
         function saveStreaks() {
             localStorage.setItem('yolk_streaks', JSON.stringify(App.streaks));
-            if (App.dataLoaded) database.ref('streaks').set(App.streaks).catch(e => console.error(e));
+            if (App.dataLoaded) saveToSupabase();
         }
         
         function loadStreaks() {
@@ -2492,7 +2701,7 @@
                     if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') renderMessages(App.activeChat);
                     updateChatList();
                 }
-                saveToFirebase();
+                saveToSupabase();
                 updateUserInterface();
                 document.getElementById('adminModalOverlay').remove();
             });
@@ -2501,98 +2710,16 @@
             });
         }
         
-        function initBots() { App.systemBots = []; saveToFirebase(); }
-        function loadFromFirebase() { 
-            console.log('🔄 Загрузка данных из Firebase...'); 
-            try { 
-                database.ref().get().then(snapshot => { 
-                    if (snapshot.exists()) { 
-                        const data = snapshot.val(); 
-                        if (data.users) { 
-                            App.users = data.users; 
-                            Object.keys(App.users).forEach(u => { 
-                                if (!App.users[u].followers) App.users[u].followers = []; 
-                                if (!App.users[u].following) App.users[u].following = []; 
-                                if (!App.users[u].nfts) App.users[u].nfts = []; 
-                                if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
-                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                            }); 
-                        } 
-                        if (data.chats) App.chats = data.chats; 
-                        if (data.blocked) App.blocked = data.blocked; 
-                        if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; 
-                        if (data.streaks) App.streaks = data.streaks; 
-                        if (data.privacySettings) App.privacySettings = data.privacySettings; 
-                        if (data.posts) App.posts = data.posts; 
-                        if (data.donationRequests) App.donationRequests = data.donationRequests; 
-                        localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked })); 
-                        if (data.yolkChatMessages) saveYolkChatMessages(); 
-                        if (data.streaks) saveStreaks(); 
-                        if (data.privacySettings) savePrivacySettings(); 
-                    } else { 
-                        console.log('⚠️ База данных пуста'); 
-                    } 
-                    const savedUser = localStorage.getItem('yolk_current_user'); 
-                    const savedChat = localStorage.getItem('yolk_active_chat'); 
-                    if (savedUser && App.users[savedUser]) { 
-                        App.currentUser = savedUser; 
-                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat]) ? savedChat : 'saved'; 
-                        loadSavedMessages(); 
-                        loadYolkChatMessages(); 
-                        loadStreaks(); 
-                        loadPrivacySettings(); 
-                        setupUserListener(App.currentUser); 
-                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
-                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); 
-                        updateLastSeen(App.currentUser); 
-                    } 
-                    App.dataLoaded = true; 
-                    render(); 
-                }).catch(error => { 
-                    console.error('❌ Ошибка Firebase:', error); 
-                    const cachedData = localStorage.getItem('yolk_cache'); 
-                    if (cachedData) { 
-                        try { 
-                            const cache = JSON.parse(cachedData); 
-                            if (cache.users) { 
-                                App.users = cache.users; 
-                                Object.keys(App.users).forEach(u => { 
-                                    if (!App.users[u].followers) App.users[u].followers = []; 
-                                    if (!App.users[u].following) App.users[u].following = []; 
-                                    if (!App.users[u].nfts) App.users[u].nfts = []; 
-                                    if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
-                                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                                }); 
-                            } 
-                            if (cache.chats) App.chats = cache.chats; 
-                            if (cache.blocked) App.blocked = cache.blocked; 
-                            console.log('📦 Загружено из кэша:', Object.keys(App.users).length); 
-                        } catch(e) { } 
-                    } 
-                    const savedUser = localStorage.getItem('yolk_current_user'); 
-                    if (savedUser && App.users[savedUser]) { 
-                        App.currentUser = savedUser; 
-                        App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved'; 
-                        loadSavedMessages(); 
-                        loadYolkChatMessages(); 
-                        loadStreaks(); 
-                        loadPrivacySettings(); 
-                        setupUserListener(App.currentUser); 
-                    } 
-                    App.dataLoaded = true; 
-                    render(); 
-                }); 
-            } catch (error) { 
-                console.error('❌ Ошибка Firebase:', error); 
-            } 
-        }
+        function initBots() { App.systemBots = []; saveToSupabase(); }
         
+        // === ИНИЦИАЛИЗАЦИЯ ===
         window.addEventListener('load', () => { 
             loadingStartTime = Date.now();
             initBots(); 
-            loadFromFirebase(); 
+            loadFromSupabase(); 
+            subscribeToAppState();
             loadTheme(); 
         });
     </script>
 </body>
-</html> 
+</html>
