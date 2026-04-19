@@ -859,16 +859,16 @@
     <div id="app"></div>
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
-<script>
-    // === SUPABASE INIT (ТОЛЬКО ОДИН РАЗ) ===
-    const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
-    
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-        db: { schema: 'public' },
-        realtime: { params: { eventsPerSecond: 10 } }
-    });
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script>
+        // === SUPABASE INIT ===
+        const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
+        const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+            db: { schema: 'public' },
+            realtime: { params: { eventsPerSecond: 10 } }
+        });
 
     // Глобальные переменные приложения
     const App = { 
@@ -2701,13 +2701,13 @@
     function initBots() { App.systemBots = []; saveToSupabase(); }
     
     // === ИНИЦИАЛИЗАЦИЯ ===
-    window.addEventListener('load', () => { 
-        loadingStartTime = Date.now();
-        initBots(); 
-        loadFromSupabase(); 
-        subscribeToAppState();
-        loadTheme(); 
-    });
-</script>
+     window.addEventListener('load', () => { 
+            loadingStartTime = Date.now();
+            initBots(); 
+            loadFromSupabase(); 
+            subscribeToAppState();
+            loadTheme(); 
+        });
+    </script>
 </body>
 </html>
