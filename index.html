@@ -7,7 +7,6 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
-        /* ===== Тот же самый CSS, без изменений ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -1826,7 +1825,6 @@
             }
             saveToFirebase();
             updatePostStats(postId);
-            localStorage.setItem('yolk_posts', JSON.stringify(App.posts)); // сохраняем лайки локально
         }
 
         function updatePostStats(postId) {
@@ -1888,7 +1886,6 @@
                     time: Date.now()
                 });
                 saveToFirebase();
-                localStorage.setItem('yolk_posts', JSON.stringify(App.posts));
                 document.getElementById('commentsModal').remove();
                 updatePostStats(postId);
                 showNotification('Комментарий добавлен');
@@ -1904,7 +1901,6 @@
             if (index !== -1 && App.posts[index].author === App.currentUser) {
                 App.posts.splice(index, 1);
                 saveToFirebase();
-                localStorage.setItem('yolk_posts', JSON.stringify(App.posts));
                 initFeed();
                 showNotification('Пост удален');
             } else {
@@ -1944,9 +1940,6 @@
             };
             App.posts.unshift(post);
             App.lastPostTime[App.currentUser] = Date.now();
-            // Сохраняем в localStorage сразу
-            localStorage.setItem('yolk_posts', JSON.stringify(App.posts));
-            localStorage.setItem('yolk_lastPostTime', JSON.stringify(App.lastPostTime));
             saveToFirebase();
             initFeed();
             showNotification('Пост опубликован!');
@@ -2559,23 +2552,7 @@
                         if (data.yolkChatMessages) App.yolkChatMessages = data.yolkChatMessages; 
                         if (data.streaks) App.streaks = data.streaks; 
                         if (data.privacySettings) App.privacySettings = data.privacySettings; 
-                        
-                        // Обработка постов: объединяем с localStorage, если там есть
-                        const localPosts = localStorage.getItem('yolk_posts');
-                        let mergedPosts = data.posts && Array.isArray(data.posts) ? [...data.posts] : [];
-                        if (localPosts) {
-                            try {
-                                const parsedLocal = JSON.parse(localPosts);
-                                parsedLocal.forEach(localPost => {
-                                    if (!mergedPosts.find(p => p.id === localPost.id)) {
-                                        mergedPosts.push(localPost);
-                                    }
-                                });
-                            } catch(e) {}
-                        }
-                        App.posts = mergedPosts.sort((a, b) => b.time - a.time);
-                        localStorage.setItem('yolk_posts', JSON.stringify(App.posts));
-                        
+                        if (data.posts) App.posts = data.posts; 
                         if (data.donationRequests) App.donationRequests = data.donationRequests; 
                         localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked })); 
                         if (data.yolkChatMessages) saveYolkChatMessages(); 
@@ -2583,10 +2560,6 @@
                         if (data.privacySettings) savePrivacySettings(); 
                     } else { 
                         console.log('⚠️ База данных пуста'); 
-                        const localPosts = localStorage.getItem('yolk_posts');
-                        if (localPosts) {
-                            try { App.posts = JSON.parse(localPosts); } catch(e) { App.posts = []; }
-                        }
                     } 
                     const savedUser = localStorage.getItem('yolk_current_user'); 
                     const savedChat = localStorage.getItem('yolk_active_chat'); 
@@ -2602,11 +2575,6 @@
                         App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000); 
                         updateLastSeen(App.currentUser); 
                     } 
-                    // Загружаем lastPostTime из localStorage
-                    const localLastPostTime = localStorage.getItem('yolk_lastPostTime');
-                    if (localLastPostTime) {
-                        try { App.lastPostTime = JSON.parse(localLastPostTime); } catch(e) { App.lastPostTime = {}; }
-                    }
                     App.dataLoaded = true; 
                     render(); 
                 }).catch(error => { 
@@ -2631,14 +2599,6 @@
                             console.log('📦 Загружено из кэша:', Object.keys(App.users).length); 
                         } catch(e) { } 
                     } 
-                    const localPosts = localStorage.getItem('yolk_posts');
-                    if (localPosts) {
-                        try { App.posts = JSON.parse(localPosts); } catch(e) { App.posts = []; }
-                    }
-                    const localLastPostTime = localStorage.getItem('yolk_lastPostTime');
-                    if (localLastPostTime) {
-                        try { App.lastPostTime = JSON.parse(localLastPostTime); } catch(e) { App.lastPostTime = {}; }
-                    }
                     const savedUser = localStorage.getItem('yolk_current_user'); 
                     if (savedUser && App.users[savedUser]) { 
                         App.currentUser = savedUser; 
