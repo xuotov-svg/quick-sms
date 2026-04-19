@@ -1967,7 +1967,7 @@ function renderFeed() {
         const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
         
         html += `
-            <div class="post-card" data-post-id="${post.id}">
+            <div class="post-card" data-post-id="${post.id}" data-author="${post.author}">
                 <div class="post-header" onclick="openProfileModal('${post.author}')">
                     <div class="post-avatar">${avatarHtml}</div>
                     <div style="flex:1;">
@@ -2111,6 +2111,7 @@ window.deletePost = function(postId) {
     }
 };
 
+// Исправлено: обновляем все посты данного автора
 window.toggleFeedSubscription = function(postId, author) {
     if (author === App.currentUser) return;
     const isCurrentlySubscribed = isFollowing(App.currentUser, author);
@@ -2119,8 +2120,8 @@ window.toggleFeedSubscription = function(postId, author) {
     } else {
         subscribeToUser(App.currentUser, author);
     }
-    const postCards = document.querySelectorAll(`.post-card[data-post-id="${postId}"]`);
-    postCards.forEach(postCard => {
+    const authorPosts = document.querySelectorAll(`.post-card[data-author="${author}"]`);
+    authorPosts.forEach(postCard => {
         const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
         if (btn) {
             const newSubStatus = !isCurrentlySubscribed;
