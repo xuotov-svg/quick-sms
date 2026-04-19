@@ -7,6 +7,7 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
+        /* === Все стили без изменений === */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -892,8 +893,8 @@
             SETTINGS: 'https://github.com/xuotov-svg/quick-sms/blob/main/XkuAnaeE3mA.png?raw=true'
         };
         
-        // === Supabase функции вместо Firebase ===
-        const STATE_ROW_ID = 1; // фиксированный id для единственной записи в app_state
+        // === Supabase функции ===
+        const STATE_ROW_ID = 1;
         
         async function loadAppState() {
             const { data, error } = await supabase
@@ -961,7 +962,6 @@
                 .subscribe();
         }
 
-        // Основная функция сохранения (аналог saveToFirebase)
         async function saveToSupabase() {
             if (!App.dataLoaded) return;
             const state = {
@@ -984,10 +984,8 @@
             }
         }
 
-        // Переопределяем глобальную функцию
         window.saveToFirebase = saveToSupabase;
 
-        // Загрузка данных из Supabase
         async function loadFromSupabase() {
             console.log('🔄 Загрузка данных из Supabase...');
             try {
@@ -1041,7 +1039,6 @@
                     loadYolkChatMessages();
                     loadStreaks();
                     loadPrivacySettings();
-                    setupUserListener(App.currentUser);
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
                     App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
                     updateLastSeen(App.currentUser);
@@ -1078,14 +1075,12 @@
                     loadYolkChatMessages();
                     loadStreaks();
                     loadPrivacySettings();
-                    setupUserListener(App.currentUser);
                 }
                 App.dataLoaded = true;
                 render();
             }
         }
 
-        // Заглушки для слушателей (Realtime теперь через subscribeToAppState)
         function setupRealtimeListener(chatId, chatPartner) {}
         function setupUserListener(username) {}
         
@@ -1096,7 +1091,7 @@
             }
         }
 
-        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (без изменений) ===
+        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
         let loadingStartTime = Date.now();
         const MIN_LOADING_TIME = 1000;
         
@@ -1191,16 +1186,11 @@
         function sendTypingIndicator(toUser) {
             if (!toUser || toUser === 'saved' || toUser === 'yolk') return;
             const chatId = [App.currentUser, toUser].sort().join('_');
-            // В Supabase можно добавить отдельную таблицу typing, но для простоты оставим локально
             if (App.typingTimeouts[chatId]) clearTimeout(App.typingTimeouts[chatId]);
-            App.typingTimeouts[chatId] = setTimeout(() => {
-                // Заглушка
-            }, 2000);
+            App.typingTimeouts[chatId] = setTimeout(() => {}, 2000);
         }
 
-        function setupTypingListener(chatPartner) {
-            // Можно реализовать при необходимости
-        }
+        function setupTypingListener(chatPartner) {}
         
         function findMainUsername(inputUsername) {
             if (!inputUsername) return null;
@@ -1230,7 +1220,6 @@
         function openProfileSettings() {
             const userData = App.users[App.currentUser];
             const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
-            const currentWallpaper = userData.chatWallpaper || '';
             const currentTheme = localStorage.getItem('yolk_theme') === 'light' ? 'light' : 'dark';
             
             let pendingTheme = currentTheme;
@@ -2099,7 +2088,7 @@
             const now = Date.now();
             const last = App.lastPostTime[App.currentUser] || 0;
             const diff = now - last;
-            const cooldown = 3 * 60 * 1000; // 3 минуты
+            const cooldown = 3 * 60 * 1000;
             if (diff < cooldown) {
                 const remaining = Math.ceil((cooldown - diff) / 1000);
                 showNotification(`Следующий пост можно будет опубликовать через ${remaining} сек.`, 'error');
@@ -2516,7 +2505,6 @@
         
         function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
         function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); renderMessages(chatPartner); updateChatHeaderStatus(chatPartner); }
-        function updateLastSeen(username) { if (App.users[username] && username === App.currentUser) { App.users[username].lastSeen = Date.now(); saveToSupabase(); } }
         function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
         function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
         function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
