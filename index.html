@@ -1909,10 +1909,10 @@ let feedPage = 0;
 const FEED_PAGE_SIZE = 10;
 let feedPosts = [];
 let isLoadingFeed = false;
-let allPostsLoaded = false; // флаг, что посты кончились
 
 function getShuffledPosts() {
     const shuffled = [...App.posts];
+    // Перемешиваем посты
     for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -1922,8 +1922,8 @@ function getShuffledPosts() {
 
 function initFeed() {
     feedPage = 0;
-    feedPosts = getShuffledPosts();
-    allPostsLoaded = false;
+    // Если посты есть, перемешиваем их
+    feedPosts = App.posts.length > 0 ? getShuffledPosts() : [];
     const feedContainer = document.getElementById('feedContainer');
     if (feedContainer) feedContainer.innerHTML = '';
     isLoadingFeed = false;
@@ -1935,10 +1935,6 @@ function renderFeed() {
     const feedContainer = document.getElementById('feedContainer');
     if (!feedContainer) return;
     if (isLoadingFeed) return;
-    if (allPostsLoaded) {
-        feedContainer.onscroll = null;
-        return;
-    }
     
     if (feedPosts.length === 0) {
         feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
@@ -1947,12 +1943,15 @@ function renderFeed() {
     
     const start = feedPage * FEED_PAGE_SIZE;
     const end = start + FEED_PAGE_SIZE;
-    const postsToShow = feedPosts.slice(start, end);
+    let postsToShow = feedPosts.slice(start, end);
     
+    // === БЕСКОНЕЧНАЯ ЛЕНТА В СТИЛЕ VK ===
+    // Если посты закончились, начинаем показывать их снова (с перемешиванием)
     if (postsToShow.length === 0) {
-        allPostsLoaded = true;
-        feedContainer.onscroll = null;
-        return;
+        feedPage = 0;
+        feedPosts = getShuffledPosts(); // Перемешиваем заново
+        postsToShow = feedPosts.slice(0, FEED_PAGE_SIZE);
+        feedPage = 1;
     }
     
     isLoadingFeed = true;
@@ -2012,9 +2011,6 @@ function renderFeed() {
         }
     };
 }
-
-// ... (все остальные функции без изменений, как в предыдущем ответе, до самого конца)
-// Я не дублирую их здесь для краткости, но в ПОЛНОМ коде они идут после ленты.
 
 window.toggleLikePost = function(postId) {
     const post = App.posts.find(p => p.id === postId);
@@ -2123,7 +2119,6 @@ window.deletePost = function(postId) {
     }
 };
 
-// Исправлено: обновляем все посты данного автора
 window.toggleFeedSubscription = function(postId, author) {
     if (author === App.currentUser) return;
     const isCurrentlySubscribed = isFollowing(App.currentUser, author);
@@ -2250,6 +2245,8 @@ function openCreatePostModal() {
         document.getElementById('createPostModal').remove();
     });
 }
+
+
 
 function render() { 
     const root = document.getElementById('app'); 
