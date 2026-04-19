@@ -402,7 +402,6 @@
         
         .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; color: var(--text); }
         .settings-icon:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
-        .settings-icon-img { width: 28px; height: 28px; object-fit: contain; cursor: pointer; }
         
         .toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .toggle-switch .toggle-label { font-size: 14px; color: var(--text); }
@@ -729,8 +728,8 @@
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
         .post-like img, .post-comment img, .post-delete img {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             object-fit: contain;
         }
         .post-delete {
@@ -873,8 +872,7 @@
             LIKE_ON: 'https://github.com/xuotov-svg/quick-sms/blob/main/а2.png?raw=true',
             COMMENT: 'https://github.com/xuotov-svg/quick-sms/blob/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png?raw=true',
             DELETE: 'https://github.com/xuotov-svg/quick-sms/blob/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png?raw=true',
-            FIRE: 'https://github.com/xuotov-svg/quick-sms/blob/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png?raw=true',
-            SETTINGS: 'https://github.com/xuotov-svg/quick-sms/blob/main/XkuAnaeE3mA.png?raw=true'
+            FIRE: 'https://github.com/xuotov-svg/quick-sms/blob/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png?raw=true'
         };
         
         const App = { 
@@ -882,7 +880,7 @@
             tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
             savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
             streaks: {}, privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null,
-            donationRequests: {}, typingTimeouts: {}, lastPostTime: {} 
+            donationRequests: {}, typingTimeouts: {} 
         };
         App.systemBots = [];
         
@@ -901,10 +899,11 @@
         function getDisplayName(username) {
             const user = App.users[username];
             if (!user) return username;
+            // Возвращаем displayName, если задан, иначе имя без @
             if (user.displayName && user.displayName.trim().length > 0) {
                 return user.displayName.trim();
             }
-            return username.substring(1);
+            return username.substring(1); // убираем @
         }
         
         function formatUserNameWithStatus(username) {
@@ -923,9 +922,11 @@
         }
 
         function formatUsernameWithAliases(username) {
+            // В новом дизайне доп.юзернеймы не используются, оставляем для совместимости
             const user = App.users[username];
             if (!user) return formatUserNameWithStatus(username);
             let display = formatUserNameWithStatus(username);
+            // (доп. имена убраны, оставляем пусто)
             return display;
         }
 
@@ -1016,6 +1017,7 @@
         function findMainUsername(inputUsername) {
             if (!inputUsername) return null;
             if (App.users[inputUsername]) return inputUsername;
+            // поиск по дополнительным юзернеймам (оставлен для совместимости, но не используется)
             for (let mainName in App.users) {
                 const user = App.users[mainName];
                 if (user.additionalUsernames && user.additionalUsernames.includes(inputUsername)) {
@@ -1023,19 +1025,6 @@
                 }
             }
             return null;
-        }
-        
-        function isEmailTaken(email, excludeUsername = null) {
-            if (!email) return false;
-            const lowerEmail = email.toLowerCase();
-            for (let username in App.users) {
-                if (excludeUsername && username === excludeUsername) continue;
-                const userEmail = App.users[username]?.email;
-                if (userEmail && userEmail.toLowerCase() === lowerEmail) {
-                    return true;
-                }
-            }
-            return false;
         }
         
         function openProfileSettings() {
@@ -1048,7 +1037,6 @@
             let pendingPrivacy = currentPrivacy;
             let pendingTwoFA = userData.twoFA || false;
             let pendingDisplayName = userData.displayName || getDisplayName(App.currentUser);
-            let pendingEmail = userData.email || `${App.currentUser.substring(1)}@yolkapp.com`;
             
             const modalHtml = `
                 <div class="modal-overlay" id="settingsModalOverlay">
@@ -1057,11 +1045,7 @@
                         <div class="profile-input-group">
                             <label>ВАШ ЮЗЕРНЕЙМ</label>
                             <input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2); cursor: default; opacity: 0.8;">
-                        </div>
-                        <div class="profile-input-group">
-                            <label>EMAIL</label>
-                            <input type="email" id="settingsEmail" value="${pendingEmail}" placeholder="example@mail.com">
-                            <small style="color: var(--text-secondary);">Используется для входа</small>
+                            <small style="color: var(--text-secondary);">Не редактируется</small>
                         </div>
                         <div class="profile-input-group">
                             <label>ИМЯ (до 6 символов)</label>
@@ -1094,6 +1078,11 @@
                             <input type="file" id="settingsBanner" accept="image/*" style="display:none;">
                         </div>
                         <div class="profile-input-group">
+                            <label>ФОН ЧАТА</label>
+                            <div id="settingsWallpaperPreview" class="wallpaper-preview" style="background-image: ${currentWallpaper ? `url('${currentWallpaper}')` : 'none'}; background-size: cover; background-position: center;"></div>
+                            <input type="file" id="settingsWallpaper" accept="image/*">
+                        </div>
+                        <div class="profile-input-group">
                             <label>ТЕМА ОФОРМЛЕНИЯ</label>
                             <div class="toggle-switch ${pendingTheme === 'light' ? 'active' : ''}" id="themeToggle">
                                 <div class="toggle-checkbox"></div>
@@ -1106,6 +1095,7 @@
                                 <div class="toggle-checkbox"></div>
                                 <span class="toggle-label">${pendingPrivacy ? 'Незнакомцы не могут писать первыми' : 'Все могут писать первыми'}</span>
                             </div>
+                            <small style="color: var(--text-secondary); display:block; margin-top:5px;">Если включено: только те, с кем у вас уже есть чат, могут писать вам.</small>
                         </div>
                         <div class="profile-input-group">
                             <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
@@ -1148,7 +1138,7 @@
                 }
             };
             
-            let tempAvatar = null, tempBanner = null;
+            let tempAvatar = null, tempBanner = null, tempWallpaper = null;
             
             document.getElementById('changeAvatarBtn').addEventListener('click', () => {
                 document.getElementById('settingsAvatar').click();
@@ -1177,6 +1167,19 @@
                     compressImage(ev.target.result, 800, 200, 0.7, (compressed) => {
                         tempBanner = compressed;
                         showNotification('Баннер выбран');
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            document.getElementById('settingsWallpaper').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    compressImage(ev.target.result, 1920, 1080, 0.8, (compressed) => {
+                        document.getElementById('settingsWallpaperPreview').style.backgroundImage = `url('${compressed}')`;
+                        tempWallpaper = compressed;
                     });
                 };
                 reader.readAsDataURL(file);
@@ -1217,18 +1220,8 @@
             }
             
             document.getElementById('saveSettingsBtn').addEventListener('click', () => {
-                const newEmail = document.getElementById('settingsEmail')?.value.trim();
-                if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) {
-                    showNotification('Некорректный email', 'error');
-                    return;
-                }
-                if (newEmail && isEmailTaken(newEmail, App.currentUser)) {
-                    showNotification('Этот email уже используется другим пользователем', 'error');
-                    return;
-                }
-                if (newEmail) App.users[App.currentUser].email = newEmail;
-                
                 const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
+                // валидация: только буквы русского/английского и цифры, макс 6
                 if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
                     showNotification('Имя должно содержать только буквы (рус/англ) и цифры, до 6 символов', 'error');
                     return;
@@ -1250,6 +1243,7 @@
                 if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                 if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                 if (tempBanner) App.users[App.currentUser].banner = tempBanner;
+                if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
                 
                 if (pendingTheme !== currentTheme) {
                     applyTheme(pendingTheme);
@@ -1535,7 +1529,7 @@
                 const modalHtml = `
                     <div class="modal-overlay" id="profileModalOverlay">
                         <div class="profile-modal">
-                            <h3><span>МОЙ ПРОФИЛЬ</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
+                            <h3><span>МОЙ ПРОФИЛЬ</span> <button class="settings-icon" id="openSettingsBtn" style="background:none; border:none; font-size:22px;">⚙️</button></h3>
                             <div class="profile-banner-wrapper">
                                 <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div>
                                 <div class="profile-avatar-overlay">
@@ -1796,9 +1790,9 @@
                         <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
                         ${mediaHtml}
                         <div class="post-stats">
-                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:24px;height:24px;"> <span>${likesCount}</span></button>
-                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${commentsCount}</span></button>
-                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
+                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:20px;height:20px;"> <span>${likesCount}</span></button>
+                            <button class="post-comment" onclick="openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:20px;height:20px;"> <span>${commentsCount}</span></button>
+                            ${isOwner ? `<button class="post-delete" onclick="deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1908,25 +1902,11 @@
             }
         }
 
-        function canCreatePost() {
-            const now = Date.now();
-            const last = App.lastPostTime[App.currentUser] || 0;
-            const diff = now - last;
-            const cooldown = 3 * 60 * 1000; // 3 минуты
-            if (diff < cooldown) {
-                const remaining = Math.ceil((cooldown - diff) / 1000);
-                showNotification(`Следующий пост можно будет опубликовать через ${remaining} сек.`, 'error');
-                return false;
-            }
-            return true;
-        }
-
         function createPost(text, media, isVideo) {
             if (!text.trim() && !media) {
                 showNotification('Напишите текст или прикрепите медиа', 'error');
                 return;
             }
-            if (!canCreatePost()) return;
             const post = {
                 id: generateId(),
                 author: App.currentUser,
@@ -1939,7 +1919,6 @@
                 comments: []
             };
             App.posts.unshift(post);
-            App.lastPostTime[App.currentUser] = Date.now();
             saveToFirebase();
             initFeed();
             showNotification('Пост опубликован!');
@@ -2074,9 +2053,7 @@
             }
         }
         
-        function renderAuth() { 
-            return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; 
-        }
+        function renderAuth() { return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; }
         
         function attachAuthEvents() { 
             const loginForm = document.getElementById('loginForm'); 
@@ -2086,10 +2063,8 @@
             document.getElementById('showLoginBtn')?.addEventListener('click', () => { regForm.style.display = 'none'; loginForm.style.display = 'block'; }); 
             document.getElementById('loginBtn')?.addEventListener('click', () => { 
                 let username = document.getElementById('loginUsername').value.trim().toLowerCase(); 
-                const email = document.getElementById('loginEmail').value.trim();
                 const pass = document.getElementById('loginPassword').value.trim(); 
                 if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ, ПЕРВАЯ — БУКВА'; return; } 
-                if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! ВВЕДИТЕ КОРРЕКТНЫЙ EMAIL'; return; }
                 const clean = '@' + username;
                 
                 let mainUsername = findMainUsername(clean);
@@ -2097,8 +2072,8 @@
                     if (App.users[clean]) mainUsername = clean;
                 }
                 
-                if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass || (App.users[mainUsername].email && App.users[mainUsername].email.toLowerCase() !== email.toLowerCase())) { 
-                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН, EMAIL ИЛИ ПАРОЛЬ'; 
+                if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass) { 
+                    errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ'; 
                     return; 
                 } 
                 const user = App.users[mainUsername]; 
@@ -2131,16 +2106,13 @@
             }); 
             document.getElementById('registerBtn')?.addEventListener('click', () => { 
                 let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
-                const email = document.getElementById('regEmail').value.trim();
                 const pass = document.getElementById('regPassword').value.trim(); 
                 if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ, ПЕРВАЯ — БУКВА'; return; } 
-                if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! ВВЕДИТЕ КОРРЕКТНЫЙ EMAIL'; return; }
                 if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } 
                 if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } 
                 const clean = '@' + username; 
                 if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
-                if (isEmailTaken(email)) { errorDiv.innerText = '! ЭТОТ EMAIL УЖЕ ИСПОЛЬЗУЕТСЯ'; return; }
-                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
+                const newUser = { password: pass, avatar: null, banner: null, stars: 0, nfts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username }; 
                 database.ref('users/' + clean).set(newUser).then(() => { 
                     App.users[clean] = newUser; 
                     App.currentUser = clean; 
@@ -2544,7 +2516,6 @@
                                 if (!App.users[u].nfts) App.users[u].nfts = []; 
                                 if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
                                 if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
                             }); 
                         } 
                         if (data.chats) App.chats = data.chats; 
@@ -2591,7 +2562,6 @@
                                     if (!App.users[u].nfts) App.users[u].nfts = []; 
                                     if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
                                     if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
                                 }); 
                             } 
                             if (cache.chats) App.chats = cache.chats; 
@@ -2625,4 +2595,4 @@
         });
     </script>
 </body>
-</html>
+</html> 
