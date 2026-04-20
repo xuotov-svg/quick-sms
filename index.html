@@ -149,23 +149,19 @@
             width: 28px;
             height: 28px;
         }
-        
         .verified-icon {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            background: #389df2;
-            border-radius: 50%;
-            color: white;
-            text-align: center;
-            line-height: 18px;
-            font-size: 12px;
-            margin-left: 4px;
-            font-weight: bold;
-        }
-        .verified-icon::before {
-            content: "✓";
-        }
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/bot%20(1).png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+        
+        
         
         .messages-container {
             flex: 1;
@@ -1581,7 +1577,7 @@
                     for (let i = 0; i < 10; i++) for (let j = 0; j < 10; j++) ctx.fillStyle = nft.grid[i][j], ctx.fillRect(j * 4.8, i * 4.8, 4.8, 4.8); 
                     return `<div class="nft-item" data-nft-index="${idx}"><img src="${canvas.toDataURL()}" style="width:100%; height:100%; image-rendering: crisp-edges;"></div>`; 
                 }).join('')}</div>` : '<div>Нет открыток для подарка</div>'; 
-                const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>🎁 ВЫБЕРИТЕ ОТКРЫТКУ</h3><div id="nftTab">${nftListHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; 
+                const modalHtml = `<div class="modal-overlay" id="giftModalOverlay"><div class="profile-modal"><h3>ВЫБЕРИТЕ ОТКРЫТКУ</h3><div id="nftTab">${nftListHtml}</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftModal">ОТМЕНА</button></div></div></div>`; 
                 document.body.insertAdjacentHTML('beforeend', modalHtml); 
                 if (hasNfts) { 
                     document.querySelectorAll('.nft-item').forEach(el => { 
@@ -1597,7 +1593,7 @@
                             saveToSupabase(); 
                             const chatId = [fromUser, toUser].sort().join('_'); 
                             if (!App.chats[chatId]) App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] }; 
-                            App.chats[chatId].messages.push({ from: fromUser, text: `ОТКРЫТКА 🖼️ ОТ ${getDisplayName(fromUser)}`, time: Date.now(), gift: true, nftData: nft }); 
+                            App.chats[chatId].messages.push({ from: fromUser, text: `ОТКРЫТКА ОТ ${getDisplayName(fromUser)}`, time: Date.now(), gift: true, nftData: nft }); 
                             saveToSupabase(); 
                             showConfetti(); 
                             playHappySound(); 
@@ -2171,7 +2167,7 @@ function openCreatePostModal() {
     const modalHtml = `
         <div class="modal-overlay" id="createPostModal">
             <div class="profile-modal">
-                <h3>📝 СОЗДАТЬ ПОСТ</h3>
+                <h3>СОЗДАТЬ ПОСТ</h3>
                 <div class="profile-input-group">
                     <label>ТЕКСТ</label>
                     <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
@@ -2538,7 +2534,7 @@ function renderChatItem(u, active, currentUser) {
     let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u); 
     let display = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
     let avatarHtml = '<div class="chat-avatar">📁</div>'; 
-    if (u === 'yolk') avatarHtml = '<div class="chat-avatar">🐣</div>'; 
+    if (u === 'yolk') avatarHtml = '<div class="chat-avatar">💬</div>'; 
     else if (u !== 'saved') { 
         const avatarUrl = App.users[u]?.avatar; 
         avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
