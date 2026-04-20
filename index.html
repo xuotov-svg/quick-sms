@@ -150,22 +150,20 @@
             height: 28px;
         }
         
-        /* Изменённый стиль verified-иконки — теперь это картинка */
         .verified-icon {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/bot%20(1).png');
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            margin-left: 4px;
-            vertical-align: middle;
-        }
-        /* Убираем старую галочку */
-        .verified-icon::before {
-            content: none !important;
-        }
+    display: inline-block;
+    width: 72px;
+    height: 72px;
+    background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/bot%20(1).png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+.verified-icon::before {
+    content: none !important;
+}
         
         .messages-container {
             flex: 1;
