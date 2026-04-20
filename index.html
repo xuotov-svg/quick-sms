@@ -152,8 +152,8 @@
         
         .verified-icon {
             display: inline-block;
-            width: 18px;
-            height: 18px;
+            width: 12px;
+            height: 12px;
             background: #389df2;
             border-radius: 50%;
             color: white;
@@ -986,99 +986,91 @@
             window.saveToFirebase = saveToSupabase;
 
             async function loadFromSupabase() {
-                console.log('🔄 Загрузка данных из Supabase...');
-                try {
-                    const state = await loadAppState();
-                    if (state) {
-                        if (state.users) {
-                            App.users = state.users;
-                            Object.keys(App.users).forEach(u => {
-                                if (!App.users[u].followers) App.users[u].followers = [];
-                                if (!App.users[u].following) App.users[u].following = [];
-                                if (!App.users[u].nfts) App.users[u].nfts = [];
-                                if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
-                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                            });
-                        }
-                        if (state.chats) App.chats = state.chats;
-                        if (state.blocked) App.blocked = state.blocked;
-                        if (state.yolkChatMessages) App.yolkChatMessages = state.yolkChatMessages;
-                        if (state.streaks) App.streaks = state.streaks;
-                        if (state.privacySettings) App.privacySettings = state.privacySettings;
-                        if (state.posts) App.posts = state.posts;
-                        if (state.donationRequests) App.donationRequests = state.donationRequests;
-                        
-                        localStorage.setItem('yolk_cache', JSON.stringify({
-                            users: App.users, chats: App.chats, blocked: App.blocked
-                        }));
-                        if (state.yolkChatMessages) saveYolkChatMessages();
-                        if (state.streaks) saveStreaks();
-                        if (state.privacySettings) savePrivacySettings();
-                    } else {
-                        console.log('⚠️ База данных пуста, инициализация...');
-                        await saveAppState({
-                            users: {},
-                            chats: {},
-                            blocked: {},
-                            yolkChatMessages: {},
-                            streaks: {},
-                            privacySettings: {},
-                            posts: [],
-                            donationRequests: {}
-                        });
-                    }
-                    
-                    const savedUser = localStorage.getItem('yolk_current_user');
-                    const savedChat = localStorage.getItem('yolk_active_chat');
-                    if (savedUser && App.users[savedUser]) {
-                        App.currentUser = savedUser;
-                        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat]) ? savedChat : 'saved';
-                        loadSavedMessages();
-                        loadYolkChatMessages();
-                        loadStreaks();
-                        loadPrivacySettings();
-                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
-                        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
-                        updateLastSeen(App.currentUser);
-                    }
-                    App.dataLoaded = true;
-                    render();
-                } catch (error) {
-                    console.error('❌ Ошибка Supabase:', error);
-                    const cachedData = localStorage.getItem('yolk_cache');
-                    if (cachedData) {
-                        try {
-                            const cache = JSON.parse(cachedData);
-                            if (cache.users) {
-                                App.users = cache.users;
-                                Object.keys(App.users).forEach(u => {
-                                    if (!App.users[u].followers) App.users[u].followers = [];
-                                    if (!App.users[u].following) App.users[u].following = [];
-                                    if (!App.users[u].nfts) App.users[u].nfts = [];
-                                    if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
-                                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                                });
-                            }
-                            if (cache.chats) App.chats = cache.chats;
-                            if (cache.blocked) App.blocked = cache.blocked;
-                            console.log('📦 Загружено из кэша');
-                        } catch(e) {}
-                    }
-                    const savedUser = localStorage.getItem('yolk_current_user');
-                    if (savedUser && App.users[savedUser]) {
-                        App.currentUser = savedUser;
-                        App.activeChat = localStorage.getItem('yolk_active_chat') || 'saved';
-                        loadSavedMessages();
-                        loadYolkChatMessages();
-                        loadStreaks();
-                        loadPrivacySettings();
-                    }
-                    App.dataLoaded = true;
-                    render();
-                }
+    console.log('🔄 Загрузка данных из Supabase...');
+    try {
+        const state = await loadAppState();
+        if (state) {
+            // Данные успешно загружены
+            if (state.users) {
+                App.users = state.users;
+                Object.keys(App.users).forEach(u => {
+                    if (!App.users[u].followers) App.users[u].followers = [];
+                    if (!App.users[u].following) App.users[u].following = [];
+                    if (!App.users[u].nfts) App.users[u].nfts = [];
+                    if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                });
             }
+            if (state.chats) App.chats = state.chats;
+            if (state.blocked) App.blocked = state.blocked;
+            if (state.yolkChatMessages) App.yolkChatMessages = state.yolkChatMessages;
+            if (state.streaks) App.streaks = state.streaks;
+            if (state.privacySettings) App.privacySettings = state.privacySettings;
+            if (state.posts) App.posts = state.posts;
+            if (state.donationRequests) App.donationRequests = state.donationRequests;
+            
+            localStorage.setItem('yolk_cache', JSON.stringify({
+                users: App.users, chats: App.chats, blocked: App.blocked
+            }));
+            
+            if (state.yolkChatMessages) saveYolkChatMessages();
+            if (state.streaks) saveStreaks();
+            if (state.privacySettings) savePrivacySettings();
+        } else {
+            // ❗ ВАЖНО: НЕ ПЕРЕЗАПИСЫВАЕМ БАЗУ!
+            console.warn('⚠️ Не удалось загрузить данные из Supabase (возможно, истек токен). Использую кэш.');
+            // Данные будут взяты из localStorage ниже
+        }
+    } catch (error) {
+        console.error('❌ Ошибка подключения к Supabase:', error);
+        // Продолжаем работать с кэшем
+    }
+    
+    // === ВСЕГДА ПЫТАЕМСЯ ЗАГРУЗИТЬ ИЗ КЭША, ЕСЛИ SUPABASE НЕ ОТВЕТИЛ ===
+    const cachedData = localStorage.getItem('yolk_cache');
+    if (cachedData) {
+        try {
+            const cache = JSON.parse(cachedData);
+            if (cache.users) {
+                App.users = cache.users;
+                Object.keys(App.users).forEach(u => {
+                    if (!App.users[u].followers) App.users[u].followers = [];
+                    if (!App.users[u].following) App.users[u].following = [];
+                    if (!App.users[u].nfts) App.users[u].nfts = [];
+                    if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
+                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                });
+            }
+            if (cache.chats) App.chats = cache.chats;
+            if (cache.blocked) App.blocked = cache.blocked;
+            console.log('📦 Данные загружены из локального кэша');
+        } catch(e) {
+            console.error('Ошибка чтения кэша:', e);
+        }
+    }
+    
+    // Восстановление сессии пользователя
+    const savedUser = localStorage.getItem('yolk_current_user');
+    const savedChat = localStorage.getItem('yolk_active_chat');
+    
+    if (savedUser && App.users[savedUser]) {
+        App.currentUser = savedUser;
+        App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat]) ? savedChat : 'saved';
+        loadSavedMessages();
+        loadYolkChatMessages();
+        loadStreaks();
+        loadPrivacySettings();
+        
+        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
+        App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
+        updateLastSeen(App.currentUser);
+    }
+    
+    App.dataLoaded = true;
+    render();
+}
 
             function setupRealtimeListener(chatId, chatPartner) {}
             function setupUserListener(username) {}
@@ -1293,7 +1285,7 @@
                             </div>
                             
                             <div style="margin-top: 20px; padding: 16px; background: rgba(212,175,55,0.1); border-radius: 16px; border: 1px solid var(--glass-border);">
-                                <h4 style="margin:0 0 8px 0; color: var(--accent);">📱 Как добавить Yolkapp на экран домой?</h4>
+                                <h4 style="margin:0 0 8px 0; color: var(--accent);">Как добавить Yolkapp на экран домой?</h4>
                                 <ol style="margin:0; padding-left:20px; color: var(--text); font-size:14px; line-height:1.5;">
                                     <li>Нажмите на «•••»</li>
                                     <li>Нажмите на «Поделиться»</li>
@@ -1788,7 +1780,7 @@
                             adminBtn.style.background = '#ff9800';
                             adminBtn.style.color = '#000000';
                             adminBtn.style.border = '1px solid rgba(255,255,255,0.2)';
-                            adminBtn.textContent = '👑 АДМИН-ПАНЕЛЬ';
+                            adminBtn.textContent = 'АДМИН-ПАНЕЛЬ';
                             adminBtn.onclick = () => {
                                 document.getElementById('profileModalOverlay')?.remove();
                                 openAdminPanel();
