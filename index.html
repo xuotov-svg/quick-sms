@@ -1604,56 +1604,63 @@
             }
 
             function openProfileModal(username) { 
-                const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', gifts: [], followers: [], following: [] }) };
-                const isOwn = (username === App.currentUser); 
-                const isAdmin = (username === ADMIN_USER); 
-                
-                const receivedGifts = (userData.gifts || []).map(g => {
-                    const gData = GIFTS[g.type];
-                    return `<div class="gift-item"><img src="${gData.icon}" style="width:100%;"><div class="gift-price">${gData.name}</div></div>`;
-                }).join('');
-                
-                const followersCount = (userData.followers || []).length;
-                const displayName = getDisplayName(username);
-                
-                if (isOwn) {
-                    const modalHtml = `
-                        <div class="modal-overlay" id="profileModalOverlay">
-                            <div class="profile-modal">
-                                <h3><span>MY PROFILE</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
-                                <div class="profile-banner-wrapper">
-                                    <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
-                                    <div class="profile-avatar-overlay">
-                                        <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
-                                    </div>
-                                </div>
-                                <div class="profile-name-section">
-                                    <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                    <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
-                                </div>
-                                <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
-                                <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
-                                <div class="profile-input-group"><label>RECEIVED GIFTS</label><div class="gift-grid">${receivedGifts || 'No gifts yet'}</div></div>
-                                
-                                <div class="shop-section">
-                                    <h4>BUY GIFTS</h4>
-                                    ${Object.entries(GIFTS).map(([key, g]) => `
-                                        <div class="shop-item">
-                                            <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
-                                            <button class="buy-gift-btn" data-gift="${key}">BUY</button>
-                                        </div>
-                                    `).join('')}
-                                    <h4 style="margin-top:12px;">TOP UP YC</h4>
-                                    <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
-                                    <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
-                                    <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
-                                    <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
-                                </div>
-                                
-                                <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>
-                            </div>
+    const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', gifts: [], followers: [], following: [] }) };
+    const isOwn = (username === App.currentUser); 
+    const isAdmin = (username === ADMIN_USER); 
+    
+    // === ВОТ ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ (Безопасный парсинг подарков) ===
+    const receivedGifts = Array.isArray(userData.gifts) ? userData.gifts.map(g => {
+        const gData = GIFTS[g.type];
+        if (!gData) return '';
+        return `<div class="gift-item"><img src="${gData.icon}" style="width:100%;"><div class="gift-price">${gData.name}</div></div>`;
+    }).join('') : '';
+    
+    const followersCount = (userData.followers || []).length;
+    const displayName = getDisplayName(username);
+    
+    if (isOwn) {
+        const modalHtml = `
+            <div class="modal-overlay" id="profileModalOverlay">
+                <div class="profile-modal">
+                    <h3><span>MY PROFILE</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
+                    <div class="profile-banner-wrapper">
+                        <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
+                        <div class="profile-avatar-overlay">
+                            <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
                         </div>
-                    `;
+                    </div>
+                    <div class="profile-name-section">
+                        <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                        <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
+                    </div>
+                    <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
+                    <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                    
+                    <!-- === ВОТ ЗДЕСЬ МЕНЯЕМ НА ПОДАРКИ === -->
+                    <div class="profile-input-group"><label>RECEIVED GIFTS</label><div class="gift-grid">${receivedGifts || 'No gifts yet'}</div></div>
+                    
+                    <div class="shop-section">
+                        <h4>BUY GIFTS</h4>
+                        ${Object.entries(GIFTS).map(([key, g]) => `
+                            <div class="shop-item">
+                                <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
+                                <button class="buy-gift-btn" data-gift="${key}">BUY</button>
+                            </div>
+                        `).join('')}
+                        <!-- Остальная часть магазина (TON, Premium) без изменений -->
+                        <h4 style="margin-top:12px;">TOP UP YC</h4>
+                        <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
+                        <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
+                        <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
+                        <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
+                    </div>
+                    
+                    <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>
+                </div>
+            </div>
+        `;
+        // ... дальше код добавления обработчиков событий для кнопок (он остается тем же, но важно удалить старый createNftBtn) ...
+        // Убедись, что в части с обработчиками нет строки document.getElementById('createNftBtn')
                     document.body.insertAdjacentHTML('beforeend', modalHtml);
                     
                     document.getElementById('openSettingsBtn').addEventListener('click', () => {
