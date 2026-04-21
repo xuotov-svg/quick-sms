@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -90,7 +90,6 @@
         .search-add,
         .two-factor-box,
         .shop-section,
-        .nft-collection,
         .feed-container,
         .post-card,
         .comments-modal {
@@ -545,10 +544,11 @@
         .password-wrapper input { flex: 1; padding-right: 40px; }
         .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; }
         
-        .nft-collection { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: var(--glass-bg); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
-        .nft-item { background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; border: 1px solid var(--glass-border); width: 64px; height: 64px; cursor: pointer; transition: all 0.1s ease; }
-        .nft-item canvas, .nft-item img { width: 100%; height: 100%; image-rendering: crisp-edges; }
-        .nft-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
+        .gift-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: var(--glass-bg); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
+        .gift-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border); width: 80px; cursor: pointer; transition: all 0.1s ease; text-align: center; }
+        .gift-item img { width: 100%; height: auto; border-radius: 8px; }
+        .gift-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
+        .gift-price { font-size: 12px; color: var(--accent); margin-top: 4px; }
         
         .shop-section { background: var(--glass-bg); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
         .shop-section h4 { color: var(--text); margin-bottom: 12px; }
@@ -571,25 +571,6 @@
         
         .notification { position: fixed; top: 20px; right: 20px; background: var(--glass-bg); color: var(--text); padding: 12px 24px; border-radius: 16px; z-index: 10000; animation: slideIn 0.3s ease; border: 1px solid var(--glass-border); font-weight: 500; backdrop-filter: blur(8px); }
         .notification.error { background: #ff4444; color: white; }
-        
-        .pixel-canvas { display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 1px; background: #2a2a2a; margin-bottom: 16px; justify-content: center; }
-        .pixel { width: 30px; height: 30px; border: 1px solid #444; cursor: pointer; }
-        .color-palette { display: flex; gap: 8px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
-        .color-option { width: 30px; height: 30px; border-radius: 8px; border: 2px solid #fff; cursor: pointer; }
-        .color-option.active { border: 3px solid var(--accent); transform: scale(1.1); }
-        
-        .create-nft-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); padding: 10px; width: 100%; font-weight: bold; cursor: pointer; color: #6b7280; border-radius: 12px; }
-        .create-nft-btn:hover { background: rgba(212, 175, 55, 0.3); }
-        
-        .change-username-btn { background: #ff9800; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; color: #000000; }
-        .change-username-btn:hover { filter: brightness(1.1); }
-        
-        .admin-give-form { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--glass-border); }
-        
-        .streak-badge { display: inline-flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 20px; font-size: 10px; font-weight: bold; color: #DBBA00; margin-left: 6px; }
-        .streak-badge img { width: 14px; height: 14px; object-fit: contain; }
-        
-        .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
         
         .bottom-nav {
             position: fixed;
@@ -812,40 +793,6 @@
                 display: flex;
             }
         }
-        
-        .additional-username-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(0,0,0,0.2);
-            padding: 8px 12px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            border: 1px solid var(--glass-border);
-        }
-        .additional-username-item span {
-            color: var(--text);
-        }
-        .delete-username-btn {
-            background: none;
-            border: 1px solid var(--glass-border);
-            color: #ff6666;
-            padding: 4px 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .delete-username-btn:hover {
-            background: #ff4444;
-            color: white;
-        }
-        
-        .additional-names {
-            font-size: inherit;
-            color: var(--text);
-            margin-left: 4px;
-            font-weight: normal;
-        }
     </style>
 </head>
 <body>
@@ -854,7 +801,7 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <script>
         (function(){
-            // === SUPABASE INIT (ТОЛЬКО ОДИН РАЗ) ===
+            // === SUPABASE INIT ===
             const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
             const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
             
@@ -863,7 +810,7 @@
                 realtime: { params: { eventsPerSecond: 10 } }
             });
 
-            // Глобальные переменные приложения
+            // Global App State
             const App = { 
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
@@ -876,17 +823,24 @@
             const ADMIN_USER = '@durov';
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
-            // Иконки
+            // Gift definitions
+            const GIFTS = {
+                heart: { name: 'HEART', price: 25, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1422.png' },
+                teddy: { name: 'TEDDY BEAR', price: 25, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1423.png' },
+                icecream: { name: 'ICE CREAM', price: 50, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/kdGUgPSE5W9l8I34UisPetnRfjIhanWa7vfvI7ExqhmE0lTOANBAUoF_BafycG-atCblyUVsokKFKX5sB933WBSo.png' },
+                cap: { name: 'CAP', price: 100, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/-YMei7B5NtZLgC0Ays_b5Ls4wkwZ7rQh5_BGYsHILjbb_2c5-eXlADmP0W5Eywj_6G87hUs_-KBzJ2N26h00juZE.png' }
+            };
+            
             const ICONS = {
                 LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
-                LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%9F2.png',
+                LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
                 COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
                 FIRE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png',
                 SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png'
             };
             
-            // === SUPABASE ФУНКЦИИ ===
+            // === SUPABASE FUNCTIONS ===
             const STATE_ROW_ID = 1;
             
             async function loadAppState() {
@@ -897,7 +851,7 @@
                     .single();
                     
                 if (error) {
-                    console.warn('Ошибка загрузки состояния, создаём новое:', error);
+                    console.warn('Error loading state, creating new:', error);
                     return null;
                 }
                 return data?.data || null;
@@ -907,7 +861,7 @@
                 const { error } = await supabase
                     .from('app_state')
                     .upsert({ id: STATE_ROW_ID, data: stateData }, { onConflict: 'id' });
-                if (error) console.error('Ошибка сохранения состояния:', error);
+                if (error) console.error('Error saving state:', error);
             }
             
             function subscribeToAppState() {
@@ -916,7 +870,7 @@
                     .on('postgres_changes', 
                         { event: '*', schema: 'public', table: 'app_state', filter: `id=eq.${STATE_ROW_ID}` },
                         async (payload) => {
-                            console.log('🔄 Обновление из Supabase Realtime');
+                            console.log('🔄 Realtime update from Supabase');
                             const newData = payload.new?.data;
                             if (newData) {
                                 if (newData.users) {
@@ -925,6 +879,7 @@
                                         if (!App.users[u].followers) App.users[u].followers = [];
                                         if (!App.users[u].following) App.users[u].following = [];
                                         if (!App.users[u].gifts) App.users[u].gifts = [];
+                                        if (!App.users[u].giftInventory) App.users[u].giftInventory = [];
                                         if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
                                         if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                         if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
@@ -973,14 +928,14 @@
                         users: App.users, chats: App.chats, blocked: App.blocked
                     }));
                 } catch (e) {
-                    console.error('Ошибка сохранения в Supabase:', e);
+                    console.error('Error saving to Supabase:', e);
                 }
             }
 
             window.saveToFirebase = saveToSupabase;
 
             async function loadFromSupabase() {
-                console.log('🔄 Загрузка данных из Supabase...');
+                console.log('🔄 Loading data from Supabase...');
                 try {
                     const state = await loadAppState();
                     if (state) {
@@ -990,6 +945,7 @@
                                 if (!App.users[u].followers) App.users[u].followers = [];
                                 if (!App.users[u].following) App.users[u].following = [];
                                 if (!App.users[u].gifts) App.users[u].gifts = [];
+                                if (!App.users[u].giftInventory) App.users[u].giftInventory = [];
                                 if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
                                 if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                 if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
@@ -1011,10 +967,10 @@
                         if (state.streaks) saveStreaks();
                         if (state.privacySettings) savePrivacySettings();
                     } else {
-                        console.warn('⚠️ Не удалось загрузить данные из Supabase. Использую кэш.');
+                        console.warn('⚠️ Could not load data from Supabase, using cache.');
                     }
                 } catch (error) {
-                    console.error('❌ Ошибка подключения к Supabase:', error);
+                    console.error('❌ Supabase connection error:', error);
                 }
                 
                 const cachedData = localStorage.getItem('yolk_cache');
@@ -1027,6 +983,7 @@
                                 if (!App.users[u].followers) App.users[u].followers = [];
                                 if (!App.users[u].following) App.users[u].following = [];
                                 if (!App.users[u].gifts) App.users[u].gifts = [];
+                                if (!App.users[u].giftInventory) App.users[u].giftInventory = [];
                                 if (!App.users[u].additionalUsernames) App.users[u].additionalUsernames = [];
                                 if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                 if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
@@ -1034,9 +991,9 @@
                         }
                         if (cache.chats) App.chats = cache.chats;
                         if (cache.blocked) App.blocked = cache.blocked;
-                        console.log('📦 Данные загружены из локального кэша');
+                        console.log('📦 Data loaded from local cache');
                     } catch(e) {
-                        console.error('Ошибка чтения кэша:', e);
+                        console.error('Cache read error:', e);
                     }
                 }
                 
@@ -1067,7 +1024,7 @@
                 }
             }
 
-            // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+            // === HELPER FUNCTIONS ===
             let loadingStartTime = Date.now();
             const MIN_LOADING_TIME = 1000;
             
@@ -1137,7 +1094,7 @@
                 App.privacySettings[App.currentUser] = App.privacySettings[App.currentUser] || {};
                 App.privacySettings[App.currentUser].blockNewMessages = value;
                 savePrivacySettings();
-                showNotification(value ? 'Включено: новые пользователи не могут писать первыми' : 'Выключено: все могут писать первыми');
+                showNotification(value ? 'Only known users can message you first' : 'Everyone can message you');
             }
             
             function savePrivacySettings() {
@@ -1158,7 +1115,7 @@
                 if (App.typingTimeouts[chatId]) clearTimeout(App.typingTimeouts[chatId]);
                 App.typingTimeouts[chatId] = setTimeout(() => {}, 2000);
             }
-
+            
             function findMainUsername(inputUsername) {
                 if (!inputUsername) return null;
                 if (App.users[inputUsername]) return inputUsername;
@@ -1198,83 +1155,83 @@
                 const modalHtml = `
                     <div class="modal-overlay" id="settingsModalOverlay">
                         <div class="profile-modal">
-                            <h3>НАСТРОЙКИ</h3>
+                            <h3>SETTINGS</h3>
                             <div class="profile-input-group">
-                                <label>ВАШ ЮЗЕРНЕЙМ</label>
+                                <label>USERNAME</label>
                                 <input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2); cursor: default; opacity: 0.8;">
                             </div>
                             <div class="profile-input-group">
                                 <label>EMAIL</label>
                                 <input type="email" id="settingsEmail" value="${pendingEmail}" placeholder="example@mail.com">
-                                <small style="color: var(--text-secondary);">Используется для входа</small>
+                                <small style="color: var(--text-secondary);">Used for login</small>
                             </div>
                             <div class="profile-input-group">
-                                <label>ИМЯ (до 6 символов)</label>
-                                <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Ваше имя">
-                                <small style="color: var(--text-secondary);">Англ/рус буквы и цифры</small>
+                                <label>DISPLAY NAME (max 6 chars)</label>
+                                <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Your name">
+                                <small style="color: var(--text-secondary);">Letters and digits only</small>
                             </div>
                             <div class="profile-input-group">
-                                <label>ПАРОЛЬ</label>
+                                <label>PASSWORD</label>
                                 <div class="password-wrapper">
                                     <input type="password" id="settingsPassword" value="${userData.password || ''}">
                                     <button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button>
                                 </div>
                             </div>
                             <div class="profile-input-group">
-                                <label>ОПИСАНИЕ</label>
+                                <label>BIO</label>
                                 <textarea id="settingsBio" maxlength="50">${userData.bio || ''}</textarea>
                             </div>
                             <div class="profile-input-group">
-                                <label>ВОЗРАСТ</label>
+                                <label>AGE</label>
                                 <input type="number" id="settingsAge" min="5" max="99" value="${userData.age || 14}">
                             </div>
                             <div class="profile-input-group">
-                                <label>АВАТАР</label>
-                                <button class="change-file-btn" id="changeAvatarBtn">ИЗМЕНИТЬ</button>
+                                <label>AVATAR</label>
+                                <button class="change-file-btn" id="changeAvatarBtn">CHANGE</button>
                                 <input type="file" id="settingsAvatar" accept="image/*" style="display:none;">
                             </div>
                             <div class="profile-input-group">
-                                <label>БАННЕР</label>
-                                <button class="change-file-btn" id="changeBannerBtn">ИЗМЕНИТЬ</button>
+                                <label>BANNER</label>
+                                <button class="change-file-btn" id="changeBannerBtn">CHANGE</button>
                                 <input type="file" id="settingsBanner" accept="image/*" style="display:none;">
                             </div>
                             <div class="profile-input-group">
-                                <label>ТЕМА ОФОРМЛЕНИЯ</label>
+                                <label>THEME</label>
                                 <div class="toggle-switch ${pendingTheme === 'light' ? 'active' : ''}" id="themeToggle">
                                     <div class="toggle-checkbox"></div>
-                                    <span class="toggle-label">${pendingTheme === 'light' ? 'Светлая' : 'Тёмная'}</span>
+                                    <span class="toggle-label">${pendingTheme === 'light' ? 'Light' : 'Dark'}</span>
                                 </div>
                             </div>
                             <div class="profile-input-group">
-                                <label>КОНФИДЕНЦИАЛЬНОСТЬ</label>
+                                <label>PRIVACY</label>
                                 <div class="toggle-switch ${pendingPrivacy ? 'active' : ''}" id="privacyToggle">
                                     <div class="toggle-checkbox"></div>
-                                    <span class="toggle-label">${pendingPrivacy ? 'Незнакомцы не могут писать первыми' : 'Все могут писать первыми'}</span>
+                                    <span class="toggle-label">${pendingPrivacy ? 'Only known users' : 'Everyone'}</span>
                                 </div>
                             </div>
                             <div class="profile-input-group">
-                                <label>ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА (2FA)</label>
+                                <label>TWO-FACTOR AUTH</label>
                                 <div class="toggle-switch ${pendingTwoFA ? 'active' : ''}" id="settingsTwoFAToggle">
                                     <div class="toggle-checkbox"></div>
-                                    <span class="toggle-label">${pendingTwoFA ? 'Включена' : 'Выключена'}</span>
+                                    <span class="toggle-label">${pendingTwoFA ? 'Enabled' : 'Disabled'}</span>
                                 </div>
                             </div>
                             
                             <div style="margin-top: 20px; padding: 16px; background: rgba(212,175,55,0.1); border-radius: 16px; border: 1px solid var(--glass-border);">
-                                <h4 style="margin:0 0 8px 0; color: var(--accent);">Как добавить Yolkapp на экран домой?</h4>
+                                <h4 style="margin:0 0 8px 0; color: var(--accent);">How to add Yolkapp to Home Screen?</h4>
                                 <ol style="margin:0; padding-left:20px; color: var(--text); font-size:14px; line-height:1.5;">
-                                    <li>Нажмите на «•••»</li>
-                                    <li>Нажмите на «Поделиться»</li>
-                                    <li>Пролистайте вниз</li>
-                                    <li>Найдите «Добавить на экран «Домой»» и нажмите туда</li>
-                                    <li>Нажмите на синюю кнопку «добавить»</li>
+                                    <li>Tap "•••"</li>
+                                    <li>Tap "Share"</li>
+                                    <li>Scroll down</li>
+                                    <li>Find "Add to Home Screen" and tap</li>
+                                    <li>Tap "Add"</li>
                                 </ol>
-                                <p style="margin:8px 0 0 0; color: var(--text); font-size:14px;">И теперь Yolkapp у вас находится на экране домой!</p>
+                                <p style="margin:8px 0 0 0; color: var(--text); font-size:14px;">Now Yolkapp is on your home screen!</p>
                             </div>
                             
                             <div class="profile-actions">
-                                <button class="profile-btn" id="saveSettingsBtn">СОХРАНИТЬ</button>
-                                <button class="profile-btn secondary" id="closeSettingsBtn">ОТМЕНА</button>
+                                <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
+                                <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
                             </div>
                         </div>
                     </div>
@@ -1305,7 +1262,7 @@
                     reader.onload = (ev) => {
                         compressImage(ev.target.result, 200, 200, 0.7, (compressed) => {
                             tempAvatar = compressed;
-                            showNotification('Аватар выбран');
+                            showNotification('Avatar selected');
                         });
                     };
                     reader.readAsDataURL(file);
@@ -1321,7 +1278,7 @@
                     reader.onload = (ev) => {
                         compressImage(ev.target.result, 800, 200, 0.7, (compressed) => {
                             tempBanner = compressed;
-                            showNotification('Баннер выбран');
+                            showNotification('Banner selected');
                         });
                     };
                     reader.readAsDataURL(file);
@@ -1335,7 +1292,7 @@
                         pendingTheme = newTheme;
                         themeToggle.classList.toggle('active', !isLight);
                         const labelSpan = themeToggle.querySelector('.toggle-label');
-                        labelSpan.textContent = newTheme === 'light' ? 'Светлая' : 'Тёмная';
+                        labelSpan.textContent = newTheme === 'light' ? 'Light' : 'Dark';
                     });
                 }
                 
@@ -1346,7 +1303,7 @@
                         pendingPrivacy = newState;
                         privacyToggle.classList.toggle('active', newState);
                         const labelSpan = privacyToggle.querySelector('.toggle-label');
-                        labelSpan.textContent = newState ? 'Незнакомцы не могут писать первыми' : 'Все могут писать первыми';
+                        labelSpan.textContent = newState ? 'Only known users' : 'Everyone';
                     });
                 }
                 
@@ -1357,25 +1314,25 @@
                         pendingTwoFA = newState;
                         twoFAToggle.classList.toggle('active', newState);
                         const labelSpan = twoFAToggle.querySelector('.toggle-label');
-                        labelSpan.textContent = newState ? 'Включена' : 'Выключена';
+                        labelSpan.textContent = newState ? 'Enabled' : 'Disabled';
                     });
                 }
                 
                 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
                     const newEmail = document.getElementById('settingsEmail')?.value.trim();
                     if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) {
-                        showNotification('Некорректный email', 'error');
+                        showNotification('Invalid email', 'error');
                         return;
                     }
                     if (newEmail && isEmailTaken(newEmail, App.currentUser)) {
-                        showNotification('Этот email уже используется другим пользователем', 'error');
+                        showNotification('This email is already used', 'error');
                         return;
                     }
                     if (newEmail) App.users[App.currentUser].email = newEmail;
                     
                     const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
-                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
-                        showNotification('Имя должно содержать только буквы (рус/англ) и цифры, до 6 символов', 'error');
+                    if (newDisplayName && !/^[A-Za-z0-9]{1,6}$/.test(newDisplayName)) {
+                        showNotification('Display name must be 1-6 letters/digits', 'error');
                         return;
                     }
                     if (newDisplayName) App.users[App.currentUser].displayName = newDisplayName;
@@ -1386,7 +1343,7 @@
                     
                     if (newPassword) {
                         if (!/^[A-Za-z0-9]+$/.test(newPassword)) {
-                            showNotification('Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры', 'error');
+                            showNotification('Password must contain only letters and digits', 'error');
                             return;
                         }
                         App.users[App.currentUser].password = newPassword;
@@ -1405,7 +1362,7 @@
                     if (pendingTwoFA !== (userData.twoFA || false)) {
                         App.users[App.currentUser].twoFA = pendingTwoFA;
                         saveToSupabase();
-                        showNotification(pendingTwoFA ? '2FA включена' : '2FA выключена');
+                        showNotification(pendingTwoFA ? '2FA enabled' : '2FA disabled');
                     }
                     
                     saveToSupabase();
@@ -1414,7 +1371,7 @@
                     applyWallpaper();
                     applyWallpaperToFeed();
                     document.getElementById('settingsModalOverlay').remove();
-                    showNotification('Настройки сохранены');
+                    showNotification('Settings saved');
                 });
                 
                 document.getElementById('closeSettingsBtn').addEventListener('click', () => {
@@ -1439,23 +1396,23 @@
 
             function formatLastSeen(lastSeen, chatPartner) {
                 if (chatPartner === 'saved' || chatPartner === 'yolk') return '';
-                if (!lastSeen) return 'очень давно';
+                if (!lastSeen) return 'long ago';
                 const now = Date.now();
                 const diff = now - lastSeen;
                 const minutes = Math.floor(diff / 60000);
                 const hours = Math.floor(diff / 3600000);
                 const days = Math.floor(diff / 86400000);
-                if (minutes < 1) return 'только что';
-                if (minutes < 5) return `${minutes} мин назад`;
-                if (minutes < 15) return '5 мин назад';
-                if (minutes < 30) return '15 мин назад';
-                if (minutes < 60) return '30 мин назад';
-                if (hours < 2) return '1 час назад';
-                if (hours < 5) return `${hours} часа назад`;
-                if (hours < 24) return `${hours} часов назад`;
-                if (days === 1) return '1 день назад';
-                if (days < 5) return `${days} дня назад`;
-                return `${days} дней назад`;
+                if (minutes < 1) return 'just now';
+                if (minutes < 5) return `${minutes} min ago`;
+                if (minutes < 15) return '5 min ago';
+                if (minutes < 30) return '15 min ago';
+                if (minutes < 60) return '30 min ago';
+                if (hours < 2) return '1 hour ago';
+                if (hours < 5) return `${hours} hours ago`;
+                if (hours < 24) return `${hours} hours ago`;
+                if (days === 1) return '1 day ago';
+                if (days < 5) return `${days} days ago`;
+                return `${days} days ago`;
             }
 
             function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx; const now = ctx.currentTime; const osc1 = ctx.createOscillator(); const gain = ctx.createGain(); osc1.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc1.frequency.value = 880; osc1.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc1.stop(now + 0.3); } catch(e) { console.log('Sound error:', e); } }
@@ -1490,80 +1447,92 @@
             
             function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToSupabase(); } return chatId; }
 
-            // YОДАРКИ
-            const GIFT_TYPES = {
-                gift1: { name: 'Подарок 1', image: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1422.png', price: 50 },
-                gift2: { name: 'Подарок 2', image: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1423.png', price: 50 }
-            };
-
             function buyGift(giftType) {
                 const user = App.currentUser;
-                if (!App.users[user]) return false;
-                const gift = GIFT_TYPES[giftType];
-                if (!gift) return false;
+                const gift = GIFTS[giftType];
+                if (!gift) return;
                 if (App.users[user].stars < gift.price) {
-                    showNotification(`Недостаточно YC (нужно ${gift.price})`, 'error');
-                    return false;
+                    showNotification(`Not enough YC (need ${gift.price})`, 'error');
+                    return;
                 }
-                if (!App.users[user].gifts) App.users[user].gifts = [];
-                App.users[user].gifts.push({ type: giftType, boughtAt: Date.now() });
                 App.users[user].stars -= gift.price;
+                if (!App.users[user].giftInventory) App.users[user].giftInventory = [];
+                App.users[user].giftInventory.push({ type: giftType, id: generateId(), obtained: Date.now() });
                 saveToSupabase();
                 updateUserInterface();
-                showNotification(`${gift.name} куплен!`);
-                return true;
+                showNotification(`You bought ${gift.name}!`);
             }
 
-            function openGiftSelection() {
+            function openGiftMenu() {
                 const target = App.activeChat;
                 if (!target || target === 'saved' || target === 'yolk') {
-                    showNotification('Нельзя подарить сюда', 'error');
+                    showNotification('Cannot send gift here', 'error');
                     return;
                 }
-                const gifts = App.users[App.currentUser]?.gifts || [];
-                if (gifts.length === 0) {
-                    showNotification('У вас нет подарков для дарения', 'error');
+                const inventory = App.users[App.currentUser]?.giftInventory || [];
+                if (inventory.length === 0) {
+                    showNotification('You have no gifts to send. Buy some in the shop!', 'error');
                     return;
                 }
-                let html = `<div class="modal-overlay" id="giftSelectModal"><div class="profile-modal"><h3>ВЫБЕРИТЕ YОДАРОК</h3><div class="nft-collection">`;
-                gifts.forEach((g, idx) => {
-                    const gd = GIFT_TYPES[g.type];
-                    html += `<div class="nft-item" data-gift-index="${idx}" data-gift-type="${g.type}"><img src="${gd.image}" style="width:100%; height:100%; object-fit: cover;"></div>`;
-                });
-                html += `</div><div class="profile-actions"><button class="profile-btn secondary" id="closeGiftSelect">ОТМЕНА</button></div></div></div>`;
-                document.body.insertAdjacentHTML('beforeend', html);
                 
-                document.querySelectorAll('.nft-item').forEach(el => {
+                const giftsHtml = inventory.map((gift, idx) => {
+                    const g = GIFTS[gift.type];
+                    return `<div class="gift-item" data-gift-index="${idx}" data-gift-type="${gift.type}">
+                        <img src="${g.icon}" alt="${g.name}" style="width:100%;">
+                        <div class="gift-price">${g.name}</div>
+                    </div>`;
+                }).join('');
+                
+                const modalHtml = `
+                    <div class="modal-overlay" id="giftModalOverlay">
+                        <div class="profile-modal">
+                            <h3>CHOOSE A GIFT</h3>
+                            <div class="gift-grid">${giftsHtml}</div>
+                            <div class="profile-actions">
+                                <button class="profile-btn secondary" id="closeGiftModal">CANCEL</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                document.querySelectorAll('.gift-item').forEach(el => {
                     el.addEventListener('click', (e) => {
                         const idx = parseInt(el.dataset.giftIndex);
-                        const giftType = el.dataset.giftType;
+                        const gift = inventory[idx];
+                        if (!gift) return;
                         const fromUser = App.currentUser;
                         const toUser = target;
-                        const userGifts = App.users[fromUser].gifts;
-                        if (!userGifts || idx >= userGifts.length) return;
-                        userGifts.splice(idx, 1);
+                        
+                        // Remove from sender inventory
+                        App.users[fromUser].giftInventory.splice(idx, 1);
+                        // Add to recipient's received gifts
+                        if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
+                        App.users[toUser].gifts.push({ type: gift.type, from: fromUser, time: Date.now() });
+                        
                         saveToSupabase();
                         
                         const chatId = [fromUser, toUser].sort().join('_');
                         if (!App.chats[chatId]) App.chats[chatId] = { user1: fromUser, user2: toUser, messages: [] };
-                        App.chats[chatId].messages.push({ 
-                            from: fromUser, 
-                            text: `🎉 ${getDisplayName(fromUser)} подарил подарок ${getDisplayName(toUser)} 🎉`, 
-                            time: Date.now(), 
-                            gift: true 
+                        App.chats[chatId].messages.push({
+                            from: fromUser,
+                            text: `${getDisplayName(fromUser)} sent a gift to ${getDisplayName(toUser)}`,
+                            time: Date.now(),
+                            gift: true,
+                            giftType: gift.type
                         });
                         saveToSupabase();
                         showConfetti();
                         playHappySound();
                         if (App.activeChat === toUser) renderMessages(toUser);
                         updateUserInterface();
-                        document.getElementById('giftSelectModal').remove();
-                        showNotification(`Подарок отправлен ${getDisplayName(toUser)}!`);
+                        document.getElementById('giftModalOverlay').remove();
+                        showNotification(`Gift sent to ${getDisplayName(toUser)}!`);
                     });
                 });
                 
-                document.getElementById('closeGiftSelect').addEventListener('click', () => {
-                    document.getElementById('giftSelectModal').remove();
+                document.getElementById('closeGiftModal').addEventListener('click', () => {
+                    document.getElementById('giftModalOverlay').remove();
                 });
             }
             
@@ -1582,19 +1551,19 @@
             
             function subscribeToUser(currentUser, targetUser) {
                 if (currentUser === targetUser) {
-                    showNotification('Нельзя подписаться на самого себя', 'error');
+                    showNotification('Cannot follow yourself', 'error');
                     return false;
                 }
                 ensureUserFollowData(currentUser);
                 ensureUserFollowData(targetUser);
                 if (App.users[currentUser].following.includes(targetUser)) {
-                    showNotification('Вы уже подписаны', 'error');
+                    showNotification('Already following', 'error');
                     return false;
                 }
                 App.users[currentUser].following.push(targetUser);
                 App.users[targetUser].followers.push(currentUser);
                 saveToSupabase();
-                showNotification(`Вы подписались на ${getDisplayName(targetUser)}`);
+                showNotification(`You followed ${getDisplayName(targetUser)}`);
                 return true;
             }
             
@@ -1606,14 +1575,32 @@
                 const idxFollower = App.users[targetUser].followers.indexOf(currentUser);
                 if (idxFollower !== -1) App.users[targetUser].followers.splice(idxFollower, 1);
                 saveToSupabase();
-                showNotification(`Вы отписались от ${getDisplayName(targetUser)}`);
+                showNotification(`You unfollowed ${getDisplayName(targetUser)}`);
                 return true;
             }
             
             function formatSubscribers(count) {
-                if (count % 10 === 1 && count % 100 !== 11) return `${count} подписчик`;
-                if ([2,3,4].includes(count % 10) && ![12,13,14].includes(count % 100)) return `${count} подписчика`;
-                return `${count} подписчиков`;
+                if (count === 1) return `1 subscriber`;
+                return `${count} subscribers`;
+            }
+            
+            function toggleFeedSubscription(postId, author) {
+                if (author === App.currentUser) return;
+                const isCurrentlySubscribed = isFollowing(App.currentUser, author);
+                if (isCurrentlySubscribed) {
+                    unsubscribeFromUser(App.currentUser, author);
+                } else {
+                    subscribeToUser(App.currentUser, author);
+                }
+                const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+                if (postCard) {
+                    const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
+                    if (btn) {
+                        const newSubStatus = !isCurrentlySubscribed;
+                        btn.textContent = newSubStatus ? 'UNFOLLOW' : 'FOLLOW';
+                        btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
+                    }
+                }
             }
 
             function openProfileModal(username) { 
@@ -1621,9 +1608,9 @@
                 const isOwn = (username === App.currentUser); 
                 const isAdmin = (username === ADMIN_USER); 
                 
-                const giftsList = (userData.gifts || []).map(g => {
-                    const gd = GIFT_TYPES[g.type];
-                    return `<div class="nft-item"><img src="${gd.image}" style="width:100%; height:100%; object-fit: cover;"></div>`;
+                const receivedGifts = (userData.gifts || []).map(g => {
+                    const gData = GIFTS[g.type];
+                    return `<div class="gift-item"><img src="${gData.icon}" style="width:100%;"><div class="gift-price">${gData.name}</div></div>`;
                 }).join('');
                 
                 const followersCount = (userData.followers || []).length;
@@ -1633,9 +1620,9 @@
                     const modalHtml = `
                         <div class="modal-overlay" id="profileModalOverlay">
                             <div class="profile-modal">
-                                <h3><span>МОЙ ПРОФИЛЬ (${displayName} ${username})</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
+                                <h3><span>MY PROFILE</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
                                 <div class="profile-banner-wrapper">
-                                    <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div>
+                                    <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
                                     <div class="profile-avatar-overlay">
                                         <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
                                     </div>
@@ -1644,22 +1631,26 @@
                                     <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                     <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
                                 </div>
-                                <div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div>
-                                <div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
-                                <div class="profile-input-group"><label>YОДАРКИ</label><div class="nft-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div>
+                                <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
+                                <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                                <div class="profile-input-group"><label>RECEIVED GIFTS</label><div class="gift-grid">${receivedGifts || 'No gifts yet'}</div></div>
                                 
                                 <div class="shop-section">
-                                    <h4>ПОПОЛНИТЬ YC</h4>
-                                    <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">КУПИТЬ</button></div>
-                                    <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">КУПИТЬ</button></div>
-                                    <h4 style="margin-top:12px;">ПРЕМИУМ СТАТУС</h4>
-                                    <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">КУПИТЬ</button></div>
-                                    <h4 style="margin-top:12px;">YОДАРКИ</h4>
-                                    <div class="shop-item"><span>Подарок 1 — 50 YC</span><button class="buy-gift-btn" data-gift="gift1">КУПИТЬ</button></div>
-                                    <div class="shop-item"><span>Подарок 2 — 50 YC</span><button class="buy-gift-btn" data-gift="gift2">КУПИТЬ</button></div>
+                                    <h4>BUY GIFTS</h4>
+                                    ${Object.entries(GIFTS).map(([key, g]) => `
+                                        <div class="shop-item">
+                                            <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
+                                            <button class="buy-gift-btn" data-gift="${key}">BUY</button>
+                                        </div>
+                                    `).join('')}
+                                    <h4 style="margin-top:12px;">TOP UP YC</h4>
+                                    <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
+                                    <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
+                                    <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
+                                    <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
                                 </div>
                                 
-                                <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button><button class="profile-btn logout" id="logoutFromProfileBtn">ВЫЙТИ</button></div>
+                                <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>
                             </div>
                         </div>
                     `;
@@ -1680,6 +1671,14 @@
                         render();
                     });
                     
+                    document.querySelectorAll('.buy-gift-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const giftType = e.target.dataset.gift;
+                            buyGift(giftType);
+                            document.getElementById('profileModalOverlay')?.remove();
+                        });
+                    });
+                    
                     document.querySelectorAll('.donate-btn').forEach(btn => {
                         btn.addEventListener('click', (e) => {
                             const yc = parseInt(e.target.dataset.yc);
@@ -1698,15 +1697,6 @@
                         });
                     });
                     
-                    document.querySelectorAll('.buy-gift-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            const giftType = e.target.dataset.gift;
-                            buyGift(giftType);
-                            document.getElementById('profileModalOverlay')?.remove();
-                            openProfileModal(username);
-                        });
-                    });
-                    
                     document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
                         document.getElementById('profileModalOverlay').remove();
                     });
@@ -1718,7 +1708,7 @@
                             adminBtn.style.background = '#ff9800';
                             adminBtn.style.color = '#000000';
                             adminBtn.style.border = '1px solid rgba(255,255,255,0.2)';
-                            adminBtn.textContent = 'АДМИН-ПАНЕЛЬ';
+                            adminBtn.textContent = 'ADMIN PANEL';
                             adminBtn.onclick = () => {
                                 document.getElementById('profileModalOverlay')?.remove();
                                 openAdminPanel();
@@ -1733,26 +1723,49 @@
                     return;
                 }
                 
-                const modalHtml = `<div class="modal-overlay" id="profileModalOverlay"><div class="profile-modal"><h3>ПРОФИЛЬ ${displayName} ${username}</h3><div class="profile-banner-wrapper"><div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">Нет баннера</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div></div></div><div class="profile-name-section"><div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div><div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div></div><div class="profile-input-group"><label>ОПИСАНИЕ</label><div>${userData.bio || '—'}</div></div><div class="profile-input-group"><label>ВОЗРАСТ</label><div>${userData.age || 14} лет</div></div><div class="profile-input-group"><span class="currency-label">ВАЛЮТА</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div><div class="profile-input-group"><label>YОДАРКИ</label><div class="nft-collection">${giftsList || 'НЕТ ПОДАРКОВ'}</div></div><div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">ЗАКРЫТЬ</button></div></div></div>`; 
-                document.body.insertAdjacentHTML('beforeend', modalHtml); 
-                document.getElementById('closeProfileModalBtn').addEventListener('click', () => { document.getElementById('profileModalOverlay').remove(); }); 
+                const modalHtml = `
+                    <div class="modal-overlay" id="profileModalOverlay">
+                        <div class="profile-modal">
+                            <h3>PROFILE ${displayName}</h3>
+                            <div class="profile-banner-wrapper">
+                                <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
+                                <div class="profile-avatar-overlay">
+                                    <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
+                                </div>
+                            </div>
+                            <div class="profile-name-section">
+                                <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
+                            </div>
+                            <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
+                            <div class="profile-input-group"><label>AGE</label><div>${userData.age || 14} years</div></div>
+                            <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                            <div class="profile-input-group"><label>RECEIVED GIFTS</label><div class="gift-grid">${receivedGifts || 'No gifts yet'}</div></div>
+                            <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button></div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('closeProfileModalBtn').addEventListener('click', () => {
+                    document.getElementById('profileModalOverlay').remove();
+                });
             }
 
             function openDonationModal(pack) { 
-                const modalHtml = `<div class="modal-overlay" id="donationModalOverlay"><div class="profile-modal"><h3>💸 ПОПОЛНЕНИЕ YC</h3><div class="qr-code" id="donationQrCode"></div><div class="profile-input-group"><label>📤 АДРЕС КОШЕЛЬКА TON</label><input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Адрес скопирован!')"></div><div class="profile-input-group"><label>💰 СУММА</label><input type="text" value="${pack.ton} TON" readonly></div><div class="profile-input-group"><label>📝 ВАШ ЮЗЕРНЕЙМ (обязательно!)</label><input type="text" id="donationComment" placeholder="Например: @durov" value="${App.currentUser}"></div><div class="profile-input-group"><label>🔗 TXID (хеш транзакции)</label><input type="text" id="donationTxid" placeholder="Вставьте TXID из TON Keeper"></div><div class="profile-actions"><button class="profile-btn" id="submitDonationBtn">✅ Я ОТПРАВИЛ TON</button><button class="profile-btn secondary" id="closeDonationModal">ОТМЕНА</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ В комментарии к переводу ОБЯЗАТЕЛЬНО укажите свой юзернейм с @</small></div></div>`; 
+                const modalHtml = `<div class="modal-overlay" id="donationModalOverlay"><div class="profile-modal"><h3>💸 TOP UP YC</h3><div class="qr-code" id="donationQrCode"></div><div class="profile-input-group"><label>📤 TON WALLET ADDRESS</label><input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Address copied!')"></div><div class="profile-input-group"><label>💰 AMOUNT</label><input type="text" value="${pack.ton} TON" readonly></div><div class="profile-input-group"><label>📝 YOUR USERNAME (required!)</label><input type="text" id="donationComment" placeholder="e.g. @durov" value="${App.currentUser}"></div><div class="profile-input-group"><label>🔗 TXID (transaction hash)</label><input type="text" id="donationTxid" placeholder="Paste TXID from TON Keeper"></div><div class="profile-actions"><button class="profile-btn" id="submitDonationBtn">✅ I SENT TON</button><button class="profile-btn secondary" id="closeDonationModal">CANCEL</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ In the transaction comment, you MUST include your @username</small></div></div>`; 
                 document.body.insertAdjacentHTML('beforeend', modalHtml); 
                 setTimeout(() => { const qrDiv = document.getElementById('donationQrCode'); if (qrDiv) { qrDiv.innerHTML = ''; new QRCode(qrDiv, { text: TON_ADDRESS, width: 200, height: 200 }); } }, 100); 
                 document.getElementById('submitDonationBtn')?.addEventListener('click', () => { 
                     const txid = document.getElementById('donationTxid')?.value.trim(); 
                     const comment = document.getElementById('donationComment')?.value.trim(); 
-                    if (!txid) { showNotification('Введите TXID транзакции', 'error'); return; } 
-                    if (!comment || !comment.startsWith('@')) { showNotification('Укажите ваш юзернейм с @ в комментарии', 'error'); return; } 
+                    if (!txid) { showNotification('Enter TXID', 'error'); return; } 
+                    if (!comment || !comment.startsWith('@')) { showNotification('Include your @username in comment', 'error'); return; } 
                     const requestId = generateId(); 
                     if (!App.donationRequests) App.donationRequests = {};
                     App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), statusType: pack.status || null }; 
                     saveToSupabase(); 
                     document.getElementById('donationModalOverlay')?.remove(); 
-                    showNotification(`✅ Заявка отправлена! Ожидайте начисления. ID: ${requestId.slice(-6)}`); 
+                    showNotification(`✅ Request sent! Awaiting confirmation. ID: ${requestId.slice(-6)}`); 
                 }); 
                 document.getElementById('closeDonationModal')?.addEventListener('click', () => { document.getElementById('donationModalOverlay')?.remove(); }); 
             }
@@ -1764,7 +1777,7 @@
                 if (App.users[targetUser]) { 
                     if (request.statusType) { 
                         App.users[targetUser].status = request.statusType; 
-                        showNotification(`✨ СТАТУС ${request.statusType} активирован для ${request.username}! ✨`); 
+                        showNotification(`✨ STATUS ${request.statusType} activated for ${request.username}! ✨`); 
                         updateUserInterface(); 
                         if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { 
                             renderMessages(App.activeChat); 
@@ -1772,14 +1785,14 @@
                         } 
                     } else { 
                         App.users[targetUser].stars = (App.users[targetUser].stars || 0) + request.yc; 
-                        showNotification(`✅ Начислено ${request.yc} YC пользователю ${request.username}`); 
+                        showNotification(`✅ Added ${request.yc} YC to ${request.username}`); 
                         updateUserInterface(); 
                     } 
                     request.status = 'completed'; 
                     request.completedAt = Date.now(); 
                     saveToSupabase(); 
                     if (!App.yolkChatMessages[targetUser]) App.yolkChatMessages[targetUser] = []; 
-                    let messageText = request.statusType ? `✨ Вы получили СТАТУС ${request.statusType} НАВСЕГДА! ✨` : `✅ Пополнение баланса!\n💰 +${request.yc} YC\nСпасибо за поддержку!`; 
+                    let messageText = request.statusType ? `✨ You received STATUS ${request.statusType} FOREVER! ✨` : `✅ Balance topped up!\n💰 +${request.yc} YC\nThank you for your support!`; 
                     App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: messageText, time: Date.now() }); 
                     saveToSupabase(); 
                     if (App.currentUser === ADMIN_USER) { 
@@ -1790,12 +1803,12 @@
             };
             
             window.cancelDonation = function(requestId) { 
-                if (!confirm('Вы уверены, что хотите отменить эту заявку?')) return; 
+                if (!confirm('Cancel this request?')) return; 
                 const request = App.donationRequests[requestId]; 
                 if (!request || request.status !== 'pending') return; 
                 delete App.donationRequests[requestId]; 
                 saveToSupabase(); 
-                showNotification(`❌ Заявка отменена`); 
+                showNotification(`❌ Request cancelled`); 
                 if (App.currentUser === ADMIN_USER) { 
                     document.getElementById('adminModalOverlay')?.remove(); 
                     openAdminPanel(); 
@@ -1829,11 +1842,11 @@
                 const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username); 
                 const statusDiv = document.createElement('div'); 
                 statusDiv.className = 'chat-user-status' + (isOnline ? '' : ' offline'); 
-                statusDiv.textContent = isOnline ? 'в сети' : `был(а) ${lastSeenText}`; 
+                statusDiv.textContent = isOnline ? 'online' : `last seen ${lastSeenText}`; 
                 headerInfo.appendChild(statusDiv); 
             }
 
-            // ===== ЛЕНТА =====
+            // ===== FEED =====
             let feedPage = 0;
             const FEED_PAGE_SIZE = 10;
             let feedPosts = [];
@@ -1864,7 +1877,7 @@
                 if (isLoadingFeed) return;
                 
                 if (feedPosts.length === 0) {
-                    feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">Здесь пока нет постов. Нажмите + чтобы создать первый!</div>';
+                    feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">No posts yet. Tap + to create first!</div>';
                     return;
                 }
                 
@@ -1893,7 +1906,7 @@
                     const date = new Date(post.time).toLocaleString();
                     const isSubscribed = isFollowing(App.currentUser, post.author);
                     const subButtonHtml = (post.author !== App.currentUser) ?
-                        `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ'}</button>` : '';
+                        `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
                     
                     const authorDisplay = formatUserNameWithStatus(post.author);
                     const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
@@ -1987,21 +2000,21 @@
                         <div class="comment-text" style="color: var(--text);">${c.text}</div>
                         <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
                     </div>
-                `).join('') || '<div style="color: var(--text-secondary); text-align: center;">Нет комментариев</div>';
+                `).join('') || '<div style="color: var(--text-secondary); text-align: center;">No comments</div>';
                 
                 const modalHtml = `
                     <div class="modal-overlay" id="commentsModal">
                         <div class="comments-modal">
-                            <h3 style="color: var(--text);">💬 Комментарии</h3>
+                            <h3 style="color: var(--text);">💬 Comments</h3>
                             <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
                                 ${commentsList}
                             </div>
                             <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
-                                <input type="text" id="newCommentText" placeholder="Напишите комментарий..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
-                                <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Отправить</button>
+                                <input type="text" id="newCommentText" placeholder="Write a comment..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
+                                <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Send</button>
                             </div>
                             <div class="profile-actions" style="margin-top:12px;">
-                                <button class="profile-btn secondary" id="closeCommentsModal">Закрыть</button>
+                                <button class="profile-btn secondary" id="closeCommentsModal">Close</button>
                             </div>
                         </div>
                     </div>
@@ -2016,7 +2029,7 @@
                     saveToSupabase();
                     document.getElementById('commentsModal').remove();
                     updatePostStats(postId);
-                    showNotification('Комментарий добавлен');
+                    showNotification('Comment added');
                 });
                 
                 document.getElementById('closeCommentsModal').addEventListener('click', () => {
@@ -2031,15 +2044,15 @@
             };
 
             window.deletePost = function(postId) {
-                if (!confirm('Удалить пост?')) return;
+                if (!confirm('Delete post?')) return;
                 const index = App.posts.findIndex(p => p.id === postId);
                 if (index !== -1 && App.posts[index].author === App.currentUser) {
                     App.posts.splice(index, 1);
                     saveToSupabase();
                     initFeed();
-                    showNotification('Пост удален');
+                    showNotification('Post deleted');
                 } else {
-                    showNotification('Нет прав для удаления', 'error');
+                    showNotification('Permission denied', 'error');
                 }
             };
 
@@ -2056,7 +2069,7 @@
                     const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
                     if (btn) {
                         const newSubStatus = !isCurrentlySubscribed;
-                        btn.textContent = newSubStatus ? 'ОТПИСАТЬСЯ' : 'ПОДПИСАТЬСЯ';
+                        btn.textContent = newSubStatus ? 'UNFOLLOW' : 'FOLLOW';
                         btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
                     }
                 });
@@ -2069,7 +2082,7 @@
                 const cooldown = 3 * 60 * 1000;
                 if (diff < cooldown) {
                     const remaining = Math.ceil((cooldown - diff) / 1000);
-                    showNotification(`Следующий пост можно будет опубликовать через ${remaining} сек.`, 'error');
+                    showNotification(`Next post in ${remaining} sec.`, 'error');
                     return false;
                 }
                 return true;
@@ -2077,7 +2090,7 @@
 
             function createPost(text, media, isVideo) {
                 if (!text.trim() && !media) {
-                    showNotification('Напишите текст или прикрепите медиа', 'error');
+                    showNotification('Add text or media', 'error');
                     return;
                 }
                 if (!canCreatePost()) return;
@@ -2096,26 +2109,26 @@
                 App.lastPostTime[App.currentUser] = Date.now();
                 saveToSupabase();
                 initFeed();
-                showNotification('Пост опубликован!');
+                showNotification('Post published!');
             }
 
             function openCreatePostModal() {
                 const modalHtml = `
                     <div class="modal-overlay" id="createPostModal">
                         <div class="profile-modal">
-                            <h3>СОЗДАТЬ ПОСТ</h3>
+                            <h3>CREATE POST</h3>
                             <div class="profile-input-group">
-                                <label>ТЕКСТ</label>
-                                <textarea id="postText" rows="3" placeholder="Что нового?"></textarea>
+                                <label>TEXT</label>
+                                <textarea id="postText" rows="3" placeholder="What's new?"></textarea>
                             </div>
                             <div class="profile-input-group">
-                                <label>ДОБАВИТЬ ФОТО/ВИДЕО</label>
-                                <button class="change-file-btn" id="addPostMediaBtn">ДОБАВИТЬ</button>
+                                <label>ADD PHOTO/VIDEO</label>
+                                <button class="change-file-btn" id="addPostMediaBtn">ADD</button>
                                 <input type="file" id="postMediaFile" accept="image/*,video/*" style="display:none;">
                             </div>
                             <div class="profile-actions">
-                                <button class="profile-btn" id="confirmCreatePostBtn">ОПУБЛИКОВАТЬ</button>
-                                <button class="profile-btn secondary" id="closeCreatePostModal">ОТМЕНА</button>
+                                <button class="profile-btn" id="confirmCreatePostBtn">PUBLISH</button>
+                                <button class="profile-btn secondary" id="closeCreatePostModal">CANCEL</button>
                             </div>
                         </div>
                     </div>
@@ -2136,20 +2149,20 @@
                             compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
                                 tempMedia = compressed;
                                 isVideo = false;
-                                showNotification('Изображение добавлено');
+                                showNotification('Image added');
                             });
                         };
                         reader.readAsDataURL(file);
                     } else if (file.type.startsWith('video/')) {
                         if (file.size > 20 * 1024 * 1024) {
-                            showNotification('Видео не более 20 МБ', 'error');
+                            showNotification('Video max 20 MB', 'error');
                             return;
                         }
                         const reader = new FileReader();
                         reader.onload = (ev) => {
                             tempMedia = ev.target.result;
                             isVideo = true;
-                            showNotification('Видео добавлено');
+                            showNotification('Video added');
                         };
                         reader.readAsDataURL(file);
                     }
@@ -2158,7 +2171,7 @@
                 document.getElementById('confirmCreatePostBtn').addEventListener('click', () => {
                     const text = document.getElementById('postText').value.trim();
                     if (!text && !tempMedia) {
-                        showNotification('Введите текст или прикрепите медиа', 'error');
+                        showNotification('Enter text or attach media', 'error');
                         return;
                     }
                     createPost(text, tempMedia, isVideo);
@@ -2227,7 +2240,7 @@
             }
 
             function renderAuth() { 
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="loginUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="loginPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="loginBtn">ВОЙТИ</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">СОЗДАТЬ</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>ЮЗЕРНЕЙМ</label><input id="regUsername" type="text" placeholder="только англ буквы и цифры, 4-15 символов, начинается с буквы"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>ПАРОЛЬ</label><input id="regPassword" type="password" placeholder="только латинские буквы (A-Z, a-z) и цифры"></div><button class="btn" id="registerBtn">СОЗДАТЬ</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← НАЗАД</button></div></div><div id="authError" class="auth-error"></div></div></div>`; 
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="letters and digits, 4-15 chars, start with letter"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="only letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">SIGN UP</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="only letters and digits"></div><button class="btn" id="registerBtn">CREATE</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`; 
             }
 
             function attachAuthEvents() { 
@@ -2240,8 +2253,8 @@
                     let username = document.getElementById('loginUsername').value.trim().toLowerCase(); 
                     const email = document.getElementById('loginEmail').value.trim();
                     const pass = document.getElementById('loginPassword').value.trim(); 
-                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ, ПЕРВАЯ — БУКВА'; return; } 
-                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! ВВЕДИТЕ КОРРЕКТНЫЙ EMAIL'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = '! Invalid username format'; return; } 
+                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! Invalid email'; return; }
                     const clean = '@' + username;
                     
                     let mainUsername = findMainUsername(clean);
@@ -2250,7 +2263,7 @@
                     }
                     
                     if (!mainUsername || !App.users[mainUsername] || App.users[mainUsername].password !== pass || (App.users[mainUsername].email && App.users[mainUsername].email.toLowerCase() !== email.toLowerCase())) { 
-                        errorDiv.innerText = '! НЕВЕРНЫЙ ЛОГИН, EMAIL ИЛИ ПАРОЛЬ'; 
+                        errorDiv.innerText = '! Incorrect username, email or password'; 
                         return; 
                     } 
                     const user = App.users[mainUsername]; 
@@ -2268,15 +2281,15 @@
                     } 
                     if (user.twoFA) { 
                         send2FACode(mainUsername); 
-                        const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Двухфакторная аутентификация</h3><p>Код подтверждения отправлен в ваш личный чат <strong>YOLK</strong></p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">ПОДТВЕРДИТЬ</button><div class="resend-link" id="resend2FACode">Отправить код повторно</div><div id="twoFactorError" class="auth-error"></div></div></div>`; 
+                        const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Two-Factor Authentication</h3><p>Confirmation code sent to your <strong>YOLK</strong> chat</p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">VERIFY</button><div class="resend-link" id="resend2FACode">Resend code</div><div id="twoFactorError" class="auth-error"></div></div></div>`; 
                         document.body.insertAdjacentHTML('beforeend', modalHtml); 
                         document.getElementById('verify2FABtn').addEventListener('click', () => { 
                             const inputCode = document.getElementById('twoFactorCode').value.trim(); 
-                            if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Введите код'; return; } 
+                            if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Enter code'; return; } 
                             if (verify2FACode(mainUsername, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } 
-                            else { document.getElementById('twoFactorError').textContent = 'Неверный или истекший код'; } 
+                            else { document.getElementById('twoFactorError').textContent = 'Invalid or expired code'; } 
                         }); 
-                        document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(mainUsername); showNotification('Новый код отправлен в ваш личный чат YOLK', 'success'); }); 
+                        document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(mainUsername); showNotification('New code sent to YOLK chat', 'success'); }); 
                         document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); 
                     } else { loginSuccess(); } 
                 }); 
@@ -2284,14 +2297,14 @@
                     let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
                     const email = document.getElementById('regEmail').value.trim();
                     const pass = document.getElementById('regPassword').value.trim(); 
-                    if (!isValidUsername(username)) { errorDiv.innerText = '! ТОЛЬКО АНГЛ БУКВЫ И ЦИФРЫ, 4-15 СИМВОЛОВ, ПЕРВАЯ — БУКВА'; return; } 
-                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! ВВЕДИТЕ КОРРЕКТНЫЙ EMAIL'; return; }
-                    if (!pass) { errorDiv.innerText = '! ВВЕДИТЕ ПАРОЛЬ'; return; } 
-                    if (!isValidPassword(pass)) { errorDiv.innerText = '! Пароль должен содержать только латинские буквы (A-Z, a-z) и цифры'; return; } 
+                    if (!isValidUsername(username)) { errorDiv.innerText = '! Invalid username format'; return; } 
+                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = '! Invalid email'; return; }
+                    if (!pass) { errorDiv.innerText = '! Enter password'; return; } 
+                    if (!isValidPassword(pass)) { errorDiv.innerText = '! Password must contain only letters and digits'; return; } 
                     const clean = '@' + username; 
-                    if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! УЖЕ ЕСТЬ'; return; } 
-                    if (isEmailTaken(email)) { errorDiv.innerText = '! ЭТОТ EMAIL УЖЕ ИСПОЛЬЗУЕТСЯ'; return; }
-                    const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
+                    if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! Username taken'; return; } 
+                    if (isEmailTaken(email)) { errorDiv.innerText = '! Email already used'; return; }
+                    const newUser = { password: pass, avatar: null, banner: null, stars: 0, gifts: [], giftInventory: [], bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
                     App.users[clean] = newUser;
                     App.currentUser = clean; 
                     App.savedMessages[clean] = []; 
@@ -2299,8 +2312,8 @@
                     localStorage.setItem('yolk_current_user', clean); 
                     saveToSupabase().then(() => {
                         render(); 
-                        showNotification('✅ Аккаунт создан!'); 
-                    }).catch((err) => { console.error('❌ Ошибка сохранения пользователя:', err); errorDiv.innerText = '! Ошибка сервера, попробуйте позже'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); 
+                        showNotification('✅ Account created!'); 
+                    }).catch((err) => { console.error('❌ Error saving user:', err); errorDiv.innerText = '! Server error, try later'; setTimeout(() => { errorDiv.innerText = ''; }, 3000); }); 
                 }); 
             }
 
@@ -2310,10 +2323,10 @@
                 const isChatsActive = App.activeTab === 'chats'; 
                 let blockedMessage = '';
                 if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
-                    blockedMessage = 'Этому пользователю нельзя писать первым';
+                    blockedMessage = 'Cannot message this user first';
                 }
                 
-                const chatTitle = App.activeChat === 'saved' ? 'ИЗБРАННОЕ' : (App.activeChat === 'yolk' ? 'YOLK' : formatUserNameWithStatus(App.activeChat));
+                const chatTitle = App.activeChat === 'saved' ? 'SAVED' : (App.activeChat === 'yolk' ? 'YOLK' : formatUserNameWithStatus(App.activeChat));
                 
                 return `
                     <div class="main-container">
@@ -2321,18 +2334,18 @@
                         <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                             <div class="user-profile" id="openProfileBtn">
                                 <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (getDisplayName(user)[0]?.toUpperCase() || '?')}</div>
-                                <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} лет</div>` : ''}</div>
+                                <div><div class="username-display">${formatUserNameWithStatus(user)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div class="age-badge">${userData.age} y.o.</div>` : ''}</div>
                             </div>
-                            <div class="search-add"><input type="text" placeholder="ПОИСК @юзернейм" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
+                            <div class="search-add"><input type="text" placeholder="SEARCH @username" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
                             <div class="chats-list" id="chatsList"></div>
                         </div>
                         <div class="chat-area">
                             <div class="chat-header">
                                 <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatTitle}${!App.channels && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                                <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' ? `<button class="tiny-btn" id="viewProfileBtn">ПРОФИЛЬ</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">ПОДАРИТЬ</button>` : ''}</div>
+                                <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' ? `<button class="tiny-btn" id="viewProfileBtn">PROFILE</button>` : ''}${App.activeChat !== 'saved' && App.activeChat !== 'yolk' && canUserMessage(user, App.activeChat) ? `<button class="tiny-btn" id="giftBtn">SEND GIFT</button>` : ''}</div>
                             </div>
                             <div class="messages-container" id="messageList"></div>
-                            ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'ЗАМЕТКА...' : 'СООБЩЕНИЕ...'}" autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">ФОТО</label><label for="videoUpload" class="file-label">ВИДЕО</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>Это системный чат, отправлять сообщения нельзя</small></div>'}
+                            ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'NOTE...' : 'MESSAGE...'}" autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>System chat, cannot send messages</small></div>'}
                         </div>
                         ` : `
                         <div class="feed-container" id="feedContainer"></div>
@@ -2340,8 +2353,8 @@
                         `}
                     </div>
                     <div class="bottom-nav">
-                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">YАТЫ</div>
-                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">YЕНТА</div>
+                        <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats">CHATS</div>
+                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed">FEED</div>
                     </div>
                 `; 
             }
@@ -2350,7 +2363,7 @@
                 const backBtn = document.getElementById('backBtn'); if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); });
                 const openProfileBtn = document.getElementById('openProfileBtn'); if (openProfileBtn) openProfileBtn.addEventListener('click', () => openProfileModal(App.currentUser));
                 const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { openProfileModal(App.activeChat); } });
-                const giftBtn = document.getElementById('giftBtn'); if (giftBtn) giftBtn.addEventListener('click', openGiftSelection);
+                const giftBtn = document.getElementById('giftBtn'); if (giftBtn) giftBtn.addEventListener('click', openGiftMenu);
                 const sendBtn = document.getElementById('sendMsgBtn'); if (sendBtn) sendBtn.addEventListener('click', sendMessage);
                 const fileUpload = document.getElementById('fileUpload'); const videoUpload = document.getElementById('videoUpload'); if (fileUpload) fileUpload.addEventListener('change', handleFileSelect); if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect);
                 const addUserBtn = document.getElementById('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
@@ -2379,11 +2392,11 @@
             function sendMessage() { 
                 const textInput = document.getElementById('messageText'); 
                 const text = textInput ? textInput.value.trim() : ''; 
-                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Введите сообщение или выберите файл', 'error'); return; } 
+                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Enter message or select file', 'error'); return; } 
                 const from = App.currentUser; 
                 const to = App.activeChat; 
-                if (!to || to === 'yolk') { showNotification('Сюда нельзя писать', 'error'); return; } 
-                if (!canUserMessage(from, to)) { showNotification('Вы не можете писать этому пользователю', 'error'); return; } 
+                if (!to || to === 'yolk') { showNotification('Cannot send here', 'error'); return; } 
+                if (!canUserMessage(from, to)) { showNotification('Cannot message this user', 'error'); return; } 
                 try { 
                     let mediaData = null; 
                     let isVideoMsg = false; 
@@ -2394,7 +2407,7 @@
                         if (!App.savedMessages[from]) App.savedMessages[from] = []; 
                         App.savedMessages[from].push(message); 
                         saveSavedMessages(); 
-                        showNotification('Сохранено в избранное'); 
+                        showNotification('Saved to notes'); 
                         renderMessages('saved'); 
                         playHappySound(); 
                     } else { 
@@ -2414,7 +2427,7 @@
                     if (fileInput) fileInput.value = ''; 
                     if (videoInput) videoInput.value = ''; 
                     updateChatList(); 
-                } catch (error) { console.error('Ошибка отправки:', error); showNotification('Ошибка отправки', 'error'); } 
+                } catch (error) { console.error('Send error:', error); showNotification('Send error', 'error'); } 
             }
 
             function renderMessages(chatPartner) { 
@@ -2426,7 +2439,7 @@
                 else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; } 
                 let html = ''; 
                 if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); }); 
-                else { if (chatPartner === 'yolk') html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">Здесь будут приходить коды для входа</div>'; else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">Нет сообщений</div>'; } 
+                else { if (chatPartner === 'yolk') html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">Login codes will appear here</div>'; else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">No messages</div>'; } 
                 messagesContainer.innerHTML = html; 
                 setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100); 
                 if (chatPartner !== 'saved' && chatPartner !== 'yolk') updateChatHeaderStatus(chatPartner); 
@@ -2436,7 +2449,7 @@
                 const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser); 
                 const isGift = msg.gift ? true : false; 
                 const isSystem = msg.from === 'SYSTEM'; 
-                const fromUserDisplay = isSystem ? 'СИСТЕМА' : formatUserNameWithStatus(msg.from);
+                const fromUserDisplay = isSystem ? 'SYSTEM' : formatUserNameWithStatus(msg.from);
                 let canDelete = false; 
                 if (chatPartner === 'saved') canDelete = true; 
                 else if (chatPartner === 'yolk') canDelete = false; 
@@ -2444,10 +2457,14 @@
                 let mediaHtml = ''; 
                 if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
                 let messageText = msg.text || ''; 
+                if (isGift && msg.giftType) {
+                    const gift = GIFTS[msg.giftType];
+                    mediaHtml = `<img src="${gift.icon}" class="media-preview" style="max-width:100px;">`;
+                }
                 const messageClass = isMe ? 'me' : ''; 
                 const fullDate = new Date(msg.time).toLocaleString();
                 
-                return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 СИСТЕМА</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">УДАЛИТЬ</button></div>` : ''}</div></div>`; 
+                return `<div class="message ${messageClass} ${isGift ? 'gift-message' : ''} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 SYSTEM</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">DELETE</button></div>` : ''}</div></div>`; 
             }
 
             function updateChatList() { 
@@ -2465,8 +2482,8 @@
             }
 
             function renderChatItem(u, active, currentUser) { 
-                let name = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : u); 
-                let display = u === 'saved' ? 'ИЗБРАННОЕ' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
+                let name = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : u); 
+                let display = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
                 let avatarHtml = '<div class="chat-avatar">📁</div>'; 
                 if (u === 'yolk') avatarHtml = '<div class="chat-avatar">💬</div>'; 
                 else if (u !== 'saved') { 
@@ -2476,7 +2493,7 @@
                 const userData = App.users[u] || {}; 
                 const streak = getStreak(u); 
                 const streakHtml = streak > 0 ? `<span class="streak-badge"><img src="${ICONS.FIRE}" style="width:12px;height:12px;"> ${streak}</span>` : ''; 
-                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} лет</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
+                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} y.o.</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
             }
 
             function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
@@ -2484,35 +2501,35 @@
             function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
             function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
             function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
-            function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Код подтверждения: ${code}\nВведите этот код для входа в аккаунт ${username}\nКод действителен 5 минут.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
+            function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Verification code: ${code}\nEnter this code to log into ${username}\nCode valid for 5 minutes.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
             function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
             function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { saveToSupabase(); } }
-            function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Фото добавлено, напишите текст и отправьте'); }); }; reader.readAsDataURL(file); }
-            function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Видео не более 20 МБ', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Видео добавлено, напишите текст и отправьте'); }; reader.readAsDataURL(file); }
+            function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Photo added, type message and send'); }); }; reader.readAsDataURL(file); }
+            function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Video max 20 MB', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Video added, type message and send'); }; reader.readAsDataURL(file); }
             function addUserBySearch() { 
                 let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
-                if (!query) { showNotification('Введите имя пользователя', 'error'); return; } 
+                if (!query) { showNotification('Enter username', 'error'); return; } 
                 if (!query.startsWith('@')) query = '@' + query; 
-                if (query === 'yolk') { showNotification('Это системный чат', 'error'); return; } 
+                if (query === 'yolk') { showNotification('System chat', 'error'); return; } 
                 
                 let mainUser = findMainUsername(query);
                 if (!mainUser) {
                     if (App.users[query]) mainUser = query;
                 }
                 
-                if (!mainUser || !App.users[mainUser]) { showNotification('Пользователь не найден', 'error'); return; } 
-                if (mainUser === App.currentUser) { showNotification('Это вы', 'error'); return; } 
-                if (!canUserMessage(App.currentUser, mainUser)) { showNotification('Этот пользователь запретил писать первым', 'error'); return; } 
+                if (!mainUser || !App.users[mainUser]) { showNotification('User not found', 'error'); return; } 
+                if (mainUser === App.currentUser) { showNotification('This is you', 'error'); return; } 
+                if (!canUserMessage(App.currentUser, mainUser)) { showNotification('User does not accept new messages', 'error'); return; } 
                 ensureChat(App.currentUser, mainUser); 
                 App.activeChat = mainUser; 
                 localStorage.setItem('yolk_active_chat', mainUser); 
                 if (window.innerWidth < 768) App.sidebarOpen = false; 
                 document.getElementById('searchUserInput').value = ''; 
                 render(); 
-                showNotification(`Чат с ${getDisplayName(mainUser)} создан`); 
+                showNotification(`Chat with ${getDisplayName(mainUser)} created`); 
             }
-            window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Удалить чат ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToSupabase(); render(); showNotification('Чат удален'); };
-            window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Удалено'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Нельзя удалять системные сообщения', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Удалено'); renderMessages(chatPartner); } } } catch (error) { console.error('Ошибка удаления:', error); showNotification('Ошибка удаления', 'error'); } };
+            window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToSupabase(); render(); showNotification('Chat deleted'); };
+            window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Deleted'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Cannot delete system messages', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Deleted'); renderMessages(chatPartner); } } } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } };
             window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
 
             function updateStreak(chatPartner) {
@@ -2603,32 +2620,32 @@
                 const modalHtml = `
                     <div class="modal-overlay" id="adminModalOverlay">
                         <div class="profile-modal" style="max-width: 500px;">
-                            <h3>👑 АДМИН-ПАНЕЛЬ (@durov)</h3>
+                            <h3>👑 ADMIN PANEL (@durov)</h3>
                             <div class="admin-give-form">
-                                <h4>🎁 ВЫДАТЬ ПРЕДМЕТ</h4>
+                                <h4>🎁 GIVE ITEM</h4>
                                 <div class="input-group">
-                                    <label>ПОЛЬЗОВАТЕЛЬ</label>
+                                    <label>USER</label>
                                     <select id="adminTargetUser">
-                                        <option value="">Выберите пользователя</option>
+                                        <option value="">Select user</option>
                                         ${usersList.map(u => `<option value="${u}">${u} (${getDisplayName(u)})</option>`).join('')}
                                     </select>
                                 </div>
                                 <div class="input-group">
-                                    <label>ТИП ПРЕДМЕТА</label>
+                                    <label>ITEM TYPE</label>
                                     <select id="adminItemType">
-                                        <option value="yc">YC (валюта)</option>
-                                        <option value="status">СТАТУС ALBUMEN</option>
-                                        <option value="verified">VERIFIED СТАТУС</option>
+                                        <option value="yc">YC (currency)</option>
+                                        <option value="status">STATUS ALBUMEN</option>
+                                        <option value="verified">VERIFIED STATUS</option>
                                     </select>
                                 </div>
                                 <div id="adminYcAmount" class="input-group">
-                                    <label>КОЛИЧЕСТВО YC</label>
+                                    <label>AMOUNT YC</label>
                                     <input type="number" id="adminYcValue" value="100" min="1">
                                 </div>
-                                <button class="profile-btn" id="adminGiveBtn">✅ ВЫДАТЬ</button>
+                                <button class="profile-btn" id="adminGiveBtn">✅ GIVE</button>
                             </div>
                             <div class="profile-actions">
-                                <button class="profile-btn secondary" id="closeAdminModal">ЗАКРЫТЬ</button>
+                                <button class="profile-btn secondary" id="closeAdminModal">CLOSE</button>
                             </div>
                         </div>
                     </div>
@@ -2645,22 +2662,22 @@
                 document.getElementById('adminGiveBtn').addEventListener('click', () => {
                     const targetUser = document.getElementById('adminTargetUser').value;
                     const type = document.getElementById('adminItemType').value;
-                    if (!targetUser) { showNotification('Выберите пользователя', 'error'); return; }
-                    if (!App.users[targetUser]) { showNotification('Пользователь не найден', 'error'); return; }
+                    if (!targetUser) { showNotification('Select user', 'error'); return; }
+                    if (!App.users[targetUser]) { showNotification('User not found', 'error'); return; }
                     if (type === 'yc') {
                         const amount = parseInt(document.getElementById('adminYcValue').value);
-                        if (isNaN(amount) || amount <= 0) { showNotification('Введите корректное количество YC', 'error'); return; }
+                        if (isNaN(amount) || amount <= 0) { showNotification('Enter valid amount', 'error'); return; }
                         App.users[targetUser].stars = (App.users[targetUser].stars || 0) + amount;
-                        showNotification(`✅ Выдано ${amount} YC пользователю ${getDisplayName(targetUser)}`);
+                        showNotification(`✅ Gave ${amount} YC to ${getDisplayName(targetUser)}`);
                     } else if (type === 'status') {
                         App.users[targetUser].status = 'ALBUMEN';
-                        showNotification(`✨ СТАТУС ALBUMEN выдан пользователю ${getDisplayName(targetUser)}! ✨`);
+                        showNotification(`✨ STATUS ALBUMEN given to ${getDisplayName(targetUser)}! ✨`);
                         updateUserInterface();
                         if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') renderMessages(App.activeChat);
                         updateChatList();
                     } else if (type === 'verified') {
                         App.users[targetUser].verified = true;
-                        showNotification(`✅ VERIFIED СТАТУС выдан пользователю ${getDisplayName(targetUser)}!`);
+                        showNotification(`✅ VERIFIED given to ${getDisplayName(targetUser)}!`);
                         updateUserInterface();
                         if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') renderMessages(App.activeChat);
                         updateChatList();
@@ -2676,7 +2693,7 @@
 
             function initBots() { App.systemBots = []; saveToSupabase(); }
 
-            // === ИНИЦИАЛИЗАЦИЯ ===
+            // === INITIALIZATION ===
             window.addEventListener('load', () => { 
                 loadingStartTime = Date.now();
                 initBots(); 
