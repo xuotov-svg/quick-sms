@@ -1642,7 +1642,7 @@
                 const giftsList = (userData.gifts || []).map(g => {
                     const gData = GIFTS[g.type];
                     if (!gData) return '';
-                    const sourceText = g.source === 'bought' ? '🎁 Bought' : `from ${getDisplayName(g.from)}`;
+                    const sourceText = g.source === 'bought' ? 'Bought' : `from ${getDisplayName(g.from)}`;
                     return `<div class="gift-item" data-gift-id="${g.id}">
                         <img src="${gData.icon}" style="width:100%;">
                         <div class="gift-price">${gData.name}</div>
@@ -2526,8 +2526,8 @@
             function renderChatItem(u, active, currentUser) { 
                 let name = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : u); 
                 let display = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
-                let avatarHtml = '<div class="chat-avatar">📁</div>'; 
-                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">💬</div>'; 
+                let avatarHtml = '<div class="chat-avatar">S</div>'; 
+                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">Y</div>'; 
                 else if (u !== 'saved') { 
                     const avatarUrl = App.users[u]?.avatar; 
                     avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
