@@ -132,22 +132,37 @@
         }
         
         .yc-currency {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/wpzqwSbImbdyjUJ2s0oSvqLdaEE6_dmPD-8nhrp7NeMfIbWcP8KWCEuET5rKHB4FzkmtnwvQzrzI-T-931kLpPBv.png');
-            background-size: cover;
-            background-position: center;
-            margin-right: 4px;
-            position: relative;
-        }
-        
-        .star-balance-large .yc-currency {
-            width: 28px;
-            height: 28px;
-        }
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/wpzqwSbImbdyjUJ2s0oSvqLdaEE6_dmPD-8nhrp7NeMfIbWcP8KWCEuET5rKHB4FzkmtnwvQzrzI-T-931kLpPBv.png');
+    background-size: cover;
+    background-position: center;
+    margin-right: 4px;
+    position: relative;
+}
+
+.star-balance-large {
+    font-size: 24px;
+    background: var(--glass-bg);
+    padding: 12px 16px;
+    border-radius: 16px;
+    justify-content: center;
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.star-balance-large .yc-currency {
+    width: 32px;
+    height: 32px;
+    margin-right: 0;
+    flex-shrink: 0;
+}
         .verified-icon {
             display: inline-block;
             width: 32px;
@@ -1656,7 +1671,7 @@
                                 <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                                 <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
                                 
-                                <div class="profile-input-group"><label>🎁 MY GIFTS (drag to reorder)</label><div class="gift-grid" id="profileGiftsGrid">${giftsList || 'No gifts yet'}</div></div>
+                                <div class="profile-input-group"><label>MY GIFTS</label><div class="gift-grid" id="profileGiftsGrid">${giftsList || 'No gifts yet'}</div></div>
                                 
                                 <div class="shop-section">
                                     <h4>BUY GIFTS</h4>
@@ -1767,7 +1782,7 @@
                             </div>
                             <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><label>AGE</label><div>${userData.age || 14} years</div></div>
-                            <div class="profile-input-group"><label>🎁 GIFTS</label><div class="gift-grid">${giftsList || 'No gifts yet'}</div></div>
+                            <div class="profile-input-group"><label>GIFTS</label><div class="gift-grid">${giftsList || 'No gifts yet'}</div></div>
                             <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button></div>
                         </div>
                     </div>
