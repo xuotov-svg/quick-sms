@@ -279,44 +279,13 @@
             50% { opacity: 1; transform: translateY(-5px); }
         }
         
-        body.light-theme .icon-btn,
-        body.light-theme .send-btn,
-        body.light-theme .file-label,
-        body.light-theme .tiny-btn,
-        body.light-theme .inline-btn,
-        body.light-theme .profile-btn,
-        body.light-theme .btn,
-        body.light-theme .subscribe-btn,
-        body.light-theme .unsubscribe-btn,
-        body.light-theme .like-btn,
-        body.light-theme .dislike-btn,
-        body.light-theme .settings-icon,
-        body.light-theme .delete-chat-icon,
-        body.light-theme .tab,
-        body.light-theme .nft-item,
-        body.light-theme .msg-actions button,
-        body.light-theme .back-btn,
-        body.light-theme .create-nft-btn,
-        body.light-theme .change-username-btn,
-        body.light-theme .toggle-password,
-        body.light-theme .resend-link,
-        body.light-theme .shop-item button,
-        body.light-theme .close-btn,
-        body.light-theme .nav-item,
-        body.light-theme .post-like,
-        body.light-theme .post-dislike,
-        body.light-theme .post-comment,
-        body.light-theme .post-delete,
-        body.light-theme .create-post-btn {
-            filter: none !important;
-        }
-        
         .icon-btn,
         .send-btn,
         .file-label,
         .tiny-btn,
         .inline-btn,
         .profile-btn,
+        .btn,
         .subscribe-btn,
         .unsubscribe-btn,
         .like-btn,
@@ -324,10 +293,8 @@
         .settings-icon,
         .delete-chat-icon,
         .tab,
-        .nft-item,
         .msg-actions button,
         .back-btn,
-        .create-nft-btn,
         .change-username-btn,
         .toggle-password,
         .resend-link,
@@ -342,213 +309,52 @@
             transition: all 0.2s ease;
         }
         
-        .icon-btn:hover,
-        .send-btn:hover,
-        .file-label:hover,
-        .tiny-btn:hover,
-        .inline-btn:hover,
-        .profile-btn:hover,
-        .btn:hover,
-        .subscribe-btn:hover,
-        .unsubscribe-btn:hover,
-        .like-btn:hover,
-        .dislike-btn:hover,
-        .settings-icon:hover,
-        .delete-chat-icon:hover,
-        .tab:hover,
-        .nft-item:hover,
-        .msg-actions button:hover,
-        .shop-item button:hover,
-        .nav-item:hover,
-        .post-like:hover,
-        .post-dislike:hover,
-        .post-comment:hover,
-        .post-delete:hover,
-        .create-post-btn:hover {
-            filter: brightness(1.05);
-        }
-        
-        .tab.active,
-        .btn:active,
-        .icon-btn:active,
-        .send-btn:active,
-        .nav-item.active {
-            color: var(--accent);
-        }
-        
-        .star-balance, .star-balance-large { display: inline-flex; align-items: center; gap: 4px; color: var(--text); }
-        .star-balance-large { font-size: 24px; background: var(--glass-bg); padding: 12px; border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); backdrop-filter: blur(8px); }
-        
-        .profile-banner-wrapper { position: relative; width: 100%; margin-bottom: 20px; }
-        .banner-container { width: 100%; height: 150px; border-radius: 20px; overflow: hidden; border: 1px solid var(--glass-border); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
-        .banner-image { width: 100%; height: 100%; object-fit: cover; }
-        .banner-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; }
-        body.light-theme .banner-placeholder { background: #f0f0f0; color: #aaa; }
-        body.light-theme .banner-container { background: #f0f0f0; }
-        
-        .profile-avatar-overlay { position: absolute; bottom: -40px; left: 20px; z-index: 10; }
-        .profile-avatar-overlay .avatar-large { width: 100px; height: 100px; border-radius: 50%; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text); overflow: hidden; box-shadow: 0 4px 20px var(--shadow); }
-        body.light-theme .profile-avatar-overlay .avatar-large { background: #e0e0e0; }
-        .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 4px; }
-        
-        .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; color: var(--text); }
-        .settings-icon:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
-        .settings-icon-img { width: 28px; height: 28px; object-fit: contain; cursor: pointer; }
-        
-        .toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .toggle-switch .toggle-label { font-size: 14px; color: var(--text); }
-        .toggle-switch .toggle-checkbox { width: 40px; height: 20px; background: #2a2a2a; border-radius: 20px; position: relative; transition: 0.2s; border: 1px solid var(--glass-border); }
-        .toggle-switch .toggle-checkbox::after { content: ""; width: 16px; height: 16px; background: #ffffff; border-radius: 50%; position: absolute; top: 1px; left: 2px; transition: 0.2s; }
-        .toggle-switch.active .toggle-checkbox { background: var(--accent); }
-        .toggle-switch.active .toggle-checkbox::after { left: 20px; }
-        
-        .auth-container, .main-container { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .auth-box { max-width: 400px; margin: auto; background: var(--glass-bg); padding: 30px 24px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 8px 32px var(--shadow); width: 90%; animation: fadeIn 0.3s ease; }
-        .auth-box h2 { color: var(--accent); margin-bottom: 16px; font-weight: 500; }
-        
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
-        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 12px 16px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 15px; outline: none; transition: all 0.2s; }
-        .input-group input:focus, .input-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
-        
-        .btn { background: var(--accent); color: #000000; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 8px; }
-        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--glass-border); }
-        .btn:hover { transform: translateY(-2px); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        
-        .auth-error { color: #ff6666; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
-        .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
-        
-        .two-factor-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease; backdrop-filter: blur(8px); }
-        .two-factor-box { background: var(--glass-bg); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); max-width: 400px; width: 90%; text-align: center; }
-        .two-factor-box h3 { color: var(--accent); margin-bottom: 20px; }
-        .two-factor-box p { margin-bottom: 20px; color: var(--text); }
-        .code-input { font-size: 24px; letter-spacing: 10px; text-align: center; padding: 15px; border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; width: 100%; background: var(--input-bg); color: var(--text); }
-        .resend-link { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
-        
-        .main-container { flex-direction: row; position: relative; flex: 1; overflow: hidden; }
-        .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
-        .sidebar.open { transform: translateX(0); }
-        
-        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--glass-bg); position: relative; z-index: 5; width: 100%; }
-        
-        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; font-size: 24px; cursor: pointer; margin-right: 10px; display: none; width: 40px; height: 40px; border-radius: 12px; }
-        .back-btn.visible { display: block; }
-        .back-btn:hover { background: var(--hover-bg); }
-        
-        @media (min-width: 768px) { .sidebar { position: relative; transform: translateX(0); width: 300px; } .back-btn { display: none !important; } }
-        
-        .user-profile { padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--glass-border); background: var(--glass-bg); cursor: pointer; }
-        .avatar { width: 48px; height: 48px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text); font-weight: 500; overflow: hidden; flex-shrink: 0; }
-        .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-        .username-display { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
-        .age-badge { display: inline-block; margin-left: 5px; color: var(--text-secondary); font-size: 12px; }
-        
-        .search-add { padding: 12px; border-bottom: 1px solid var(--glass-border); display: flex; gap: 8px; background: var(--glass-bg); }
-        .search-add input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 15px; color: var(--text); outline: none; }
-        .search-add input::placeholder { color: var(--text-secondary); }
-        
-        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .icon-btn:hover { background: rgba(212, 175, 55, 0.3); }
-        
-        .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
-        .chat-item { padding: 12px 16px; border-radius: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text); background: var(--glass-bg); border: 1px solid var(--glass-border); transition: all 0.2s; }
-        .chat-item:hover { background: var(--hover-bg); border-color: var(--hover-border); }
-        .chat-item.active { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--accent); }
-        
-        .chat-avatar { width: 40px; height: 40px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border); color: var(--text); }
-        .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; }
-        .delete-chat-icon img { width: 20px; height: 20px; object-fit: contain; }
-        .delete-chat-icon:hover { opacity: 0.8; }
-        
-        .chat-header { padding: 12px 16px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; color: var(--text); }
-        .chat-header-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-        .chat-header-info strong { color: var(--text); font-size: 16px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-        .chat-user-status { font-size: 11px; color: #4CAF50; font-weight: normal; margin-top: 2px; }
-        .chat-user-status.offline { color: #888; }
-        
-        .chat-actions { display: flex; gap: 8px; align-items: center; }
-        .tiny-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
-        .tiny-btn:hover { background: rgba(212, 175, 55, 0.2); }
-        
-        .subscribe-btn { background: #DBBA00; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #000000; font-weight: 500; }
-        .subscribe-btn:hover { filter: brightness(1.1); }
-        .unsubscribe-btn { background: #818181; border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; }
-        .unsubscribe-btn:hover { background: #6a6a6a; }
-        
-        .gift-message { animation: giftGlow 1.5s infinite; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--accent); }
-        @keyframes giftGlow { 0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } 50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); } 100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } }
-        
-        .system-message { background: rgba(40, 40, 45, 0.7); border: 1px solid var(--glass-border); color: #aaaaaa; font-style: italic; }
-        
-        .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
-        .msg-actions button { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 500; }
-        .msg-actions button:hover { background: #ff4444; color: white; }
-        
-        .like-btn, .dislike-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 20px; transition: 0.2s; }
-        .like-btn.liked, .dislike-btn.disliked { color: var(--accent); }
-        .like-btn.liked { color: #4CAF50; }
-        .dislike-btn.disliked { color: #ff6666; }
-        .like-btn:hover, .dislike-btn:hover { background: rgba(212, 175, 55, 0.2); }
-        
-        .media-preview { max-width: 200px; max-height: 200px; border-radius: 12px; margin-top: 4px; border: 1px solid var(--glass-border); cursor: pointer; }
-        video.media-preview { max-width: 200px; max-height: 200px; }
-        
-        .message-username { cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 2px; color: var(--accent); }
-        .message-username:hover { text-decoration: underline; }
-        
-        .input-area { display: flex; gap: 8px; padding: 12px; background: var(--glass-bg); border-top: 1px solid var(--glass-border); align-items: center; flex-wrap: wrap; z-index: 2; position: relative; }
-        .input-area input[type="text"] { flex: 2; min-width: 120px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 12px 16px; color: var(--text); font-family: inherit; outline: none; font-size: 14px; }
-        .input-area input[type="text"]::placeholder { color: var(--text-secondary); }
-        .input-area input[type="file"] { display: none; }
-        .file-label { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 24px; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500; }
-        .file-label:hover { background: rgba(212, 175, 55, 0.2); }
-        .send-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); width: 44px; height: 44px; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .send-btn:hover { background: rgba(212, 175, 55, 0.3); }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s ease; backdrop-filter: blur(8px); }
-        .profile-modal { background: var(--glass-bg); border-radius: 24px; width: 90%; max-width: 400px; padding: 24px; box-shadow: 0 20px 40px var(--shadow); border: 1px solid var(--glass-border); color: var(--text); max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease; }
-        .profile-modal h3 { font-size: 22px; margin-bottom: 16px; color: var(--text); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-        
-        .profile-input-group { margin-bottom: 16px; position: relative; }
-        .profile-input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
-        .profile-input-group input, .profile-input-group textarea, .profile-password-row { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
-        .profile-input-group input:focus, .profile-input-group textarea:focus { border-color: var(--accent); }
-        
-        .change-file-btn {
-            background: rgba(212, 175, 55, 0.2);
+        .gift-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 16px 0;
+            padding: 12px;
+            background: var(--glass-bg);
+            border-radius: 16px;
+            justify-content: flex-start;
             border: 1px solid var(--glass-border);
-            padding: 10px 14px;
+        }
+        .gift-item {
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
             border-radius: 12px;
-            color: #6b7280;
-            font-weight: 600;
-            cursor: pointer;
+            border: 1px solid var(--glass-border);
+            width: 80px;
+            cursor: grab;
+            transition: all 0.1s ease;
             text-align: center;
-            transition: 0.2s;
+            user-select: none;
+        }
+        .gift-item:active {
+            cursor: grabbing;
+            opacity: 0.7;
+        }
+        .gift-item.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+        .gift-item img {
             width: 100%;
+            height: auto;
+            border-radius: 8px;
+            pointer-events: none;
         }
-        .change-file-btn:hover {
-            background: rgba(212, 175, 55, 0.3);
+        .gift-price {
+            font-size: 12px;
+            color: var(--accent);
+            margin-top: 4px;
         }
-        
-        .wallpaper-preview,
-        #settingsWallpaper,
-        .profile-input-group:has(#settingsWallpaper) {
-            display: none !important;
+        .gift-source {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
         }
-        
-        .password-wrapper { position: relative; display: flex; align-items: center; }
-        .password-wrapper input { flex: 1; padding-right: 40px; }
-        .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; }
-        
-        .gift-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 16px 0; padding: 12px; background: var(--glass-bg); border-radius: 16px; justify-content: center; border: 1px solid var(--glass-border); }
-        .gift-item { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 12px; border: 1px solid var(--glass-border); width: 80px; cursor: pointer; transition: all 0.1s ease; text-align: center; }
-        .gift-item img { width: 100%; height: auto; border-radius: 8px; }
-        .gift-item:hover { background: rgba(212, 175, 55, 0.3); transform: scale(1.05); }
-        .gift-price { font-size: 12px; color: var(--accent); margin-top: 4px; }
         
         .shop-section { background: var(--glass-bg); border-radius: 16px; padding: 16px; margin: 16px 0; border: 1px solid var(--glass-border); }
         .shop-section h4 { color: var(--text); margin-bottom: 12px; }
@@ -793,6 +599,166 @@
                 display: flex;
             }
         }
+
+        /* Additional layout fixes */
+        .profile-banner-wrapper { position: relative; width: 100%; margin-bottom: 20px; }
+        .banner-container { width: 100%; height: 150px; border-radius: 20px; overflow: hidden; border: 1px solid var(--glass-border); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+        .banner-image { width: 100%; height: 100%; object-fit: cover; }
+        .banner-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; }
+        body.light-theme .banner-placeholder { background: #f0f0f0; color: #aaa; }
+        body.light-theme .banner-container { background: #f0f0f0; }
+        
+        .profile-avatar-overlay { position: absolute; bottom: -40px; left: 20px; z-index: 10; }
+        .profile-avatar-overlay .avatar-large { width: 100px; height: 100px; border-radius: 50%; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text); overflow: hidden; box-shadow: 0 4px 20px var(--shadow); }
+        body.light-theme .profile-avatar-overlay .avatar-large { background: #e0e0e0; }
+        .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 4px; }
+        
+        .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; color: var(--text); }
+        .settings-icon:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
+        .settings-icon-img { width: 28px; height: 28px; object-fit: contain; cursor: pointer; }
+        
+        .toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .toggle-switch .toggle-label { font-size: 14px; color: var(--text); }
+        .toggle-switch .toggle-checkbox { width: 40px; height: 20px; background: #2a2a2a; border-radius: 20px; position: relative; transition: 0.2s; border: 1px solid var(--glass-border); }
+        .toggle-switch .toggle-checkbox::after { content: ""; width: 16px; height: 16px; background: #ffffff; border-radius: 50%; position: absolute; top: 1px; left: 2px; transition: 0.2s; }
+        .toggle-switch.active .toggle-checkbox { background: var(--accent); }
+        .toggle-switch.active .toggle-checkbox::after { left: 20px; }
+        
+        .auth-container, .main-container { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        .auth-box { max-width: 400px; margin: auto; background: var(--glass-bg); padding: 30px 24px; border-radius: 24px; border: 1px solid var(--glass-border); box-shadow: 0 8px 32px var(--shadow); width: 90%; animation: fadeIn 0.3s ease; }
+        .auth-box h2 { color: var(--accent); margin-bottom: 16px; font-weight: 500; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 14px; font-weight: 500; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 12px 16px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 15px; outline: none; transition: all 0.2s; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2); }
+        
+        .btn { background: var(--accent); color: #000000; border: none; padding: 12px; border-radius: 12px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--glass-border); }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .auth-error { color: #ff6666; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
+        .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
+        
+        .two-factor-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease; backdrop-filter: blur(8px); }
+        .two-factor-box { background: var(--glass-bg); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); max-width: 400px; width: 90%; text-align: center; }
+        .two-factor-box h3 { color: var(--accent); margin-bottom: 20px; }
+        .two-factor-box p { margin-bottom: 20px; color: var(--text); }
+        .code-input { font-size: 24px; letter-spacing: 10px; text-align: center; padding: 15px; border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; width: 100%; background: var(--input-bg); color: var(--text); }
+        .resend-link { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
+        
+        .main-container { flex-direction: row; position: relative; flex: 1; overflow: hidden; }
+        .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
+        .sidebar.open { transform: translateX(0); }
+        
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--glass-bg); position: relative; z-index: 5; width: 100%; }
+        
+        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; font-size: 24px; cursor: pointer; margin-right: 10px; display: none; width: 40px; height: 40px; border-radius: 12px; }
+        .back-btn.visible { display: block; }
+        .back-btn:hover { background: var(--hover-bg); }
+        
+        @media (min-width: 768px) { .sidebar { position: relative; transform: translateX(0); width: 300px; } .back-btn { display: none !important; } }
+        
+        .user-profile { padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--glass-border); background: var(--glass-bg); cursor: pointer; }
+        .avatar { width: 48px; height: 48px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text); font-weight: 500; overflow: hidden; flex-shrink: 0; }
+        .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+        .username-display { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+        .age-badge { display: inline-block; margin-left: 5px; color: var(--text-secondary); font-size: 12px; }
+        
+        .search-add { padding: 12px; border-bottom: 1px solid var(--glass-border); display: flex; gap: 8px; background: var(--glass-bg); }
+        .search-add input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 15px; color: var(--text); outline: none; }
+        .search-add input::placeholder { color: var(--text-secondary); }
+        
+        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: rgba(212, 175, 55, 0.3); }
+        
+        .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .chat-item { padding: 12px 16px; border-radius: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text); background: var(--glass-bg); border: 1px solid var(--glass-border); transition: all 0.2s; }
+        .chat-item:hover { background: var(--hover-bg); border-color: var(--hover-border); }
+        .chat-item.active { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--accent); }
+        
+        .chat-avatar { width: 40px; height: 40px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border); color: var(--text); }
+        .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; }
+        .delete-chat-icon img { width: 20px; height: 20px; object-fit: contain; }
+        .delete-chat-icon:hover { opacity: 0.8; }
+        
+        .chat-header { padding: 12px 16px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+        .chat-header-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .chat-header-info strong { color: var(--text); font-size: 16px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .chat-user-status { font-size: 11px; color: #4CAF50; font-weight: normal; margin-top: 2px; }
+        .chat-user-status.offline { color: #888; }
+        
+        .chat-actions { display: flex; gap: 8px; align-items: center; }
+        .tiny-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
+        .tiny-btn:hover { background: rgba(212, 175, 55, 0.2); }
+        
+        .subscribe-btn { background: #DBBA00; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #000000; font-weight: 500; }
+        .subscribe-btn:hover { filter: brightness(1.1); }
+        .unsubscribe-btn { background: #818181; border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; }
+        .unsubscribe-btn:hover { background: #6a6a6a; }
+        
+        .gift-message { animation: giftGlow 1.5s infinite; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--accent); }
+        @keyframes giftGlow { 0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } 50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.5); } 100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.3); } }
+        
+        .system-message { background: rgba(40, 40, 45, 0.7); border: 1px solid var(--glass-border); color: #aaaaaa; font-style: italic; }
+        
+        .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+        .msg-actions button { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 500; }
+        .msg-actions button:hover { background: #ff4444; color: white; }
+        
+        .like-btn, .dislike-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 20px; transition: 0.2s; }
+        .like-btn.liked, .dislike-btn.disliked { color: var(--accent); }
+        .like-btn.liked { color: #4CAF50; }
+        .dislike-btn.disliked { color: #ff6666; }
+        .like-btn:hover, .dislike-btn:hover { background: rgba(212, 175, 55, 0.2); }
+        
+        .media-preview { max-width: 200px; max-height: 200px; border-radius: 12px; margin-top: 4px; border: 1px solid var(--glass-border); cursor: pointer; }
+        video.media-preview { max-width: 200px; max-height: 200px; }
+        
+        .message-username { cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 2px; color: var(--accent); }
+        .message-username:hover { text-decoration: underline; }
+        
+        .input-area { display: flex; gap: 8px; padding: 12px; background: var(--glass-bg); border-top: 1px solid var(--glass-border); align-items: center; flex-wrap: wrap; z-index: 2; position: relative; }
+        .input-area input[type="text"] { flex: 2; min-width: 120px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 12px 16px; color: var(--text); font-family: inherit; outline: none; font-size: 14px; }
+        .input-area input[type="text"]::placeholder { color: var(--text-secondary); }
+        .input-area input[type="file"] { display: none; }
+        .file-label { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 8px 16px; border-radius: 24px; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .file-label:hover { background: rgba(212, 175, 55, 0.2); }
+        .send-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); width: 44px; height: 44px; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .send-btn:hover { background: rgba(212, 175, 55, 0.3); }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s ease; backdrop-filter: blur(8px); }
+        .profile-modal { background: var(--glass-bg); border-radius: 24px; width: 90%; max-width: 400px; padding: 24px; box-shadow: 0 20px 40px var(--shadow); border: 1px solid var(--glass-border); color: var(--text); max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease; }
+        .profile-modal h3 { font-size: 22px; margin-bottom: 16px; color: var(--text); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .profile-input-group { margin-bottom: 16px; position: relative; }
+        .profile-input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+        .profile-input-group input, .profile-input-group textarea, .profile-password-row { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
+        .profile-input-group input:focus, .profile-input-group textarea:focus { border-color: var(--accent); }
+        
+        .change-file-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 10px 14px;
+            border-radius: 12px;
+            color: #6b7280;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .change-file-btn:hover {
+            background: rgba(212, 175, 55, 0.3);
+        }
+        
+        .password-wrapper { position: relative; display: flex; align-items: center; }
+        .password-wrapper input { flex: 1; padding-right: 40px; }
+        .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; }
     </style>
 </head>
 <body>
@@ -1457,7 +1423,12 @@
                 }
                 App.users[user].stars -= gift.price;
                 if (!App.users[user].giftInventory) App.users[user].giftInventory = [];
-                App.users[user].giftInventory.push({ type: giftType, id: generateId(), obtained: Date.now() });
+                if (!App.users[user].gifts) App.users[user].gifts = [];
+                
+                const giftObj = { type: giftType, id: generateId(), obtained: Date.now(), source: 'bought' };
+                App.users[user].giftInventory.push(giftObj);
+                App.users[user].gifts.push(giftObj);
+                
                 saveToSupabase();
                 updateUserInterface();
                 showNotification(`You bought ${gift.name}!`);
@@ -1477,7 +1448,7 @@
                 
                 const giftsHtml = inventory.map((gift, idx) => {
                     const g = GIFTS[gift.type];
-                    return `<div class="gift-item" data-gift-index="${idx}" data-gift-type="${gift.type}">
+                    return `<div class="gift-item" data-gift-index="${idx}" data-gift-type="${gift.type}" data-gift-id="${gift.id}">
                         <img src="${g.icon}" alt="${g.name}" style="width:100%;">
                         <div class="gift-price">${g.name}</div>
                     </div>`;
@@ -1499,6 +1470,7 @@
                 document.querySelectorAll('.gift-item').forEach(el => {
                     el.addEventListener('click', (e) => {
                         const idx = parseInt(el.dataset.giftIndex);
+                        const giftId = el.dataset.giftId;
                         const gift = inventory[idx];
                         if (!gift) return;
                         const fromUser = App.currentUser;
@@ -1506,9 +1478,13 @@
                         
                         // Remove from sender inventory
                         App.users[fromUser].giftInventory.splice(idx, 1);
-                        // Add to recipient's received gifts
+                        // Remove from sender gifts display
+                        const giftIndex = App.users[fromUser].gifts.findIndex(g => g.id === giftId);
+                        if (giftIndex !== -1) App.users[fromUser].gifts.splice(giftIndex, 1);
+                        
+                        // Add to recipient's gifts
                         if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
-                        App.users[toUser].gifts.push({ type: gift.type, from: fromUser, time: Date.now() });
+                        App.users[toUser].gifts.push({ type: gift.type, from: fromUser, time: Date.now(), id: generateId(), source: 'received' });
                         
                         saveToSupabase();
                         
@@ -1583,85 +1559,128 @@
                 if (count === 1) return `1 subscriber`;
                 return `${count} subscribers`;
             }
-            
-            function toggleFeedSubscription(postId, author) {
-                if (author === App.currentUser) return;
-                const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-                if (isCurrentlySubscribed) {
-                    unsubscribeFromUser(App.currentUser, author);
-                } else {
-                    subscribeToUser(App.currentUser, author);
+
+            // Drag and drop for gifts in profile
+            function setupGiftDragDrop(container, username) {
+                if (!container) return;
+                const items = container.querySelectorAll('.gift-item');
+                let dragSrcElement = null;
+                
+                function handleDragStart(e) {
+                    dragSrcElement = this;
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', this.innerHTML);
+                    this.classList.add('dragging');
                 }
-                const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-                if (postCard) {
-                    const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
-                    if (btn) {
-                        const newSubStatus = !isCurrentlySubscribed;
-                        btn.textContent = newSubStatus ? 'UNFOLLOW' : 'FOLLOW';
-                        btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
+                
+                function handleDragOver(e) {
+                    if (e.preventDefault) e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    return false;
+                }
+                
+                function handleDrop(e) {
+                    if (e.stopPropagation) e.stopPropagation();
+                    if (dragSrcElement !== this) {
+                        const parent = this.parentNode;
+                        const srcIndex = Array.from(parent.children).indexOf(dragSrcElement);
+                        const targetIndex = Array.from(parent.children).indexOf(this);
+                        
+                        // Swap in DOM
+                        if (srcIndex < targetIndex) {
+                            parent.insertBefore(dragSrcElement, this.nextSibling);
+                        } else {
+                            parent.insertBefore(dragSrcElement, this);
+                        }
+                        
+                        // Swap in App.users gifts array
+                        const gifts = App.users[username].gifts;
+                        if (gifts && srcIndex !== -1 && targetIndex !== -1) {
+                            const temp = gifts[srcIndex];
+                            gifts[srcIndex] = gifts[targetIndex];
+                            gifts[targetIndex] = temp;
+                            saveToSupabase();
+                        }
                     }
+                    return false;
                 }
+                
+                function handleDragEnd(e) {
+                    this.classList.remove('dragging');
+                    items.forEach(item => item.classList.remove('dragging'));
+                }
+                
+                items.forEach(item => {
+                    item.setAttribute('draggable', true);
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragover', handleDragOver);
+                    item.addEventListener('drop', handleDrop);
+                    item.addEventListener('dragend', handleDragEnd);
+                });
             }
 
             function openProfileModal(username) { 
-    const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', gifts: [], followers: [], following: [] }) };
-    const isOwn = (username === App.currentUser); 
-    const isAdmin = (username === ADMIN_USER); 
-    
-    // === ВОТ ЭТО ГЛАВНОЕ ИСПРАВЛЕНИЕ (Безопасный парсинг подарков) ===
-    const receivedGifts = Array.isArray(userData.gifts) ? userData.gifts.map(g => {
-        const gData = GIFTS[g.type];
-        if (!gData) return '';
-        return `<div class="gift-item"><img src="${gData.icon}" style="width:100%;"><div class="gift-price">${gData.name}</div></div>`;
-    }).join('') : '';
-    
-    const followersCount = (userData.followers || []).length;
-    const displayName = getDisplayName(username);
-    
-    if (isOwn) {
-        const modalHtml = `
-            <div class="modal-overlay" id="profileModalOverlay">
-                <div class="profile-modal">
-                    <h3><span>MY PROFILE</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
-                    <div class="profile-banner-wrapper">
-                        <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
-                        <div class="profile-avatar-overlay">
-                            <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
-                        </div>
-                    </div>
-                    <div class="profile-name-section">
-                        <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                        <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
-                    </div>
-                    <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
-                    <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
-                    
-                    <!-- === ВОТ ЗДЕСЬ МЕНЯЕМ НА ПОДАРКИ === -->
-                    <div class="profile-input-group"><label>RECEIVED GIFTS</label><div class="gift-grid">${receivedGifts || 'No gifts yet'}</div></div>
-                    
-                    <div class="shop-section">
-                        <h4>BUY GIFTS</h4>
-                        ${Object.entries(GIFTS).map(([key, g]) => `
-                            <div class="shop-item">
-                                <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
-                                <button class="buy-gift-btn" data-gift="${key}">BUY</button>
+                const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', gifts: [], followers: [], following: [] }) };
+                const isOwn = (username === App.currentUser); 
+                const isAdmin = (username === ADMIN_USER); 
+                
+                const giftsList = (userData.gifts || []).map(g => {
+                    const gData = GIFTS[g.type];
+                    if (!gData) return '';
+                    const sourceText = g.source === 'bought' ? '🎁 Bought' : `from ${getDisplayName(g.from)}`;
+                    return `<div class="gift-item" data-gift-id="${g.id}">
+                        <img src="${gData.icon}" style="width:100%;">
+                        <div class="gift-price">${gData.name}</div>
+                        <div class="gift-source">${sourceText}</div>
+                    </div>`;
+                }).join('');
+                
+                const followersCount = (userData.followers || []).length;
+                const displayName = getDisplayName(username);
+                
+                if (isOwn) {
+                    const modalHtml = `
+                        <div class="modal-overlay" id="profileModalOverlay">
+                            <div class="profile-modal">
+                                <h3><span>MY PROFILE</span> <img src="${ICONS.SETTINGS}" class="settings-icon-img" id="openSettingsBtn" style="width:28px; height:28px; cursor:pointer;"></h3>
+                                <div class="profile-banner-wrapper">
+                                    <div class="banner-container">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
+                                    <div class="profile-avatar-overlay">
+                                        <div class="avatar-large">${userData.avatar ? `<img src="${userData.avatar}">` : '🍳'}</div>
+                                    </div>
+                                </div>
+                                <div class="profile-name-section">
+                                    <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
+                                    <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
+                                </div>
+                                <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
+                                <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
+                                
+                                <div class="profile-input-group"><label>🎁 MY GIFTS (drag to reorder)</label><div class="gift-grid" id="profileGiftsGrid">${giftsList || 'No gifts yet'}</div></div>
+                                
+                                <div class="shop-section">
+                                    <h4>BUY GIFTS</h4>
+                                    ${Object.entries(GIFTS).map(([key, g]) => `
+                                        <div class="shop-item">
+                                            <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
+                                            <button class="buy-gift-btn" data-gift="${key}">BUY</button>
+                                        </div>
+                                    `).join('')}
+                                    <h4 style="margin-top:12px;">TOP UP YC</h4>
+                                    <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
+                                    <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
+                                    <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
+                                    <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
+                                </div>
+                                
+                                <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>
                             </div>
-                        `).join('')}
-                        <!-- Остальная часть магазина (TON, Premium) без изменений -->
-                        <h4 style="margin-top:12px;">TOP UP YC</h4>
-                        <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
-                        <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
-                        <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
-                        <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
-                    </div>
-                    
-                    <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>
-                </div>
-            </div>
-        `;
-        // ... дальше код добавления обработчиков событий для кнопок (он остается тем же, но важно удалить старый createNftBtn) ...
-        // Убедись, что в части с обработчиками нет строки document.getElementById('createNftBtn')
+                        </div>
+                    `;
                     document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    
+                    const grid = document.getElementById('profileGiftsGrid');
+                    if (grid) setupGiftDragDrop(grid, username);
                     
                     document.getElementById('openSettingsBtn').addEventListener('click', () => {
                         document.getElementById('profileModalOverlay').remove();
@@ -1683,6 +1702,7 @@
                             const giftType = e.target.dataset.gift;
                             buyGift(giftType);
                             document.getElementById('profileModalOverlay')?.remove();
+                            setTimeout(() => openProfileModal(username), 100);
                         });
                     });
                     
@@ -1730,6 +1750,7 @@
                     return;
                 }
                 
+                // Other user profile
                 const modalHtml = `
                     <div class="modal-overlay" id="profileModalOverlay">
                         <div class="profile-modal">
@@ -1746,8 +1767,7 @@
                             </div>
                             <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><label>AGE</label><div>${userData.age || 14} years</div></div>
-                            <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
-                            <div class="profile-input-group"><label>RECEIVED GIFTS</label><div class="gift-grid">${receivedGifts || 'No gifts yet'}</div></div>
+                            <div class="profile-input-group"><label>🎁 GIFTS</label><div class="gift-grid">${giftsList || 'No gifts yet'}</div></div>
                             <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button></div>
                         </div>
                     </div>
