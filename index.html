@@ -1312,10 +1312,10 @@
                     if (newEmail) App.users[App.currentUser].email = newEmail;
                     
                     const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
-                    if (newDisplayName && !/^[A-Za-z0-9]{1,6}$/.test(newDisplayName)) {
-                        showNotification('Display name must be 1-6 letters/digits', 'error');
-                        return;
-                    }
+                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
+    showNotification('Display name must be 1-6 letters/digits (Russian allowed)', 'error');
+    return;
+}
                     if (newDisplayName) App.users[App.currentUser].displayName = newDisplayName;
                     
                     const newPassword = document.getElementById('settingsPassword')?.value.trim();
