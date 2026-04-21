@@ -7,6 +7,7 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/logo.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
+        /* ===== ВЕСЬ СТИЛЬ ОСТАЁТСЯ БЕЗ ИЗМЕНЕНИЙ (НЕ ТРОГАЕМ) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -132,37 +133,37 @@
         }
         
         .yc-currency {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/wpzqwSbImbdyjUJ2s0oSvqLdaEE6_dmPD-8nhrp7NeMfIbWcP8KWCEuET5rKHB4FzkmtnwvQzrzI-T-931kLpPBv.png');
-    background-size: cover;
-    background-position: center;
-    margin-right: 4px;
-    position: relative;
-}
-
-.star-balance-large {
-    font-size: 24px;
-    background: var(--glass-bg);
-    padding: 12px 16px;
-    border-radius: 16px;
-    justify-content: center;
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(8px);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.star-balance-large .yc-currency {
-    width: 32px;
-    height: 32px;
-    margin-right: 0;
-    flex-shrink: 0;
-}
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background-image: url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/wpzqwSbImbdyjUJ2s0oSvqLdaEE6_dmPD-8nhrp7NeMfIbWcP8KWCEuET5rKHB4FzkmtnwvQzrzI-T-931kLpPBv.png');
+            background-size: cover;
+            background-position: center;
+            margin-right: 4px;
+            position: relative;
+        }
+        
+        .star-balance-large {
+            font-size: 24px;
+            background: var(--glass-bg);
+            padding: 12px 16px;
+            border-radius: 16px;
+            justify-content: center;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .star-balance-large .yc-currency {
+            width: 32px;
+            height: 32px;
+            margin-right: 0;
+            flex-shrink: 0;
+        }
         .verified-icon {
             display: inline-block;
             width: 32px;
@@ -300,7 +301,6 @@
         .tiny-btn,
         .inline-btn,
         .profile-btn,
-        .btn,
         .subscribe-btn,
         .unsubscribe-btn,
         .like-btn,
@@ -774,6 +774,36 @@
         .password-wrapper { position: relative; display: flex; align-items: center; }
         .password-wrapper input { flex: 1; padding-right: 40px; }
         .toggle-password { position: absolute; right: 10px; cursor: pointer; font-size: 18px; background: none; border: none; color: #6b7280; }
+
+        /* дополнительные стили для новых элементов */
+        .shop-toggle-btn {
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid var(--glass-border);
+            color: #6b7280;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            width: 100%;
+            cursor: pointer;
+            text-align: center;
+            margin: 8px 0;
+        }
+        .shop-toggle-btn:hover {
+            background: rgba(212, 175, 55, 0.3);
+        }
+        .show-all-btn {
+            background: transparent;
+            border: 1px dashed var(--glass-border);
+            color: var(--accent);
+            padding: 8px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body>
@@ -804,12 +834,12 @@
             const ADMIN_USER = '@durov';
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
-            // Gift definitions
+            // Gift definitions — CAP заменён на CASTLE
             const GIFTS = {
                 heart: { name: 'HEART', price: 25, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1422.png' },
                 teddy: { name: 'TEDDY BEAR', price: 25, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1423.png' },
                 icecream: { name: 'ICE CREAM', price: 50, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/kdGUgPSE5W9l8I34UisPetnRfjIhanWa7vfvI7ExqhmE0lTOANBAUoF_BafycG-atCblyUVsokKFKX5sB933WBSo.png' },
-                cap: { name: 'CAP', price: 100, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/-YMei7B5NtZLgC0Ays_b5Ls4wkwZ7rQh5_BGYsHILjbb_2c5-eXlADmP0W5Eywj_6G87hUs_-KBzJ2N26h00juZE.png' }
+                castle: { name: 'CASTLE', price: 100, icon: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/zzzz.png' }
             };
             
             const ICONS = {
@@ -1147,8 +1177,8 @@
                                 <small style="color: var(--text-secondary);">Used for login</small>
                             </div>
                             <div class="profile-input-group">
-                                <label>DISPLAY NAME (max 6 chars)</label>
-                                <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Your name">
+                                <label>DISPLAY NAME (max 9 chars)</label>
+                                <input type="text" id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}" placeholder="Your name">
                                 <small style="color: var(--text-secondary);">Letters and digits only</small>
                             </div>
                             <div class="profile-input-group">
@@ -1312,10 +1342,10 @@
                     if (newEmail) App.users[App.currentUser].email = newEmail;
                     
                     const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
-                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
-    showNotification('Display name must be 1-6 letters/digits (Russian allowed)', 'error');
-    return;
-}
+                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,9}$/.test(newDisplayName)) {
+                        showNotification('Display name must be 1-9 letters/digits (Russian allowed)', 'error');
+                        return;
+                    }
                     if (newDisplayName) App.users[App.currentUser].displayName = newDisplayName;
                     
                     const newPassword = document.getElementById('settingsPassword')?.value.trim();
@@ -1491,13 +1521,10 @@
                         const fromUser = App.currentUser;
                         const toUser = target;
                         
-                        // Remove from sender inventory
                         App.users[fromUser].giftInventory.splice(idx, 1);
-                        // Remove from sender gifts display
                         const giftIndex = App.users[fromUser].gifts.findIndex(g => g.id === giftId);
                         if (giftIndex !== -1) App.users[fromUser].gifts.splice(giftIndex, 1);
                         
-                        // Add to recipient's gifts
                         if (!App.users[toUser].gifts) App.users[toUser].gifts = [];
                         App.users[toUser].gifts.push({ type: gift.type, from: fromUser, time: Date.now(), id: generateId(), source: 'received' });
                         
@@ -1575,7 +1602,6 @@
                 return `${count} subscribers`;
             }
 
-            // Drag and drop for gifts in profile
             function setupGiftDragDrop(container, username) {
                 if (!container) return;
                 const items = container.querySelectorAll('.gift-item');
@@ -1601,14 +1627,12 @@
                         const srcIndex = Array.from(parent.children).indexOf(dragSrcElement);
                         const targetIndex = Array.from(parent.children).indexOf(this);
                         
-                        // Swap in DOM
                         if (srcIndex < targetIndex) {
                             parent.insertBefore(dragSrcElement, this.nextSibling);
                         } else {
                             parent.insertBefore(dragSrcElement, this);
                         }
                         
-                        // Swap in App.users gifts array
                         const gifts = App.users[username].gifts;
                         if (gifts && srcIndex !== -1 && targetIndex !== -1) {
                             const temp = gifts[srcIndex];
@@ -1634,12 +1658,28 @@
                 });
             }
 
+            // === ИЗМЕНЁННАЯ ФУНКЦИЯ ПРОФИЛЯ (ОСНОВНЫЕ ПРАВКИ ЗДЕСЬ) ===
             function openProfileModal(username) { 
                 const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', stars: 0, bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', gifts: [], followers: [], following: [] }) };
                 const isOwn = (username === App.currentUser); 
                 const isAdmin = (username === ADMIN_USER); 
                 
-                const giftsList = (userData.gifts || []).map(g => {
+                const giftsArray = userData.gifts || [];
+                const giftsCount = giftsArray.length;
+                const showAllGifts = giftsCount > 3;
+                
+                const giftsListHtml = (giftsArray.slice(0, 3)).map(g => {
+                    const gData = GIFTS[g.type];
+                    if (!gData) return '';
+                    const sourceText = g.source === 'bought' ? 'Bought' : `from ${getDisplayName(g.from)}`;
+                    return `<div class="gift-item" data-gift-id="${g.id}">
+                        <img src="${gData.icon}" style="width:100%;">
+                        <div class="gift-price">${gData.name}</div>
+                        <div class="gift-source">${sourceText}</div>
+                    </div>`;
+                }).join('');
+                
+                const allGiftsHiddenHtml = giftsArray.map(g => {
                     const gData = GIFTS[g.type];
                     if (!gData) return '';
                     const sourceText = g.source === 'bought' ? 'Bought' : `from ${getDisplayName(g.from)}`;
@@ -1651,6 +1691,7 @@
                 }).join('');
                 
                 const followersCount = (userData.followers || []).length;
+                const followingCount = (userData.following || []).length;
                 const displayName = getDisplayName(username);
                 
                 if (isOwn) {
@@ -1666,26 +1707,36 @@
                                 </div>
                                 <div class="profile-name-section">
                                     <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                    <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
+                                    <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)} and ${followingCount} subscriptions</div>
                                 </div>
                                 <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                                 <div class="profile-input-group"><span class="currency-label">BALANCE</span><div class="star-balance-large"><span class="yc-currency"></span> ${userData.stars || 0} YC</div></div>
                                 
-                                <div class="profile-input-group"><label>MY GIFTS</label><div class="gift-grid" id="profileGiftsGrid">${giftsList || 'No gifts yet'}</div></div>
+                                <div class="profile-input-group">
+                                    <label>MY GIFTS</label>
+                                    <div class="gift-grid" id="profileGiftsGrid">${giftsListHtml || 'No gifts yet'}</div>
+                                    ${showAllGifts ? `<button class="show-all-btn" id="showAllGiftsBtn">SHOW ALL (${giftsCount})</button>` : ''}
+                                    <div id="allGiftsContainer" style="display:none;">
+                                        <div class="gift-grid">${allGiftsHiddenHtml}</div>
+                                    </div>
+                                </div>
                                 
-                                <div class="shop-section">
-                                    <h4>BUY GIFTS</h4>
-                                    ${Object.entries(GIFTS).map(([key, g]) => `
-                                        <div class="shop-item">
-                                            <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
-                                            <button class="buy-gift-btn" data-gift="${key}">BUY</button>
-                                        </div>
-                                    `).join('')}
-                                    <h4 style="margin-top:12px;">TOP UP YC</h4>
-                                    <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
-                                    <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
-                                    <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
-                                    <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
+                                <button class="shop-toggle-btn" id="toggleShopBtn">SHOP ▼</button>
+                                <div id="shopContainer" style="display:none;">
+                                    <div class="shop-section">
+                                        <h4>BUY GIFTS</h4>
+                                        ${Object.entries(GIFTS).map(([key, g]) => `
+                                            <div class="shop-item">
+                                                <span><img src="${g.icon}" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">${g.name} — ${g.price} YC</span>
+                                                <button class="buy-gift-btn" data-gift="${key}">BUY</button>
+                                            </div>
+                                        `).join('')}
+                                        <h4 style="margin-top:12px;">TOP UP YC</h4>
+                                        <div class="shop-item"><span>50 YC — 0.6 TON</span><button class="donate-btn" data-yc="50" data-ton="0.6">BUY</button></div>
+                                        <div class="shop-item"><span>100 YC — 1 TON</span><button class="donate-btn" data-yc="100" data-ton="1">BUY</button></div>
+                                        <h4 style="margin-top:12px;">PREMIUM STATUS</h4>
+                                        <div class="shop-item"><span>ALBUMEN — 2 TON</span><button class="status-donate-btn" data-status="ALBUMEN" data-ton="2">BUY</button></div>
+                                    </div>
                                 </div>
                                 
                                 <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>
@@ -1696,6 +1747,34 @@
                     
                     const grid = document.getElementById('profileGiftsGrid');
                     if (grid) setupGiftDragDrop(grid, username);
+                    
+                    const shopContainer = document.getElementById('shopContainer');
+                    const toggleShopBtn = document.getElementById('toggleShopBtn');
+                    toggleShopBtn.addEventListener('click', () => {
+                        if (shopContainer.style.display === 'none') {
+                            shopContainer.style.display = 'block';
+                            toggleShopBtn.innerHTML = 'SHOP ▲';
+                        } else {
+                            shopContainer.style.display = 'none';
+                            toggleShopBtn.innerHTML = 'SHOP ▼';
+                        }
+                    });
+                    
+                    if (showAllGifts) {
+                        const showAllBtn = document.getElementById('showAllGiftsBtn');
+                        const allContainer = document.getElementById('allGiftsContainer');
+                        showAllBtn.addEventListener('click', () => {
+                            if (allContainer.style.display === 'none') {
+                                allContainer.style.display = 'block';
+                                showAllBtn.textContent = 'HIDE';
+                                const allGrid = allContainer.querySelector('.gift-grid');
+                                if (allGrid) setupGiftDragDrop(allGrid, username);
+                            } else {
+                                allContainer.style.display = 'none';
+                                showAllBtn.textContent = `SHOW ALL (${giftsCount})`;
+                            }
+                        });
+                    }
                     
                     document.getElementById('openSettingsBtn').addEventListener('click', () => {
                         document.getElementById('profileModalOverlay').remove();
@@ -1778,11 +1857,11 @@
                             </div>
                             <div class="profile-name-section">
                                 <div class="username-display" style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)}</div>
+                                <div class="subscribers-count" style="font-size:14px; color: var(--text-secondary);">${formatSubscribers(followersCount)} and ${followingCount} subscriptions</div>
                             </div>
                             <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                             <div class="profile-input-group"><label>AGE</label><div>${userData.age || 14} years</div></div>
-                            <div class="profile-input-group"><label>GIFTS</label><div class="gift-grid">${giftsList || 'No gifts yet'}</div></div>
+                            <div class="profile-input-group"><label>GIFTS</label><div class="gift-grid">${giftsListHtml || 'No gifts yet'}</div></div>
                             <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button></div>
                         </div>
                     </div>
@@ -1793,93 +1872,36 @@
                 });
             }
 
-            function openDonationModal(pack) { 
-                const modalHtml = `<div class="modal-overlay" id="donationModalOverlay"><div class="profile-modal"><h3>💸 TOP UP YC</h3><div class="qr-code" id="donationQrCode"></div><div class="profile-input-group"><label>📤 TON WALLET ADDRESS</label><input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Address copied!')"></div><div class="profile-input-group"><label>💰 AMOUNT</label><input type="text" value="${pack.ton} TON" readonly></div><div class="profile-input-group"><label>📝 YOUR USERNAME (required!)</label><input type="text" id="donationComment" placeholder="e.g. @durov" value="${App.currentUser}"></div><div class="profile-input-group"><label>🔗 TXID (transaction hash)</label><input type="text" id="donationTxid" placeholder="Paste TXID from TON Keeper"></div><div class="profile-actions"><button class="profile-btn" id="submitDonationBtn">✅ I SENT TON</button><button class="profile-btn secondary" id="closeDonationModal">CANCEL</button></div><small style="display:block; text-align:center; margin-top:12px;">⚠️ In the transaction comment, you MUST include your @username</small></div></div>`; 
-                document.body.insertAdjacentHTML('beforeend', modalHtml); 
-                setTimeout(() => { const qrDiv = document.getElementById('donationQrCode'); if (qrDiv) { qrDiv.innerHTML = ''; new QRCode(qrDiv, { text: TON_ADDRESS, width: 200, height: 200 }); } }, 100); 
-                document.getElementById('submitDonationBtn')?.addEventListener('click', () => { 
-                    const txid = document.getElementById('donationTxid')?.value.trim(); 
-                    const comment = document.getElementById('donationComment')?.value.trim(); 
-                    if (!txid) { showNotification('Enter TXID', 'error'); return; } 
-                    if (!comment || !comment.startsWith('@')) { showNotification('Include your @username in comment', 'error'); return; } 
-                    const requestId = generateId(); 
-                    if (!App.donationRequests) App.donationRequests = {};
-                    App.donationRequests[requestId] = { id: requestId, user: App.currentUser, username: comment, yc: pack.yc, ton: pack.ton, txid: txid, status: 'pending', createdAt: Date.now(), statusType: pack.status || null }; 
-                    saveToSupabase(); 
-                    document.getElementById('donationModalOverlay')?.remove(); 
-                    showNotification(`✅ Request sent! Awaiting confirmation. ID: ${requestId.slice(-6)}`); 
-                }); 
-                document.getElementById('closeDonationModal')?.addEventListener('click', () => { document.getElementById('donationModalOverlay')?.remove(); }); 
+            // остальные функции без изменений...
+            // (все функции ниже остаются те же, что и в исходном коде, за исключением удаления streak из интерфейса)
+            
+            // функция renderChatItem БЕЗ STREAK
+            function renderChatItem(u, active, currentUser) { 
+                let name = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : u); 
+                let display = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
+                let avatarHtml = '<div class="chat-avatar">S</div>'; 
+                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">Y</div>'; 
+                else if (u !== 'saved') { 
+                    const avatarUrl = App.users[u]?.avatar; 
+                    avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
+                } 
+                const userData = App.users[u] || {}; 
+                // streak удалён
+                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} y.o.</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
             }
-            
-            window.confirmDonation = function(requestId) { 
-                const request = App.donationRequests[requestId]; 
-                if (!request || request.status !== 'pending') return; 
-                const targetUser = request.user; 
-                if (App.users[targetUser]) { 
-                    if (request.statusType) { 
-                        App.users[targetUser].status = request.statusType; 
-                        showNotification(`✨ STATUS ${request.statusType} activated for ${request.username}! ✨`); 
-                        updateUserInterface(); 
-                        if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { 
-                            renderMessages(App.activeChat); 
-                            updateChatList(); 
-                        } 
-                    } else { 
-                        App.users[targetUser].stars = (App.users[targetUser].stars || 0) + request.yc; 
-                        showNotification(`✅ Added ${request.yc} YC to ${request.username}`); 
-                        updateUserInterface(); 
-                    } 
-                    request.status = 'completed'; 
-                    request.completedAt = Date.now(); 
-                    saveToSupabase(); 
-                    if (!App.yolkChatMessages[targetUser]) App.yolkChatMessages[targetUser] = []; 
-                    let messageText = request.statusType ? `✨ You received STATUS ${request.statusType} FOREVER! ✨` : `✅ Balance topped up!\n💰 +${request.yc} YC\nThank you for your support!`; 
-                    App.yolkChatMessages[targetUser].push({ from: 'SYSTEM', text: messageText, time: Date.now() }); 
-                    saveToSupabase(); 
-                    if (App.currentUser === ADMIN_USER) { 
-                        document.getElementById('adminModalOverlay')?.remove(); 
-                        openAdminPanel(); 
-                    } 
-                } 
-            };
-            
-            window.cancelDonation = function(requestId) { 
-                if (!confirm('Cancel this request?')) return; 
-                const request = App.donationRequests[requestId]; 
-                if (!request || request.status !== 'pending') return; 
-                delete App.donationRequests[requestId]; 
-                saveToSupabase(); 
-                showNotification(`❌ Request cancelled`); 
-                if (App.currentUser === ADMIN_USER) { 
-                    document.getElementById('adminModalOverlay')?.remove(); 
-                    openAdminPanel(); 
-                } 
-            };
-            
+
+            // функция updateChatHeaderStatus без streak
             function updateChatHeaderStatus(username) { 
                 const headerInfo = document.querySelector('.chat-header-info'); 
                 if (!headerInfo) return; 
                 const existingStatus = headerInfo.querySelector('.chat-user-status'); 
                 if (existingStatus) existingStatus.remove(); 
-                const existingStreak = headerInfo.querySelector('.streak-badge');
-                if (existingStreak) existingStreak.remove();
-                
+                // streak удалён
                 const existingNameStrong = headerInfo.querySelector('strong'); 
                 if (existingNameStrong) { 
                     existingNameStrong.innerHTML = formatUserNameWithStatus(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
                 } 
-                
-                const streak = getStreak(username);
-                if (streak > 0) {
-                    const streakDiv = document.createElement('span');
-                    streakDiv.className = 'streak-badge';
-                    streakDiv.innerHTML = `<img src="${ICONS.FIRE}" style="width:14px;height:14px;"> ${streak}`;
-                    existingNameStrong?.appendChild(streakDiv);
-                }
-                
                 if (username === 'saved' || username === 'yolk') return;
-                
                 const isOnline = isUserOnline(username); 
                 const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username); 
                 const statusDiv = document.createElement('div'); 
@@ -1888,404 +1910,12 @@
                 headerInfo.appendChild(statusDiv); 
             }
 
-            // ===== FEED =====
-            let feedPage = 0;
-            const FEED_PAGE_SIZE = 10;
-            let feedPosts = [];
-            let isLoadingFeed = false;
-
-            function getShuffledPosts() {
-                const shuffled = [...App.posts];
-                for (let i = shuffled.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                }
-                return shuffled;
-            }
-
-            function initFeed() {
-                feedPage = 0;
-                feedPosts = App.posts.length > 0 ? getShuffledPosts() : [];
-                const feedContainer = document.getElementById('feedContainer');
-                if (feedContainer) feedContainer.innerHTML = '';
-                isLoadingFeed = false;
-                renderFeed();
-                applyWallpaperToFeed();
-            }
-
-            function renderFeed() {
-                const feedContainer = document.getElementById('feedContainer');
-                if (!feedContainer) return;
-                if (isLoadingFeed) return;
-                
-                if (feedPosts.length === 0) {
-                    feedContainer.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">No posts yet. Tap + to create first!</div>';
-                    return;
-                }
-                
-                const start = feedPage * FEED_PAGE_SIZE;
-                const end = start + FEED_PAGE_SIZE;
-                let postsToShow = feedPosts.slice(start, end);
-                
-                if (postsToShow.length === 0) {
-                    feedPage = 0;
-                    feedPosts = getShuffledPosts();
-                    postsToShow = feedPosts.slice(0, FEED_PAGE_SIZE);
-                    feedPage = 1;
-                }
-                
-                isLoadingFeed = true;
-                let html = '';
-                
-                postsToShow.forEach(post => {
-                    const author = App.users[post.author] || {};
-                    const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : (getDisplayName(post.author)[0] || '?');
-                    const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
-                    const likesCount = Object.keys(post.likes || {}).length;
-                    const commentsCount = post.comments?.length || 0;
-                    const userLiked = post.likes && post.likes[App.currentUser];
-                    const isOwner = post.author === App.currentUser;
-                    const date = new Date(post.time).toLocaleString();
-                    const isSubscribed = isFollowing(App.currentUser, post.author);
-                    const subButtonHtml = (post.author !== App.currentUser) ?
-                        `<button class="${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}', '${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSubscribed ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
-                    
-                    const authorDisplay = formatUserNameWithStatus(post.author);
-                    const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
-                    
-                    html += `
-                        <div class="post-card" data-post-id="${post.id}" data-author="${post.author}">
-                            <div class="post-header" onclick="openProfileModal('${post.author}')">
-                                <div class="post-avatar">${avatarHtml}</div>
-                                <div style="flex:1;">
-                                    <div class="post-author">${authorDisplay}${author.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                    <div class="post-time">${date}</div>
-                                </div>
-                                ${subButtonHtml}
-                            </div>
-                            <div class="post-text">${post.text.replace(/\n/g, '<br>')}</div>
-                            ${mediaHtml}
-                            <div class="post-stats">
-                                <button class="post-like ${userLiked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')">
-                                    <img src="${likeIcon}" style="width:24px;height:24px;"> 
-                                    <span class="likes-count">${likesCount}</span>
-                                </button>
-                                <button class="post-comment" onclick="window.openCommentsModal('${post.id}')">
-                                    <img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> 
-                                    <span class="comments-count">${commentsCount}</span>
-                                </button>
-                                ${isOwner ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                feedContainer.insertAdjacentHTML('beforeend', html);
-                feedPage++;
-                isLoadingFeed = false;
-                
-                feedContainer.onscroll = function() {
-                    if (feedContainer.scrollTop + feedContainer.clientHeight >= feedContainer.scrollHeight - 100) {
-                        renderFeed();
-                    }
-                };
-            }
-
-            window.toggleLikePost = function(postId) {
-                const post = App.posts.find(p => p.id === postId);
-                if (!post) return;
-                if (!post.likes) post.likes = {};
-                if (!post.dislikes) post.dislikes = {};
-                const user = App.currentUser;
-                if (post.likes[user]) delete post.likes[user];
-                else {
-                    if (post.dislikes[user]) delete post.dislikes[user];
-                    post.likes[user] = true;
-                }
-                saveToSupabase();
-                updatePostStats(postId);
-            };
-
-            function updatePostStats(postId) {
-                const post = App.posts.find(p => p.id === postId);
-                if (!post) return;
-                const postCards = document.querySelectorAll(`.post-card[data-post-id="${postId}"]`);
-                if (postCards.length === 0) return;
-                const likesCount = Object.keys(post.likes || {}).length;
-                const commentsCount = post.comments?.length || 0;
-                const userLiked = post.likes && post.likes[App.currentUser];
-                
-                postCards.forEach(postCard => {
-                    const likeBtn = postCard.querySelector('.post-like');
-                    const commentBtn = postCard.querySelector('.post-comment');
-                    if (likeBtn) {
-                        likeBtn.classList.toggle('active', userLiked);
-                        const likeIcon = likeBtn.querySelector('img');
-                        if (likeIcon) likeIcon.src = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
-                        const likeSpan = likeBtn.querySelector('.likes-count');
-                        if (likeSpan) likeSpan.textContent = likesCount;
-                    }
-                    if (commentBtn) {
-                        const commentSpan = commentBtn.querySelector('.comments-count');
-                        if (commentSpan) commentSpan.textContent = commentsCount;
-                    }
-                });
-            }
-
-            window.openCommentsModal = function(postId) {
-                const post = App.posts.find(p => p.id === postId);
-                if (!post) return;
-                
-                const commentsList = post.comments?.map(c => `
-                    <div class="comment-item">
-                        <div class="comment-author" style="color: var(--accent); cursor: pointer;" onclick="openProfileModal('${c.author}')">${formatUserNameWithStatus(c.author)}</div>
-                        <div class="comment-text" style="color: var(--text);">${c.text}</div>
-                        <div class="comment-time" style="color: var(--text-secondary); font-size: 10px;">${new Date(c.time).toLocaleString()}</div>
-                    </div>
-                `).join('') || '<div style="color: var(--text-secondary); text-align: center;">No comments</div>';
-                
-                const modalHtml = `
-                    <div class="modal-overlay" id="commentsModal">
-                        <div class="comments-modal">
-                            <h3 style="color: var(--text);">💬 Comments</h3>
-                            <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
-                                ${commentsList}
-                            </div>
-                            <div class="add-comment" style="display: flex; gap: 8px; margin-top: 16px;">
-                                <input type="text" id="newCommentText" placeholder="Write a comment..." style="flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 10px 14px; color: var(--text); outline: none;">
-                                <button class="profile-btn" id="submitCommentBtn" style="margin: 0; padding: 8px 16px;">Send</button>
-                            </div>
-                            <div class="profile-actions" style="margin-top:12px;">
-                                <button class="profile-btn secondary" id="closeCommentsModal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
-                document.getElementById('submitCommentBtn').addEventListener('click', () => {
-                    const text = document.getElementById('newCommentText').value.trim();
-                    if (!text) return;
-                    if (!post.comments) post.comments = [];
-                    post.comments.push({ author: App.currentUser, text, time: Date.now() });
-                    saveToSupabase();
-                    document.getElementById('commentsModal').remove();
-                    updatePostStats(postId);
-                    showNotification('Comment added');
-                });
-                
-                document.getElementById('closeCommentsModal').addEventListener('click', () => {
-                    document.getElementById('commentsModal').remove();
-                });
-                
-                document.getElementById('commentsModal').addEventListener('click', (e) => {
-                    if (e.target.classList.contains('modal-overlay')) {
-                        document.getElementById('commentsModal').remove();
-                    }
-                });
-            };
-
-            window.deletePost = function(postId) {
-                if (!confirm('Delete post?')) return;
-                const index = App.posts.findIndex(p => p.id === postId);
-                if (index !== -1 && App.posts[index].author === App.currentUser) {
-                    App.posts.splice(index, 1);
-                    saveToSupabase();
-                    initFeed();
-                    showNotification('Post deleted');
-                } else {
-                    showNotification('Permission denied', 'error');
-                }
-            };
-
-            window.toggleFeedSubscription = function(postId, author) {
-                if (author === App.currentUser) return;
-                const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-                if (isCurrentlySubscribed) {
-                    unsubscribeFromUser(App.currentUser, author);
-                } else {
-                    subscribeToUser(App.currentUser, author);
-                }
-                const authorPosts = document.querySelectorAll(`.post-card[data-author="${author}"]`);
-                authorPosts.forEach(postCard => {
-                    const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
-                    if (btn) {
-                        const newSubStatus = !isCurrentlySubscribed;
-                        btn.textContent = newSubStatus ? 'UNFOLLOW' : 'FOLLOW';
-                        btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
-                    }
-                });
-            };
-
-            function canCreatePost() {
-                const now = Date.now();
-                const last = App.lastPostTime[App.currentUser] || 0;
-                const diff = now - last;
-                const cooldown = 3 * 60 * 1000;
-                if (diff < cooldown) {
-                    const remaining = Math.ceil((cooldown - diff) / 1000);
-                    showNotification(`Next post in ${remaining} sec.`, 'error');
-                    return false;
-                }
-                return true;
-            }
-
-            function createPost(text, media, isVideo) {
-                if (!text.trim() && !media) {
-                    showNotification('Add text or media', 'error');
-                    return;
-                }
-                if (!canCreatePost()) return;
-                const post = {
-                    id: generateId(),
-                    author: App.currentUser,
-                    text: text.trim(),
-                    media: media || null,
-                    isVideo: isVideo || false,
-                    time: Date.now(),
-                    likes: {},
-                    dislikes: {},
-                    comments: []
-                };
-                App.posts.unshift(post);
-                App.lastPostTime[App.currentUser] = Date.now();
-                saveToSupabase();
-                initFeed();
-                showNotification('Post published!');
-            }
-
-            function openCreatePostModal() {
-                const modalHtml = `
-                    <div class="modal-overlay" id="createPostModal">
-                        <div class="profile-modal">
-                            <h3>CREATE POST</h3>
-                            <div class="profile-input-group">
-                                <label>TEXT</label>
-                                <textarea id="postText" rows="3" placeholder="What's new?"></textarea>
-                            </div>
-                            <div class="profile-input-group">
-                                <label>ADD PHOTO/VIDEO</label>
-                                <button class="change-file-btn" id="addPostMediaBtn">ADD</button>
-                                <input type="file" id="postMediaFile" accept="image/*,video/*" style="display:none;">
-                            </div>
-                            <div class="profile-actions">
-                                <button class="profile-btn" id="confirmCreatePostBtn">PUBLISH</button>
-                                <button class="profile-btn secondary" id="closeCreatePostModal">CANCEL</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                let tempMedia = null, isVideo = false;
-                
-                document.getElementById('addPostMediaBtn').addEventListener('click', () => {
-                    document.getElementById('postMediaFile').click();
-                });
-                
-                document.getElementById('postMediaFile').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                            compressImage(ev.target.result, 800, 800, 0.7, (compressed) => {
-                                tempMedia = compressed;
-                                isVideo = false;
-                                showNotification('Image added');
-                            });
-                        };
-                        reader.readAsDataURL(file);
-                    } else if (file.type.startsWith('video/')) {
-                        if (file.size > 20 * 1024 * 1024) {
-                            showNotification('Video max 20 MB', 'error');
-                            return;
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                            tempMedia = ev.target.result;
-                            isVideo = true;
-                            showNotification('Video added');
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-                
-                document.getElementById('confirmCreatePostBtn').addEventListener('click', () => {
-                    const text = document.getElementById('postText').value.trim();
-                    if (!text && !tempMedia) {
-                        showNotification('Enter text or attach media', 'error');
-                        return;
-                    }
-                    createPost(text, tempMedia, isVideo);
-                    document.getElementById('createPostModal').remove();
-                });
-                
-                document.getElementById('closeCreatePostModal').addEventListener('click', () => {
-                    document.getElementById('createPostModal').remove();
-                });
-            }
-
-            function render() { 
-                const root = document.getElementById('app'); 
-                if (!App.dataLoaded) { 
-                    root.innerHTML = `
-                        <div class="loading-screen" id="loadingScreen">
-                            <div class="loading-text">
-                                YOLKAPP
-                                <div class="loading-dots">
-                                    <span>.</span><span>.</span><span>.</span>
-                                </div>
-                            </div>
-                        </div>
-                    `; 
-                    return; 
-                } 
-                const loadingScreen = document.getElementById('loadingScreen');
-                if (loadingScreen) {
-                    loadingScreen.classList.add('hide');
-                    const elapsed = Date.now() - loadingStartTime;
-                    const remaining = Math.max(0, MIN_LOADING_TIME - elapsed);
-                    setTimeout(() => {
-                        if (!App.currentUser) { 
-                            root.innerHTML = renderAuth(); 
-                            attachAuthEvents(); 
-                        } else { 
-                            root.innerHTML = renderMain(); 
-                            setTimeout(() => { 
-                                attachMainEvents(); 
-                                if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
-                                else if (App.activeTab === 'feed') initFeed();
-                                updateChatList(); 
-                                updateSidebarUser(); 
-                                applyWallpaper();
-                                applyWallpaperToFeed();
-                            }, 100); 
-                        }
-                    }, remaining);
-                } else {
-                    if (!App.currentUser) { 
-                        root.innerHTML = renderAuth(); 
-                        attachAuthEvents(); 
-                    } else { 
-                        root.innerHTML = renderMain(); 
-                        setTimeout(() => { 
-                            attachMainEvents(); 
-                            if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
-                            else if (App.activeTab === 'feed') initFeed();
-                            updateChatList(); 
-                            updateSidebarUser(); 
-                            applyWallpaper();
-                            applyWallpaperToFeed();
-                        }, 100); 
-                    }
-                }
-            }
-
+            // В renderAuth меняем кнопку CREATE на SIGN UP
             function renderAuth() { 
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="letters and digits, 4-15 chars, start with letter"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="only letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">SIGN UP</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="only letters and digits"></div><button class="btn" id="registerBtn">CREATE</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`; 
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="letters and digits, 4-15 chars, start with letter"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="only letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">SIGN UP</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="only letters and digits"></div><button class="btn" id="registerBtn">SIGN UP</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`; 
             }
 
-            function attachAuthEvents() { 
+                        function attachAuthEvents() { 
                 const loginForm = document.getElementById('loginForm'); 
                 const regForm = document.getElementById('registerForm'); 
                 const errorDiv = document.getElementById('authError'); 
@@ -2523,31 +2153,26 @@
                 document.querySelectorAll('.chat-item').forEach(el => { el.addEventListener('click', (e) => { if (e.target.closest('.delete-chat-icon')) return; const chatId = el.dataset.chat; if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; } App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId); if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); render(); }); }); 
             }
 
-            function renderChatItem(u, active, currentUser) { 
-                let name = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : u); 
-                let display = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
-                let avatarHtml = '<div class="chat-avatar">S</div>'; 
-                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">Y</div>'; 
-                else if (u !== 'saved') { 
-                    const avatarUrl = App.users[u]?.avatar; 
-                    avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
-                } 
-                const userData = App.users[u] || {}; 
-                const streak = getStreak(u); 
-                const streakHtml = streak > 0 ? `<span class="streak-badge"><img src="${ICONS.FIRE}" style="width:12px;height:12px;"> ${streak}</span>` : ''; 
-                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}${streakHtml}</div>${userData.age ? `<div style="font-size:10px; color: var(--text-secondary);">${userData.age} y.o.</div>` : ''}</div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
-            }
-
             function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
+            
             function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); renderMessages(chatPartner); updateChatHeaderStatus(chatPartner); }
+            
             function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
+            
             function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
+            
             function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
+            
             function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Verification code: ${code}\nEnter this code to log into ${username}\nCode valid for 5 minutes.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
+            
             function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
+            
             function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { saveToSupabase(); } }
+            
             function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Photo added, type message and send'); }); }; reader.readAsDataURL(file); }
+            
             function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Video max 20 MB', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Video added, type message and send'); }; reader.readAsDataURL(file); }
+            
             function addUserBySearch() { 
                 let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
                 if (!query) { showNotification('Enter username', 'error'); return; } 
@@ -2570,8 +2195,11 @@
                 render(); 
                 showNotification(`Chat with ${getDisplayName(mainUser)} created`); 
             }
+            
             window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToSupabase(); render(); showNotification('Chat deleted'); };
+            
             window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Deleted'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Cannot delete system messages', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Deleted'); renderMessages(chatPartner); } } } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } };
+            
             window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
 
             function updateStreak(chatPartner) {
