@@ -267,7 +267,6 @@
         body.light-theme .tiny-btn,
         body.light-theme .inline-btn,
         body.light-theme .profile-btn,
-        body.light-theme .btn,
         body.light-theme .subscribe-btn,
         body.light-theme .unsubscribe-btn,
         body.light-theme .like-btn,
@@ -739,7 +738,6 @@
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
         }
-        /* нижняя панель всегда видна */
         .bottom-nav {
             display: flex;
         }
@@ -787,7 +785,7 @@
             const App = { 
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
-                savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
+                userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
                 privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null,
                 typingTimeouts: {}, lastPostTime: {} 
             };
@@ -849,7 +847,6 @@
                                 }
                                 if (newData.chats) App.chats = newData.chats;
                                 if (newData.blocked) App.blocked = newData.blocked;
-                                if (newData.yolkChatMessages) App.yolkChatMessages = newData.yolkChatMessages;
                                 if (newData.privacySettings) App.privacySettings = newData.privacySettings;
                                 if (newData.posts) App.posts = newData.posts;
                                 
@@ -876,7 +873,6 @@
                     users: App.users,
                     chats: App.chats,
                     blocked: App.blocked,
-                    yolkChatMessages: App.yolkChatMessages,
                     privacySettings: App.privacySettings,
                     posts: App.posts
                 };
@@ -908,7 +904,6 @@
                         }
                         if (state.chats) App.chats = state.chats;
                         if (state.blocked) App.blocked = state.blocked;
-                        if (state.yolkChatMessages) App.yolkChatMessages = state.yolkChatMessages;
                         if (state.privacySettings) App.privacySettings = state.privacySettings;
                         if (state.posts) App.posts = state.posts;
                         
@@ -916,7 +911,6 @@
                             users: App.users, chats: App.chats, blocked: App.blocked
                         }));
                         
-                        if (state.yolkChatMessages) saveYolkChatMessages();
                         if (state.privacySettings) savePrivacySettings();
                     } else {
                         console.warn('⚠️ Could not load data from Supabase. Using cache.');
@@ -951,9 +945,7 @@
                 
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
-                    App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat]) ? savedChat : 'saved';
-                    loadSavedMessages();
-                    loadYolkChatMessages();
+                    App.activeChat = savedChat && App.users[savedChat] ? savedChat : null;
                     loadPrivacySettings();
                     
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
@@ -1061,7 +1053,7 @@
             }
 
             function sendTypingIndicator(toUser) {
-                if (!toUser || toUser === 'saved' || toUser === 'yolk') return;
+                if (!toUser) return;
                 const chatId = [App.currentUser, toUser].sort().join('_');
                 if (App.typingTimeouts[chatId]) clearTimeout(App.typingTimeouts[chatId]);
                 App.typingTimeouts[chatId] = setTimeout(() => {}, 2000);
@@ -1101,7 +1093,6 @@
                 
                 let pendingTheme = currentTheme;
                 let pendingPrivacy = currentPrivacy;
-                let pendingTwoFA = userData.twoFA || false;
                 let pendingDisplayName = userData.displayName || getDisplayName(App.currentUser);
                 let pendingEmail = userData.email || `${App.currentUser.substring(1)}@yolkapp.com`;
                 
@@ -1114,17 +1105,19 @@
                                 <div>
                                     <div style="font-weight: bold; font-size: 18px;">${formatUserNameWithStatus(App.currentUser)}</div>
                                     <div style="color: var(--text-secondary);">${followersCount} followers · ${followingCount} following</div>
-                                    <div>Age: ${userData.age || 14}</div>
                                 </div>
                             </div>
-                            <button class="change-file-btn" id="editProfileDetailsBtn" style="margin-bottom: 16px;">✏️ EDIT PROFILE</button>
+                            <div class="profile-input-group">
+                                <label>USERNAME</label>
+                                <input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2);">
+                            </div>
                             <div class="profile-input-group">
                                 <label>EMAIL</label>
                                 <input type="email" id="settingsEmail" value="${pendingEmail}" placeholder="example@mail.com">
                             </div>
                             <div class="profile-input-group">
-                                <label>DISPLAY NAME (up to 6 chars)</label>
-                                <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Your name">
+                                <label>DISPLAY NAME (up to 9 chars)</label>
+                                <input type="text" id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}" placeholder="Your name">
                             </div>
                             <div class="profile-input-group">
                                 <label>PASSWORD</label>
@@ -1132,14 +1125,6 @@
                                     <input type="password" id="settingsPassword" value="${userData.password || ''}">
                                     <button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button>
                                 </div>
-                            </div>
-                            <div class="profile-input-group">
-                                <label>BIO (max 50)</label>
-                                <textarea id="settingsBio" maxlength="50">${userData.bio || ''}</textarea>
-                            </div>
-                            <div class="profile-input-group">
-                                <label>AGE</label>
-                                <input type="number" id="settingsAge" min="5" max="99" value="${userData.age || 14}">
                             </div>
                             <div class="profile-input-group">
                                 <label>AVATAR</label>
@@ -1165,17 +1150,13 @@
                                     <span class="toggle-label">${pendingPrivacy ? 'Strangers cannot message first' : 'Everyone can message first'}</span>
                                 </div>
                             </div>
-                            <div class="profile-input-group">
-                                <label>TWO-FACTOR AUTH</label>
-                                <div class="toggle-switch ${pendingTwoFA ? 'active' : ''}" id="settingsTwoFAToggle">
-                                    <div class="toggle-checkbox"></div>
-                                    <span class="toggle-label">${pendingTwoFA ? 'Enabled' : 'Disabled'}</span>
-                                </div>
-                            </div>
                             
                             <div class="profile-actions">
                                 <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
                                 <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
+                            </div>
+                            <div class="profile-actions">
+                                <button class="profile-btn logout" id="logoutFromSettingsBtn">LOGOUT</button>
                             </div>
                         </div>
                     </div>
@@ -1228,10 +1209,6 @@
                     reader.readAsDataURL(file);
                 });
                 
-                document.getElementById('editProfileDetailsBtn').addEventListener('click', () => {
-                    // Already in edit mode, just scroll to inputs
-                });
-                
                 const themeToggle = document.getElementById('themeToggle');
                 if (themeToggle) {
                     themeToggle.addEventListener('click', () => {
@@ -1255,17 +1232,6 @@
                     });
                 }
                 
-                const twoFAToggle = document.getElementById('settingsTwoFAToggle');
-                if (twoFAToggle) {
-                    twoFAToggle.addEventListener('click', () => {
-                        const newState = !pendingTwoFA;
-                        pendingTwoFA = newState;
-                        twoFAToggle.classList.toggle('active', newState);
-                        const labelSpan = twoFAToggle.querySelector('.toggle-label');
-                        labelSpan.textContent = newState ? 'Enabled' : 'Disabled';
-                    });
-                }
-                
                 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
                     const newEmail = document.getElementById('settingsEmail')?.value.trim();
                     if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) {
@@ -1279,16 +1245,13 @@
                     if (newEmail) App.users[App.currentUser].email = newEmail;
                     
                     const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
-                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
-                        showNotification('Display name must be 1-6 letters/digits', 'error');
+                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,9}$/.test(newDisplayName)) {
+                        showNotification('Display name must be 1-9 letters/digits', 'error');
                         return;
                     }
                     if (newDisplayName) App.users[App.currentUser].displayName = newDisplayName;
                     
                     const newPassword = document.getElementById('settingsPassword')?.value.trim();
-                    const newBio = document.getElementById('settingsBio')?.value.trim().slice(0, 50);
-                    const newAge = parseInt(document.getElementById('settingsAge')?.value);
-                    
                     if (newPassword) {
                         if (!/^[A-Za-z0-9]+$/.test(newPassword)) {
                             showNotification('Password must contain only Latin letters and digits', 'error');
@@ -1296,8 +1259,6 @@
                         }
                         App.users[App.currentUser].password = newPassword;
                     }
-                    if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
-                    if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                     if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                     if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                     
@@ -1306,11 +1267,6 @@
                     }
                     if (pendingPrivacy !== currentPrivacy) {
                         updatePrivacySetting(pendingPrivacy);
-                    }
-                    if (pendingTwoFA !== (userData.twoFA || false)) {
-                        App.users[App.currentUser].twoFA = pendingTwoFA;
-                        saveToSupabase();
-                        showNotification(pendingTwoFA ? '2FA enabled' : '2FA disabled');
                     }
                     
                     saveToSupabase();
@@ -1324,6 +1280,15 @@
                 
                 document.getElementById('closeSettingsBtn').addEventListener('click', () => {
                     document.getElementById('settingsModalOverlay').remove();
+                });
+                
+                document.getElementById('logoutFromSettingsBtn').addEventListener('click', () => {
+                    document.getElementById('settingsModalOverlay').remove();
+                    App.currentUser = null;
+                    App.activeChat = null;
+                    localStorage.removeItem('yolk_current_user');
+                    localStorage.removeItem('yolk_active_chat');
+                    render();
                 });
             }
 
@@ -1343,7 +1308,6 @@
             }
 
             function formatLastSeen(lastSeen, chatPartner) {
-                if (chatPartner === 'saved' || chatPartner === 'yolk') return '';
                 if (!lastSeen) return 'long ago';
                 const now = Date.now();
                 const diff = now - lastSeen;
@@ -1399,7 +1363,7 @@
             
             function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
             
-            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToSupabase(); } return chatId; }
+            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToSupabase(); } return chatId; }
 
             function ensureUserFollowData(username) {
                 if (!App.users[username]) return;
@@ -1468,7 +1432,7 @@
             }
 
             function openProfileModal(username) { 
-                const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', followers: [], following: [] }) };
+                const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', bio: '', verified: false, status: null, age: 14, chatWallpaper: '', followers: [], following: [] }) };
                 const isOwn = (username === App.currentUser); 
                 const followersCount = (userData.followers || []).length;
                 const followingCount = (userData.following || []).length;
@@ -1487,9 +1451,7 @@
                             <div class="profile-name-section">
                                 <div style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                 <div style="font-size:14px; color: var(--text-secondary);">${followersCount} followers · ${followingCount} following</div>
-                                <div>Age: ${userData.age || 14}</div>
                             </div>
-                            <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                             ${!isOwn ? `<div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button></div>` : ''}
                             ${isOwn ? `<div class="profile-actions"><button class="profile-btn" id="editProfileFromModalBtn">EDIT</button><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>` : ''}
                         </div>
@@ -1506,7 +1468,6 @@
                         document.getElementById('profileModalOverlay').remove();
                         App.currentUser = null;
                         App.activeChat = null;
-                        App.savedMessages = {};
                         localStorage.removeItem('yolk_current_user');
                         localStorage.removeItem('yolk_active_chat');
                         render();
@@ -1882,7 +1843,7 @@
                             root.innerHTML = renderMain(); 
                             setTimeout(() => { 
                                 attachMainEvents(); 
-                                if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
+                                if (App.activeTab === 'chats' && App.activeChat) renderMessages(App.activeChat);
                                 else if (App.activeTab === 'feed') initFeed();
                                 updateChatList(); 
                                 updateSidebarUser(); 
@@ -1899,7 +1860,7 @@
                         root.innerHTML = renderMain(); 
                         setTimeout(() => { 
                             attachMainEvents(); 
-                            if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
+                            if (App.activeTab === 'chats' && App.activeChat) renderMessages(App.activeChat);
                             else if (App.activeTab === 'feed') initFeed();
                             updateChatList(); 
                             updateSidebarUser(); 
@@ -1938,30 +1899,13 @@
                         return; 
                     } 
                     const user = App.users[mainUsername]; 
-                    function loginSuccess() { 
-                        App.currentUser = mainUsername; 
-                        localStorage.setItem('yolk_current_user', mainUsername); 
-                        loadSavedMessages(); 
-                        loadYolkChatMessages(); 
-                        loadPrivacySettings(); 
-                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
-                        App.lastSeenInterval = setInterval(() => { updateLastSeen(mainUsername); }, 30000); 
-                        updateLastSeen(mainUsername); 
-                        render(); 
-                    } 
-                    if (user.twoFA) { 
-                        send2FACode(mainUsername); 
-                        const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Two-Factor Authentication</h3><p>A code was sent to your YOLK chat</p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">VERIFY</button><div class="resend-link" id="resend2FACode">Resend code</div><div id="twoFactorError" class="auth-error"></div></div></div>`; 
-                        document.body.insertAdjacentHTML('beforeend', modalHtml); 
-                        document.getElementById('verify2FABtn').addEventListener('click', () => { 
-                            const inputCode = document.getElementById('twoFactorCode').value.trim(); 
-                            if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Enter code'; return; } 
-                            if (verify2FACode(mainUsername, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } 
-                            else { document.getElementById('twoFactorError').textContent = 'Invalid or expired code'; } 
-                        }); 
-                        document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(mainUsername); showNotification('New code sent to your YOLK chat', 'success'); }); 
-                        document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); 
-                    } else { loginSuccess(); } 
+                    App.currentUser = mainUsername; 
+                    localStorage.setItem('yolk_current_user', mainUsername); 
+                    loadPrivacySettings(); 
+                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
+                    App.lastSeenInterval = setInterval(() => { updateLastSeen(mainUsername); }, 30000); 
+                    updateLastSeen(mainUsername); 
+                    render(); 
                 }); 
                 document.getElementById('registerBtn')?.addEventListener('click', () => { 
                     let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
@@ -1974,11 +1918,9 @@
                     const clean = '@' + username; 
                     if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! Username already taken'; return; } 
                     if (isEmailTaken(email)) { errorDiv.innerText = '! Email already used'; return; }
-                    const newUser = { password: pass, avatar: null, banner: null, bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
+                    const newUser = { password: pass, avatar: null, banner: null, verified: false, status: null, age: 14, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
                     App.users[clean] = newUser;
                     App.currentUser = clean; 
-                    App.savedMessages[clean] = []; 
-                    saveSavedMessages(); 
                     localStorage.setItem('yolk_current_user', clean); 
                     saveToSupabase().then(() => {
                         render(); 
@@ -1992,11 +1934,11 @@
                 const userData = App.users[user] || {}; 
                 const isChatsActive = App.activeTab === 'chats'; 
                 let blockedMessage = '';
-                if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
+                if (App.activeChat && !canUserMessage(user, App.activeChat)) {
                     blockedMessage = 'This user does not accept messages from strangers';
                 }
                 
-                const chatTitle = App.activeChat === 'saved' ? 'SAVED' : (App.activeChat === 'yolk' ? 'YOLK' : formatUserNameWithStatus(App.activeChat));
+                const chatTitle = formatUserNameWithStatus(App.activeChat);
                 const followersCount = (userData.followers || []).length;
                 const followingCount = (userData.following || []).length;
                 
@@ -2016,11 +1958,11 @@
                         </div>
                         <div class="chat-area">
                             <div class="chat-header">
-                                <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatTitle}${!App.channels && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                                <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' ? `<button class="tiny-btn" id="viewProfileBtn">PROFILE</button>` : ''}</div>
+                                <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatTitle}${App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                                <div class="chat-actions"><button class="tiny-btn" id="viewProfileBtn">PROFILE</button></div>
                             </div>
                             <div class="messages-container" id="messageList"></div>
-                            ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'NOTE...' : 'MESSAGE...'}" autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>This is a system chat, you cannot send messages</small></div>'}
+                            ${canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="MESSAGE..." autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`}
                         </div>
                         ` : `
                         <div class="feed-container" id="feedContainer"></div>
@@ -2038,7 +1980,7 @@
 
             function attachMainEvents() { 
                 const backBtn = document.getElementById('backBtn'); if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); });
-                const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { openProfileModal(App.activeChat); } });
+                const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat) { openProfileModal(App.activeChat); } });
                 const sendBtn = document.getElementById('sendMsgBtn'); if (sendBtn) sendBtn.addEventListener('click', sendMessage);
                 const fileUpload = document.getElementById('fileUpload'); const videoUpload = document.getElementById('videoUpload'); if (fileUpload) fileUpload.addEventListener('change', handleFileSelect); if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect);
                 const addUserBtn = document.getElementById('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
@@ -2060,17 +2002,20 @@
                 });
                 
                 document.getElementById('premiumTab')?.addEventListener('click', () => {
-                    // Покупка премиум статуса ALBUMEN
                     const modalHtml = `
                         <div class="modal-overlay" id="premiumModal">
                             <div class="profile-modal">
-                                <h3>✨ PREMIUM STATUS</h3>
-                                <p style="margin-bottom: 16px;">Get ALBUMEN status for 2 TON</p>
+                                <h3>PREMIUM STATUS</h3>
+                                <p style="margin-bottom: 16px;">PERMANENT PREMIUM SUBSCRIPTION, INCLUDES:</p>
+                                <ul style="margin-left: 20px; margin-bottom: 20px; color: var(--text);">
+                                    <li>1. BLUE NICK</li>
+                                    <li>2. YOUR POSTS WILL BE MORE OFTEN IN RECOMMENDATIONS</li>
+                                </ul>
+                                <p style="margin-bottom: 8px;">Send 2 TON to:</p>
                                 <div class="profile-input-group">
-                                    <label>TON ADDRESS</label>
                                     <input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Address copied!')">
                                 </div>
-                                <p style="font-size: 14px;">Send exactly 2 TON to the address above. After payment, contact support with TXID.</p>
+                                <p style="font-size: 14px; margin-top: 8px;">After payment, please wait 1-2 days for activation.</p>
                                 <div class="profile-actions">
                                     <button class="profile-btn secondary" id="closePremiumModal">CLOSE</button>
                                 </div>
@@ -2095,7 +2040,7 @@
                 if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Enter message or select file', 'error'); return; } 
                 const from = App.currentUser; 
                 const to = App.activeChat; 
-                if (!to || to === 'yolk') { showNotification('Cannot send here', 'error'); return; } 
+                if (!to) { showNotification('Select a chat', 'error'); return; } 
                 if (!canUserMessage(from, to)) { showNotification('You cannot message this user', 'error'); return; } 
                 try { 
                     let mediaData = null; 
@@ -2103,21 +2048,12 @@
                     if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } 
                     else if (App.tempPhoto) { mediaData = App.tempPhoto; } 
                     const message = { from, text: text || '', time: Date.now(), photo: mediaData, isVideo: isVideoMsg, likes: {}, dislikes: {} };
-                    if (to === 'saved') { 
-                        if (!App.savedMessages[from]) App.savedMessages[from] = []; 
-                        App.savedMessages[from].push(message); 
-                        saveSavedMessages(); 
-                        showNotification('Saved'); 
-                        renderMessages('saved'); 
-                        playHappySound(); 
-                    } else { 
-                        const chatId = [from, to].sort().join('_'); 
-                        if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
-                        App.chats[chatId].messages.push(message); 
-                        saveToSupabase(); 
-                        renderMessages(to); 
-                        playHappySound(); 
-                    } 
+                    const chatId = [from, to].sort().join('_'); 
+                    if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
+                    App.chats[chatId].messages.push(message); 
+                    saveToSupabase(); 
+                    renderMessages(to); 
+                    playHappySound(); 
                     if (textInput) textInput.value = ''; 
                     App.tempPhoto = null; 
                     App.tempVideo = null; 
@@ -2133,25 +2069,22 @@
                 const messagesContainer = document.getElementById('messageList'); 
                 if (!messagesContainer) return; 
                 let messages = []; 
-                if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || []; 
-                else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || []; 
-                else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; } 
+                const chatId = [App.currentUser, chatPartner].sort().join('_'); 
+                const chat = App.chats[chatId]; 
+                messages = chat ? chat.messages : []; 
                 let html = ''; 
                 if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); }); 
-                else { if (chatPartner === 'yolk') html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">Login codes will appear here</div>'; else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">No messages</div>'; } 
+                else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">No messages</div>'; 
                 messagesContainer.innerHTML = html; 
                 setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100); 
-                if (chatPartner !== 'saved' && chatPartner !== 'yolk') updateChatHeaderStatus(chatPartner); 
+                updateChatHeaderStatus(chatPartner); 
             }
 
             function renderMessage(msg, idx, currentUser, chatPartner) { 
-                const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser); 
+                const isMe = msg.from === currentUser; 
                 const isSystem = msg.from === 'SYSTEM'; 
                 const fromUserDisplay = isSystem ? 'SYSTEM' : formatUserNameWithStatus(msg.from);
-                let canDelete = false; 
-                if (chatPartner === 'saved') canDelete = true; 
-                else if (chatPartner === 'yolk') canDelete = false; 
-                else canDelete = isMe; 
+                let canDelete = isMe; 
                 let mediaHtml = ''; 
                 if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
                 let messageText = msg.text || ''; 
@@ -2165,50 +2098,44 @@
                 const chatsContainer = document.getElementById('chatsList'); 
                 if (!chatsContainer || !App.currentUser) return; 
                 let chatsList = getChatListForUser(App.currentUser); 
-                const saved = chatsList.includes('saved') ? ['saved'] : []; 
-                const yolk = chatsList.includes('yolk') ? ['yolk'] : []; 
-                const other = chatsList.filter(c => c !== 'saved' && c !== 'yolk'); 
-                const orderedList = [...saved, ...yolk, ...other]; 
                 let html = ''; 
-                orderedList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); }); 
+                chatsList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); }); 
                 chatsContainer.innerHTML = html; 
                 document.querySelectorAll('.chat-item').forEach(el => { el.addEventListener('click', (e) => { if (e.target.closest('.delete-chat-icon')) return; const chatId = el.dataset.chat; if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; } App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId); if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); render(); }); }); 
             }
 
             function renderChatItem(u, active, currentUser) { 
-                let name = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : u); 
-                let display = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
-                let avatarHtml = '<div class="chat-avatar">📁</div>'; 
-                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">💬</div>'; 
-                else if (u !== 'saved') { 
-                    const avatarUrl = App.users[u]?.avatar; 
-                    avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
-                } 
+                let display = formatUserNameWithStatus(u);
+                let avatarHtml = '<div class="chat-avatar">👤</div>'; 
+                const avatarUrl = App.users[u]?.avatar; 
+                avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
                 const userData = App.users[u] || {}; 
-                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
+                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span></div>`; 
             }
 
-            function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
-            function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); renderMessages(chatPartner); updateChatHeaderStatus(chatPartner); }
-            function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
-            function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
-            function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
-            function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Verification code: ${code}\nEnter this code to log into ${username}\nCode valid for 5 minutes.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
-            function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
-            function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { saveToSupabase(); } }
+            function getChatListForUser(user) { 
+                let set = new Set(); 
+                Object.keys(App.chats || {}).forEach(key => { 
+                    const c = App.chats[key]; 
+                    if (c) { 
+                        if (c.user1 === user) set.add(c.user2); 
+                        if (c.user2 === user) set.add(c.user1); 
+                    } 
+                }); 
+                return Array.from(set); 
+            }
+            
             function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Photo added, write text and send'); }); }; reader.readAsDataURL(file); }
             function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Video max 20 MB', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Video added, write text and send'); }; reader.readAsDataURL(file); }
+            
             function addUserBySearch() { 
                 let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
                 if (!query) { showNotification('Enter username', 'error'); return; } 
                 if (!query.startsWith('@')) query = '@' + query; 
-                if (query === 'yolk') { showNotification('This is a system chat', 'error'); return; } 
-                
                 let mainUser = findMainUsername(query);
                 if (!mainUser) {
                     if (App.users[query]) mainUser = query;
                 }
-                
                 if (!mainUser || !App.users[mainUser]) { showNotification('User not found', 'error'); return; } 
                 if (mainUser === App.currentUser) { showNotification('This is you', 'error'); return; } 
                 if (!canUserMessage(App.currentUser, mainUser)) { showNotification('This user does not accept messages from strangers', 'error'); return; } 
@@ -2220,9 +2147,40 @@
                 render(); 
                 showNotification(`Chat with ${getDisplayName(mainUser)} created`); 
             }
-            window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToSupabase(); render(); showNotification('Chat deleted'); };
-            window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Deleted'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Cannot delete system messages', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Deleted'); renderMessages(chatPartner); } } } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } };
-            window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
+            
+            window.deleteChat = function(chat, event) { 
+                event.stopPropagation(); 
+                if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; 
+                const user = App.currentUser; 
+                const chatId = [user, chat].sort().join('_'); 
+                if (App.chats[chatId]) delete App.chats[chatId]; 
+                if (App.activeChat === chat) { 
+                    App.activeChat = null; 
+                    localStorage.removeItem('yolk_active_chat'); 
+                } 
+                saveToSupabase(); 
+                render(); 
+                showNotification('Chat deleted'); 
+            };
+            
+            window.deleteMessage = function(chatPartner, idx) { 
+                const from = App.currentUser; 
+                try { 
+                    const chatId = [from, chatPartner].sort().join('_'); 
+                    const msgs = App.chats[chatId]?.messages; 
+                    if (msgs && msgs[idx]) { 
+                        msgs.splice(idx, 1); 
+                        saveToSupabase(); 
+                        showNotification('Deleted'); 
+                        renderMessages(chatPartner); 
+                    } 
+                } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } 
+            };
+            
+            window.openImageModal = function(src) { 
+                const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; 
+                document.body.insertAdjacentHTML('beforeend', modalHtml); 
+            };
 
             function updateChatHeaderStatus(username) { 
                 const headerInfo = document.querySelector('.chat-header-info'); 
@@ -2233,7 +2191,6 @@
                 if (existingNameStrong) { 
                     existingNameStrong.innerHTML = formatUserNameWithStatus(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
                 } 
-                if (username === 'saved' || username === 'yolk') return;
                 const isOnline = isUserOnline(username); 
                 const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username); 
                 const statusDiv = document.createElement('div'); 
@@ -2255,4 +2212,4 @@
         })();
     </script>
 </body>
-</html> 
+</html>
