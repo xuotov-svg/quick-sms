@@ -1037,59 +1037,58 @@
             }
 
             async function loadFromSupabase() {
-    console.log('🔄 Loading data from Supabase...');
-    try {
-        const state = await loadAppState();
-        if (state) {
-            if (state.users) {
-                App.users = state.users;
-                Object.keys(App.users).forEach(u => {
-                    if (!App.users[u].followers) App.users[u].followers = [];
-                    if (!App.users[u].following) App.users[u].following = [];
-                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                });
-            }
-            if (state.chats) App.chats = state.chats;
-            if (state.blocked) App.blocked = state.blocked;
-            if (state.privacySettings) App.privacySettings = state.privacySettings;
-            if (state.posts) App.posts = state.posts;
-            if (state.musicTracks) App.musicTracks = state.musicTracks;  // ← ВОТ ЭТА СТРОКА БЫЛА ПРОПУЩЕНА
-            
-            localStorage.setItem('yolk_cache', JSON.stringify({
-                users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
-            }));
-            
-            if (state.privacySettings) savePrivacySettings();
-        } else {
-            console.warn('⚠️ Could not load data from Supabase. Using cache.');
-        }
-    } catch (error) {
-        console.error('❌ Supabase connection error:', error);
-    }
-    
-    // Загрузка из кэша
-    const cachedData = localStorage.getItem('yolk_cache');
-    if (cachedData) {
-        try {
-            const cache = JSON.parse(cachedData);
-            if (cache.users) {
-                App.users = cache.users;
-                Object.keys(App.users).forEach(u => {
-                    if (!App.users[u].followers) App.users[u].followers = [];
-                    if (!App.users[u].following) App.users[u].following = [];
-                    if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                    if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                });
-            }
-            if (cache.chats) App.chats = cache.chats;
-            if (cache.blocked) App.blocked = cache.blocked;
-            if (cache.musicTracks) App.musicTracks = cache.musicTracks;  // ← И ЗДЕСЬ ТОЖЕ
-            console.log('📦 Data loaded from local cache');
-        } catch(e) {
-            console.error('Cache read error:', e);
-        }
-    }
+                console.log('🔄 Loading data from Supabase...');
+                try {
+                    const state = await loadAppState();
+                    if (state) {
+                        if (state.users) {
+                            App.users = state.users;
+                            Object.keys(App.users).forEach(u => {
+                                if (!App.users[u].followers) App.users[u].followers = [];
+                                if (!App.users[u].following) App.users[u].following = [];
+                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                            });
+                        }
+                        if (state.chats) App.chats = state.chats;
+                        if (state.blocked) App.blocked = state.blocked;
+                        if (state.privacySettings) App.privacySettings = state.privacySettings;
+                        if (state.posts) App.posts = state.posts;
+                        if (state.musicTracks) App.musicTracks = state.musicTracks;
+                        
+                        localStorage.setItem('yolk_cache', JSON.stringify({
+                            users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
+                        }));
+                        
+                        if (state.privacySettings) savePrivacySettings();
+                    } else {
+                        console.warn('⚠️ Could not load data from Supabase. Using cache.');
+                    }
+                } catch (error) {
+                    console.error('❌ Supabase connection error:', error);
+                }
+                
+                const cachedData = localStorage.getItem('yolk_cache');
+                if (cachedData) {
+                    try {
+                        const cache = JSON.parse(cachedData);
+                        if (cache.users) {
+                            App.users = cache.users;
+                            Object.keys(App.users).forEach(u => {
+                                if (!App.users[u].followers) App.users[u].followers = [];
+                                if (!App.users[u].following) App.users[u].following = [];
+                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                            });
+                        }
+                        if (cache.chats) App.chats = cache.chats;
+                        if (cache.blocked) App.blocked = cache.blocked;
+                        if (cache.musicTracks) App.musicTracks = cache.musicTracks;
+                        console.log('📦 Data loaded from local cache');
+                    } catch(e) {
+                        console.error('Cache read error:', e);
+                    }
+                }
                 
                 const savedUser = localStorage.getItem('yolk_current_user');
                 const savedChat = localStorage.getItem('yolk_active_chat');
