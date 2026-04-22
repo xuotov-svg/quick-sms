@@ -918,7 +918,7 @@
                 chatWallpaper: '', soundEnabled: true, audioCtx: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
                 typingTimeouts: {}, lastPostTime: {},
-                musicTracks: [],
+                musicTracks: [],        // Инициализирован как пустой массив
                 currentTrack: null,
                 isPlaying: false,
                 audioElement: new Audio(),
@@ -1028,6 +1028,7 @@
                 };
                 try {
                     await saveAppState(state);
+                    // Сохраняем также в localStorage с musicTracks
                     localStorage.setItem('yolk_cache', JSON.stringify({
                         users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
                     }));
@@ -1054,7 +1055,8 @@
                         if (state.blocked) App.blocked = state.blocked;
                         if (state.privacySettings) App.privacySettings = state.privacySettings;
                         if (state.posts) App.posts = state.posts;
-                        if (state.musicTracks) App.musicTracks = state.musicTracks;
+                        // Важно: загружаем musicTracks или инициализируем пустым массивом
+                        App.musicTracks = state.musicTracks || [];
                         
                         localStorage.setItem('yolk_cache', JSON.stringify({
                             users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
@@ -1083,7 +1085,8 @@
                         }
                         if (cache.chats) App.chats = cache.chats;
                         if (cache.blocked) App.blocked = cache.blocked;
-                        if (cache.musicTracks) App.musicTracks = cache.musicTracks;
+                        // Загружаем musicTracks из кеша
+                        App.musicTracks = cache.musicTracks || [];
                         console.log('📦 Data loaded from local cache');
                     } catch(e) {
                         console.error('Cache read error:', e);
@@ -1951,8 +1954,14 @@
                 });
             }
 
-            // === MUSIC SECTION ==================================================
+            // === MUSIC SECTION (исправлено сохранение и добавлена проверка премиума) ===
             function openUploadMusicModal() {
+                // Проверка премиум-статуса (verified)
+                if (!App.users[App.currentUser]?.verified) {
+                    showNotification('Only premium users can upload tracks', 'error');
+                    return;
+                }
+                
                 let tempCover = null, tempAudio = null;
                 const modalHtml = `
                     <div class="modal-overlay" id="uploadMusicModal">
@@ -2032,10 +2041,15 @@
                         uploadTime: Date.now()
                     };
                     App.musicTracks.push(newTrack);
-                    saveToSupabase();
-                    document.getElementById('uploadMusicModal').remove();
-                    renderMusicSection();
-                    showNotification('Track uploaded!');
+                    // Сохраняем в Supabase и ждём завершения
+                    saveToSupabase().then(() => {
+                        document.getElementById('uploadMusicModal').remove();
+                        renderMusicSection();
+                        showNotification('Track uploaded!');
+                    }).catch(err => {
+                        console.error('Save error:', err);
+                        showNotification('Failed to save track', 'error');
+                    });
                 });
                 
                 document.getElementById('closeUploadMusicModal').addEventListener('click', () => {
