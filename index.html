@@ -7,6 +7,7 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
+        /* Весь CSS остаётся без изменений, как в исходном вопросе */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -953,26 +954,65 @@
             // === SUPABASE FUNCTIONS ===
             const STATE_ROW_ID = 1;
             
-            // Сохранение в localStorage (надёжное резервное копирование)
+            // Сохранение в localStorage (БЕЗ АУДИОФАЙЛОВ)
             function saveToLocalCache() {
-                const cache = {
-                    users: App.users,
-                    chats: App.chats,
-                    blocked: App.blocked,
-                    privacySettings: App.privacySettings,
-                    posts: App.posts,
-                    musicTracks: App.musicTracks
-                };
-                localStorage.setItem('yolk_cache', JSON.stringify(cache));
-                console.log('💾 Local cache saved, tracks:', App.musicTracks.length);
+                try {
+                    const cache = {
+                        users: App.users,
+                        chats: App.chats,
+                        blocked: App.blocked,
+                        privacySettings: App.privacySettings,
+                        posts: App.posts,
+                        musicTracks: App.musicTracks.map(track => ({
+                            // Сохраняем только метаданные, аудио НЕ сохраняем (слишком большие)
+                            id: track.id,
+                            title: track.title,
+                            artist: track.artist,
+                            cover: track.cover,
+                            uploadedBy: track.uploadedBy,
+                            uploadTime: track.uploadTime
+                            // audio исключено
+                        }))
+                    };
+                    localStorage.setItem('yolk_cache', JSON.stringify(cache));
+                    console.log('💾 Local cache saved (without audio files)');
+                } catch (e) {
+                    console.warn('⚠️ LocalStorage quota exceeded, clearing old data...');
+                    // Очищаем старые данные
+                    const keys = Object.keys(localStorage);
+                    for (let key of keys) {
+                        if (key.startsWith('yolk_') && key !== 'yolk_current_user' && key !== 'yolk_theme' && key !== 'yolk_privacy') {
+                            localStorage.removeItem(key);
+                        }
+                    }
+                    // Пробуем сохранить ещё раз
+                    try {
+                        const cache = {
+                            users: App.users,
+                            chats: App.chats,
+                            blocked: App.blocked,
+                            privacySettings: App.privacySettings,
+                            posts: App.posts,
+                            musicTracks: App.musicTracks.map(track => ({
+                                id: track.id, title: track.title, artist: track.artist,
+                                cover: track.cover, uploadedBy: track.uploadedBy, uploadTime: track.uploadTime
+                            }))
+                        };
+                        localStorage.setItem('yolk_cache', JSON.stringify(cache));
+                    } catch (e2) {
+                        console.error('Still cannot save to localStorage:', e2);
+                    }
+                }
             }
             
-            // Загрузка из localStorage
+            // Загрузка из localStorage (восстанавливает только метаданные треков)
             function loadFromLocalCache() {
                 const cached = localStorage.getItem('yolk_cache');
                 if (!cached) return null;
                 try {
-                    return JSON.parse(cached);
+                    const data = JSON.parse(cached);
+                    // Если есть треки без аудио, они будут загружены, но аудио придет из Supabase
+                    return data;
                 } catch (e) {
                     console.error('Cache parse error:', e);
                     return null;
@@ -1038,7 +1078,7 @@
                                 if (newData.posts) App.posts = newData.posts;
                                 if (newData.musicTracks) App.musicTracks = newData.musicTracks;
                                 
-                                // Обновляем локальный кеш
+                                // Обновляем локальный кеш (без аудио)
                                 saveToLocalCache();
                                 
                                 if (App.currentUser) {
@@ -1063,11 +1103,11 @@
                     blocked: App.blocked,
                     privacySettings: App.privacySettings,
                     posts: App.posts,
-                    musicTracks: App.musicTracks
+                    musicTracks: App.musicTracks  // полные треки с аудио сохраняются в Supabase
                 };
-                // ВСЕГДА сначала сохраняем в localStorage (гарантированное сохранение)
+                // Сохраняем в localStorage (без аудио)
                 saveToLocalCache();
-                // Затем пытаемся синхронизировать с Supabase
+                // Сохраняем в Supabase (с аудио)
                 await saveAppState(state);
             }
 
@@ -1082,16 +1122,16 @@
                     console.error('Supabase load exception:', e);
                 }
                 
-                // 2. Загружаем из локального кеша
+                // 2. Загружаем из локального кеша (метаданные)
                 const localData = loadFromLocalCache();
                 
-                // 3. Выбираем наиболее полные данные (приоритет Supabase, если он не пуст)
+                // 3. Приоритет: данные Supabase (полные), если нет — используем кеш + попробуем позже синхронизировать
                 let useData = supabaseData;
                 if (!useData || Object.keys(useData).length === 0) {
                     useData = localData;
-                    console.log('📦 Using local cache data');
+                    console.log('📦 Using local cache data (metadata only)');
                 } else {
-                    console.log('☁️ Using Supabase data');
+                    console.log('☁️ Using Supabase data (full)');
                 }
                 
                 // 4. Применяем данные к App
