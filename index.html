@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp</title>
+    <title>Yolkapp • music</title>
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
@@ -90,7 +90,9 @@
         .search-add,
         .feed-container,
         .post-card,
-        .comments-modal {
+        .comments-modal,
+        .music-container,
+        .track-card {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -114,18 +116,20 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        .chat-area, .feed-container {
+        .chat-area, .feed-container, .music-container {
             background-color: transparent !important;
             position: relative;
         }
         
         body:not(.light-theme) .chat-area,
-        body:not(.light-theme) .feed-container {
+        body:not(.light-theme) .feed-container,
+        body:not(.light-theme) .music-container {
             background-color: #0a0a0a !important;
         }
         
         body.light-theme .chat-area,
-        body.light-theme .feed-container {
+        body.light-theme .feed-container,
+        body.light-theme .music-container {
             background-color: #ffffff !important;
         }
         
@@ -240,7 +244,6 @@
         body.light-theme .tiny-btn,
         body.light-theme .inline-btn,
         body.light-theme .profile-btn,
-        body.light-theme .btn,
         body.light-theme .subscribe-btn,
         body.light-theme .unsubscribe-btn,
         body.light-theme .like-btn,
@@ -704,8 +707,182 @@
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
         }
-        .bottom-nav {
+
+        /* MUSIC SECTION */
+        .music-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--glass-bg);
+            position: relative;
+            z-index: 5;
+            width: 100%;
+        }
+        .music-search {
+            margin-bottom: 16px;
             display: flex;
+            gap: 8px;
+        }
+        .music-search input {
+            flex: 1;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .track-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--glass-bg);
+            border-radius: 20px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border: 1px solid var(--glass-border);
+        }
+        .track-cover {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            background: #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .track-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .track-info {
+            flex: 1;
+        }
+        .track-title {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 16px;
+        }
+        .track-artist {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .track-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .track-actions button {
+            background: rgba(212,175,55,0.15);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--accent);
+            font-size: 18px;
+        }
+        .delete-track-btn {
+            background: rgba(255,68,68,0.15) !important;
+            color: #ff6666 !important;
+        }
+
+        /* MINI PLAYER */
+        .mini-player {
+            position: fixed;
+            bottom: 70px;
+            left: 16px;
+            right: 16px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 40;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .player-cover {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #1e1e1e;
+        }
+        .player-cover img { width: 100%; height: 100%; object-fit: cover; }
+        .player-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .player-title {
+            font-weight: 700;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .player-artist {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .player-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .player-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 24px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .player-progress {
+            width: 100px;
+            height: 4px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .player-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+            width: 0%;
+        }
+        .create-music-btn {
+            position: fixed;
+            bottom: 140px;
+            right: 20px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 35;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 768px) {
+            .player-progress { width: 60px; }
         }
     </style>
 </head>
@@ -730,10 +907,24 @@
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null,
                 chatWallpaper: '', soundEnabled: true, audioCtx: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {} 
+                typingTimeouts: {}, lastPostTime: {},
+                musicTracks: [],               // массив треков
+                currentTrack: null,            // текущий играющий трек (объект)
+                isPlaying: false,
+                audioElement: new Audio(),
+                musicSearchQuery: ''
             };
             App.systemBots = [];
             
+            // Настройки аудио
+            App.audioElement.addEventListener('timeupdate', updatePlayerProgress);
+            App.audioElement.addEventListener('ended', () => {
+                App.isPlaying = false;
+                updateMiniPlayerUI();
+            });
+            App.audioElement.addEventListener('play', () => { App.isPlaying = true; updateMiniPlayerUI(); });
+            App.audioElement.addEventListener('pause', () => { App.isPlaying = false; updateMiniPlayerUI(); });
+
             const ADMIN_USER = '@durov';
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
@@ -742,7 +933,8 @@
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
                 COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
-                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png'
+                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png',
+                MUSIC_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png'
             };
             
             // === SUPABASE FUNCTIONS ===
@@ -791,9 +983,10 @@
                                 if (newData.blocked) App.blocked = newData.blocked;
                                 if (newData.privacySettings) App.privacySettings = newData.privacySettings;
                                 if (newData.posts) App.posts = newData.posts;
+                                if (newData.musicTracks) App.musicTracks = newData.musicTracks;
                                 
                                 localStorage.setItem('yolk_cache', JSON.stringify({
-                                    users: App.users, chats: App.chats, blocked: App.blocked
+                                    users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
                                 }));
                                 
                                 if (App.currentUser) {
@@ -803,6 +996,7 @@
                                     applyWallpaperToFeed();
                                     if (App.activeChat) renderMessages(App.activeChat);
                                     updateChatList();
+                                    if (App.activeTab === 'music') renderMusicSection();
                                 }
                             }
                         })
@@ -816,12 +1010,13 @@
                     chats: App.chats,
                     blocked: App.blocked,
                     privacySettings: App.privacySettings,
-                    posts: App.posts
+                    posts: App.posts,
+                    musicTracks: App.musicTracks
                 };
                 try {
                     await saveAppState(state);
                     localStorage.setItem('yolk_cache', JSON.stringify({
-                        users: App.users, chats: App.chats, blocked: App.blocked
+                        users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
                     }));
                 } catch (e) {
                     console.error('Error saving to Supabase:', e);
@@ -846,9 +1041,10 @@
                         if (state.blocked) App.blocked = state.blocked;
                         if (state.privacySettings) App.privacySettings = state.privacySettings;
                         if (state.posts) App.posts = state.posts;
+                        if (state.musicTracks) App.musicTracks = state.musicTracks;
                         
                         localStorage.setItem('yolk_cache', JSON.stringify({
-                            users: App.users, chats: App.chats, blocked: App.blocked
+                            users: App.users, chats: App.chats, blocked: App.blocked, musicTracks: App.musicTracks
                         }));
                         
                         if (state.privacySettings) savePrivacySettings();
@@ -874,6 +1070,7 @@
                         }
                         if (cache.chats) App.chats = cache.chats;
                         if (cache.blocked) App.blocked = cache.blocked;
+                        if (cache.musicTracks) App.musicTracks = cache.musicTracks;
                         console.log('📦 Data loaded from local cache');
                     } catch(e) {
                         console.error('Cache read error:', e);
@@ -1092,6 +1289,9 @@
                                 <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
                                 <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
                             </div>
+                            <div style="margin-top: 16px;">
+                                <button class="profile-btn logout" id="logoutFromSettingsBtn">LOG OUT</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1222,6 +1422,17 @@
                 document.getElementById('closeSettingsBtn').addEventListener('click', () => {
                     document.getElementById('settingsModalOverlay').remove();
                 });
+                
+                document.getElementById('logoutFromSettingsBtn').addEventListener('click', () => {
+                    if (confirm('Log out?')) {
+                        document.getElementById('settingsModalOverlay').remove();
+                        App.currentUser = null;
+                        App.activeChat = null;
+                        localStorage.removeItem('yolk_current_user');
+                        localStorage.removeItem('yolk_active_chat');
+                        render();
+                    }
+                });
             }
 
             function applyWallpaperToFeed() {
@@ -1340,29 +1551,6 @@
                 return true;
             }
             
-            function formatSubscribers(count) {
-                return `${count} ${count === 1 ? 'follower' : 'followers'}`;
-            }
-            
-            function toggleFeedSubscription(postId, author) {
-                if (author === App.currentUser) return;
-                const isCurrentlySubscribed = isFollowing(App.currentUser, author);
-                if (isCurrentlySubscribed) {
-                    unsubscribeFromUser(App.currentUser, author);
-                } else {
-                    subscribeToUser(App.currentUser, author);
-                }
-                const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
-                if (postCard) {
-                    const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
-                    if (btn) {
-                        const newSubStatus = !isCurrentlySubscribed;
-                        btn.textContent = newSubStatus ? 'UNFOLLOW' : 'FOLLOW';
-                        btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
-                    }
-                }
-            }
-
             function openProfileModal(username) { 
                 const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', verified: false, status: null, chatWallpaper: '', followers: [], following: [] }) };
                 const isOwn = (username === App.currentUser); 
@@ -1752,6 +1940,223 @@
                 });
             }
 
+            // === MUSIC SECTION ==================================================
+            function openUploadMusicModal() {
+                let tempCover = null, tempAudio = null;
+                const modalHtml = `
+                    <div class="modal-overlay" id="uploadMusicModal">
+                        <div class="profile-modal">
+                            <h3>UPLOAD TRACK</h3>
+                            <div class="profile-input-group">
+                                <label>TITLE *</label>
+                                <input type="text" id="musicTitle" placeholder="Song name" maxlength="50">
+                            </div>
+                            <div class="profile-input-group">
+                                <label>ARTIST *</label>
+                                <input type="text" id="musicArtist" value="${getDisplayName(App.currentUser)}" placeholder="Artist name">
+                            </div>
+                            <div class="profile-input-group">
+                                <label>COVER (optional)</label>
+                                <button class="change-file-btn" id="selectCoverBtn">SELECT COVER</button>
+                                <input type="file" id="coverFileInput" accept="image/*" style="display:none;">
+                            </div>
+                            <div class="profile-input-group">
+                                <label>AUDIO MP3 * (max 15MB)</label>
+                                <button class="change-file-btn" id="selectAudioBtn">SELECT AUDIO</button>
+                                <input type="file" id="audioFileInput" accept="audio/mpeg,audio/mp3" style="display:none;">
+                            </div>
+                            <div class="profile-actions">
+                                <button class="profile-btn" id="confirmUploadMusic">UPLOAD</button>
+                                <button class="profile-btn secondary" id="closeUploadMusicModal">CANCEL</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                document.getElementById('selectCoverBtn').addEventListener('click', () => document.getElementById('coverFileInput').click());
+                document.getElementById('coverFileInput').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        compressImage(ev.target.result, 300, 300, 0.7, (compressed) => {
+                            tempCover = compressed;
+                            showNotification('Cover ready');
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                document.getElementById('selectAudioBtn').addEventListener('click', () => document.getElementById('audioFileInput').click());
+                document.getElementById('audioFileInput').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    if (file.size > 15 * 1024 * 1024) {
+                        showNotification('File too large (max 15MB)', 'error');
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        tempAudio = ev.target.result;
+                        showNotification('Audio loaded');
+                    };
+                    reader.readAsDataURL(file);
+                });
+                
+                document.getElementById('confirmUploadMusic').addEventListener('click', () => {
+                    const title = document.getElementById('musicTitle').value.trim();
+                    const artist = document.getElementById('musicArtist').value.trim();
+                    if (!title) { showNotification('Enter title', 'error'); return; }
+                    if (!artist) { showNotification('Enter artist', 'error'); return; }
+                    if (!tempAudio) { showNotification('Select audio file', 'error'); return; }
+                    
+                    const newTrack = {
+                        id: generateId(),
+                        title,
+                        artist,
+                        cover: tempCover || null,
+                        audio: tempAudio,
+                        uploadedBy: App.currentUser,
+                        uploadTime: Date.now()
+                    };
+                    App.musicTracks.push(newTrack);
+                    saveToSupabase();
+                    document.getElementById('uploadMusicModal').remove();
+                    renderMusicSection();
+                    showNotification('Track uploaded!');
+                });
+                
+                document.getElementById('closeUploadMusicModal').addEventListener('click', () => {
+                    document.getElementById('uploadMusicModal').remove();
+                });
+            }
+
+            function deleteTrack(trackId) {
+                const track = App.musicTracks.find(t => t.id === trackId);
+                if (!track) return;
+                if (track.uploadedBy !== App.currentUser && App.currentUser !== ADMIN_USER) {
+                    showNotification('Cannot delete this track', 'error');
+                    return;
+                }
+                if (!confirm('Delete this track?')) return;
+                App.musicTracks = App.musicTracks.filter(t => t.id !== trackId);
+                if (App.currentTrack && App.currentTrack.id === trackId) {
+                    App.audioElement.pause();
+                    App.currentTrack = null;
+                    App.isPlaying = false;
+                    updateMiniPlayerUI();
+                }
+                saveToSupabase();
+                renderMusicSection();
+                showNotification('Track deleted');
+            }
+
+            function playTrack(track) {
+                if (App.currentTrack && App.currentTrack.id === track.id) {
+                    if (App.isPlaying) {
+                        App.audioElement.pause();
+                    } else {
+                        App.audioElement.play().catch(e => showNotification('Playback error', 'error'));
+                    }
+                } else {
+                    App.currentTrack = track;
+                    App.audioElement.src = track.audio;
+                    App.audioElement.play().catch(e => showNotification('Playback error', 'error'));
+                }
+                updateMiniPlayerUI();
+            }
+
+            function updatePlayerProgress() {
+                const fill = document.querySelector('.player-progress-fill');
+                if (fill && App.audioElement.duration) {
+                    const percent = (App.audioElement.currentTime / App.audioElement.duration) * 100;
+                    fill.style.width = percent + '%';
+                }
+            }
+
+            function seekAudio(e) {
+                const progressBar = e.currentTarget;
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                if (App.audioElement.duration) {
+                    App.audioElement.currentTime = percent * App.audioElement.duration;
+                }
+            }
+
+            function updateMiniPlayerUI() {
+                const playerDiv = document.getElementById('miniPlayer');
+                if (!playerDiv) return;
+                if (App.currentTrack) {
+                    playerDiv.style.display = 'flex';
+                    const cover = playerDiv.querySelector('.player-cover img');
+                    const title = playerDiv.querySelector('.player-title');
+                    const artist = playerDiv.querySelector('.player-artist');
+                    const playBtn = playerDiv.querySelector('#playPauseBtn');
+                    if (cover) cover.src = App.currentTrack.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23aaa\'%3E♪%3C/text%3E%3C/svg%3E';
+                    if (title) title.textContent = App.currentTrack.title;
+                    if (artist) artist.textContent = App.currentTrack.artist;
+                    if (playBtn) playBtn.textContent = App.isPlaying ? '⏸' : '▶';
+                } else {
+                    playerDiv.style.display = 'none';
+                }
+            }
+
+            function renderMusicSection() {
+                const container = document.getElementById('musicContainer');
+                if (!container) return;
+                let tracks = App.musicTracks;
+                const query = App.musicSearchQuery.toLowerCase();
+                if (query) {
+                    tracks = tracks.filter(t => t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query));
+                }
+                let html = `<div class="music-search"><input type="text" id="musicSearchInput" placeholder="Search tracks..." value="${App.musicSearchQuery}"></div>`;
+                if (tracks.length === 0) {
+                    html += '<div style="text-align:center; color: var(--text-secondary); padding:40px;">No tracks yet. Tap + to upload!</div>';
+                } else {
+                    tracks.forEach(track => {
+                        const canDelete = (track.uploadedBy === App.currentUser || App.currentUser === ADMIN_USER);
+                        html += `
+                            <div class="track-card">
+                                <div class="track-cover">${track.cover ? `<img src="${track.cover}">` : '🎵'}</div>
+                                <div class="track-info">
+                                    <div class="track-title">${track.title}</div>
+                                    <div class="track-artist" onclick="openProfileModal('${track.uploadedBy}')">${track.artist}</div>
+                                </div>
+                                <div class="track-actions">
+                                    <button class="play-track-btn" data-id="${track.id}">▶</button>
+                                    ${canDelete ? `<button class="delete-track-btn" data-id="${track.id}">🗑</button>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                container.innerHTML = html;
+                
+                const searchInput = document.getElementById('musicSearchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        App.musicSearchQuery = e.target.value;
+                        renderMusicSection();
+                    });
+                }
+                
+                document.querySelectorAll('.play-track-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = btn.dataset.id;
+                        const track = App.musicTracks.find(t => t.id === id);
+                        if (track) playTrack(track);
+                    });
+                });
+                document.querySelectorAll('.delete-track-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = btn.dataset.id;
+                        deleteTrack(id);
+                    });
+                });
+            }
+
+            // ===== RENDER =====
             function render() { 
                 const root = document.getElementById('app'); 
                 if (!App.dataLoaded) { 
@@ -1782,10 +2187,12 @@
                                 attachMainEvents(); 
                                 if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                                 else if (App.activeTab === 'feed') initFeed();
+                                else if (App.activeTab === 'music') renderMusicSection();
                                 updateChatList(); 
                                 updateSidebarUser(); 
                                 applyWallpaper();
                                 applyWallpaperToFeed();
+                                updateMiniPlayerUI();
                             }, 100); 
                         }
                     }, remaining);
@@ -1799,10 +2206,12 @@
                             attachMainEvents(); 
                             if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                             else if (App.activeTab === 'feed') initFeed();
+                            else if (App.activeTab === 'music') renderMusicSection();
                             updateChatList(); 
                             updateSidebarUser(); 
                             applyWallpaper();
                             applyWallpaperToFeed();
+                            updateMiniPlayerUI();
                         }, 100); 
                     }
                 }
@@ -1880,7 +2289,7 @@
                 
                 return `
                     <div class="main-container">
-                        ${isChatsActive ? `
+                        ${App.activeTab === 'chats' ? `
                         <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                             <div class="user-profile">
                                 <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (getDisplayName(user)[0]?.toUpperCase() || '?')}</div>
@@ -1900,16 +2309,33 @@
                             <div class="messages-container" id="messageList"></div>
                             ${App.activeChat ? (canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="MESSAGE..." autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);">Select a chat to start messaging</div>'}
                         </div>
-                        ` : `
+                        ` : (App.activeTab === 'feed' ? `
                         <div class="feed-container" id="feedContainer"></div>
                         <button class="create-post-btn" id="createPostBtn">+</button>
-                        `}
+                        ` : `
+                        <div class="music-container" id="musicContainer"></div>
+                        <button class="create-music-btn" id="createMusicBtn">+</button>
+                        `)}
                     </div>
                     <div class="bottom-nav">
                         <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png" alt="Feed"></div>
                         <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png" alt="Chats"></div>
+                        <div class="nav-item ${App.activeTab === 'music' ? 'active' : ''}" data-tab="music"><img src="${ICONS.MUSIC_ICON}" alt="Music"></div>
                         <div class="nav-item" id="premiumTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png" alt="Premium"></div>
                         <div class="nav-item" id="settingsTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v4.png" alt="Settings"></div>
+                    </div>
+                    <div id="miniPlayer" class="mini-player" style="display: none;">
+                        <div class="player-cover"><img src=""></div>
+                        <div class="player-info">
+                            <div class="player-title"></div>
+                            <div class="player-artist"></div>
+                        </div>
+                        <div class="player-controls">
+                            <button class="player-btn" id="playPauseBtn">▶</button>
+                            <div class="player-progress" id="playerProgressBar">
+                                <div class="player-progress-fill"></div>
+                            </div>
+                        </div>
                     </div>
                 `; 
             }
@@ -1925,15 +2351,9 @@
                 document.querySelectorAll('.nav-item[data-tab]').forEach(item => {
                     item.addEventListener('click', () => {
                         const tab = item.dataset.tab;
-                        if (tab === 'chats') {
-                            App.activeTab = 'chats';
-                            if (window.innerWidth < 768) App.sidebarOpen = false;
-                            render();
-                        } else if (tab === 'feed') {
-                            App.activeTab = 'feed';
-                            render();
-                            setTimeout(() => initFeed(), 50);
-                        }
+                        App.activeTab = tab;
+                        if (tab === 'chats' && window.innerWidth < 768) App.sidebarOpen = false;
+                        render();
                     });
                 });
                 
@@ -1971,6 +2391,22 @@
                 
                 const createPostBtn = document.getElementById('createPostBtn');
                 if (createPostBtn) createPostBtn.addEventListener('click', openCreatePostModal);
+                
+                const createMusicBtn = document.getElementById('createMusicBtn');
+                if (createMusicBtn) createMusicBtn.addEventListener('click', openUploadMusicModal);
+                
+                // Mini player controls
+                const playPauseBtn = document.getElementById('playPauseBtn');
+                if (playPauseBtn) {
+                    playPauseBtn.addEventListener('click', () => {
+                        if (App.currentTrack) {
+                            if (App.isPlaying) App.audioElement.pause();
+                            else App.audioElement.play();
+                        }
+                    });
+                }
+                const progressBar = document.getElementById('playerProgressBar');
+                if (progressBar) progressBar.addEventListener('click', seekAudio);
             }
 
             function sendMessage() { 
