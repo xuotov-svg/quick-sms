@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yolkapp • music</title>
+    <title>Yolkapp</title>
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/yolk6767.jpg">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37' stroke='%23000' stroke-width='3'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff5e0' stroke='%23000' stroke-width='2'/%3E%3Ccircle cx='44' cy='42' r='2' fill='%23000'/%3E%3Ccircle cx='56' cy='42' r='2' fill='%23000'/%3E%3Cpath d='M45 52 Q50 58 55 52' stroke='%23000' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
     <style>
-        /* Весь CSS остаётся без изменений, как в исходном вопросе */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
         
         :root {
@@ -89,11 +88,10 @@
         .chat-item,
         .user-profile,
         .search-add,
+        .two-factor-box,
         .feed-container,
         .post-card,
-        .comments-modal,
-        .music-container,
-        .track-card {
+        .comments-modal {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -117,20 +115,18 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        .chat-area, .feed-container, .music-container {
+        .chat-area, .feed-container {
             background-color: transparent !important;
             position: relative;
         }
         
         body:not(.light-theme) .chat-area,
-        body:not(.light-theme) .feed-container,
-        body:not(.light-theme) .music-container {
+        body:not(.light-theme) .feed-container {
             background-color: #0a0a0a !important;
         }
         
         body.light-theme .chat-area,
-        body.light-theme .feed-container,
-        body.light-theme .music-container {
+        body.light-theme .feed-container {
             background-color: #ffffff !important;
         }
         
@@ -205,6 +201,32 @@
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
         
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: var(--message-other);
+            border-radius: 18px;
+            width: fit-content;
+            margin-bottom: 8px;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .typing-dots { display: flex; gap: 3px; }
+        .typing-dots span {
+            width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+        
         .loading-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -245,6 +267,7 @@
         body.light-theme .tiny-btn,
         body.light-theme .inline-btn,
         body.light-theme .profile-btn,
+        body.light-theme .btn,
         body.light-theme .subscribe-btn,
         body.light-theme .unsubscribe-btn,
         body.light-theme .like-btn,
@@ -370,6 +393,13 @@
         .auth-error { color: #ff6666; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
         
+        .two-factor-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease; backdrop-filter: blur(8px); }
+        .two-factor-box { background: var(--glass-bg); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); max-width: 400px; width: 90%; text-align: center; }
+        .two-factor-box h3 { color: var(--accent); margin-bottom: 20px; }
+        .two-factor-box p { margin-bottom: 20px; color: var(--text); }
+        .code-input { font-size: 24px; letter-spacing: 10px; text-align: center; padding: 15px; border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; width: 100%; background: var(--input-bg); color: var(--text); }
+        .resend-link { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
+        
         .main-container { flex-direction: row; position: relative; flex: 1; overflow: hidden; }
         .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
         .sidebar.open { transform: translateX(0); }
@@ -483,6 +513,7 @@
         .profile-btn.warning { background: #ff9800; color: #000000; }
         .profile-btn:hover { transform: translateY(-2px); }
         
+        .currency-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
         .hidden { display: none; }
         
         ::-webkit-scrollbar { width: 4px; background: #1a1a1a; }
@@ -708,192 +739,32 @@
             .main-container { margin-bottom: 60px; }
             .create-post-btn { bottom: 70px; }
         }
-
-        /* MUSIC SECTION */
-        .music-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            background: var(--glass-bg);
-            position: relative;
-            z-index: 5;
-            width: 100%;
-        }
-        .music-search {
-            margin-bottom: 16px;
+        /* нижняя панель всегда видна */
+        .bottom-nav {
             display: flex;
-            gap: 8px;
         }
-        .music-search input {
-            flex: 1;
-            background: var(--input-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 12px 16px;
-            color: var(--text);
-            font-size: 14px;
-        }
-        .track-card {
+        
+        .additional-username-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: var(--glass-bg);
-            border-radius: 20px;
-            padding: 12px;
-            margin-bottom: 12px;
-            border: 1px solid var(--glass-border);
-        }
-        .track-cover {
-            width: 60px;
-            height: 60px;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
             border-radius: 12px;
-            background: #1e1e1e;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .track-cover img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .track-info {
-            flex: 1;
-        }
-        .track-title {
-            font-weight: 700;
-            color: var(--text);
-            font-size: 16px;
-        }
-        .track-artist {
-            font-size: 13px;
-            color: var(--text-secondary);
-            cursor: pointer;
-        }
-        .track-actions {
-            display: flex;
-            gap: 8px;
-        }
-        .track-actions button {
-            background: rgba(212,175,55,0.15);
+            margin-bottom: 8px;
             border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--accent);
-            font-size: 18px;
         }
-        .delete-track-btn {
-            background: rgba(255,68,68,0.15) !important;
-            color: #ff6666 !important;
-        }
-        .track-actions img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-        }
-
-        /* MINI PLAYER */
-        .mini-player {
-            position: fixed;
-            bottom: 70px;
-            left: 16px;
-            right: 16px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
-            border-radius: 40px;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            z-index: 40;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
-        .player-cover {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #1e1e1e;
-        }
-        .player-cover img { width: 100%; height: 100%; object-fit: cover; }
-        .player-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .player-title {
-            font-weight: 700;
+        .additional-username-item span {
             color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
-        .player-artist {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-        .player-controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .player-btn {
+        .delete-username-btn {
             background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 24px;
+            border: 1px solid var(--glass-border);
+            color: #ff6666;
+            padding: 4px 8px;
+            border-radius: 8px;
             cursor: pointer;
-            width: 36px;
-            height: 36px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .player-btn img {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-        }
-        .player-progress {
-            width: 100px;
-            height: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .player-progress-fill {
-            height: 100%;
-            background: var(--accent);
-            border-radius: 4px;
-            width: 0%;
-        }
-        .create-music-btn {
-            position: fixed;
-            bottom: 140px;
-            right: 20px;
-            background: var(--accent);
-            color: #000;
-            border: none;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            font-size: 28px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px var(--shadow);
-            z-index: 35;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        @media (max-width: 768px) {
-            .player-progress { width: 60px; }
+            font-size: 12px;
         }
     </style>
 </head>
@@ -912,31 +783,16 @@
                 realtime: { params: { eventsPerSecond: 10 } }
             });
 
-            // Global app state
+            // Глобальные переменные приложения
             const App = { 
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
-                tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null,
-                chatWallpaper: '', soundEnabled: true, audioCtx: null,
-                privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {},
-                musicTracks: [],
-                currentTrack: null,
-                isPlaying: false,
-                audioElement: new Audio(),
-                musicSearchQuery: ''
+                tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
+                savedMessages: {}, yolkChatMessages: {}, userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
+                privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null,
+                typingTimeouts: {}, lastPostTime: {} 
             };
             App.systemBots = [];
             
-            // Настройки аудио
-            App.audioElement.addEventListener('timeupdate', updatePlayerProgress);
-            App.audioElement.addEventListener('ended', () => {
-                App.isPlaying = false;
-                updateMiniPlayerUI();
-                updateTrackButtons();
-            });
-            App.audioElement.addEventListener('play', () => { App.isPlaying = true; updateMiniPlayerUI(); updateTrackButtons(); });
-            App.audioElement.addEventListener('pause', () => { App.isPlaying = false; updateMiniPlayerUI(); updateTrackButtons(); });
-
             const ADMIN_USER = '@durov';
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
             
@@ -945,112 +801,32 @@
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
                 COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
-                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png',
-                MUSIC_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png',
-                PLAY_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1487.png',
-                PAUSE_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1484.png'
+                FIRE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png',
+                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png'
             };
             
-            // === SUPABASE FUNCTIONS ===
+            // === SUPABASE ФУНКЦИИ ===
             const STATE_ROW_ID = 1;
             
-            // Сохранение в localStorage (БЕЗ АУДИОФАЙЛОВ)
-            function saveToLocalCache() {
-                try {
-                    const cache = {
-                        users: App.users,
-                        chats: App.chats,
-                        blocked: App.blocked,
-                        privacySettings: App.privacySettings,
-                        posts: App.posts,
-                        musicTracks: App.musicTracks.map(track => ({
-                            // Сохраняем только метаданные, аудио НЕ сохраняем (слишком большие)
-                            id: track.id,
-                            title: track.title,
-                            artist: track.artist,
-                            cover: track.cover,
-                            uploadedBy: track.uploadedBy,
-                            uploadTime: track.uploadTime
-                            // audio исключено
-                        }))
-                    };
-                    localStorage.setItem('yolk_cache', JSON.stringify(cache));
-                    console.log('💾 Local cache saved (without audio files)');
-                } catch (e) {
-                    console.warn('⚠️ LocalStorage quota exceeded, clearing old data...');
-                    // Очищаем старые данные
-                    const keys = Object.keys(localStorage);
-                    for (let key of keys) {
-                        if (key.startsWith('yolk_') && key !== 'yolk_current_user' && key !== 'yolk_theme' && key !== 'yolk_privacy') {
-                            localStorage.removeItem(key);
-                        }
-                    }
-                    // Пробуем сохранить ещё раз
-                    try {
-                        const cache = {
-                            users: App.users,
-                            chats: App.chats,
-                            blocked: App.blocked,
-                            privacySettings: App.privacySettings,
-                            posts: App.posts,
-                            musicTracks: App.musicTracks.map(track => ({
-                                id: track.id, title: track.title, artist: track.artist,
-                                cover: track.cover, uploadedBy: track.uploadedBy, uploadTime: track.uploadTime
-                            }))
-                        };
-                        localStorage.setItem('yolk_cache', JSON.stringify(cache));
-                    } catch (e2) {
-                        console.error('Still cannot save to localStorage:', e2);
-                    }
-                }
-            }
-            
-            // Загрузка из localStorage (восстанавливает только метаданные треков)
-            function loadFromLocalCache() {
-                const cached = localStorage.getItem('yolk_cache');
-                if (!cached) return null;
-                try {
-                    const data = JSON.parse(cached);
-                    // Если есть треки без аудио, они будут загружены, но аудио придет из Supabase
-                    return data;
-                } catch (e) {
-                    console.error('Cache parse error:', e);
-                    return null;
-                }
-            }
-            
             async function loadAppState() {
-                try {
-                    const { data, error } = await supabase
-                        .from('app_state')
-                        .select('data')
-                        .eq('id', STATE_ROW_ID)
-                        .single();
-                        
-                    if (error) {
-                        console.warn('Supabase load error (table may not exist):', error.message);
-                        return null;
-                    }
-                    return data?.data || null;
-                } catch (e) {
-                    console.error('Exception loading state:', e);
+                const { data, error } = await supabase
+                    .from('app_state')
+                    .select('data')
+                    .eq('id', STATE_ROW_ID)
+                    .single();
+                    
+                if (error) {
+                    console.warn('Error loading state, creating new:', error);
                     return null;
                 }
+                return data?.data || null;
             }
             
             async function saveAppState(stateData) {
-                try {
-                    const { error } = await supabase
-                        .from('app_state')
-                        .upsert({ id: STATE_ROW_ID, data: stateData, updated_at: new Date() }, { onConflict: 'id' });
-                    if (error) {
-                        console.error('Supabase save error:', error);
-                    } else {
-                        console.log('☁️ Synced to Supabase');
-                    }
-                } catch (e) {
-                    console.error('Exception saving state:', e);
-                }
+                const { error } = await supabase
+                    .from('app_state')
+                    .upsert({ id: STATE_ROW_ID, data: stateData }, { onConflict: 'id' });
+                if (error) console.error('Error saving state:', error);
             }
             
             function subscribeToAppState() {
@@ -1059,10 +835,9 @@
                     .on('postgres_changes', 
                         { event: '*', schema: 'public', table: 'app_state', filter: `id=eq.${STATE_ROW_ID}` },
                         async (payload) => {
-                            console.log('🔄 Realtime update received');
+                            console.log('🔄 Update from Supabase Realtime');
                             const newData = payload.new?.data;
                             if (newData) {
-                                // Обновляем глобальное состояние
                                 if (newData.users) {
                                     App.users = newData.users;
                                     Object.keys(App.users).forEach(u => {
@@ -1074,12 +849,13 @@
                                 }
                                 if (newData.chats) App.chats = newData.chats;
                                 if (newData.blocked) App.blocked = newData.blocked;
+                                if (newData.yolkChatMessages) App.yolkChatMessages = newData.yolkChatMessages;
                                 if (newData.privacySettings) App.privacySettings = newData.privacySettings;
                                 if (newData.posts) App.posts = newData.posts;
-                                if (newData.musicTracks) App.musicTracks = newData.musicTracks;
                                 
-                                // Обновляем локальный кеш (без аудио)
-                                saveToLocalCache();
+                                localStorage.setItem('yolk_cache', JSON.stringify({
+                                    users: App.users, chats: App.chats, blocked: App.blocked
+                                }));
                                 
                                 if (App.currentUser) {
                                     updateUserInterface();
@@ -1088,7 +864,6 @@
                                     applyWallpaperToFeed();
                                     if (App.activeChat) renderMessages(App.activeChat);
                                     updateChatList();
-                                    if (App.activeTab === 'music') renderMusicSection();
                                 }
                             }
                         })
@@ -1101,78 +876,84 @@
                     users: App.users,
                     chats: App.chats,
                     blocked: App.blocked,
+                    yolkChatMessages: App.yolkChatMessages,
                     privacySettings: App.privacySettings,
-                    posts: App.posts,
-                    musicTracks: App.musicTracks  // полные треки с аудио сохраняются в Supabase
+                    posts: App.posts
                 };
-                // Сохраняем в localStorage (без аудио)
-                saveToLocalCache();
-                // Сохраняем в Supabase (с аудио)
-                await saveAppState(state);
+                try {
+                    await saveAppState(state);
+                    localStorage.setItem('yolk_cache', JSON.stringify({
+                        users: App.users, chats: App.chats, blocked: App.blocked
+                    }));
+                } catch (e) {
+                    console.error('Error saving to Supabase:', e);
+                }
             }
 
+            window.saveToFirebase = saveToSupabase;
+
             async function loadFromSupabase() {
-                console.log('🔄 Loading data...');
-                
-                // 1. Загружаем из Supabase (если возможно)
-                let supabaseData = null;
+                console.log('🔄 Loading data from Supabase...');
                 try {
-                    supabaseData = await loadAppState();
-                } catch (e) {
-                    console.error('Supabase load exception:', e);
-                }
-                
-                // 2. Загружаем из локального кеша (метаданные)
-                const localData = loadFromLocalCache();
-                
-                // 3. Приоритет: данные Supabase (полные), если нет — используем кеш + попробуем позже синхронизировать
-                let useData = supabaseData;
-                if (!useData || Object.keys(useData).length === 0) {
-                    useData = localData;
-                    console.log('📦 Using local cache data (metadata only)');
-                } else {
-                    console.log('☁️ Using Supabase data (full)');
-                }
-                
-                // 4. Применяем данные к App
-                if (useData) {
-                    if (useData.users) {
-                        App.users = useData.users;
-                        Object.keys(App.users).forEach(u => {
-                            if (!App.users[u].followers) App.users[u].followers = [];
-                            if (!App.users[u].following) App.users[u].following = [];
-                            if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
-                            if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                        });
+                    const state = await loadAppState();
+                    if (state) {
+                        if (state.users) {
+                            App.users = state.users;
+                            Object.keys(App.users).forEach(u => {
+                                if (!App.users[u].followers) App.users[u].followers = [];
+                                if (!App.users[u].following) App.users[u].following = [];
+                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                            });
+                        }
+                        if (state.chats) App.chats = state.chats;
+                        if (state.blocked) App.blocked = state.blocked;
+                        if (state.yolkChatMessages) App.yolkChatMessages = state.yolkChatMessages;
+                        if (state.privacySettings) App.privacySettings = state.privacySettings;
+                        if (state.posts) App.posts = state.posts;
+                        
+                        localStorage.setItem('yolk_cache', JSON.stringify({
+                            users: App.users, chats: App.chats, blocked: App.blocked
+                        }));
+                        
+                        if (state.yolkChatMessages) saveYolkChatMessages();
+                        if (state.privacySettings) savePrivacySettings();
+                    } else {
+                        console.warn('⚠️ Could not load data from Supabase. Using cache.');
                     }
-                    if (useData.chats) App.chats = useData.chats;
-                    if (useData.blocked) App.blocked = useData.blocked;
-                    if (useData.privacySettings) App.privacySettings = useData.privacySettings;
-                    if (useData.posts) App.posts = useData.posts;
-                    if (useData.musicTracks) App.musicTracks = useData.musicTracks;
-                    
-                    console.log('✅ Data loaded. Tracks:', App.musicTracks.length);
-                } else {
-                    console.log('📦 No data found, starting fresh');
-                    // Инициализируем пустые структуры
-                    App.users = {};
-                    App.chats = {};
-                    App.blocked = {};
-                    App.privacySettings = {};
-                    App.posts = [];
-                    App.musicTracks = [];
+                } catch (error) {
+                    console.error('❌ Supabase connection error:', error);
                 }
                 
-                // Сохраняем кеш для синхронизации
-                saveToLocalCache();
+                const cachedData = localStorage.getItem('yolk_cache');
+                if (cachedData) {
+                    try {
+                        const cache = JSON.parse(cachedData);
+                        if (cache.users) {
+                            App.users = cache.users;
+                            Object.keys(App.users).forEach(u => {
+                                if (!App.users[u].followers) App.users[u].followers = [];
+                                if (!App.users[u].following) App.users[u].following = [];
+                                if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
+                                if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
+                            });
+                        }
+                        if (cache.chats) App.chats = cache.chats;
+                        if (cache.blocked) App.blocked = cache.blocked;
+                        console.log('📦 Data loaded from local cache');
+                    } catch(e) {
+                        console.error('Cache read error:', e);
+                    }
+                }
                 
-                // Восстанавливаем сессию пользователя
                 const savedUser = localStorage.getItem('yolk_current_user');
                 const savedChat = localStorage.getItem('yolk_active_chat');
                 
                 if (savedUser && App.users[savedUser]) {
                     App.currentUser = savedUser;
-                    App.activeChat = savedChat && App.users[savedChat] ? savedChat : null;
+                    App.activeChat = savedChat && (savedChat === 'saved' || savedChat === 'yolk' || App.users[savedChat]) ? savedChat : 'saved';
+                    loadSavedMessages();
+                    loadYolkChatMessages();
                     loadPrivacySettings();
                     
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
@@ -1184,6 +965,9 @@
                 render();
             }
 
+            function setupRealtimeListener(chatId, chatPartner) {}
+            function setupUserListener(username) {}
+            
             function updateLastSeen(username) {
                 if (App.users[username] && username === App.currentUser) {
                     App.users[username].lastSeen = Date.now();
@@ -1277,7 +1061,7 @@
             }
 
             function sendTypingIndicator(toUser) {
-                if (!toUser) return;
+                if (!toUser || toUser === 'saved' || toUser === 'yolk') return;
                 const chatId = [App.currentUser, toUser].sort().join('_');
                 if (App.typingTimeouts[chatId]) clearTimeout(App.typingTimeouts[chatId]);
                 App.typingTimeouts[chatId] = setTimeout(() => {}, 2000);
@@ -1317,6 +1101,7 @@
                 
                 let pendingTheme = currentTheme;
                 let pendingPrivacy = currentPrivacy;
+                let pendingTwoFA = userData.twoFA || false;
                 let pendingDisplayName = userData.displayName || getDisplayName(App.currentUser);
                 let pendingEmail = userData.email || `${App.currentUser.substring(1)}@yolkapp.com`;
                 
@@ -1329,19 +1114,17 @@
                                 <div>
                                     <div style="font-weight: bold; font-size: 18px;">${formatUserNameWithStatus(App.currentUser)}</div>
                                     <div style="color: var(--text-secondary);">${followersCount} followers · ${followingCount} following</div>
+                                    <div>Age: ${userData.age || 14}</div>
                                 </div>
                             </div>
-                            <div class="profile-input-group">
-                                <label>USERNAME (cannot change)</label>
-                                <input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2); cursor: default;">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>DISPLAY NAME (up to 9 chars)</label>
-                                <input type="text" id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}" placeholder="Your name">
-                            </div>
+                            <button class="change-file-btn" id="editProfileDetailsBtn" style="margin-bottom: 16px;">✏️ EDIT PROFILE</button>
                             <div class="profile-input-group">
                                 <label>EMAIL</label>
                                 <input type="email" id="settingsEmail" value="${pendingEmail}" placeholder="example@mail.com">
+                            </div>
+                            <div class="profile-input-group">
+                                <label>DISPLAY NAME (up to 6 chars)</label>
+                                <input type="text" id="settingsDisplayName" maxlength="6" value="${pendingDisplayName}" placeholder="Your name">
                             </div>
                             <div class="profile-input-group">
                                 <label>PASSWORD</label>
@@ -1349,6 +1132,14 @@
                                     <input type="password" id="settingsPassword" value="${userData.password || ''}">
                                     <button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button>
                                 </div>
+                            </div>
+                            <div class="profile-input-group">
+                                <label>BIO (max 50)</label>
+                                <textarea id="settingsBio" maxlength="50">${userData.bio || ''}</textarea>
+                            </div>
+                            <div class="profile-input-group">
+                                <label>AGE</label>
+                                <input type="number" id="settingsAge" min="5" max="99" value="${userData.age || 14}">
                             </div>
                             <div class="profile-input-group">
                                 <label>AVATAR</label>
@@ -1374,23 +1165,22 @@
                                     <span class="toggle-label">${pendingPrivacy ? 'Strangers cannot message first' : 'Everyone can message first'}</span>
                                 </div>
                             </div>
-                            ${App.currentUser === ADMIN_USER ? `<button class="profile-btn warning" id="openAdminPanelBtn" style="margin-bottom:12px;">ADMIN PANEL</button>` : ''}
+                            <div class="profile-input-group">
+                                <label>TWO-FACTOR AUTH</label>
+                                <div class="toggle-switch ${pendingTwoFA ? 'active' : ''}" id="settingsTwoFAToggle">
+                                    <div class="toggle-checkbox"></div>
+                                    <span class="toggle-label">${pendingTwoFA ? 'Enabled' : 'Disabled'}</span>
+                                </div>
+                            </div>
+                            
                             <div class="profile-actions">
                                 <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
                                 <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
                             </div>
-                            <button class="profile-btn logout" id="logoutFromSettingsBtn" style="margin-top: 16px; width: 100%;">LOG OUT</button>
                         </div>
                     </div>
                 `;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
-                if (App.currentUser === ADMIN_USER) {
-                    document.getElementById('openAdminPanelBtn').addEventListener('click', () => {
-                        document.getElementById('settingsModalOverlay').remove();
-                        openAdminPanel();
-                    });
-                }
                 
                 window.toggleSettingsPassword = function() {
                     const passInput = document.getElementById('settingsPassword');
@@ -1438,6 +1228,10 @@
                     reader.readAsDataURL(file);
                 });
                 
+                document.getElementById('editProfileDetailsBtn').addEventListener('click', () => {
+                    // Already in edit mode, just scroll to inputs
+                });
+                
                 const themeToggle = document.getElementById('themeToggle');
                 if (themeToggle) {
                     themeToggle.addEventListener('click', () => {
@@ -1461,6 +1255,17 @@
                     });
                 }
                 
+                const twoFAToggle = document.getElementById('settingsTwoFAToggle');
+                if (twoFAToggle) {
+                    twoFAToggle.addEventListener('click', () => {
+                        const newState = !pendingTwoFA;
+                        pendingTwoFA = newState;
+                        twoFAToggle.classList.toggle('active', newState);
+                        const labelSpan = twoFAToggle.querySelector('.toggle-label');
+                        labelSpan.textContent = newState ? 'Enabled' : 'Disabled';
+                    });
+                }
+                
                 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
                     const newEmail = document.getElementById('settingsEmail')?.value.trim();
                     if (newEmail && !/^\S+@\S+\.\S+$/.test(newEmail)) {
@@ -1474,13 +1279,16 @@
                     if (newEmail) App.users[App.currentUser].email = newEmail;
                     
                     const newDisplayName = document.getElementById('settingsDisplayName')?.value.trim();
-                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,9}$/.test(newDisplayName)) {
-                        showNotification('Display name must be 1-9 letters/digits', 'error');
+                    if (newDisplayName && !/^[A-Za-zА-Яа-я0-9]{1,6}$/.test(newDisplayName)) {
+                        showNotification('Display name must be 1-6 letters/digits', 'error');
                         return;
                     }
                     if (newDisplayName) App.users[App.currentUser].displayName = newDisplayName;
                     
                     const newPassword = document.getElementById('settingsPassword')?.value.trim();
+                    const newBio = document.getElementById('settingsBio')?.value.trim().slice(0, 50);
+                    const newAge = parseInt(document.getElementById('settingsAge')?.value);
+                    
                     if (newPassword) {
                         if (!/^[A-Za-z0-9]+$/.test(newPassword)) {
                             showNotification('Password must contain only Latin letters and digits', 'error');
@@ -1488,6 +1296,8 @@
                         }
                         App.users[App.currentUser].password = newPassword;
                     }
+                    if (newBio !== undefined) App.users[App.currentUser].bio = newBio;
+                    if (newAge && newAge >= 5 && newAge <= 99) App.users[App.currentUser].age = newAge;
                     if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
                     if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                     
@@ -1496,6 +1306,11 @@
                     }
                     if (pendingPrivacy !== currentPrivacy) {
                         updatePrivacySetting(pendingPrivacy);
+                    }
+                    if (pendingTwoFA !== (userData.twoFA || false)) {
+                        App.users[App.currentUser].twoFA = pendingTwoFA;
+                        saveToSupabase();
+                        showNotification(pendingTwoFA ? '2FA enabled' : '2FA disabled');
                     }
                     
                     saveToSupabase();
@@ -1509,17 +1324,6 @@
                 
                 document.getElementById('closeSettingsBtn').addEventListener('click', () => {
                     document.getElementById('settingsModalOverlay').remove();
-                });
-                
-                document.getElementById('logoutFromSettingsBtn').addEventListener('click', () => {
-                    if (confirm('Log out?')) {
-                        document.getElementById('settingsModalOverlay').remove();
-                        App.currentUser = null;
-                        App.activeChat = null;
-                        localStorage.removeItem('yolk_current_user');
-                        localStorage.removeItem('yolk_active_chat');
-                        render();
-                    }
                 });
             }
 
@@ -1538,7 +1342,8 @@
                 }
             }
 
-            function formatLastSeen(lastSeen) {
+            function formatLastSeen(lastSeen, chatPartner) {
+                if (chatPartner === 'saved' || chatPartner === 'yolk') return '';
                 if (!lastSeen) return 'long ago';
                 const now = Date.now();
                 const diff = now - lastSeen;
@@ -1558,7 +1363,7 @@
                 return `${days} days ago`;
             }
 
-            function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx; const now = ctx.currentTime; const osc1 = ctx.createOscillator(); const gain = ctx.createGain(); osc1.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc1.frequency.value = 880; osc1.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc1.stop(now + 0.3); } catch(e) {} }
+            function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx; const now = ctx.currentTime; const osc1 = ctx.createOscillator(); const gain = ctx.createGain(); osc1.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc1.frequency.value = 880; osc1.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc1.stop(now + 0.3); } catch(e) { console.log('Sound error:', e); } }
             function showConfetti() { const confettiDiv = document.createElement('div'); confettiDiv.className = 'confetti'; for (let i = 0; i < 50; i++) { const piece = document.createElement('div'); piece.className = 'confetti-piece'; piece.style.left = Math.random() * 100 + '%'; piece.style.animationDelay = Math.random() * 2 + 's'; piece.style.background = ['#ffd700', '#ffb347', '#ff8c00', '#d4af37'][Math.floor(Math.random() * 4)]; confettiDiv.appendChild(piece); } document.body.appendChild(confettiDiv); setTimeout(() => confettiDiv.remove(), 3000); }
             function showNotification(message, type = 'success') { const notification = document.createElement('div'); notification.className = 'notification' + (type === 'error' ? ' error' : ''); notification.textContent = message; document.body.appendChild(notification); setTimeout(() => notification.remove(), 3000); }
             function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) { const img = new Image(); img.onload = () => { let width = img.width; let height = img.height; if (width > maxWidth) { height = (height * maxWidth) / width; width = maxWidth; } if (height > maxHeight) { width = (width * maxHeight) / height; height = maxHeight; } const canvas = document.createElement('canvas'); canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height); const compressedDataUrl = canvas.toDataURL('image/jpeg', quality); callback(compressedDataUrl); }; img.src = dataUrl; }
@@ -1594,7 +1399,7 @@
             
             function updateUserInterface() { const userData = App.users[App.currentUser]; if (!userData) return; updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
             
-            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB) return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToSupabase(); } return chatId; }
+            function ensureChat(userA, userB) { if (!userA || !userB || userA === userB || userB === 'saved' || userB === 'yolk') return; const chatId = [userA, userB].sort().join('_'); if (!App.chats[chatId]) { App.chats[chatId] = { user1: userA, user2: userB, messages: [] }; saveToSupabase(); } return chatId; }
 
             function ensureUserFollowData(username) {
                 if (!App.users[username]) return;
@@ -1639,8 +1444,31 @@
                 return true;
             }
             
+            function formatSubscribers(count) {
+                return `${count} ${count === 1 ? 'follower' : 'followers'}`;
+            }
+            
+            function toggleFeedSubscription(postId, author) {
+                if (author === App.currentUser) return;
+                const isCurrentlySubscribed = isFollowing(App.currentUser, author);
+                if (isCurrentlySubscribed) {
+                    unsubscribeFromUser(App.currentUser, author);
+                } else {
+                    subscribeToUser(App.currentUser, author);
+                }
+                const postCard = document.querySelector(`.post-card[data-post-id="${postId}"]`);
+                if (postCard) {
+                    const btn = postCard.querySelector('.subscribe-btn, .unsubscribe-btn');
+                    if (btn) {
+                        const newSubStatus = !isCurrentlySubscribed;
+                        btn.textContent = newSubStatus ? 'UNFOLLOW' : 'FOLLOW';
+                        btn.className = newSubStatus ? 'unsubscribe-btn' : 'subscribe-btn';
+                    }
+                }
+            }
+
             function openProfileModal(username) { 
-                const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', verified: false, status: null, chatWallpaper: '', followers: [], following: [] }) };
+                const userData = { ...(App.users[username] || { avatar: null, banner: null, password: '', bio: '', verified: false, status: null, age: 14, twoFA: false, chatWallpaper: '', followers: [], following: [] }) };
                 const isOwn = (username === App.currentUser); 
                 const followersCount = (userData.followers || []).length;
                 const followingCount = (userData.following || []).length;
@@ -1659,7 +1487,9 @@
                             <div class="profile-name-section">
                                 <div style="font-size:20px;">${formatUserNameWithStatus(username)}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div>
                                 <div style="font-size:14px; color: var(--text-secondary);">${followersCount} followers · ${followingCount} following</div>
+                                <div>Age: ${userData.age || 14}</div>
                             </div>
+                            <div class="profile-input-group"><label>BIO</label><div>${userData.bio || '—'}</div></div>
                             ${!isOwn ? `<div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button></div>` : ''}
                             ${isOwn ? `<div class="profile-actions"><button class="profile-btn" id="editProfileFromModalBtn">EDIT</button><button class="profile-btn secondary" id="closeProfileModalBtn">CLOSE</button><button class="profile-btn logout" id="logoutFromProfileBtn">LOGOUT</button></div>` : ''}
                         </div>
@@ -1676,6 +1506,7 @@
                         document.getElementById('profileModalOverlay').remove();
                         App.currentUser = null;
                         App.activeChat = null;
+                        App.savedMessages = {};
                         localStorage.removeItem('yolk_current_user');
                         localStorage.removeItem('yolk_active_chat');
                         render();
@@ -1743,7 +1574,6 @@
                     const commentsCount = post.comments?.length || 0;
                     const userLiked = post.likes && post.likes[App.currentUser];
                     const isOwner = post.author === App.currentUser;
-                    const isAdmin = App.currentUser === ADMIN_USER;
                     const date = new Date(post.time).toLocaleString();
                     const isSubscribed = isFollowing(App.currentUser, post.author);
                     const subButtonHtml = (post.author !== App.currentUser) ?
@@ -1773,7 +1603,7 @@
                                     <img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> 
                                     <span class="comments-count">${commentsCount}</span>
                                 </button>
-                                ${(isOwner || isAdmin) ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
+                                ${isOwner ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
                             </div>
                         </div>
                     `;
@@ -1846,7 +1676,7 @@
                 const modalHtml = `
                     <div class="modal-overlay" id="commentsModal">
                         <div class="comments-modal">
-                            <h3 style="color: var(--text);">Comments</h3>
+                            <h3 style="color: var(--text);">💬 Comments</h3>
                             <div id="commentsList" style="max-height: 300px; overflow-y: auto;">
                                 ${commentsList}
                             </div>
@@ -1885,19 +1715,15 @@
             };
 
             window.deletePost = function(postId) {
-                const post = App.posts.find(p => p.id === postId);
-                if (!post) return;
-                if (post.author !== App.currentUser && App.currentUser !== ADMIN_USER) {
-                    showNotification('You cannot delete this post', 'error');
-                    return;
-                }
                 if (!confirm('Delete post?')) return;
                 const index = App.posts.findIndex(p => p.id === postId);
-                if (index !== -1) {
+                if (index !== -1 && App.posts[index].author === App.currentUser) {
                     App.posts.splice(index, 1);
                     saveToSupabase();
                     initFeed();
                     showNotification('Post deleted');
+                } else {
+                    showNotification('You cannot delete this post', 'error');
                 }
             };
 
@@ -2028,237 +1854,6 @@
                 });
             }
 
-            // === MUSIC SECTION ==================================================
-            function openUploadMusicModal() {
-                let tempCover = null, tempAudio = null;
-                const modalHtml = `
-                    <div class="modal-overlay" id="uploadMusicModal">
-                        <div class="profile-modal">
-                            <h3>UPLOAD TRACK</h3>
-                            <div class="profile-input-group">
-                                <label>TITLE *</label>
-                                <input type="text" id="musicTitle" placeholder="Song name" maxlength="50">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>ARTIST *</label>
-                                <input type="text" id="musicArtist" value="${getDisplayName(App.currentUser)}" placeholder="Artist name">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>COVER (optional)</label>
-                                <button class="change-file-btn" id="selectCoverBtn">SELECT COVER</button>
-                                <input type="file" id="coverFileInput" accept="image/*" style="display:none;">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>AUDIO MP3 * (max 15MB)</label>
-                                <button class="change-file-btn" id="selectAudioBtn">SELECT AUDIO</button>
-                                <input type="file" id="audioFileInput" accept="audio/mpeg,audio/mp3" style="display:none;">
-                            </div>
-                            <div class="profile-actions">
-                                <button class="profile-btn" id="confirmUploadMusic">UPLOAD</button>
-                                <button class="profile-btn secondary" id="closeUploadMusicModal">CANCEL</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
-                document.getElementById('selectCoverBtn').addEventListener('click', () => document.getElementById('coverFileInput').click());
-                document.getElementById('coverFileInput').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        compressImage(ev.target.result, 300, 300, 0.7, (compressed) => {
-                            tempCover = compressed;
-                            showNotification('Cover ready');
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('selectAudioBtn').addEventListener('click', () => document.getElementById('audioFileInput').click());
-                document.getElementById('audioFileInput').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    if (file.size > 15 * 1024 * 1024) {
-                        showNotification('File too large (max 15MB)', 'error');
-                        return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        tempAudio = ev.target.result;
-                        showNotification('Audio loaded');
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('confirmUploadMusic').addEventListener('click', () => {
-                    const title = document.getElementById('musicTitle').value.trim();
-                    const artist = document.getElementById('musicArtist').value.trim();
-                    if (!title) { showNotification('Enter title', 'error'); return; }
-                    if (!artist) { showNotification('Enter artist', 'error'); return; }
-                    if (!tempAudio) { showNotification('Select audio file', 'error'); return; }
-                    
-                    const newTrack = {
-                        id: generateId(),
-                        title,
-                        artist,
-                        cover: tempCover || null,
-                        audio: tempAudio,
-                        uploadedBy: App.currentUser,
-                        uploadTime: Date.now()
-                    };
-                    App.musicTracks.push(newTrack);
-                    saveToSupabase(); // <- гарантированное сохранение в localStorage + Supabase
-                    document.getElementById('uploadMusicModal').remove();
-                    renderMusicSection();
-                    showNotification('Track uploaded!');
-                });
-                
-                document.getElementById('closeUploadMusicModal').addEventListener('click', () => {
-                    document.getElementById('uploadMusicModal').remove();
-                });
-            }
-
-            function deleteTrack(trackId) {
-                const track = App.musicTracks.find(t => t.id === trackId);
-                if (!track) return;
-                if (track.uploadedBy !== App.currentUser && App.currentUser !== ADMIN_USER) {
-                    showNotification('Cannot delete this track', 'error');
-                    return;
-                }
-                if (!confirm('Delete this track?')) return;
-                App.musicTracks = App.musicTracks.filter(t => t.id !== trackId);
-                if (App.currentTrack && App.currentTrack.id === trackId) {
-                    App.audioElement.pause();
-                    App.currentTrack = null;
-                    App.isPlaying = false;
-                    updateMiniPlayerUI();
-                }
-                saveToSupabase();
-                renderMusicSection();
-                showNotification('Track deleted');
-            }
-
-            function playTrack(track) {
-                if (App.currentTrack && App.currentTrack.id === track.id) {
-                    if (App.isPlaying) {
-                        App.audioElement.pause();
-                    } else {
-                        App.audioElement.play().catch(e => showNotification('Playback error', 'error'));
-                    }
-                } else {
-                    App.currentTrack = track;
-                    App.audioElement.src = track.audio;
-                    App.audioElement.play().catch(e => showNotification('Playback error', 'error'));
-                }
-                updateMiniPlayerUI();
-                updateTrackButtons();
-            }
-
-            function updatePlayerProgress() {
-                const fill = document.querySelector('.player-progress-fill');
-                if (fill && App.audioElement.duration) {
-                    const percent = (App.audioElement.currentTime / App.audioElement.duration) * 100;
-                    fill.style.width = percent + '%';
-                }
-            }
-
-            function seekAudio(e) {
-                const progressBar = e.currentTarget;
-                const rect = progressBar.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                if (App.audioElement.duration) {
-                    App.audioElement.currentTime = percent * App.audioElement.duration;
-                }
-            }
-
-            function updateMiniPlayerUI() {
-                const playerDiv = document.getElementById('miniPlayer');
-                if (!playerDiv) return;
-                if (App.currentTrack) {
-                    playerDiv.style.display = 'flex';
-                    const cover = playerDiv.querySelector('.player-cover img');
-                    const title = playerDiv.querySelector('.player-title');
-                    const artist = playerDiv.querySelector('.player-artist');
-                    const playBtnImg = playerDiv.querySelector('#playPauseBtn img');
-                    if (cover) cover.src = App.currentTrack.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23aaa\'%3E♪%3C/text%3E%3C/svg%3E';
-                    if (title) title.textContent = App.currentTrack.title;
-                    if (artist) artist.textContent = App.currentTrack.artist;
-                    if (playBtnImg) playBtnImg.src = App.isPlaying ? ICONS.PAUSE_ICON : ICONS.PLAY_ICON;
-                } else {
-                    playerDiv.style.display = 'none';
-                }
-            }
-
-            function updateTrackButtons() {
-                document.querySelectorAll('.play-track-btn').forEach(btn => {
-                    const id = btn.dataset.id;
-                    const img = btn.querySelector('img');
-                    if (img) {
-                        const isCurrent = App.currentTrack && App.currentTrack.id === id;
-                        img.src = (isCurrent && App.isPlaying) ? ICONS.PAUSE_ICON : ICONS.PLAY_ICON;
-                    }
-                });
-            }
-
-            function renderMusicSection() {
-                const container = document.getElementById('musicContainer');
-                if (!container) return;
-                let tracks = App.musicTracks;
-                const query = App.musicSearchQuery.toLowerCase();
-                if (query) {
-                    tracks = tracks.filter(t => t.title.toLowerCase().includes(query) || t.artist.toLowerCase().includes(query));
-                }
-                let html = `<div class="music-search"><input type="text" id="musicSearchInput" placeholder="Search tracks..." value="${App.musicSearchQuery}"></div>`;
-                if (tracks.length === 0) {
-                    html += '<div style="text-align:center; color: var(--text-secondary); padding:40px;">No tracks yet. Tap + to upload!</div>';
-                } else {
-                    tracks.forEach(track => {
-                        const canDelete = (track.uploadedBy === App.currentUser || App.currentUser === ADMIN_USER);
-                        const isCurrent = App.currentTrack && App.currentTrack.id === track.id;
-                        const playIcon = (isCurrent && App.isPlaying) ? ICONS.PAUSE_ICON : ICONS.PLAY_ICON;
-                        html += `
-                            <div class="track-card">
-                                <div class="track-cover">${track.cover ? `<img src="${track.cover}">` : '🎵'}</div>
-                                <div class="track-info">
-                                    <div class="track-title">${track.title}</div>
-                                    <div class="track-artist" onclick="openProfileModal('${track.uploadedBy}')">${track.artist}</div>
-                                </div>
-                                <div class="track-actions">
-                                    <button class="play-track-btn" data-id="${track.id}"><img src="${playIcon}" style="width:24px;height:24px;"></button>
-                                    ${canDelete ? `<button class="delete-track-btn" data-id="${track.id}"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-                }
-                container.innerHTML = html;
-                
-                const searchInput = document.getElementById('musicSearchInput');
-                if (searchInput) {
-                    searchInput.addEventListener('input', (e) => {
-                        App.musicSearchQuery = e.target.value;
-                        renderMusicSection();
-                    });
-                }
-                
-                document.querySelectorAll('.play-track-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = btn.dataset.id;
-                        const track = App.musicTracks.find(t => t.id === id);
-                        if (track) playTrack(track);
-                    });
-                });
-                document.querySelectorAll('.delete-track-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const id = btn.dataset.id;
-                        deleteTrack(id);
-                    });
-                });
-            }
-
-            // ===== RENDER =====
             function render() { 
                 const root = document.getElementById('app'); 
                 if (!App.dataLoaded) { 
@@ -2289,12 +1884,10 @@
                                 attachMainEvents(); 
                                 if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                                 else if (App.activeTab === 'feed') initFeed();
-                                else if (App.activeTab === 'music') renderMusicSection();
                                 updateChatList(); 
                                 updateSidebarUser(); 
                                 applyWallpaper();
                                 applyWallpaperToFeed();
-                                updateMiniPlayerUI();
                             }, 100); 
                         }
                     }, remaining);
@@ -2308,12 +1901,10 @@
                             attachMainEvents(); 
                             if (App.activeTab === 'chats' && App.activeChat) loadMessages(App.activeChat);
                             else if (App.activeTab === 'feed') initFeed();
-                            else if (App.activeTab === 'music') renderMusicSection();
                             updateChatList(); 
                             updateSidebarUser(); 
                             applyWallpaper();
                             applyWallpaperToFeed();
-                            updateMiniPlayerUI();
                         }, 100); 
                     }
                 }
@@ -2346,13 +1937,31 @@
                         errorDiv.innerText = '! Invalid username, email or password'; 
                         return; 
                     } 
-                    App.currentUser = mainUsername; 
-                    localStorage.setItem('yolk_current_user', mainUsername); 
-                    loadPrivacySettings(); 
-                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
-                    App.lastSeenInterval = setInterval(() => { updateLastSeen(mainUsername); }, 30000); 
-                    updateLastSeen(mainUsername); 
-                    render(); 
+                    const user = App.users[mainUsername]; 
+                    function loginSuccess() { 
+                        App.currentUser = mainUsername; 
+                        localStorage.setItem('yolk_current_user', mainUsername); 
+                        loadSavedMessages(); 
+                        loadYolkChatMessages(); 
+                        loadPrivacySettings(); 
+                        if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
+                        App.lastSeenInterval = setInterval(() => { updateLastSeen(mainUsername); }, 30000); 
+                        updateLastSeen(mainUsername); 
+                        render(); 
+                    } 
+                    if (user.twoFA) { 
+                        send2FACode(mainUsername); 
+                        const modalHtml = `<div class="two-factor-screen" id="twoFactorScreen"><div class="two-factor-box"><h3>🔐 Two-Factor Authentication</h3><p>A code was sent to your YOLK chat</p><input type="text" class="code-input" id="twoFactorCode" maxlength="6" placeholder="------" autofocus><button class="btn" id="verify2FABtn">VERIFY</button><div class="resend-link" id="resend2FACode">Resend code</div><div id="twoFactorError" class="auth-error"></div></div></div>`; 
+                        document.body.insertAdjacentHTML('beforeend', modalHtml); 
+                        document.getElementById('verify2FABtn').addEventListener('click', () => { 
+                            const inputCode = document.getElementById('twoFactorCode').value.trim(); 
+                            if (!inputCode) { document.getElementById('twoFactorError').textContent = 'Enter code'; return; } 
+                            if (verify2FACode(mainUsername, inputCode)) { document.getElementById('twoFactorScreen').remove(); loginSuccess(); } 
+                            else { document.getElementById('twoFactorError').textContent = 'Invalid or expired code'; } 
+                        }); 
+                        document.getElementById('resend2FACode').addEventListener('click', () => { send2FACode(mainUsername); showNotification('New code sent to your YOLK chat', 'success'); }); 
+                        document.getElementById('twoFactorCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('verify2FABtn').click(); }); 
+                    } else { loginSuccess(); } 
                 }); 
                 document.getElementById('registerBtn')?.addEventListener('click', () => { 
                     let username = document.getElementById('regUsername').value.trim().toLowerCase(); 
@@ -2365,9 +1974,11 @@
                     const clean = '@' + username; 
                     if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! Username already taken'; return; } 
                     if (isEmailTaken(email)) { errorDiv.innerText = '! Email already used'; return; }
-                    const newUser = { password: pass, avatar: null, banner: null, verified: false, status: null, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
+                    const newUser = { password: pass, avatar: null, banner: null, bio: '', verified: false, status: null, age: 14, twoFA: false, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
                     App.users[clean] = newUser;
                     App.currentUser = clean; 
+                    App.savedMessages[clean] = []; 
+                    saveSavedMessages(); 
                     localStorage.setItem('yolk_current_user', clean); 
                     saveToSupabase().then(() => {
                         render(); 
@@ -2381,17 +1992,17 @@
                 const userData = App.users[user] || {}; 
                 const isChatsActive = App.activeTab === 'chats'; 
                 let blockedMessage = '';
-                if (App.activeChat && !canUserMessage(user, App.activeChat)) {
+                if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk' && !canUserMessage(user, App.activeChat)) {
                     blockedMessage = 'This user does not accept messages from strangers';
                 }
                 
-                const chatTitle = App.activeChat ? formatUserNameWithStatus(App.activeChat) : '';
+                const chatTitle = App.activeChat === 'saved' ? 'SAVED' : (App.activeChat === 'yolk' ? 'YOLK' : formatUserNameWithStatus(App.activeChat));
                 const followersCount = (userData.followers || []).length;
                 const followingCount = (userData.following || []).length;
                 
                 return `
                     <div class="main-container">
-                        ${App.activeTab === 'chats' ? `
+                        ${isChatsActive ? `
                         <div class="sidebar ${App.sidebarOpen ? 'open' : ''}">
                             <div class="user-profile">
                                 <div class="avatar">${userData.avatar ? `<img src="${userData.avatar}" class="avatar-img">` : (getDisplayName(user)[0]?.toUpperCase() || '?')}</div>
@@ -2405,78 +2016,61 @@
                         </div>
                         <div class="chat-area">
                             <div class="chat-header">
-                                <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatTitle}${App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
-                                <div class="chat-actions">${App.activeChat ? `<button class="tiny-btn" id="viewProfileBtn">PROFILE</button>` : ''}</div>
+                                <div class="chat-header-info"><button class="back-btn ${window.innerWidth < 768 ? 'visible' : ''}" id="backBtn">←</button><strong>${chatTitle}${!App.channels && App.users[App.activeChat]?.verified ? '<span class="verified-icon"></span>' : ''}</strong></div>
+                                <div class="chat-actions">${App.activeChat !== 'saved' && App.activeChat !== 'yolk' ? `<button class="tiny-btn" id="viewProfileBtn">PROFILE</button>` : ''}</div>
                             </div>
                             <div class="messages-container" id="messageList"></div>
-                            ${App.activeChat ? (canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="MESSAGE..." autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);">Select a chat to start messaging</div>'}
+                            ${App.activeChat !== 'yolk' ? (canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="${App.activeChat === 'saved' ? 'NOTE...' : 'MESSAGE...'}" autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`) : '<div class="input-area" style="justify-content:center; color: var(--text-secondary);"><small>This is a system chat, you cannot send messages</small></div>'}
                         </div>
-                        ` : (App.activeTab === 'feed' ? `
+                        ` : `
                         <div class="feed-container" id="feedContainer"></div>
                         <button class="create-post-btn" id="createPostBtn">+</button>
-                        ` : `
-                        <div class="music-container" id="musicContainer"></div>
-                        <button class="create-music-btn" id="createMusicBtn">+</button>
-                        `)}
+                        `}
                     </div>
                     <div class="bottom-nav">
-                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png" alt="Feed"></div>
                         <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png" alt="Chats"></div>
-                        <div class="nav-item ${App.activeTab === 'music' ? 'active' : ''}" data-tab="music"><img src="${ICONS.MUSIC_ICON}" alt="Music"></div>
+                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png" alt="Feed"></div>
                         <div class="nav-item" id="premiumTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png" alt="Premium"></div>
                         <div class="nav-item" id="settingsTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v4.png" alt="Settings"></div>
-                    </div>
-                    <div id="miniPlayer" class="mini-player" style="display: none;">
-                        <div class="player-cover"><img src=""></div>
-                        <div class="player-info">
-                            <div class="player-title"></div>
-                            <div class="player-artist"></div>
-                        </div>
-                        <div class="player-controls">
-                            <button class="player-btn" id="playPauseBtn"><img src="${ICONS.PLAY_ICON}"></button>
-                            <div class="player-progress" id="playerProgressBar">
-                                <div class="player-progress-fill"></div>
-                            </div>
-                        </div>
                     </div>
                 `; 
             }
 
             function attachMainEvents() { 
                 const backBtn = document.getElementById('backBtn'); if (backBtn) backBtn.addEventListener('click', () => { App.sidebarOpen = true; document.querySelector('.sidebar').classList.add('open'); });
-                const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat) { openProfileModal(App.activeChat); } });
+                const viewProfileBtn = document.getElementById('viewProfileBtn'); if (viewProfileBtn) viewProfileBtn.addEventListener('click', () => { if (App.activeChat && App.activeChat !== 'saved' && App.activeChat !== 'yolk') { openProfileModal(App.activeChat); } });
                 const sendBtn = document.getElementById('sendMsgBtn'); if (sendBtn) sendBtn.addEventListener('click', sendMessage);
                 const fileUpload = document.getElementById('fileUpload'); const videoUpload = document.getElementById('videoUpload'); if (fileUpload) fileUpload.addEventListener('change', handleFileSelect); if (videoUpload) videoUpload.addEventListener('change', handleVideoSelect);
                 const addUserBtn = document.getElementById('addUserBtn'); if (addUserBtn) addUserBtn.addEventListener('click', addUserBySearch);
                 const messageText = document.getElementById('messageText'); if (messageText) messageText.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendMessage(); } });
                 
-                document.querySelectorAll('.nav-item[data-tab]').forEach(item => {
-                    item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
                         const tab = item.dataset.tab;
-                        App.activeTab = tab;
-                        if (tab === 'chats' && window.innerWidth < 768) App.sidebarOpen = false;
-                        render();
+                        if (tab === 'chats') {
+                            App.activeTab = 'chats';
+                            if (window.innerWidth < 768) App.sidebarOpen = false;
+                            render();
+                        } else if (tab === 'feed') {
+                            App.activeTab = 'feed';
+                            render();
+                            setTimeout(() => initFeed(), 50);
+                        }
                     });
                 });
                 
                 document.getElementById('premiumTab')?.addEventListener('click', () => {
+                    // Покупка премиум статуса ALBUMEN
                     const modalHtml = `
                         <div class="modal-overlay" id="premiumModal">
-                            <div class="profile-modal" style="max-width: 450px;">
-                                <h3>Premium Subscription</h3>
-                                <div style="background: rgba(212,175,55,0.1); padding: 16px; border-radius: 16px; margin-bottom: 20px;">
-                                    <p style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">PERMANENT PREMIUM SUBSCRIPTION</p>
-                                    <ul style="margin-left: 20px; color: var(--text); line-height: 1.6;">
-                                        <li>BLUE NICK</li>
-                                        <li>YOUR POSTS WILL APPEAR MORE OFTEN IN RECOMMENDATIONS</li>
-                                    </ul>
-                                </div>
-                                <p style="margin-bottom: 16px;">Price: <strong>2 TON</strong></p>
+                            <div class="profile-modal">
+                                <h3>✨ PREMIUM STATUS</h3>
+                                <p style="margin-bottom: 16px;">Get ALBUMEN status for 2 TON</p>
                                 <div class="profile-input-group">
                                     <label>TON ADDRESS</label>
                                     <input type="text" value="${TON_ADDRESS}" readonly onclick="this.select();document.execCommand('copy');showNotification('Address copied!')">
                                 </div>
-                                <p style="font-size: 14px; margin-bottom: 12px;">Send exactly 2 TON to the address above. After payment, your subscription will be activated within 1-2 days. For support, contact @durov.</p>
+                                <p style="font-size: 14px;">Send exactly 2 TON to the address above. After payment, contact support with TXID.</p>
                                 <div class="profile-actions">
                                     <button class="profile-btn secondary" id="closePremiumModal">CLOSE</button>
                                 </div>
@@ -2493,22 +2087,6 @@
                 
                 const createPostBtn = document.getElementById('createPostBtn');
                 if (createPostBtn) createPostBtn.addEventListener('click', openCreatePostModal);
-                
-                const createMusicBtn = document.getElementById('createMusicBtn');
-                if (createMusicBtn) createMusicBtn.addEventListener('click', openUploadMusicModal);
-                
-                // Mini player controls
-                const playPauseBtn = document.getElementById('playPauseBtn');
-                if (playPauseBtn) {
-                    playPauseBtn.addEventListener('click', () => {
-                        if (App.currentTrack) {
-                            if (App.isPlaying) App.audioElement.pause();
-                            else App.audioElement.play();
-                        }
-                    });
-                }
-                const progressBar = document.getElementById('playerProgressBar');
-                if (progressBar) progressBar.addEventListener('click', seekAudio);
             }
 
             function sendMessage() { 
@@ -2517,7 +2095,7 @@
                 if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Enter message or select file', 'error'); return; } 
                 const from = App.currentUser; 
                 const to = App.activeChat; 
-                if (!to) { showNotification('Select a chat', 'error'); return; } 
+                if (!to || to === 'yolk') { showNotification('Cannot send here', 'error'); return; } 
                 if (!canUserMessage(from, to)) { showNotification('You cannot message this user', 'error'); return; } 
                 try { 
                     let mediaData = null; 
@@ -2525,12 +2103,21 @@
                     if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } 
                     else if (App.tempPhoto) { mediaData = App.tempPhoto; } 
                     const message = { from, text: text || '', time: Date.now(), photo: mediaData, isVideo: isVideoMsg, likes: {}, dislikes: {} };
-                    const chatId = [from, to].sort().join('_'); 
-                    if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
-                    App.chats[chatId].messages.push(message); 
-                    saveToSupabase(); 
-                    renderMessages(to); 
-                    playHappySound(); 
+                    if (to === 'saved') { 
+                        if (!App.savedMessages[from]) App.savedMessages[from] = []; 
+                        App.savedMessages[from].push(message); 
+                        saveSavedMessages(); 
+                        showNotification('Saved'); 
+                        renderMessages('saved'); 
+                        playHappySound(); 
+                    } else { 
+                        const chatId = [from, to].sort().join('_'); 
+                        if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
+                        App.chats[chatId].messages.push(message); 
+                        saveToSupabase(); 
+                        renderMessages(to); 
+                        playHappySound(); 
+                    } 
                     if (textInput) textInput.value = ''; 
                     App.tempPhoto = null; 
                     App.tempVideo = null; 
@@ -2545,61 +2132,83 @@
             function renderMessages(chatPartner) { 
                 const messagesContainer = document.getElementById('messageList'); 
                 if (!messagesContainer) return; 
-                const chatId = [App.currentUser, chatPartner].sort().join('_'); 
-                const chat = App.chats[chatId]; 
-                const messages = chat ? chat.messages : []; 
+                let messages = []; 
+                if (chatPartner === 'saved') messages = App.savedMessages[App.currentUser] || []; 
+                else if (chatPartner === 'yolk') messages = App.yolkChatMessages[App.currentUser] || []; 
+                else { const chatId = [App.currentUser, chatPartner].sort().join('_'); const chat = App.chats[chatId]; messages = chat ? chat.messages : []; } 
                 let html = ''; 
                 if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); }); 
-                else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">No messages</div>'; 
+                else { if (chatPartner === 'yolk') html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">Login codes will appear here</div>'; else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">No messages</div>'; } 
                 messagesContainer.innerHTML = html; 
                 setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100); 
-                updateChatHeaderStatus(chatPartner); 
+                if (chatPartner !== 'saved' && chatPartner !== 'yolk') updateChatHeaderStatus(chatPartner); 
             }
 
             function renderMessage(msg, idx, currentUser, chatPartner) { 
-                const isMe = msg.from === currentUser; 
-                const fromUserDisplay = formatUserNameWithStatus(msg.from);
-                let canDelete = isMe; 
+                const isMe = msg.from === currentUser || (chatPartner === 'saved' && msg.from === currentUser); 
+                const isSystem = msg.from === 'SYSTEM'; 
+                const fromUserDisplay = isSystem ? 'SYSTEM' : formatUserNameWithStatus(msg.from);
+                let canDelete = false; 
+                if (chatPartner === 'saved') canDelete = true; 
+                else if (chatPartner === 'yolk') canDelete = false; 
+                else canDelete = isMe; 
                 let mediaHtml = ''; 
                 if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
                 let messageText = msg.text || ''; 
                 const messageClass = isMe ? 'me' : ''; 
                 const fullDate = new Date(msg.time).toLocaleString();
                 
-                return `<div class="message ${messageClass}">${!isMe ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">DELETE</button></div>` : ''}</div></div>`; 
+                return `<div class="message ${messageClass} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}${App.users[msg.from]?.verified ? '<span class="verified-icon"></span>' : ''}</span></small><br>` : ''}${isSystem ? `<small>🔔 SYSTEM</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">DELETE</button></div>` : ''}</div></div>`; 
             }
 
             function updateChatList() { 
                 const chatsContainer = document.getElementById('chatsList'); 
                 if (!chatsContainer || !App.currentUser) return; 
                 let chatsList = getChatListForUser(App.currentUser); 
+                const saved = chatsList.includes('saved') ? ['saved'] : []; 
+                const yolk = chatsList.includes('yolk') ? ['yolk'] : []; 
+                const other = chatsList.filter(c => c !== 'saved' && c !== 'yolk'); 
+                const orderedList = [...saved, ...yolk, ...other]; 
                 let html = ''; 
-                chatsList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); }); 
+                orderedList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); }); 
                 chatsContainer.innerHTML = html; 
                 document.querySelectorAll('.chat-item').forEach(el => { el.addEventListener('click', (e) => { if (e.target.closest('.delete-chat-icon')) return; const chatId = el.dataset.chat; if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; } App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId); if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); render(); }); }); 
             }
 
             function renderChatItem(u, active, currentUser) { 
-                let display = formatUserNameWithStatus(u);
-                let avatarHtml = `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
-                const avatarUrl = App.users[u]?.avatar; 
-                if (avatarUrl) avatarHtml = `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>`; 
+                let name = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : u); 
+                let display = u === 'saved' ? 'SAVED' : (u === 'yolk' ? 'YOLK' : formatUserNameWithStatus(u));
+                let avatarHtml = '<div class="chat-avatar">📁</div>'; 
+                if (u === 'yolk') avatarHtml = '<div class="chat-avatar">💬</div>'; 
+                else if (u !== 'saved') { 
+                    const avatarUrl = App.users[u]?.avatar; 
+                    avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar">${getDisplayName(u)[0]?.toUpperCase() || '@'}</div>`; 
+                } 
                 const userData = App.users[u] || {}; 
-                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span></div>`; 
+                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display" style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">${display}${userData.verified ? '<span class="verified-icon"></span>' : ''}</div></div>${u !== 'saved' && u !== 'yolk' ? `<span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span>` : ''}</div>`; 
             }
 
-            function getChatListForUser(user) { let set = new Set(); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user) set.add(c.user2); if (c.user2 === user) set.add(c.user1); } }); return Array.from(set); }
-            function loadMessages(chatPartner) { renderMessages(chatPartner); updateChatHeaderStatus(chatPartner); }
+            function getChatListForUser(user) { let set = new Set(['saved', 'yolk']); Object.keys(App.chats || {}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user && c.user2 !== 'saved') set.add(c.user2); if (c.user2 === user && c.user1 !== 'saved') set.add(c.user1); } }); return Array.from(set); }
+            function loadMessages(chatPartner) { if (chatPartner === 'saved' || chatPartner === 'yolk') { renderMessages(chatPartner); return; } const chatId = [App.currentUser, chatPartner].sort().join('_'); renderMessages(chatPartner); updateChatHeaderStatus(chatPartner); }
+            function loadSavedMessages() { if (!App.currentUser) return; const saved = localStorage.getItem('yolk_saved_' + App.currentUser); if (saved) { try { App.savedMessages[App.currentUser] = JSON.parse(saved); } catch(e) { App.savedMessages[App.currentUser] = []; } } else { App.savedMessages[App.currentUser] = []; } }
+            function saveSavedMessages() { if (App.currentUser) { localStorage.setItem('yolk_saved_' + App.currentUser, JSON.stringify(App.savedMessages[App.currentUser] || [])); } }
+            function loadYolkChatMessages() { const saved = localStorage.getItem('yolk_chat_messages'); if (saved) { try { App.yolkChatMessages = JSON.parse(saved); } catch(e) { App.yolkChatMessages = {}; } } else { App.yolkChatMessages = {}; } }
+            function send2FACode(username) { const code = Math.floor(100000 + Math.random() * 900000).toString(); const pendingCode = { code: code, username: username, timestamp: Date.now() }; localStorage.setItem('pending_2fa_' + username, JSON.stringify(pendingCode)); if (!App.yolkChatMessages[username]) App.yolkChatMessages[username] = []; App.yolkChatMessages[username].push({ from: 'SYSTEM', text: `🔐 Verification code: ${code}\nEnter this code to log into ${username}\nCode valid for 5 minutes.`, time: Date.now(), isCode: true }); saveYolkChatMessages(); return pendingCode; }
+            function verify2FACode(username, inputCode) { const saved = localStorage.getItem('pending_2fa_' + username); if (!saved) return false; const pending = JSON.parse(saved); if (pending.code === inputCode && (Date.now() - pending.timestamp) < 300000) { localStorage.removeItem('pending_2fa_' + username); return true; } return false; }
+            function saveYolkChatMessages() { localStorage.setItem('yolk_chat_messages', JSON.stringify(App.yolkChatMessages)); if (App.dataLoaded) { saveToSupabase(); } }
             function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Photo added, write text and send'); }); }; reader.readAsDataURL(file); }
             function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Video max 20 MB', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Video added, write text and send'); }; reader.readAsDataURL(file); }
             function addUserBySearch() { 
                 let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
                 if (!query) { showNotification('Enter username', 'error'); return; } 
                 if (!query.startsWith('@')) query = '@' + query; 
+                if (query === 'yolk') { showNotification('This is a system chat', 'error'); return; } 
+                
                 let mainUser = findMainUsername(query);
                 if (!mainUser) {
                     if (App.users[query]) mainUser = query;
                 }
+                
                 if (!mainUser || !App.users[mainUser]) { showNotification('User not found', 'error'); return; } 
                 if (mainUser === App.currentUser) { showNotification('This is you', 'error'); return; } 
                 if (!canUserMessage(App.currentUser, mainUser)) { showNotification('This user does not accept messages from strangers', 'error'); return; } 
@@ -2611,8 +2220,8 @@
                 render(); 
                 showNotification(`Chat with ${getDisplayName(mainUser)} created`); 
             }
-            window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = null; localStorage.removeItem('yolk_active_chat'); } saveToSupabase(); render(); showNotification('Chat deleted'); };
-            window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Deleted'); renderMessages(chatPartner); } } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } };
+            window.deleteChat = function(chat, event) { event.stopPropagation(); if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; const user = App.currentUser; const chatId = [user, chat].sort().join('_'); if (App.chats[chatId]) delete App.chats[chatId]; if (App.activeChat === chat) { App.activeChat = 'saved'; localStorage.setItem('yolk_active_chat', 'saved'); } saveToSupabase(); render(); showNotification('Chat deleted'); };
+            window.deleteMessage = function(chatPartner, idx) { const from = App.currentUser; try { if (chatPartner === 'saved') { const msgs = App.savedMessages[from]; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveSavedMessages(); showNotification('Deleted'); renderMessages('saved'); } } else if (chatPartner === 'yolk') { showNotification('Cannot delete system messages', 'error'); return; } else { const chatId = [from, chatPartner].sort().join('_'); const msgs = App.chats[chatId]?.messages; if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); showNotification('Deleted'); renderMessages(chatPartner); } } } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } };
             window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
 
             function updateChatHeaderStatus(username) { 
@@ -2624,64 +2233,13 @@
                 if (existingNameStrong) { 
                     existingNameStrong.innerHTML = formatUserNameWithStatus(username) + (App.users[username]?.verified ? '<span class="verified-icon"></span>' : '');
                 } 
+                if (username === 'saved' || username === 'yolk') return;
                 const isOnline = isUserOnline(username); 
-                const lastSeenText = formatLastSeen(App.users[username]?.lastSeen); 
+                const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username); 
                 const statusDiv = document.createElement('div'); 
                 statusDiv.className = 'chat-user-status' + (isOnline ? '' : ' offline'); 
                 statusDiv.textContent = isOnline ? 'online' : `last seen ${lastSeenText}`; 
                 headerInfo.appendChild(statusDiv); 
-            }
-
-            function openAdminPanel() {
-                const usersList = Object.keys(App.users).filter(u => !App.systemBots.includes(u));
-                const modalHtml = `
-                    <div class="modal-overlay" id="adminModalOverlay">
-                        <div class="profile-modal" style="max-width: 500px;">
-                            <h3>ADMIN PANEL</h3>
-                            <div class="admin-give-form">
-                                <h4>GIVE ITEM</h4>
-                                <div class="input-group">
-                                    <label>USER</label>
-                                    <select id="adminTargetUser">
-                                        <option value="">Select user</option>
-                                        ${usersList.map(u => `<option value="${u}">${u} (${getDisplayName(u)})</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div class="input-group">
-                                    <label>ITEM TYPE</label>
-                                    <select id="adminItemType">
-                                        <option value="status">STATUS ALBUMEN</option>
-                                        <option value="verified">VERIFIED STATUS</option>
-                                    </select>
-                                </div>
-                                <button class="profile-btn" id="adminGiveBtn">GIVE</button>
-                            </div>
-                            <div class="profile-actions">
-                                <button class="profile-btn secondary" id="closeAdminModal">CLOSE</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                document.getElementById('adminGiveBtn').addEventListener('click', () => {
-                    const targetUser = document.getElementById('adminTargetUser').value;
-                    const type = document.getElementById('adminItemType').value;
-                    if (!targetUser) { showNotification('Select user', 'error'); return; }
-                    if (!App.users[targetUser]) { showNotification('User not found', 'error'); return; }
-                    if (type === 'status') {
-                        App.users[targetUser].status = 'ALBUMEN';
-                        showNotification(`ALBUMEN status given to ${getDisplayName(targetUser)}`);
-                    } else if (type === 'verified') {
-                        App.users[targetUser].verified = true;
-                        showNotification(`Verified status given to ${getDisplayName(targetUser)}`);
-                    }
-                    saveToSupabase();
-                    updateUserInterface();
-                    document.getElementById('adminModalOverlay').remove();
-                });
-                document.getElementById('closeAdminModal').addEventListener('click', () => {
-                    document.getElementById('adminModalOverlay').remove();
-                });
             }
 
             function initBots() { App.systemBots = []; saveToSupabase(); }
@@ -2697,4 +2255,4 @@
         })();
     </script>
 </body>
-</html>
+</html> 
