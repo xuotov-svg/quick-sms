@@ -792,6 +792,11 @@
             background: rgba(255,68,68,0.15) !important;
             color: #ff6666 !important;
         }
+        .track-actions img {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
 
         /* MINI PLAYER */
         .mini-player {
@@ -849,6 +854,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .player-btn img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
         }
         .player-progress {
             width: 100px;
@@ -908,8 +918,8 @@
                 chatWallpaper: '', soundEnabled: true, audioCtx: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
                 typingTimeouts: {}, lastPostTime: {},
-                musicTracks: [],               // массив треков
-                currentTrack: null,            // текущий играющий трек (объект)
+                musicTracks: [],
+                currentTrack: null,
                 isPlaying: false,
                 audioElement: new Audio(),
                 musicSearchQuery: ''
@@ -921,9 +931,10 @@
             App.audioElement.addEventListener('ended', () => {
                 App.isPlaying = false;
                 updateMiniPlayerUI();
+                updateTrackButtons();
             });
-            App.audioElement.addEventListener('play', () => { App.isPlaying = true; updateMiniPlayerUI(); });
-            App.audioElement.addEventListener('pause', () => { App.isPlaying = false; updateMiniPlayerUI(); });
+            App.audioElement.addEventListener('play', () => { App.isPlaying = true; updateMiniPlayerUI(); updateTrackButtons(); });
+            App.audioElement.addEventListener('pause', () => { App.isPlaying = false; updateMiniPlayerUI(); updateTrackButtons(); });
 
             const ADMIN_USER = '@durov';
             const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
@@ -934,7 +945,9 @@
                 COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
                 SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png',
-                MUSIC_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png'
+                MUSIC_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png',
+                PLAY_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1487.png',
+                PAUSE_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1484.png'
             };
             
             // === SUPABASE FUNCTIONS ===
@@ -1289,9 +1302,7 @@
                                 <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
                                 <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
                             </div>
-                            <div style="margin-top: 16px;">
-                                <button class="profile-btn logout" id="logoutFromSettingsBtn">LOG OUT</button>
-                            </div>
+                            <button class="profile-btn logout" id="logoutFromSettingsBtn" style="margin-top: 16px; width: 100%;">LOG OUT</button>
                         </div>
                     </div>
                 `;
@@ -2065,6 +2076,7 @@
                     App.audioElement.play().catch(e => showNotification('Playback error', 'error'));
                 }
                 updateMiniPlayerUI();
+                updateTrackButtons();
             }
 
             function updatePlayerProgress() {
@@ -2092,14 +2104,25 @@
                     const cover = playerDiv.querySelector('.player-cover img');
                     const title = playerDiv.querySelector('.player-title');
                     const artist = playerDiv.querySelector('.player-artist');
-                    const playBtn = playerDiv.querySelector('#playPauseBtn');
+                    const playBtnImg = playerDiv.querySelector('#playPauseBtn img');
                     if (cover) cover.src = App.currentTrack.cover || 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 100 100\'%3E%3Crect width=\'100\' height=\'100\' fill=\'%23333\'/%3E%3Ctext x=\'50\' y=\'60\' font-size=\'40\' text-anchor=\'middle\' fill=\'%23aaa\'%3E♪%3C/text%3E%3C/svg%3E';
                     if (title) title.textContent = App.currentTrack.title;
                     if (artist) artist.textContent = App.currentTrack.artist;
-                    if (playBtn) playBtn.textContent = App.isPlaying ? '⏸' : '▶';
+                    if (playBtnImg) playBtnImg.src = App.isPlaying ? ICONS.PAUSE_ICON : ICONS.PLAY_ICON;
                 } else {
                     playerDiv.style.display = 'none';
                 }
+            }
+
+            function updateTrackButtons() {
+                document.querySelectorAll('.play-track-btn').forEach(btn => {
+                    const id = btn.dataset.id;
+                    const img = btn.querySelector('img');
+                    if (img) {
+                        const isCurrent = App.currentTrack && App.currentTrack.id === id;
+                        img.src = (isCurrent && App.isPlaying) ? ICONS.PAUSE_ICON : ICONS.PLAY_ICON;
+                    }
+                });
             }
 
             function renderMusicSection() {
@@ -2116,6 +2139,8 @@
                 } else {
                     tracks.forEach(track => {
                         const canDelete = (track.uploadedBy === App.currentUser || App.currentUser === ADMIN_USER);
+                        const isCurrent = App.currentTrack && App.currentTrack.id === track.id;
+                        const playIcon = (isCurrent && App.isPlaying) ? ICONS.PAUSE_ICON : ICONS.PLAY_ICON;
                         html += `
                             <div class="track-card">
                                 <div class="track-cover">${track.cover ? `<img src="${track.cover}">` : '🎵'}</div>
@@ -2124,8 +2149,8 @@
                                     <div class="track-artist" onclick="openProfileModal('${track.uploadedBy}')">${track.artist}</div>
                                 </div>
                                 <div class="track-actions">
-                                    <button class="play-track-btn" data-id="${track.id}">▶</button>
-                                    ${canDelete ? `<button class="delete-track-btn" data-id="${track.id}">🗑</button>` : ''}
+                                    <button class="play-track-btn" data-id="${track.id}"><img src="${playIcon}" style="width:24px;height:24px;"></button>
+                                    ${canDelete ? `<button class="delete-track-btn" data-id="${track.id}"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
                                 </div>
                             </div>
                         `;
@@ -2331,7 +2356,7 @@
                             <div class="player-artist"></div>
                         </div>
                         <div class="player-controls">
-                            <button class="player-btn" id="playPauseBtn">▶</button>
+                            <button class="player-btn" id="playPauseBtn"><img src="${ICONS.PLAY_ICON}"></button>
                             <div class="player-progress" id="playerProgressBar">
                                 <div class="player-progress-fill"></div>
                             </div>
@@ -2365,8 +2390,8 @@
                                 <div style="background: rgba(212,175,55,0.1); padding: 16px; border-radius: 16px; margin-bottom: 20px;">
                                     <p style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">PERMANENT PREMIUM SUBSCRIPTION</p>
                                     <ul style="margin-left: 20px; color: var(--text); line-height: 1.6;">
-                                        <li>🔵 BLUE NICK</li>
-                                        <li>📈 YOUR POSTS WILL APPEAR MORE OFTEN IN RECOMMENDATIONS</li>
+                                        <li>BLUE NICK</li>
+                                        <li>YOUR POSTS WILL APPEAR MORE OFTEN IN RECOMMENDATIONS</li>
                                     </ul>
                                 </div>
                                 <p style="margin-bottom: 16px;">Price: <strong>2 TON</strong></p>
