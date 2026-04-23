@@ -91,10 +91,7 @@
         .two-factor-box,
         .feed-container,
         .post-card,
-        .comments-modal,
-        .music-container,
-        .track-card,
-        .admin-panel {
+        .comments-modal {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -109,12 +106,6 @@
         .icon-btn:hover,
         .send-btn:hover,
         .profile-btn:hover,
-        .subscribe-btn:hover,
-        .unsubscribe-btn:hover,
-        .like-btn:hover,
-        .dislike-btn:hover,
-        .settings-icon:hover,
-        .delete-chat-icon:hover,
         .tab:hover,
         .tab.active,
         .nav-item:hover,
@@ -124,20 +115,18 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
         }
         
-        .chat-area, .feed-container, .music-container {
+        .chat-area, .feed-container {
             background-color: transparent !important;
             position: relative;
         }
         
         body:not(.light-theme) .chat-area,
-        body:not(.light-theme) .feed-container,
-        body:not(.light-theme) .music-container {
+        body:not(.light-theme) .feed-container {
             background-color: #0a0a0a !important;
         }
         
         body.light-theme .chat-area,
-        body.light-theme .feed-container,
-        body.light-theme .music-container {
+        body.light-theme .feed-container {
             background-color: #ffffff !important;
         }
         
@@ -272,6 +261,34 @@
             50% { opacity: 1; transform: translateY(-5px); }
         }
         
+        body.light-theme .icon-btn,
+        body.light-theme .send-btn,
+        body.light-theme .file-label,
+        body.light-theme .tiny-btn,
+        body.light-theme .inline-btn,
+        body.light-theme .profile-btn,
+        body.light-theme .subscribe-btn,
+        body.light-theme .unsubscribe-btn,
+        body.light-theme .like-btn,
+        body.light-theme .dislike-btn,
+        body.light-theme .settings-icon,
+        body.light-theme .delete-chat-icon,
+        body.light-theme .tab,
+        body.light-theme .msg-actions button,
+        body.light-theme .back-btn,
+        body.light-theme .change-username-btn,
+        body.light-theme .toggle-password,
+        body.light-theme .resend-link,
+        body.light-theme .close-btn,
+        body.light-theme .nav-item,
+        body.light-theme .post-like,
+        body.light-theme .post-dislike,
+        body.light-theme .post-comment,
+        body.light-theme .post-delete,
+        body.light-theme .create-post-btn {
+            filter: none !important;
+        }
+        
         .icon-btn,
         .send-btn,
         .file-label,
@@ -297,8 +314,7 @@
         .post-dislike,
         .post-comment,
         .post-delete,
-        .create-post-btn,
-        .create-track-btn {
+        .create-post-btn {
             transition: all 0.2s ease;
         }
         
@@ -322,8 +338,7 @@
         .post-dislike:hover,
         .post-comment:hover,
         .post-delete:hover,
-        .create-post-btn:hover,
-        .create-track-btn:hover {
+        .create-post-btn:hover {
             filter: brightness(1.05);
         }
         
@@ -525,16 +540,14 @@
             justify-content: space-around;
             padding: 8px 0;
             z-index: 20;
-            flex-wrap: wrap;
         }
         .nav-item {
             flex: 1;
-            min-width: 60px;
             text-align: center;
             padding: 8px;
             cursor: pointer;
             border-radius: 12px;
-            margin: 0 4px;
+            margin: 0 8px;
             transition: all 0.2s;
             display: flex;
             justify-content: center;
@@ -549,7 +562,7 @@
             background: rgba(212, 175, 55, 0.2);
         }
         
-        .feed-container, .music-container {
+        .feed-container {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
@@ -558,7 +571,7 @@
             z-index: 5;
             width: 100%;
         }
-        .post-card, .track-card {
+        .post-card {
             background: var(--glass-bg);
             border-radius: 20px;
             padding: 16px;
@@ -566,14 +579,14 @@
             border: 1px solid var(--glass-border);
             transition: transform 0.2s;
         }
-        .post-header, .track-header {
+        .post-header {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 12px;
             cursor: pointer;
         }
-        .post-avatar, .track-cover {
+        .post-avatar {
             width: 48px;
             height: 48px;
             border-radius: 50%;
@@ -584,12 +597,12 @@
             font-size: 24px;
             overflow: hidden;
         }
-        .post-avatar-img, .track-cover-img {
+        .post-avatar-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .post-author, .track-author {
+        .post-author {
             font-weight: 600;
             color: var(--text);
             display: flex;
@@ -597,16 +610,11 @@
             gap: 4px;
             flex-wrap: wrap;
         }
-        .track-title {
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 4px;
-        }
-        .post-time, .track-time {
+        .post-time {
             font-size: 12px;
             color: var(--text-secondary);
         }
-        .post-text, .track-meta {
+        .post-text {
             margin-bottom: 12px;
             color: var(--text);
             word-break: break-word;
@@ -618,43 +626,7 @@
             margin-bottom: 12px;
             cursor: pointer;
         }
-        .track-controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 8px;
-        }
-        .play-pause-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 4px;
-        }
-        .play-pause-btn img {
-            width: 36px;
-            height: 36px;
-        }
-        .progress-bar {
-            flex: 1;
-            height: 4px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 2px;
-            cursor: pointer;
-        }
-        .progress-fill {
-            width: 0%;
-            height: 100%;
-            background: var(--accent);
-            border-radius: 2px;
-            transition: width 0.1s;
-        }
-        .time-display {
-            font-size: 12px;
-            color: var(--text-secondary);
-            min-width: 60px;
-            text-align: right;
-        }
-        .post-stats, .track-stats {
+        .post-stats {
             display: flex;
             gap: 16px;
             margin-top: 12px;
@@ -662,7 +634,7 @@
             padding-top: 12px;
             align-items: center;
         }
-        .post-stats button, .track-stats button {
+        .post-stats button {
             background: rgba(212, 175, 55, 0.12);
             border: 1px solid rgba(212, 175, 55, 0.25);
             border-radius: 30px;
@@ -677,7 +649,7 @@
             gap: 6px;
             color: #d4af37;
         }
-        .post-stats button:hover, .track-stats button:hover {
+        .post-stats button:hover {
             transform: translateY(-2px);
             background: rgba(212, 175, 55, 0.25);
             border-color: #d4af37;
@@ -688,20 +660,19 @@
             border-color: #d4af37;
             box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
         }
-        .post-like img, .post-comment img, .post-delete img,
-        .track-delete img {
+        .post-like img, .post-comment img, .post-delete img {
             width: 24px;
             height: 24px;
             object-fit: contain;
         }
-        .post-delete, .track-delete {
+        .post-delete {
             background: rgba(255, 68, 68, 0.12) !important;
             border-color: rgba(255, 68, 68, 0.3) !important;
             color: #ff6666 !important;
             padding: 8px 12px !important;
         }
         
-        .create-post-btn, .create-track-btn {
+        .create-post-btn {
             position: fixed;
             bottom: 80px;
             right: 20px;
@@ -719,7 +690,7 @@
             align-items: center;
             justify-content: center;
         }
-        .create-post-btn:hover, .create-track-btn:hover {
+        .create-post-btn:hover {
             transform: scale(1.05);
         }
         .comments-modal {
@@ -763,57 +734,9 @@
             color: var(--text);
         }
         
-        .music-search {
-            padding: 8px 16px;
-            margin-bottom: 16px;
-        }
-        .music-search input {
-            width: 100%;
-            padding: 12px 16px;
-            background: var(--input-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            color: var(--text);
-        }
-        
-        .admin-panel {
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border-radius: 24px;
-            padding: 20px;
-        }
-        .admin-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .admin-tab {
-            flex: 1;
-            padding: 10px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            cursor: pointer;
-            text-align: center;
-            color: var(--text);
-        }
-        .admin-tab.active {
-            background: var(--accent);
-            color: black;
-        }
-        .admin-user-item, .admin-post-item, .admin-track-item {
-            padding: 10px;
-            border-bottom: 1px solid var(--glass-border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
         @media (max-width: 768px) {
             .main-container { margin-bottom: 60px; }
-            .create-post-btn, .create-track-btn { bottom: 70px; }
+            .create-post-btn { bottom: 70px; }
         }
         .bottom-nav {
             display: flex;
@@ -863,9 +786,8 @@
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
                 userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
-                privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {}, tracks: [], currentAudio: null, currentTrackId: null,
-                adminPanelOpen: false
+                privacySettings: {}, posts: [], activeTab: 'chats', tempPostPhoto: null, tempPostVideo: null,
+                typingTimeouts: {}, lastPostTime: {} 
             };
             App.systemBots = [];
             
@@ -878,11 +800,7 @@
                 COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
                 FIRE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png',
-                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png',
-                PLAY: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1487.png',
-                PAUSE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1484.png',
-                MUSIC_TAB: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png',
-                ADMIN_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/admin.png'
+                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png'
             };
             
             // === SUPABASE ФУНКЦИИ ===
@@ -925,17 +843,15 @@
                                         if (!App.users[u].following) App.users[u].following = [];
                                         if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                         if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                                        if (App.users[u].premium === undefined) App.users[u].premium = false;
                                     });
                                 }
                                 if (newData.chats) App.chats = newData.chats;
                                 if (newData.blocked) App.blocked = newData.blocked;
                                 if (newData.privacySettings) App.privacySettings = newData.privacySettings;
                                 if (newData.posts) App.posts = newData.posts;
-                                if (newData.tracks) App.tracks = newData.tracks;
                                 
                                 localStorage.setItem('yolk_cache', JSON.stringify({
-                                    users: App.users, chats: App.chats, blocked: App.blocked, tracks: App.tracks
+                                    users: App.users, chats: App.chats, blocked: App.blocked
                                 }));
                                 
                                 if (App.currentUser) {
@@ -945,8 +861,6 @@
                                     applyWallpaperToFeed();
                                     if (App.activeChat) renderMessages(App.activeChat);
                                     updateChatList();
-                                    if (App.activeTab === 'feed') initFeed();
-                                    if (App.activeTab === 'music') renderMusic();
                                 }
                             }
                         })
@@ -960,13 +874,12 @@
                     chats: App.chats,
                     blocked: App.blocked,
                     privacySettings: App.privacySettings,
-                    posts: App.posts,
-                    tracks: App.tracks
+                    posts: App.posts
                 };
                 try {
                     await saveAppState(state);
                     localStorage.setItem('yolk_cache', JSON.stringify({
-                        users: App.users, chats: App.chats, blocked: App.blocked, tracks: App.tracks
+                        users: App.users, chats: App.chats, blocked: App.blocked
                     }));
                 } catch (e) {
                     console.error('Error saving to Supabase:', e);
@@ -987,17 +900,15 @@
                                 if (!App.users[u].following) App.users[u].following = [];
                                 if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                 if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                                if (App.users[u].premium === undefined) App.users[u].premium = false;
                             });
                         }
                         if (state.chats) App.chats = state.chats;
                         if (state.blocked) App.blocked = state.blocked;
                         if (state.privacySettings) App.privacySettings = state.privacySettings;
                         if (state.posts) App.posts = state.posts;
-                        if (state.tracks) App.tracks = state.tracks;
                         
                         localStorage.setItem('yolk_cache', JSON.stringify({
-                            users: App.users, chats: App.chats, blocked: App.blocked, tracks: App.tracks
+                            users: App.users, chats: App.chats, blocked: App.blocked
                         }));
                         
                         if (state.privacySettings) savePrivacySettings();
@@ -1019,12 +930,10 @@
                                 if (!App.users[u].following) App.users[u].following = [];
                                 if (!App.users[u].displayName) App.users[u].displayName = u.substring(1);
                                 if (!App.users[u].email) App.users[u].email = `${u.substring(1)}@yolkapp.com`;
-                                if (App.users[u].premium === undefined) App.users[u].premium = false;
                             });
                         }
                         if (cache.chats) App.chats = cache.chats;
                         if (cache.blocked) App.blocked = cache.blocked;
-                        if (cache.tracks) App.tracks = cache.tracks;
                         console.log('📦 Data loaded from local cache');
                     } catch(e) {
                         console.error('Cache read error:', e);
@@ -1043,9 +952,6 @@
                     App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
                     updateLastSeen(App.currentUser);
                 }
-                
-                // Set admin premium
-                if (App.users[ADMIN_USER]) App.users[ADMIN_USER].premium = true;
                 
                 App.dataLoaded = true;
                 render();
@@ -1249,7 +1155,6 @@
                                 <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
                                 <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
                             </div>
-                            ${App.currentUser === ADMIN_USER ? `<div class="profile-actions"><button class="profile-btn warning" id="openAdminPanelBtn">ADMIN PANEL</button></div>` : ''}
                             <div class="profile-actions">
                                 <button class="profile-btn logout" id="logoutFromSettingsBtn">LOGOUT</button>
                             </div>
@@ -1377,13 +1282,6 @@
                     document.getElementById('settingsModalOverlay').remove();
                 });
                 
-                if (App.currentUser === ADMIN_USER) {
-                    document.getElementById('openAdminPanelBtn').addEventListener('click', () => {
-                        document.getElementById('settingsModalOverlay').remove();
-                        openAdminPanel();
-                    });
-                }
-                
                 document.getElementById('logoutFromSettingsBtn').addEventListener('click', () => {
                     document.getElementById('settingsModalOverlay').remove();
                     App.currentUser = null;
@@ -1393,141 +1291,6 @@
                     render();
                 });
             }
-
-            function openAdminPanel() {
-                const modalHtml = `
-                    <div class="modal-overlay" id="adminPanelOverlay">
-                        <div class="admin-panel">
-                            <h3 style="color: var(--text); margin-bottom: 16px;">ADMIN PANEL</h3>
-                            <div class="admin-tabs">
-                                <div class="admin-tab active" data-tab="users">Users</div>
-                                <div class="admin-tab" data-tab="posts">Posts</div>
-                                <div class="admin-tab" data-tab="tracks">Tracks</div>
-                            </div>
-                            <div id="adminContent" style="max-height: 400px; overflow-y: auto;"></div>
-                            <div class="profile-actions" style="margin-top: 20px;">
-                                <button class="profile-btn secondary" id="closeAdminPanel">CLOSE</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                
-                const contentDiv = document.getElementById('adminContent');
-                const tabs = document.querySelectorAll('.admin-tab');
-                
-                function renderUsers() {
-                    let html = '';
-                    Object.keys(App.users).forEach(username => {
-                        const user = App.users[username];
-                        const premium = user.premium ? '✅' : '❌';
-                        html += `<div class="admin-user-item">
-                            <span>${username} ${premium}</span>
-                            <div>
-                                <button class="tiny-btn" onclick="window.togglePremiumAdmin('${username}')">Premium</button>
-                                <button class="tiny-btn" style="background:#ff4444;" onclick="window.deleteUserAdmin('${username}')">Delete</button>
-                            </div>
-                        </div>`;
-                    });
-                    contentDiv.innerHTML = html || '<div>No users</div>';
-                }
-                
-                function renderPosts() {
-                    let html = '';
-                    App.posts.forEach(post => {
-                        html += `<div class="admin-post-item">
-                            <span>${post.author}: ${post.text.substring(0,30)}</span>
-                            <button class="tiny-btn" style="background:#ff4444;" onclick="window.deletePostAdmin('${post.id}')">Delete</button>
-                        </div>`;
-                    });
-                    contentDiv.innerHTML = html || '<div>No posts</div>';
-                }
-                
-                function renderTracks() {
-                    let html = '';
-                    App.tracks.forEach(track => {
-                        html += `<div class="admin-track-item">
-                            <span>${track.title} by ${track.author}</span>
-                            <button class="tiny-btn" style="background:#ff4444;" onclick="window.deleteTrackAdmin('${track.id}')">Delete</button>
-                        </div>`;
-                    });
-                    contentDiv.innerHTML = html || '<div>No tracks</div>';
-                }
-                
-                renderUsers();
-                
-                tabs.forEach(tab => {
-                    tab.addEventListener('click', () => {
-                        tabs.forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
-                        const tabName = tab.dataset.tab;
-                        if (tabName === 'users') renderUsers();
-                        else if (tabName === 'posts') renderPosts();
-                        else if (tabName === 'tracks') renderTracks();
-                    });
-                });
-                
-                document.getElementById('closeAdminPanel').addEventListener('click', () => {
-                    document.getElementById('adminPanelOverlay').remove();
-                });
-            }
-            
-            window.togglePremiumAdmin = function(username) {
-                if (App.users[username]) {
-                    App.users[username].premium = !App.users[username].premium;
-                    saveToSupabase();
-                    showNotification(`Premium ${App.users[username].premium ? 'granted' : 'revoked'} for ${username}`);
-                    if (App.currentUser === ADMIN_USER) {
-                        document.querySelector('.admin-tab.active')?.click();
-                    }
-                }
-            };
-            
-            window.deleteUserAdmin = function(username) {
-                if (username === ADMIN_USER) {
-                    showNotification('Cannot delete admin', 'error');
-                    return;
-                }
-                if (confirm(`Delete user ${username}?`)) {
-                    delete App.users[username];
-                    // also delete chats
-                    Object.keys(App.chats).forEach(chatId => {
-                        const chat = App.chats[chatId];
-                        if (chat.user1 === username || chat.user2 === username) {
-                            delete App.chats[chatId];
-                        }
-                    });
-                    saveToSupabase();
-                    showNotification(`User ${username} deleted`);
-                    if (App.currentUser === ADMIN_USER) {
-                        document.querySelector('.admin-tab.active')?.click();
-                    }
-                }
-            };
-            
-            window.deletePostAdmin = function(postId) {
-                const index = App.posts.findIndex(p => p.id === postId);
-                if (index !== -1) {
-                    App.posts.splice(index, 1);
-                    saveToSupabase();
-                    showNotification('Post deleted');
-                    if (App.currentUser === ADMIN_USER) {
-                        document.querySelector('.admin-tab.active')?.click();
-                    }
-                }
-            };
-            
-            window.deleteTrackAdmin = function(trackId) {
-                const index = App.tracks.findIndex(t => t.id === trackId);
-                if (index !== -1) {
-                    App.tracks.splice(index, 1);
-                    saveToSupabase();
-                    showNotification('Track deleted');
-                    if (App.currentUser === ADMIN_USER) {
-                        document.querySelector('.admin-tab.active')?.click();
-                    }
-                }
-            };
 
             function applyWallpaperToFeed() {
                 const feedContainer = document.querySelector('.feed-container');
@@ -1772,8 +1535,6 @@
                     const commentsCount = post.comments?.length || 0;
                     const userLiked = post.likes && post.likes[App.currentUser];
                     const isOwner = post.author === App.currentUser;
-                    const isAdmin = App.currentUser === ADMIN_USER;
-                    if (!post.id) post.id = generateId();
                     const date = new Date(post.time).toLocaleString();
                     const isSubscribed = isFollowing(App.currentUser, post.author);
                     const subButtonHtml = (post.author !== App.currentUser) ?
@@ -1781,7 +1542,6 @@
                     
                     const authorDisplay = formatUserNameWithStatus(post.author);
                     const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
-                    const canDelete = isOwner || isAdmin;
                     
                     html += `
                         <div class="post-card" data-post-id="${post.id}" data-author="${post.author}">
@@ -1804,7 +1564,7 @@
                                     <img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> 
                                     <span class="comments-count">${commentsCount}</span>
                                 </button>
-                                ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
+                                ${isOwner ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
                             </div>
                         </div>
                     `;
@@ -1916,20 +1676,15 @@
             };
 
             window.deletePost = function(postId) {
-                const post = App.posts.find(p => p.id === postId);
-                if (!post) return;
-                const canDelete = (post.author === App.currentUser || App.currentUser === ADMIN_USER);
-                if (!canDelete) {
-                    showNotification('You cannot delete this post', 'error');
-                    return;
-                }
                 if (!confirm('Delete post?')) return;
                 const index = App.posts.findIndex(p => p.id === postId);
-                if (index !== -1) {
+                if (index !== -1 && App.posts[index].author === App.currentUser) {
                     App.posts.splice(index, 1);
                     saveToSupabase();
                     initFeed();
                     showNotification('Post deleted');
+                } else {
+                    showNotification('You cannot delete this post', 'error');
                 }
             };
 
@@ -2060,293 +1815,6 @@
                 });
             }
 
-            // ===== MUSIC =====
-            function renderMusic() {
-                const container = document.getElementById('musicContainer');
-                if (!container) return;
-                let searchQuery = '';
-                const searchInput = container.querySelector('#musicSearchInput');
-                if (searchInput) searchQuery = searchInput.value.toLowerCase();
-                
-                const filtered = App.tracks.filter(t => 
-                    t.title.toLowerCase().includes(searchQuery) || 
-                    t.artist.toLowerCase().includes(searchQuery)
-                ).sort((a,b) => b.time - a.time);
-                
-                let html = `
-                    <div class="music-search">
-                        <input type="text" id="musicSearchInput" placeholder="Search by title or artist" value="${searchQuery}">
-                    </div>
-                    <div id="tracksList"></div>
-                `;
-                container.innerHTML = html;
-                
-                const tracksList = document.getElementById('tracksList');
-                if (filtered.length === 0) {
-                    tracksList.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">No tracks yet.</div>';
-                } else {
-                    filtered.forEach(track => {
-                        const isOwner = track.author === App.currentUser;
-                        const isAdmin = App.currentUser === ADMIN_USER;
-                        const canDelete = isOwner || isAdmin;
-                        const date = new Date(track.time).toLocaleString();
-                        const coverHtml = track.cover ? `<img src="${track.cover}" class="track-cover-img">` : '🎵';
-                        const isPlaying = (App.currentTrackId === track.id && App.currentAudio && !App.currentAudio.paused);
-                        
-                        const trackHtml = `
-                            <div class="track-card" data-track-id="${track.id}">
-                                <div class="track-header" onclick="openProfileModal('${track.author}')">
-                                    <div class="track-cover">${coverHtml}</div>
-                                    <div style="flex:1;">
-                                        <div class="track-title">${track.title}</div>
-                                        <div class="track-author">${formatUserNameWithStatus(track.author)}${App.users[track.author]?.verified ? '<span class="verified-icon"></span>' : ''}</div>
-                                        <div class="track-time">${date}</div>
-                                    </div>
-                                </div>
-                                <div class="track-meta">
-                                    <span>Artist: ${track.artist}</span>
-                                </div>
-                                <div class="track-controls">
-                                    <button class="play-pause-btn" data-track-id="${track.id}">
-                                        <img src="${isPlaying ? ICONS.PAUSE : ICONS.PLAY}" alt="play/pause">
-                                    </button>
-                                    <div class="progress-bar" data-track-id="${track.id}">
-                                        <div class="progress-fill" id="progress-${track.id}" style="width:0%"></div>
-                                    </div>
-                                    <span class="time-display" id="time-${track.id}">0:00 / 0:00</span>
-                                </div>
-                                <div class="track-stats">
-                                    ${canDelete ? `<button class="track-delete" onclick="window.deleteTrack('${track.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
-                                </div>
-                            </div>
-                        `;
-                        tracksList.insertAdjacentHTML('beforeend', trackHtml);
-                    });
-                    
-                    // Attach event listeners for play/pause and progress
-                    document.querySelectorAll('.play-pause-btn').forEach(btn => {
-                        btn.addEventListener('click', (e) => {
-                            const trackId = btn.dataset.trackId;
-                            window.togglePlayPause(trackId);
-                        });
-                    });
-                    document.querySelectorAll('.progress-bar').forEach(bar => {
-                        bar.addEventListener('click', (e) => {
-                            const trackId = bar.dataset.trackId;
-                            const rect = bar.getBoundingClientRect();
-                            const percent = (e.clientX - rect.left) / rect.width;
-                            window.seekTrack(trackId, percent);
-                        });
-                    });
-                }
-                
-                const searchInputEl = document.getElementById('musicSearchInput');
-                if (searchInputEl) {
-                    searchInputEl.addEventListener('input', () => {
-                        renderMusic();
-                    });
-                }
-            }
-
-            window.togglePlayPause = function(trackId) {
-                const track = App.tracks.find(t => t.id === trackId);
-                if (!track) return;
-                
-                if (App.currentAudio && App.currentTrackId === trackId) {
-                    if (App.currentAudio.paused) {
-                        App.currentAudio.play();
-                        updatePlayPauseIcon(trackId, true);
-                    } else {
-                        App.currentAudio.pause();
-                        updatePlayPauseIcon(trackId, false);
-                    }
-                } else {
-                    if (App.currentAudio) {
-                        App.currentAudio.pause();
-                        if (App.currentTrackId) updatePlayPauseIcon(App.currentTrackId, false);
-                    }
-                    const audio = new Audio(track.audio);
-                    App.currentAudio = audio;
-                    App.currentTrackId = trackId;
-                    
-                    audio.addEventListener('loadedmetadata', () => {
-                        updateTimeDisplay(trackId, audio);
-                    });
-                    audio.addEventListener('timeupdate', () => {
-                        updateProgress(trackId, audio);
-                        updateTimeDisplay(trackId, audio);
-                    });
-                    audio.addEventListener('ended', () => {
-                        updatePlayPauseIcon(trackId, false);
-                        App.currentAudio = null;
-                        App.currentTrackId = null;
-                    });
-                    audio.play();
-                    updatePlayPauseIcon(trackId, true);
-                }
-            };
-
-            function updatePlayPauseIcon(trackId, isPlaying) {
-                const btn = document.querySelector(`.play-pause-btn[data-track-id="${trackId}"] img`);
-                if (btn) btn.src = isPlaying ? ICONS.PAUSE : ICONS.PLAY;
-            }
-
-            function updateProgress(trackId, audio) {
-                const fill = document.getElementById(`progress-${trackId}`);
-                if (fill && audio.duration) {
-                    const percent = (audio.currentTime / audio.duration) * 100;
-                    fill.style.width = percent + '%';
-                }
-            }
-
-            function updateTimeDisplay(trackId, audio) {
-                const display = document.getElementById(`time-${trackId}`);
-                if (display) {
-                    const current = formatTime(audio.currentTime);
-                    const total = formatTime(audio.duration);
-                    display.textContent = `${current} / ${total}`;
-                }
-            }
-
-            function formatTime(seconds) {
-                if (isNaN(seconds)) return '0:00';
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-
-            window.seekTrack = function(trackId, percent) {
-                if (App.currentAudio && App.currentTrackId === trackId) {
-                    App.currentAudio.currentTime = percent * App.currentAudio.duration;
-                }
-            };
-
-            window.deleteTrack = function(trackId) {
-                const track = App.tracks.find(t => t.id === trackId);
-                if (!track) return;
-                const canDelete = (track.author === App.currentUser || App.currentUser === ADMIN_USER);
-                if (!canDelete) {
-                    showNotification('You cannot delete this track', 'error');
-                    return;
-                }
-                if (!confirm('Delete track?')) return;
-                const index = App.tracks.findIndex(t => t.id === trackId);
-                if (index !== -1) {
-                    if (App.currentTrackId === trackId && App.currentAudio) {
-                        App.currentAudio.pause();
-                        App.currentAudio = null;
-                        App.currentTrackId = null;
-                    }
-                    App.tracks.splice(index, 1);
-                    saveToSupabase();
-                    renderMusic();
-                    showNotification('Track deleted');
-                }
-            };
-
-            function openUploadTrackModal() {
-                // Убрали проверку премиума - теперь все могут загружать треки
-                const modalHtml = `
-                    <div class="modal-overlay" id="uploadTrackModal">
-                        <div class="profile-modal">
-                            <h3>UPLOAD TRACK</h3>
-                            <div class="profile-input-group">
-                                <label>TITLE</label>
-                                <input type="text" id="trackTitle" placeholder="Track title">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>ARTIST</label>
-                                <input type="text" id="trackArtist" placeholder="Artist name">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>COVER (optional)</label>
-                                <button class="change-file-btn" id="addCoverBtn">CHOOSE COVER</button>
-                                <input type="file" id="trackCoverFile" accept="image/*" style="display:none;">
-                            </div>
-                            <div class="profile-input-group">
-                                <label>AUDIO FILE</label>
-                                <button class="change-file-btn" id="addAudioBtn">CHOOSE AUDIO</button>
-                                <input type="file" id="trackAudioFile" accept="audio/*" style="display:none;">
-                                <div id="audioFileName" style="margin-top:4px; font-size:12px; color: var(--text-secondary);"></div>
-                            </div>
-                            <div class="profile-actions">
-                                <button class="profile-btn" id="confirmUploadTrackBtn">UPLOAD</button>
-                                <button class="profile-btn secondary" id="closeUploadTrackModal">CANCEL</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                let tempCover = null;
-                let tempAudio = null;
-                
-                document.getElementById('addCoverBtn').addEventListener('click', () => {
-                    document.getElementById('trackCoverFile').click();
-                });
-                document.getElementById('trackCoverFile').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        compressImage(ev.target.result, 200, 200, 0.7, (compressed) => {
-                            tempCover = compressed;
-                            showNotification('Cover selected');
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('addAudioBtn').addEventListener('click', () => {
-                    document.getElementById('trackAudioFile').click();
-                });
-                document.getElementById('trackAudioFile').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    if (file.size > 20 * 1024 * 1024) {
-                        showNotification('Audio max 20 MB', 'error');
-                        return;
-                    }
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        tempAudio = ev.target.result;
-                        document.getElementById('audioFileName').textContent = file.name;
-                        showNotification('Audio selected');
-                    };
-                    reader.readAsDataURL(file);
-                });
-                
-                document.getElementById('confirmUploadTrackBtn').addEventListener('click', () => {
-                    const title = document.getElementById('trackTitle').value.trim();
-                    const artist = document.getElementById('trackArtist').value.trim();
-                    if (!title || !artist) {
-                        showNotification('Title and artist required', 'error');
-                        return;
-                    }
-                    if (!tempAudio) {
-                        showNotification('Select audio file', 'error');
-                        return;
-                    }
-                    const track = {
-                        id: generateId(),
-                        title,
-                        artist,
-                        cover: tempCover,
-                        audio: tempAudio,
-                        author: App.currentUser,
-                        time: Date.now()
-                    };
-                    App.tracks.push(track);
-                    saveToSupabase();
-                    document.getElementById('uploadTrackModal').remove();
-                    if (App.activeTab === 'music') renderMusic();
-                    showNotification('Track uploaded!');
-                });
-                
-                document.getElementById('closeUploadTrackModal').addEventListener('click', () => {
-                    document.getElementById('uploadTrackModal').remove();
-                });
-            }
-
             function render() { 
                 const root = document.getElementById('app'); 
                 if (!App.dataLoaded) { 
@@ -2377,7 +1845,6 @@
                                 attachMainEvents(); 
                                 if (App.activeTab === 'chats' && App.activeChat) renderMessages(App.activeChat);
                                 else if (App.activeTab === 'feed') initFeed();
-                                else if (App.activeTab === 'music') renderMusic();
                                 updateChatList(); 
                                 updateSidebarUser(); 
                                 applyWallpaper();
@@ -2395,7 +1862,6 @@
                             attachMainEvents(); 
                             if (App.activeTab === 'chats' && App.activeChat) renderMessages(App.activeChat);
                             else if (App.activeTab === 'feed') initFeed();
-                            else if (App.activeTab === 'music') renderMusic();
                             updateChatList(); 
                             updateSidebarUser(); 
                             applyWallpaper();
@@ -2434,7 +1900,6 @@
                     } 
                     const user = App.users[mainUsername]; 
                     App.currentUser = mainUsername; 
-                    App.activeTab = 'feed';
                     localStorage.setItem('yolk_current_user', mainUsername); 
                     loadPrivacySettings(); 
                     if (App.lastSeenInterval) clearInterval(App.lastSeenInterval); 
@@ -2453,10 +1918,9 @@
                     const clean = '@' + username; 
                     if (App.users[clean] || App.systemBots.includes(clean) || findMainUsername(clean)) { errorDiv.innerText = '! Username already taken'; return; } 
                     if (isEmailTaken(email)) { errorDiv.innerText = '! Email already used'; return; }
-                    const newUser = { password: pass, avatar: null, banner: null, verified: false, status: null, age: 14, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email, premium: false }; 
+                    const newUser = { password: pass, avatar: null, banner: null, verified: false, status: null, age: 14, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email }; 
                     App.users[clean] = newUser;
                     App.currentUser = clean; 
-                    App.activeTab = 'feed';
                     localStorage.setItem('yolk_current_user', clean); 
                     saveToSupabase().then(() => {
                         render(); 
@@ -2469,8 +1933,6 @@
                 const user = App.currentUser; 
                 const userData = App.users[user] || {}; 
                 const isChatsActive = App.activeTab === 'chats'; 
-                const isFeedActive = App.activeTab === 'feed';
-                const isMusicActive = App.activeTab === 'music';
                 let blockedMessage = '';
                 if (App.activeChat && !canUserMessage(user, App.activeChat)) {
                     blockedMessage = 'This user does not accept messages from strangers';
@@ -2502,18 +1964,14 @@
                             <div class="messages-container" id="messageList"></div>
                             ${canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="MESSAGE..." autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message" style="color: var(--text);">${blockedMessage}</div></div>`}
                         </div>
-                        ` : (isFeedActive ? `
+                        ` : `
                         <div class="feed-container" id="feedContainer"></div>
                         <button class="create-post-btn" id="createPostBtn">+</button>
-                        ` : (isMusicActive ? `
-                        <div class="music-container" id="musicContainer"></div>
-                        <button class="create-track-btn" id="createTrackBtn">+</button>
-                        ` : ''))}
+                        `}
                     </div>
                     <div class="bottom-nav">
-                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png" alt="Feed"></div>
                         <div class="nav-item ${App.activeTab === 'chats' ? 'active' : ''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png" alt="Chats"></div>
-                        <div class="nav-item ${App.activeTab === 'music' ? 'active' : ''}" data-tab="music"><img src="${ICONS.MUSIC_TAB}" alt="Music"></div>
+                        <div class="nav-item ${App.activeTab === 'feed' ? 'active' : ''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png" alt="Feed"></div>
                         <div class="nav-item" id="premiumTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png" alt="Premium"></div>
                         <div class="nav-item" id="settingsTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v4.png" alt="Settings"></div>
                     </div>
@@ -2539,10 +1997,6 @@
                             App.activeTab = 'feed';
                             render();
                             setTimeout(() => initFeed(), 50);
-                        } else if (tab === 'music') {
-                            App.activeTab = 'music';
-                            render();
-                            setTimeout(() => renderMusic(), 50);
                         }
                     });
                 });
@@ -2556,7 +2010,6 @@
                                 <ul style="margin-left: 20px; margin-bottom: 20px; color: var(--text);">
                                     <li>1. BLUE NICK</li>
                                     <li>2. YOUR POSTS WILL BE MORE OFTEN IN RECOMMENDATIONS</li>
-                                    <li>3. UPLOAD MUSIC TRACKS</li>
                                 </ul>
                                 <p style="margin-bottom: 8px;">Send 2 TON to:</p>
                                 <div class="profile-input-group">
@@ -2579,8 +2032,6 @@
                 
                 const createPostBtn = document.getElementById('createPostBtn');
                 if (createPostBtn) createPostBtn.addEventListener('click', openCreatePostModal);
-                const createTrackBtn = document.getElementById('createTrackBtn');
-                if (createTrackBtn) createTrackBtn.addEventListener('click', openUploadTrackModal);
             }
 
             function sendMessage() { 
@@ -2757,8 +2208,6 @@
                 loadFromSupabase(); 
                 subscribeToAppState();
                 loadTheme(); 
-                // set default premium for admin
-                if (App.users[ADMIN_USER]) App.users[ADMIN_USER].premium = true;
             });
         })();
     </script>
