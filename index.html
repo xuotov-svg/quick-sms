@@ -93,7 +93,8 @@
         .post-card,
         .comments-modal,
         .music-container,
-        .track-card {
+        .track-card,
+        .admin-panel {
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             background: var(--glass-bg);
@@ -108,6 +109,12 @@
         .icon-btn:hover,
         .send-btn:hover,
         .profile-btn:hover,
+        .subscribe-btn:hover,
+        .unsubscribe-btn:hover,
+        .like-btn:hover,
+        .dislike-btn:hover,
+        .settings-icon:hover,
+        .delete-chat-icon:hover,
         .tab:hover,
         .tab.active,
         .nav-item:hover,
@@ -263,35 +270,6 @@
         @keyframes dotPulse {
             0%, 100% { opacity: 0.3; transform: translateY(0); }
             50% { opacity: 1; transform: translateY(-5px); }
-        }
-        
-        body.light-theme .icon-btn,
-        body.light-theme .send-btn,
-        body.light-theme .file-label,
-        body.light-theme .tiny-btn,
-        body.light-theme .inline-btn,
-        body.light-theme .profile-btn,
-        body.light-theme .subscribe-btn,
-        body.light-theme .unsubscribe-btn,
-        body.light-theme .like-btn,
-        body.light-theme .dislike-btn,
-        body.light-theme .settings-icon,
-        body.light-theme .delete-chat-icon,
-        body.light-theme .tab,
-        body.light-theme .msg-actions button,
-        body.light-theme .back-btn,
-        body.light-theme .change-username-btn,
-        body.light-theme .toggle-password,
-        body.light-theme .resend-link,
-        body.light-theme .close-btn,
-        body.light-theme .nav-item,
-        body.light-theme .post-like,
-        body.light-theme .post-dislike,
-        body.light-theme .post-comment,
-        body.light-theme .post-delete,
-        body.light-theme .create-post-btn,
-        body.light-theme .create-track-btn {
-            filter: none !important;
         }
         
         .icon-btn,
@@ -798,6 +776,41 @@
             color: var(--text);
         }
         
+        .admin-panel {
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border-radius: 24px;
+            padding: 20px;
+        }
+        .admin-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .admin-tab {
+            flex: 1;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: center;
+            color: var(--text);
+        }
+        .admin-tab.active {
+            background: var(--accent);
+            color: black;
+        }
+        .admin-user-item, .admin-post-item, .admin-track-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
         @media (max-width: 768px) {
             .main-container { margin-bottom: 60px; }
             .create-post-btn, .create-track-btn { bottom: 70px; }
@@ -851,7 +864,8 @@
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
                 userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {}, tracks: [], currentAudio: null, currentTrackId: null
+                typingTimeouts: {}, lastPostTime: {}, tracks: [], currentAudio: null, currentTrackId: null,
+                adminPanelOpen: false
             };
             App.systemBots = [];
             
@@ -867,7 +881,8 @@
                 SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png',
                 PLAY: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1487.png',
                 PAUSE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1484.png',
-                MUSIC_TAB: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png'
+                MUSIC_TAB: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/cccgb.png',
+                ADMIN_ICON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/admin.png'
             };
             
             // === SUPABASE ФУНКЦИИ ===
@@ -1028,6 +1043,9 @@
                     App.lastSeenInterval = setInterval(() => { updateLastSeen(App.currentUser); }, 30000);
                     updateLastSeen(App.currentUser);
                 }
+                
+                // Set admin premium
+                if (App.users[ADMIN_USER]) App.users[ADMIN_USER].premium = true;
                 
                 App.dataLoaded = true;
                 render();
@@ -1231,6 +1249,7 @@
                                 <button class="profile-btn" id="saveSettingsBtn">SAVE</button>
                                 <button class="profile-btn secondary" id="closeSettingsBtn">CANCEL</button>
                             </div>
+                            ${App.currentUser === ADMIN_USER ? `<div class="profile-actions"><button class="profile-btn warning" id="openAdminPanelBtn">ADMIN PANEL</button></div>` : ''}
                             <div class="profile-actions">
                                 <button class="profile-btn logout" id="logoutFromSettingsBtn">LOGOUT</button>
                             </div>
@@ -1358,6 +1377,13 @@
                     document.getElementById('settingsModalOverlay').remove();
                 });
                 
+                if (App.currentUser === ADMIN_USER) {
+                    document.getElementById('openAdminPanelBtn').addEventListener('click', () => {
+                        document.getElementById('settingsModalOverlay').remove();
+                        openAdminPanel();
+                    });
+                }
+                
                 document.getElementById('logoutFromSettingsBtn').addEventListener('click', () => {
                     document.getElementById('settingsModalOverlay').remove();
                     App.currentUser = null;
@@ -1367,6 +1393,141 @@
                     render();
                 });
             }
+
+            function openAdminPanel() {
+                const modalHtml = `
+                    <div class="modal-overlay" id="adminPanelOverlay">
+                        <div class="admin-panel">
+                            <h3 style="color: var(--text); margin-bottom: 16px;">ADMIN PANEL</h3>
+                            <div class="admin-tabs">
+                                <div class="admin-tab active" data-tab="users">Users</div>
+                                <div class="admin-tab" data-tab="posts">Posts</div>
+                                <div class="admin-tab" data-tab="tracks">Tracks</div>
+                            </div>
+                            <div id="adminContent" style="max-height: 400px; overflow-y: auto;"></div>
+                            <div class="profile-actions" style="margin-top: 20px;">
+                                <button class="profile-btn secondary" id="closeAdminPanel">CLOSE</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                
+                const contentDiv = document.getElementById('adminContent');
+                const tabs = document.querySelectorAll('.admin-tab');
+                
+                function renderUsers() {
+                    let html = '';
+                    Object.keys(App.users).forEach(username => {
+                        const user = App.users[username];
+                        const premium = user.premium ? '✅' : '❌';
+                        html += `<div class="admin-user-item">
+                            <span>${username} ${premium}</span>
+                            <div>
+                                <button class="tiny-btn" onclick="window.togglePremiumAdmin('${username}')">Premium</button>
+                                <button class="tiny-btn" style="background:#ff4444;" onclick="window.deleteUserAdmin('${username}')">Delete</button>
+                            </div>
+                        </div>`;
+                    });
+                    contentDiv.innerHTML = html || '<div>No users</div>';
+                }
+                
+                function renderPosts() {
+                    let html = '';
+                    App.posts.forEach(post => {
+                        html += `<div class="admin-post-item">
+                            <span>${post.author}: ${post.text.substring(0,30)}</span>
+                            <button class="tiny-btn" style="background:#ff4444;" onclick="window.deletePostAdmin('${post.id}')">Delete</button>
+                        </div>`;
+                    });
+                    contentDiv.innerHTML = html || '<div>No posts</div>';
+                }
+                
+                function renderTracks() {
+                    let html = '';
+                    App.tracks.forEach(track => {
+                        html += `<div class="admin-track-item">
+                            <span>${track.title} by ${track.author}</span>
+                            <button class="tiny-btn" style="background:#ff4444;" onclick="window.deleteTrackAdmin('${track.id}')">Delete</button>
+                        </div>`;
+                    });
+                    contentDiv.innerHTML = html || '<div>No tracks</div>';
+                }
+                
+                renderUsers();
+                
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        const tabName = tab.dataset.tab;
+                        if (tabName === 'users') renderUsers();
+                        else if (tabName === 'posts') renderPosts();
+                        else if (tabName === 'tracks') renderTracks();
+                    });
+                });
+                
+                document.getElementById('closeAdminPanel').addEventListener('click', () => {
+                    document.getElementById('adminPanelOverlay').remove();
+                });
+            }
+            
+            window.togglePremiumAdmin = function(username) {
+                if (App.users[username]) {
+                    App.users[username].premium = !App.users[username].premium;
+                    saveToSupabase();
+                    showNotification(`Premium ${App.users[username].premium ? 'granted' : 'revoked'} for ${username}`);
+                    if (App.currentUser === ADMIN_USER) {
+                        document.querySelector('.admin-tab.active')?.click();
+                    }
+                }
+            };
+            
+            window.deleteUserAdmin = function(username) {
+                if (username === ADMIN_USER) {
+                    showNotification('Cannot delete admin', 'error');
+                    return;
+                }
+                if (confirm(`Delete user ${username}?`)) {
+                    delete App.users[username];
+                    // also delete chats
+                    Object.keys(App.chats).forEach(chatId => {
+                        const chat = App.chats[chatId];
+                        if (chat.user1 === username || chat.user2 === username) {
+                            delete App.chats[chatId];
+                        }
+                    });
+                    saveToSupabase();
+                    showNotification(`User ${username} deleted`);
+                    if (App.currentUser === ADMIN_USER) {
+                        document.querySelector('.admin-tab.active')?.click();
+                    }
+                }
+            };
+            
+            window.deletePostAdmin = function(postId) {
+                const index = App.posts.findIndex(p => p.id === postId);
+                if (index !== -1) {
+                    App.posts.splice(index, 1);
+                    saveToSupabase();
+                    showNotification('Post deleted');
+                    if (App.currentUser === ADMIN_USER) {
+                        document.querySelector('.admin-tab.active')?.click();
+                    }
+                }
+            };
+            
+            window.deleteTrackAdmin = function(trackId) {
+                const index = App.tracks.findIndex(t => t.id === trackId);
+                if (index !== -1) {
+                    App.tracks.splice(index, 1);
+                    saveToSupabase();
+                    showNotification('Track deleted');
+                    if (App.currentUser === ADMIN_USER) {
+                        document.querySelector('.admin-tab.active')?.click();
+                    }
+                }
+            };
 
             function applyWallpaperToFeed() {
                 const feedContainer = document.querySelector('.feed-container');
@@ -2084,10 +2245,7 @@
             };
 
             function openUploadTrackModal() {
-                if (!App.users[App.currentUser].premium) {
-                    showNotification('Only premium users can upload tracks', 'error');
-                    return;
-                }
+                // Убрали проверку премиума - теперь все могут загружать треки
                 const modalHtml = `
                     <div class="modal-overlay" id="uploadTrackModal">
                         <div class="profile-modal">
@@ -2349,7 +2507,7 @@
                         <button class="create-post-btn" id="createPostBtn">+</button>
                         ` : (isMusicActive ? `
                         <div class="music-container" id="musicContainer"></div>
-                        ${userData.premium ? `<button class="create-track-btn" id="createTrackBtn">+</button>` : ''}
+                        <button class="create-track-btn" id="createTrackBtn">+</button>
                         ` : ''))}
                     </div>
                     <div class="bottom-nav">
