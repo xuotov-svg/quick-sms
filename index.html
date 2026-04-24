@@ -168,25 +168,6 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        @keyframes albumenCharGlow {
-            0% { text-shadow: 0 0 0 #0066cc; color: #0066cc; opacity: 0.8; }
-            15% { text-shadow: 0 0 8px #88ccff, 0 0 3px #aaddff; color: #3399ff; opacity: 1; }
-            30% { text-shadow: 0 0 12px #88ccff, 0 0 5px #66bbff; color: #0066cc; opacity: 1; }
-            50% { text-shadow: 0 0 5px #88ccff; color: #2277dd; opacity: 0.9; }
-            100% { text-shadow: 0 0 0 #0066cc; color: #0066cc; opacity: 0.8; }
-        }
-        
-        .albumen-name {
-            font-weight: bold;
-            display: inline-flex;
-            flex-wrap: wrap;
-        }
-        
-        .albumen-char {
-            display: inline-block;
-            animation: albumenCharGlow 3s ease-in-out infinite;
-        }
-        
         .message-text { color: var(--text); }
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
@@ -411,13 +392,6 @@
         
         .auth-error { color: #ff6666; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
         .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
-        
-        .two-factor-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: fadeIn 0.3s ease; backdrop-filter: blur(8px); }
-        .two-factor-box { background: var(--glass-bg); padding: 30px; border-radius: 24px; border: 1px solid var(--glass-border); max-width: 400px; width: 90%; text-align: center; }
-        .two-factor-box h3 { color: var(--accent); margin-bottom: 20px; }
-        .two-factor-box p { margin-bottom: 20px; color: var(--text); }
-        .code-input { font-size: 24px; letter-spacing: 10px; text-align: center; padding: 15px; border: 1px solid var(--glass-border); border-radius: 12px; margin-bottom: 20px; width: 100%; background: var(--input-bg); color: var(--text); }
-        .resend-link { color: var(--accent); cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
         
         .main-container { flex-direction: row; position: relative; flex: 1; overflow: hidden; }
         .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
@@ -754,62 +728,6 @@
         }
         .bottom-nav { display: flex; }
         
-        .additional-username-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(0,0,0,0.2);
-            padding: 8px 12px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            border: 1px solid var(--glass-border);
-        }
-        .additional-username-item span { color: var(--text); }
-        .delete-username-btn {
-            background: none;
-            border: 1px solid var(--glass-border);
-            color: #ff6666;
-            padding: 4px 8px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .feed-mode-switch {
-            display: flex;
-            gap: 10px;
-            padding: 10px 16px;
-            justify-content: center;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            position: sticky;
-            top: 0;
-            z-index: 5;
-            margin-bottom: 8px;
-        }
-        .feed-mode-btn {
-            background: rgba(255,255,255,0.08);
-            border: 1px solid var(--glass-border);
-            padding: 10px 24px;
-            border-radius: 30px;
-            color: var(--text);
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .feed-mode-btn.active {
-            background: var(--accent);
-            color: #000;
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
-        }
-
-        .admin-panel h4 {
-            color: var(--accent);
-            margin-bottom: 12px;
-        }
-
         .badge-icon {
             display: inline-block;
             width: 28px;
@@ -834,31 +752,24 @@
 
             const App = { 
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
-                tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
-                userListeners: {}, chatWallpaper: '', soundEnabled: true, audioCtx: null,
-                privacySettings: {}, posts: [], activeTab: 'feed', feedMode: 'all', tempPostPhoto: null, tempPostVideo: null,
+                tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null,
+                privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
                 typingTimeouts: {}, lastPostTime: {} 
             };
             App.systemBots = [];
             
             const ADMIN_USER = '@durov';
-            const TON_ADDRESS = 'UQAR2F00H7mfSjtFwX9eXr_Qu1Vg8M3PKj4_bNyY5dC2niez';
-            
             const ICONS = {
                 LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
                 COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
-                FIRE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/CaC0uXTOLr4QbsQ5eDgYDHivU6ozvUlsAVI3OAL55UciB5UiB6Cks9FEa3xHss58UQ_ZXcYj6baGgs4o9uUX6auT.png',
-                SETTINGS: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/XkuAnaeE3mA.png',
                 BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
                 BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png'
             };
-
             const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
 
             const STATE_ROW_ID = 1;
-            
             async function loadAppState() {
                 const { data, error } = await supabase
                     .from('app_state')
@@ -1345,52 +1256,40 @@
             }
 
             let feedPage = 0;
-            const FEED_PAGE_SIZE = 10;
             let feedPosts = [], isLoadingFeed = false;
 
-            function getShuffledPosts() { const arr = [...feedPosts]; for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
             function initFeed() {
                 feedPage = 0;
-                feedPosts = (App.feedMode === 'my' ? App.posts.filter(p => p.author === App.currentUser) : App.posts.filter(p => p.author !== App.currentUser)).sort((a,b) => b.time - a.time);
-                feedPosts = feedPosts.length > 0 ? getShuffledPosts() : [];
+                feedPosts = [...App.posts].sort((a,b) => b.time - a.time);
                 const fc = document.getElementById('feedContainer'); if (fc) fc.innerHTML = '';
                 isLoadingFeed = false;
                 renderFeed();
                 applyWallpaperToFeed();
-                updateFeedModeButtons();
             }
-            function updateFeedModeButtons() { document.querySelectorAll('.feed-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === App.feedMode)); }
+
             function renderFeed() {
                 const fc = document.getElementById('feedContainer'); if (!fc || isLoadingFeed) return;
-                if (feedPosts.length === 0) { fc.innerHTML = '<div style="text-align:center; color: var(--text-secondary); padding:40px;">No posts yet. Tap + to create first!</div>'; return; }
-                const start = feedPage * FEED_PAGE_SIZE, end = start + FEED_PAGE_SIZE;
+                if (feedPosts.length === 0) { fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet. Tap + to create first!</div>'; return; }
+                const start = feedPage * 10, end = start + 10;
                 let postsToShow = feedPosts.slice(start, end);
-                if (postsToShow.length === 0) {
-                    feedPage = 0;
-                    feedPosts = (App.feedMode === 'my' ? App.posts.filter(p => p.author === App.currentUser) : App.posts.filter(p => p.author !== App.currentUser)).sort((a,b) => b.time - a.time);
-                    feedPosts = getShuffledPosts();
-                    postsToShow = feedPosts.slice(0, FEED_PAGE_SIZE);
-                    feedPage = 1;
-                }
+                if (postsToShow.length === 0) { feedPage = 0; postsToShow = feedPosts.slice(0,10); feedPage = 1; }
                 isLoadingFeed = true;
                 let html = '';
                 postsToShow.forEach(post => {
                     const author = App.users[post.author] || {};
                     const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`;
                     const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
-                    const likesCount = Object.keys(post.likes || {}).length, commentsCount = (post.comments || []).length;
-                    const userLiked = post.likes && post.likes[App.currentUser];
+                    const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length;
+                    const liked = post.likes && post.likes[App.currentUser];
                     const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER;
-                    const date = new Date(post.time).toLocaleString();
                     const isSub = isFollowing(App.currentUser, post.author);
                     const subBtn = post.author !== App.currentUser ? `<button class="${isSub ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSub ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
-                    const likeIcon = userLiked ? ICONS.LIKE_ON : ICONS.LIKE_OFF;
-                    html += `<div class="post-card" data-post-id="${post.id}" data-author="${post.author}">
-                        <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${date}</div></div>${subBtn}</div>
+                    html += `<div class="post-card" data-post-id="${post.id}">
+                        <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
                         <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
                         <div class="post-stats">
-                            <button class="post-like ${userLiked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')"><img src="${likeIcon}" style="width:24px;height:24px;"> <span class="likes-count">${likesCount}</span></button>
-                            <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span class="comments-count">${commentsCount}</span></button>
+                            <button class="post-like ${liked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF}" style="width:24px;height:24px;"> <span>${likes}</span></button>
+                            <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${comments}</span></button>
                             ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
                         </div>
                     </div>`;
@@ -1413,8 +1312,8 @@
                 const cards = document.querySelectorAll(`.post-card[data-post-id="${id}"]`); if (!cards.length) return;
                 const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length, liked = post.likes&&post.likes[App.currentUser];
                 cards.forEach(card => {
-                    const lb = card.querySelector('.post-like'); if (lb) { lb.classList.toggle('active', liked); const img = lb.querySelector('img'); if (img) img.src = liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF; const span = lb.querySelector('.likes-count'); if (span) span.textContent = likes; }
-                    const cb = card.querySelector('.post-comment'); if (cb) { const span = cb.querySelector('.comments-count'); if (span) span.textContent = comments; }
+                    const lb = card.querySelector('.post-like'); if (lb) { lb.classList.toggle('active', liked); const img = lb.querySelector('img'); if (img) img.src = liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF; const span = lb.querySelector('span'); if (span) span.textContent = likes; }
+                    const cb = card.querySelector('.post-comment'); if (cb) { const span = cb.querySelector('span'); if (span) span.textContent = comments; }
                 });
             }
             window.openCommentsModal = function(id) {
@@ -1566,10 +1465,6 @@
                             ${canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="MESSAGE..." autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">${blockedMessage}</div></div>`}
                         </div>
                         ` : `
-                        <div class="feed-mode-switch">
-                            <button class="feed-mode-btn ${App.feedMode === 'all' ? 'active' : ''}" data-mode="all">ALL POSTS</button>
-                            <button class="feed-mode-btn ${App.feedMode === 'my' ? 'active' : ''}" data-mode="my">MY POSTS</button>
-                        </div>
                         <div class="feed-container" id="feedContainer"></div>
                         <button class="create-post-btn" id="createPostBtn">+</button>
                         `}
@@ -1595,31 +1490,152 @@
                     if (tab === 'chats') { App.activeTab = 'chats'; localStorage.setItem('yolk_active_tab', 'chats'); if (window.innerWidth < 768) App.sidebarOpen = false; render(); }
                     else if (tab === 'feed') { App.activeTab = 'feed'; localStorage.setItem('yolk_active_tab', 'feed'); render(); setTimeout(() => initFeed(), 50); }
                 }));
-                document.querySelectorAll('.feed-mode-btn').forEach(btn => btn.addEventListener('click', (e) => {
-                    const mode = btn.dataset.mode;
-                    if (App.feedMode !== mode) { App.feedMode = mode; initFeed(); }
-                }));
                 document.getElementById('settingsTab')?.addEventListener('click', openProfileSettings);
                 document.getElementById('createPostBtn')?.addEventListener('click', openCreatePostModal);
             }
 
-            function sendMessage() { /* ... unchanged ... */ }
-            function renderMessages(chatPartner) { /* ... unchanged ... */ }
-            function renderMessage(msg, idx, currentUser, chatPartner) { /* ... unchanged ... */ }
-            function updateChatList() { /* ... unchanged ... */ }
-            function renderChatItem(u, active, currentUser) {
-                let display = formatUserNameWithBadge(u);
-                let avatarHtml = App.users[u]?.avatar ? `<div class="chat-avatar"><img src="${App.users[u].avatar}" class="chat-avatar-img"></div>` : `<div class="chat-avatar"><img src="${DEFAULT_AVATAR}" class="chat-avatar-img"></div>`;
-                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display">${display}</div></div><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span></div>`;
+            function sendMessage() { 
+                const textInput = document.getElementById('messageText'); 
+                const text = textInput ? textInput.value.trim() : ''; 
+                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Enter message or select file', 'error'); return; } 
+                const from = App.currentUser; const to = App.activeChat; 
+                if (!to) { showNotification('Select a chat', 'error'); return; } 
+                if (!canUserMessage(from, to)) { showNotification('You cannot message this user', 'error'); return; } 
+                try { 
+                    let mediaData = null; let isVideoMsg = false; 
+                    if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } 
+                    else if (App.tempPhoto) { mediaData = App.tempPhoto; } 
+                    const message = { from, text: text || '', time: Date.now(), photo: mediaData, isVideo: isVideoMsg, likes: {}, dislikes: {} };
+                    const chatId = [from, to].sort().join('_'); 
+                    if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
+                    App.chats[chatId].messages.push(message); 
+                    saveToSupabase(); renderMessages(to); playHappySound(); 
+                    if (textInput) textInput.value = ''; App.tempPhoto = null; App.tempVideo = null; 
+                    document.getElementById('fileUpload').value = ''; document.getElementById('videoUpload').value = ''; 
+                    updateChatList(); 
+                } catch (error) { console.error('Send error:', error); showNotification('Send error', 'error'); } 
             }
-            function getChatListForUser(user) { const set = new Set(); Object.keys(App.chats||{}).forEach(key => { const c = App.chats[key]; if (c) { if (c.user1 === user) set.add(c.user2); if (c.user2 === user) set.add(c.user1); } }); return Array.from(set); }
+
+            function renderMessages(chatPartner) { 
+                const container = document.getElementById('messageList'); if (!container) return; 
+                const chatId = [App.currentUser, chatPartner].sort().join('_'); 
+                const messages = (App.chats[chatId] && App.chats[chatId].messages) || []; 
+                let html = ''; 
+                if (messages.length) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); }); 
+                else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px;">No messages</div>'; 
+                container.innerHTML = html; 
+                setTimeout(() => { container.scrollTop = container.scrollHeight; }, 100); 
+                updateChatHeaderStatus(chatPartner); 
+            }
+
+            function renderMessage(msg, idx, currentUser, chatPartner) { 
+                const isMe = msg.from === currentUser; 
+                const isSystem = msg.from === 'SYSTEM'; 
+                const fromUserDisplay = isSystem ? 'SYSTEM' : formatUserNameWithBadge(msg.from);
+                let canDelete = isMe; 
+                let mediaHtml = ''; 
+                if (msg.photo) { 
+                    if (msg.isVideo) mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; 
+                    else mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; 
+                } 
+                const messageClass = isMe ? 'me' : ''; 
+                const fullDate = new Date(msg.time).toLocaleString(); 
+                return `<div class="message ${messageClass} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}</span></small><br>` : ''}${isSystem ? `<small>🔔 SYSTEM</small><br>` : ''}<div class="message-text">${msg.text || ''}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">DELETE</button></div>` : ''}</div></div>`; 
+            }
+
+            function updateChatList() { 
+                const container = document.getElementById('chatsList'); if (!container || !App.currentUser) return; 
+                const list = getChatListForUser(App.currentUser); 
+                let html = ''; 
+                list.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat); }); 
+                container.innerHTML = html; 
+                document.querySelectorAll('.chat-item').forEach(el => { 
+                    el.addEventListener('click', (e) => { 
+                        if (e.target.closest('.delete-chat-icon')) return; 
+                        const chatId = el.dataset.chat; 
+                        if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; } 
+                        App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId); 
+                        if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } 
+                        document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); 
+                        render(); 
+                    }); 
+                }); 
+            }
+
+            function renderChatItem(u, active) { 
+                const display = formatUserNameWithBadge(u); 
+                const avatarUrl = App.users[u]?.avatar; 
+                const avatarHtml = avatarUrl ? `<div class="chat-avatar"><img src="${avatarUrl}" class="chat-avatar-img"></div>` : `<div class="chat-avatar"><img src="${DEFAULT_AVATAR}" class="chat-avatar-img"></div>`; 
+                return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display">${display}</div></div><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span></div>`; 
+            }
+
+            function getChatListForUser(user) { 
+                const set = new Set(); 
+                Object.keys(App.chats || {}).forEach(key => { 
+                    const c = App.chats[key]; 
+                    if (c) { if (c.user1 === user) set.add(c.user2); if (c.user2 === user) set.add(c.user1); } 
+                }); 
+                return Array.from(set); 
+            }
+
             function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Photo added, write text and send'); }); reader.readAsDataURL(file); }
             function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20*1024*1024) { showNotification('Video max 20 MB', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Video added, write text and send'); }; reader.readAsDataURL(file); }
-            function addUserBySearch() { /* ... unchanged ... */ }
-            window.deleteChat = function(chat, event) { /* ... unchanged ... */ };
-            window.deleteMessage = function(chatPartner, idx) { /* ... unchanged ... */ };
-            window.openImageModal = function(src) { const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; document.body.insertAdjacentHTML('beforeend', modalHtml); };
-            function updateChatHeaderStatus(username) { /* ... unchanged ... */ }
+
+            function addUserBySearch() { 
+                let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
+                if (!query) { showNotification('Enter username', 'error'); return; } 
+                if (!query.startsWith('@')) query = '@' + query; 
+                let main = findMainUsername(query) || (App.users[query] ? query : null); 
+                if (!main || !App.users[main]) { showNotification('User not found', 'error'); return; } 
+                if (main === App.currentUser) { showNotification('This is you', 'error'); return; } 
+                if (!canUserMessage(App.currentUser, main)) { showNotification('This user does not accept messages from strangers', 'error'); return; } 
+                ensureChat(App.currentUser, main); 
+                App.activeChat = main; localStorage.setItem('yolk_active_chat', main); 
+                if (window.innerWidth < 768) App.sidebarOpen = false; 
+                document.getElementById('searchUserInput').value = ''; 
+                render(); 
+                showNotification(`Chat with ${getDisplayName(main)} created`); 
+            }
+
+            window.deleteChat = function(chat, event) { 
+                event.stopPropagation(); 
+                if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; 
+                const user = App.currentUser; const chatId = [user, chat].sort().join('_'); 
+                if (App.chats[chatId]) delete App.chats[chatId]; 
+                if (App.activeChat === chat) { App.activeChat = null; localStorage.removeItem('yolk_active_chat'); } 
+                saveToSupabase(); render(); 
+                showNotification('Chat deleted'); 
+            };
+
+            window.deleteMessage = function(chatPartner, idx) { 
+                const from = App.currentUser; 
+                try { 
+                    const chatId = [from, chatPartner].sort().join('_'); 
+                    const msgs = App.chats[chatId]?.messages; 
+                    if (msgs && msgs[idx]) { msgs.splice(idx, 1); saveToSupabase(); renderMessages(chatPartner); showNotification('Deleted'); } 
+                } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } 
+            };
+
+            window.openImageModal = function(src) { 
+                const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; 
+                document.body.insertAdjacentHTML('beforeend', modalHtml); 
+            };
+
+            function updateChatHeaderStatus(username) { 
+                const headerInfo = document.querySelector('.chat-header-info'); 
+                if (!headerInfo) return; 
+                const existingStatus = headerInfo.querySelector('.chat-user-status'); 
+                if (existingStatus) existingStatus.remove(); 
+                const existingNameStrong = headerInfo.querySelector('strong'); 
+                if (existingNameStrong) existingNameStrong.innerHTML = formatUserNameWithBadge(username);
+                const isOnline = isUserOnline(username); 
+                const lastSeenText = formatLastSeen(App.users[username]?.lastSeen); 
+                const statusDiv = document.createElement('div'); 
+                statusDiv.className = 'chat-user-status' + (isOnline ? '' : ' offline'); 
+                statusDiv.textContent = isOnline ? 'online' : `last seen ${lastSeenText}`; 
+                headerInfo.appendChild(statusDiv); 
+            }
+
             function initBots() { App.systemBots = []; saveToSupabase(); }
 
             window.addEventListener('load', () => {
