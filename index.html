@@ -128,6 +128,8 @@
             background-color: #ffffff !important;
         }
         
+        .verified-icon { display: none; }
+        
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -167,6 +169,182 @@
         .message .time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; color: var(--text-secondary); }
         .message small { color: var(--text-secondary); }
         
+        .typing-indicator {
+            display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: var(--message-other);
+            border-radius: 18px; width: fit-content; margin-bottom: 8px; border: 1px solid var(--glass-border);
+            color: var(--text-secondary); font-size: 13px;
+        }
+        .typing-dots { display: flex; gap: 3px; }
+        .typing-dots span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out; }
+        .typing-dots span:nth-child(1) { animation-delay: 0s; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-6px); opacity: 1; } }
+        
+        .loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg);
+            display: flex; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease;
+        }
+        .loading-screen.hide { opacity: 0; pointer-events: none; }
+        .loading-text { color: var(--text); font-size: 32px; font-weight: 500; letter-spacing: 4px; }
+        .loading-dots { display: inline-block; }
+        .loading-dots span { animation: dotPulse 1.4s ease-in-out infinite; display: inline-block; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse { 0%, 100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 1; transform: translateY(-5px); } }
+        
+        body.light-theme .icon-btn,
+        body.light-theme .send-btn,
+        body.light-theme .file-label,
+        body.light-theme .tiny-btn,
+        body.light-theme .profile-btn,
+        body.light-theme .subscribe-btn,
+        body.light-theme .unsubscribe-btn,
+        body.light-theme .like-btn,
+        body.light-theme .dislike-btn,
+        body.light-theme .settings-icon,
+        body.light-theme .delete-chat-icon,
+        body.light-theme .tab,
+        body.light-theme .msg-actions button,
+        body.light-theme .back-btn,
+        body.light-theme .change-username-btn,
+        body.light-theme .toggle-password,
+        body.light-theme .resend-link,
+        body.light-theme .close-btn,
+        body.light-theme .nav-item,
+        body.light-theme .post-like,
+        body.light-theme .post-dislike,
+        body.light-theme .post-comment,
+        body.light-theme .post-delete,
+        body.light-theme .create-post-btn,
+        body.light-theme .feed-filter-btn {
+            filter: none !important;
+        }
+        
+        .icon-btn, .send-btn, .file-label, .tiny-btn, .profile-btn, .subscribe-btn, .unsubscribe-btn, .like-btn,
+        .dislike-btn, .settings-icon, .delete-chat-icon, .tab, .msg-actions button, .back-btn, .create-nft-btn,
+        .change-username-btn, .toggle-password, .resend-link, .close-btn, .nav-item, .post-like, .post-dislike,
+        .post-comment, .post-delete, .create-post-btn { transition: all 0.2s ease; }
+        
+        .icon-btn:hover, .send-btn:hover, .file-label:hover, .tiny-btn:hover, .profile-btn:hover, .btn:hover,
+        .subscribe-btn:hover, .unsubscribe-btn:hover, .like-btn:hover, .dislike-btn:hover, .settings-icon:hover,
+        .delete-chat-icon:hover, .tab:hover, .msg-actions button:hover, .nav-item:hover, .post-like:hover,
+        .post-dislike:hover, .post-comment:hover, .post-delete:hover, .create-post-btn:hover { filter: brightness(1.05); }
+        
+        .tab.active, .btn:active, .icon-btn:active, .send-btn:active, .nav-item.active { color: var(--accent); }
+        
+        .profile-banner-wrapper { position: relative; width: 100%; margin-bottom: 20px; }
+        .banner-container { width: 100%; height: 150px; border-radius: 20px; overflow: hidden; border: 1px solid var(--glass-border); background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+        .banner-image { width: 100%; height: 100%; object-fit: cover; }
+        .banner-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%); display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; }
+        body.light-theme .banner-placeholder { background: #f0f0f0; color: #aaa; }
+        body.light-theme .banner-container { background: #f0f0f0; }
+        
+        .profile-avatar-overlay { position: absolute; bottom: -40px; left: 20px; z-index: 10; }
+        .profile-avatar-overlay .avatar-large { width: 100px; height: 100px; border-radius: 50%; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text); overflow: hidden; box-shadow: 0 4px 20px var(--shadow); }
+        body.light-theme .profile-avatar-overlay .avatar-large { background: #e0e0e0; }
+        .profile-avatar-overlay .avatar-large img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .profile-name-section { margin-top: 50px; padding-left: 20px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 4px; }
+        
+        .settings-icon { cursor: pointer; font-size: 24px; padding: 8px; border-radius: 50%; transition: 0.2s; background: none; border: none; color: var(--text); }
+        .settings-icon:hover { background: rgba(255,255,255,0.1); transform: rotate(90deg); }
+        .settings-icon-img { width: 28px; height: 28px; object-fit: contain; cursor: pointer; }
+        
+        .toggle-switch { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .toggle-switch .toggle-label { font-size: 14px; color: var(--text); }
+        .toggle-switch .toggle-checkbox { width: 40px; height: 20px; background: #2a2a2a; border-radius: 20px; position: relative; transition: 0.2s; border: 1px solid var(--glass-border); }
+        .toggle-switch .toggle-checkbox::after { content: ""; width: 16px; height: 16px; background: #ffffff; border-radius: 50%; position: absolute; top: 1px; left: 2px; transition: 0.2s; }
+        .toggle-switch.active .toggle-checkbox { background: var(--accent); }
+        .toggle-switch.active .toggle-checkbox::after { left: 20px; }
+        
+        .auth-container, .main-container { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        .auth-container { background: radial-gradient(circle at 50% 0%, #1a1a2e 0%, #0a0a0a 70%); justify-content: center; align-items: center; }
+        .auth-box { max-width: 380px; background: rgba(20, 20, 30, 0.9); backdrop-filter: blur(30px); padding: 36px 28px; border-radius: 28px; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 25px 50px rgba(0,0,0,0.7); width: 92%; animation: fadeIn 0.4s ease; text-align: center; }
+        .auth-box h2 { color: var(--accent); margin-bottom: 10px; font-weight: 600; font-size: 30px; letter-spacing: 2px; }
+        .auth-subtitle { color: var(--text-secondary); margin-bottom: 30px; font-size: 14px; }
+        
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
+        .input-group input, .input-group select, .input-group textarea { width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; color: #fff; font-size: 15px; outline: none; transition: 0.2s; }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2); }
+        
+        .btn { background: var(--accent); color: #000000; border: none; padding: 14px; border-radius: 14px; font-size: 16px; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid var(--glass-border); }
+        .btn:hover { transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .auth-error { color: #ff6666; margin-top: 12px; font-size: 14px; text-align: center; font-weight: bold; }
+        .auth-switch { margin-top: 20px; display: flex; gap: 10px; }
+        
+        .main-container { flex-direction: row; position: relative; flex: 1; overflow: hidden; }
+        .sidebar { width: 280px; background: var(--glass-bg); border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; position: absolute; left: 0; top: 0; bottom: 0; z-index: 10; transform: translateX(-100%); transition: transform 0.3s ease; }
+        .sidebar.open { transform: translateX(0); }
+        
+        .chat-area { flex: 1; display: flex; flex-direction: column; background: var(--glass-bg); position: relative; z-index: 5; width: 100%; }
+        
+        .back-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; font-size: 24px; cursor: pointer; margin-right: 10px; display: none; width: 40px; height: 40px; border-radius: 12px; }
+        .back-btn.visible { display: block; }
+        .back-btn:hover { background: var(--hover-bg); }
+        
+        @media (min-width: 768px) { .sidebar { position: relative; transform: translateX(0); width: 300px; } .back-btn { display: none !important; } }
+        
+        .user-profile { padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--glass-border); background: var(--glass-bg); }
+        .avatar { width: 48px; height: 48px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text); font-weight: 500; overflow: hidden; flex-shrink: 0; }
+        .avatar-img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+        .username-display { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+        
+        .search-add { padding: 12px; border-bottom: 1px solid var(--glass-border); display: flex; gap: 8px; background: var(--glass-bg); }
+        .search-add input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 15px; color: var(--text); outline: none; }
+        .search-add input::placeholder { color: var(--text-secondary); }
+        
+        .icon-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); color: #6b7280; width: 40px; height: 40px; border-radius: 12px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn:hover { background: rgba(212, 175, 55, 0.3); }
+        
+        .chats-list { flex: 1; overflow-y: auto; padding: 8px; }
+        .chat-item { padding: 12px 16px; border-radius: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text); background: var(--glass-bg); border: 1px solid var(--glass-border); transition: all 0.2s; }
+        .chat-item:hover { background: var(--hover-bg); border-color: var(--hover-border); }
+        .chat-item.active { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--accent); }
+        
+        .chat-avatar { width: 40px; height: 40px; background: rgba(212, 175, 55, 0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--glass-border); color: var(--text); }
+        .chat-avatar-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .delete-chat-icon { margin-left: auto; color: #6b7280; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; }
+        .delete-chat-icon img { width: 20px; height: 20px; object-fit: contain; }
+        .delete-chat-icon:hover { opacity: 0.8; }
+        
+        .chat-header { padding: 12px 16px; background: var(--glass-bg); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; color: var(--text); }
+        .chat-header-info { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .chat-header-info strong { color: var(--text); font-size: 16px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .chat-user-status { font-size: 11px; color: #4CAF50; font-weight: normal; margin-top: 2px; }
+        .chat-user-status.offline { color: #888; }
+        
+        .chat-actions { display: flex; gap: 8px; align-items: center; }
+        .tiny-btn { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #6b7280; font-weight: 500; }
+        .tiny-btn:hover { background: rgba(212, 175, 55, 0.2); }
+        
+        .subscribe-btn { background: #DBBA00; border: none; padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #000000; font-weight: 500; }
+        .subscribe-btn:hover { filter: brightness(1.1); }
+        .unsubscribe-btn { background: #818181; border: 1px solid var(--glass-border); padding: 6px 12px; border-radius: 12px; cursor: pointer; font-size: 12px; color: #ffffff; font-weight: 500; }
+        .unsubscribe-btn:hover { background: #6a6a6a; }
+        
+        .system-message { background: rgba(40, 40, 45, 0.7); border: 1px solid var(--glass-border); color: #aaaaaa; font-style: italic; }
+        
+        .msg-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+        .msg-actions button { background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border); color: #6b7280; cursor: pointer; font-size: 11px; padding: 2px 8px; border-radius: 8px; font-weight: 500; }
+        .msg-actions button:hover { background: #ff4444; color: white; }
+        
+        .like-btn, .dislike-btn { background: none; border: none; cursor: pointer; font-size: 14px; color: #6b7280; display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 20px; transition: 0.2s; }
+        .like-btn.liked, .dislike-btn.disliked { color: var(--accent); }
+        .like-btn.liked { color: #4CAF50; }
+        .dislike-btn.disliked { color: #ff6666; }
+        .like-btn:hover, .dislike-btn:hover { background: rgba(212, 175, 55, 0.2); }
+        
+        .media-preview { max-width: 200px; max-height: 200px; border-radius: 12px; margin-top: 4px; border: 1px solid var(--glass-border); cursor: pointer; }
+        video.media-preview { max-width: 200px; max-height: 200px; }
+        
+        .message-username { cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 2px; color: var(--accent); }
+        .message-username:hover { text-decoration: underline; }
+        
         .input-area { display: flex; gap: 8px; padding: 12px; background: var(--glass-bg); border-top: 1px solid var(--glass-border); align-items: center; flex-wrap: wrap; z-index: 2; position: relative; }
         .input-area input[type="text"] { flex: 2; min-width: 120px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 24px; padding: 12px 16px; color: var(--text); font-family: inherit; outline: none; font-size: 14px; }
         .input-area input[type="text"]::placeholder { color: var(--text-secondary); }
@@ -175,14 +353,14 @@
         .file-label:hover { background: rgba(212, 175, 55, 0.2); }
         .send-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); width: 44px; height: 44px; border-radius: 50%; color: #6b7280; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .send-btn:hover { background: rgba(212, 175, 55, 0.3); }
-
+        
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 3000; animation: fadeIn 0.2s ease; backdrop-filter: blur(8px); }
         .profile-modal { background: var(--glass-bg); border-radius: 24px; width: 90%; max-width: 400px; padding: 24px; box-shadow: 0 20px 40px var(--shadow); border: 1px solid var(--glass-border); color: var(--text); max-height: 80vh; overflow-y: auto; animation: fadeIn 0.2s ease; }
         .profile-modal h3 { font-size: 22px; margin-bottom: 16px; color: var(--text); border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
         
         .profile-input-group { margin-bottom: 16px; position: relative; }
         .profile-input-group label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 13px; font-weight: 500; }
-        .profile-input-group input, .profile-input-group textarea { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
+        .profile-input-group input, .profile-input-group textarea, .profile-password-row { width: 100%; padding: 10px 14px; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text); font-size: 14px; outline: none; }
         .profile-input-group input:focus, .profile-input-group textarea:focus { border-color: var(--accent); }
         
         .change-file-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid var(--glass-border); padding: 10px 14px; border-radius: 12px; color: #6b7280; font-weight: 600; cursor: pointer; text-align: center; transition: 0.2s; width: 100%; }
@@ -198,7 +376,23 @@
         .profile-btn.logout { background: #ff4444; color: #ffffff; }
         .profile-btn.warning { background: #ff9800; color: #000000; }
         .profile-btn:hover { transform: translateY(-2px); }
-
+        
+        .currency-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-bottom: 6px; display: block; }
+        .hidden { display: none; }
+        
+        ::-webkit-scrollbar { width: 4px; background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+        
+        .notification { position: fixed; top: 20px; right: 20px; background: var(--glass-bg); color: var(--text); padding: 12px 24px; border-radius: 16px; z-index: 10000; animation: slideIn 0.3s ease; border: 1px solid var(--glass-border); font-weight: 500; backdrop-filter: blur(8px); }
+        .notification.error { background: #ff4444; color: white; }
+        
+        .change-username-btn { background: #ff9800; border: none; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 8px; width: 100%; color: #000000; }
+        .change-username-btn:hover { filter: brightness(1.1); }
+        
+        .admin-give-form { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 16px; margin-bottom: 16px; border: 1px solid var(--glass-border); }
+        
+        .blocked-message { text-align: center; padding: 20px; color: #ff6666; font-weight: bold; }
+        
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0; background: var(--glass-bg); backdrop-filter: blur(12px);
             border-top: 1px solid var(--glass-border); display: flex; justify-content: space-around; padding: 8px 0; z-index: 20;
@@ -215,6 +409,8 @@
             transition: all 0.2s ease; text-align: center; letter-spacing: 0.3px;
         }
         .feed-filter-btn.active { background: var(--accent); color: #000000; border-color: var(--accent); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); transform: scale(1.02); }
+        .feed-filter-btn:hover { background: rgba(212, 175, 55, 0.25); border-color: var(--accent); }
+        .feed-filter-btn.active:hover { background: var(--accent); filter: brightness(1.05); }
         .post-card { background: var(--glass-bg); border-radius: 24px; padding: 18px; margin: 0 16px 20px; border: 1px solid var(--glass-border); box-shadow: 0 8px 28px var(--shadow); transition: transform 0.2s, box-shadow 0.2s; }
         .post-card:hover { transform: translateY(-2px); box-shadow: 0 12px 36px var(--shadow); }
         .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; cursor: pointer; }
@@ -229,8 +425,10 @@
         .post-stats button:hover { transform: translateY(-2px); background: rgba(212, 175, 55, 0.25); border-color: #d4af37; box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2); }
         .post-like.active, .post-dislike.active { background: rgba(212, 175, 55, 0.35); border-color: #d4af37; box-shadow: 0 0 12px rgba(212, 175, 55, 0.4); }
         .post-like img, .post-comment img, .post-delete img { width: 24px; height: 24px; object-fit: contain; }
+        .post-delete { background: rgba(255, 68, 68, 0.12) !important; border-color: rgba(255, 68, 68, 0.3) !important; color: #ff6666 !important; padding: 8px 12px !important; }
         
         .create-post-btn { position: fixed; bottom: 80px; right: 20px; background: var(--accent); color: #000000; border: none; width: 56px; height: 56px; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px var(--shadow); z-index: 30; display: flex; align-items: center; justify-content: center; }
+        .create-post-btn:hover { transform: scale(1.05); }
         .comments-modal { background: var(--glass-bg); border-radius: 24px; width: 90%; max-width: 400px; padding: 20px; max-height: 80vh; overflow-y: auto; }
         .comment-item { padding: 8px 0; border-bottom: 1px solid var(--glass-border); }
         .comment-author { font-weight: 600; color: var(--text); cursor: pointer; }
@@ -238,12 +436,11 @@
         .comment-time { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
         .add-comment { margin-top: 16px; display: flex; gap: 8px; }
         .add-comment input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 8px 12px; color: var(--text); }
-        .badge-icon { display: inline-block; width: 28px; height: 28px; vertical-align: middle; margin-left: 4px; }
-        ::-webkit-scrollbar { width: 4px; background: #1a1a1a; }
-        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
-        .notification { position: fixed; top: 20px; right: 20px; background: var(--glass-bg); color: var(--text); padding: 12px 24px; border-radius: 16px; z-index: 10000; animation: slideIn 0.3s ease; border: 1px solid var(--glass-border); font-weight: 500; backdrop-filter: blur(8px); }
-        .notification.error { background: #ff4444; color: white; }
+        
         @media (max-width: 768px) { .main-container { margin-bottom: 60px; } .create-post-btn { bottom: 70px; } }
+        .bottom-nav { display: flex; }
+        
+        .badge-icon { display: inline-block; width: 28px; height: 28px; vertical-align: middle; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -263,7 +460,8 @@
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {}, feedFilter: 'all', soundEnabled: true
+                typingTimeouts: {}, lastPostTime: {}, feedFilter: 'all', allPostsShuffled: [], allPostsIndex: 0,
+                soundEnabled: true
             };
             App.systemBots = [];
             
@@ -281,7 +479,7 @@
             const STATE_ROW_ID = 1;
             async function loadAppState() {
                 const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ROW_ID).single();
-                if (error) { console.warn('Error loading state:', error); return null; }
+                if (error) { console.warn('Error loading state, creating new:', error); return null; }
                 return data?.data || null;
             }
             
@@ -520,12 +718,15 @@
                     <div class="modal-overlay" id="settingsModalOverlay">
                         <div class="profile-modal">
                             <h3>SETTINGS</h3>
-                            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-                                <div class="avatar-large" style="width: 60px; height: 60px; font-size: 24px;">${userData.avatar ? `<img src="${userData.avatar}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : `<img src="${DEFAULT_AVATAR}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`}</div>
-                                <div>
-                                    <div style="font-weight: bold; font-size: 18px;">${formatUserNameWithBadge(App.currentUser)}</div>
-                                    <div style="color: var(--text-secondary);">${followersCount} followers · ${followingCount} following</div>
+                            <div class="profile-banner-wrapper" style="margin-bottom: 16px;">
+                                <div class="banner-container" style="height: 80px;">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
+                                <div class="profile-avatar-overlay" style="bottom: -30px; left: 10px;">
+                                    <div class="avatar-large" style="width: 60px; height: 60px; font-size: 24px;">${userData.avatar ? `<img src="${userData.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : `<img src="${DEFAULT_AVATAR}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`}</div>
                                 </div>
+                            </div>
+                            <div style="position:relative; padding-left: 20px; margin-top: 30px; margin-bottom: 16px;">
+                                <div style="font-weight: bold; font-size: 18px;">${formatUserNameWithBadge(App.currentUser)}</div>
+                                <div style="color: var(--text-secondary);">${followersCount} followers · ${followingCount} following</div>
                             </div>
                             <div class="profile-input-group"><label>USERNAME</label><input type="text" value="${App.currentUser}" readonly disabled style="background: rgba(0,0,0,0.2);"></div>
                             <div class="profile-input-group"><label>EMAIL</label><input type="email" id="settingsEmail" value="${pendingEmail}" placeholder="example@mail.com"></div>
@@ -585,7 +786,7 @@
                     const file = e.target.files[0];
                     if (!file) return;
                     const reader = new FileReader();
-                    reader.onload = (ev) => compressImage(ev.target.result, 1200, 400, 0.7, (compressed) => { tempBanner = compressed; showNotification('Banner selected'); });
+                    reader.onload = (ev) => compressImage(ev.target.result, 800, 300, 0.7, (compressed) => { tempBanner = compressed; showNotification('Banner selected'); });
                     reader.readAsDataURL(file);
                 });
                 document.getElementById('changeWallpaperBtn').addEventListener('click', () => document.getElementById('settingsWallpaper').click());
@@ -767,20 +968,14 @@
                 document.getElementById('closeProfileModalBtn').addEventListener('click', () => document.getElementById('profileModalOverlay').remove());
             }
 
-            // ========== FEED FUNCTIONS ==========
             function initFeed() {
                 const posts = App.posts || [];
                 if (App.feedFilter === 'all') {
                     const nonMyPosts = posts.filter(p => p.author !== App.currentUser);
+                    App.allPostsShuffled = shuffleArray([...nonMyPosts]);
+                    App.allPostsIndex = 0;
                     const fc = document.getElementById('feedPostsContainer');
-                    if (!fc) return;
-                    if (nonMyPosts.length === 0) {
-                        fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet.</div>';
-                        fc._feedPool = [];
-                        return;
-                    }
-                    fc.innerHTML = '';
-                    fc._feedPool = shuffleArray([...nonMyPosts]);
+                    if (fc) fc.innerHTML = '';
                     renderFeed();
                 } else if (App.feedFilter === 'liked') {
                     const likedPosts = posts.filter(p => p.likes && p.likes[App.currentUser]).sort((a,b) => b.time - a.time);
@@ -794,54 +989,66 @@
             }
 
             function shuffleArray(array) {
-                const arr = [...array];
-                for (let i = arr.length - 1; i > 0; i--) {
+                for (let i = array.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                    [array[i], array[j]] = [array[j], array[i]];
                 }
-                return arr;
+                return array;
             }
 
             function renderFeed() {
                 const fc = document.getElementById('feedPostsContainer');
-                if (!fc || App.feedFilter !== 'all') return;
-                
-                // Если пул не существует или пуст, но есть посты — пересоздаём
-                if (!fc._feedPool || fc._feedPool.length === 0) {
-                    const posts = App.posts || [];
-                    const nonMyPosts = posts.filter(p => p.author !== App.currentUser);
-                    if (nonMyPosts.length === 0) return;
-                    fc._feedPool = shuffleArray([...nonMyPosts]);
+                if (!fc) return;
+                if (App.feedFilter !== 'all') return;
+                if (App.allPostsShuffled.length === 0) {
+                    fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet.</div>';
+                    return;
                 }
-                
-                const batchSize = Math.min(5 + Math.floor(Math.random() * 6), fc._feedPool.length);
-                const postsToShow = fc._feedPool.splice(0, batchSize);
-                
-                let html = '';
-                postsToShow.forEach(post => {
-                    const author = App.users[post.author] || {};
-                    const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`;
-                    const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
-                    const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length;
-                    const liked = post.likes && post.likes[App.currentUser];
-                    const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER;
-                    const isSub = isFollowing(App.currentUser, post.author);
-                    const subBtn = post.author !== App.currentUser ? `<button class="${isSub ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSub ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
-                    html += `<div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
-                        <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
-                        <div class="post-stats">
-                            <button class="post-like ${liked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF}" style="width:24px;height:24px;"> <span>${likes}</span></button>
-                            <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${comments}</span></button>
-                            ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
-                        </div>
-                    </div>`;
-                });
-                
-                fc.insertAdjacentHTML('beforeend', html);
-                fc.onscroll = function() {
+
+                // Function to add a batch of 10 posts
+                function addNextBatch() {
+                    if (App.allPostsShuffled.length === 0) return;
+                    let html = '';
+                    for (let i = 0; i < 10; i++) {
+                        if (App.allPostsIndex >= App.allPostsShuffled.length) {
+                            // Reshuffle and reset to make infinite scrolling
+                            App.allPostsShuffled = shuffleArray([...App.allPostsShuffled]);
+                            App.allPostsIndex = 0;
+                        }
+                        const post = App.allPostsShuffled[App.allPostsIndex];
+                        App.allPostsIndex++;
+                        const author = App.users[post.author] || {};
+                        const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`;
+                        const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
+                        const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length;
+                        const liked = post.likes && post.likes[App.currentUser];
+                        const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER;
+                        const isSub = isFollowing(App.currentUser, post.author);
+                        const subBtn = post.author !== App.currentUser ? `<button class="${isSub ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSub ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
+                        html += `<div class="post-card" data-post-id="${post.id}">
+                            <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
+                            <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
+                            <div class="post-stats">
+                                <button class="post-like ${liked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF}" style="width:24px;height:24px;"> <span>${likes}</span></button>
+                                <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${comments}</span></button>
+                                ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
+                            </div>
+                        </div>`;
+                    }
+                    fc.insertAdjacentHTML('beforeend', html);
+                }
+
+                // Initial load: keep adding until we have enough posts to scroll
+                let safety = 0;
+                while ((fc.scrollHeight <= fc.clientHeight + 100) && safety < 50) {
+                    addNextBatch();
+                    safety++;
+                }
+
+                // Set up infinite scroll listener
+                fc.onscroll = () => {
                     if (fc.scrollTop + fc.clientHeight >= fc.scrollHeight - 100) {
-                        renderFeed();
+                        addNextBatch();
                     }
                 };
             }
