@@ -520,7 +520,6 @@
                                     applyWallpaper();
                                     applyWallpaperToFeed();
                                     if (App.activeTab === 'chats' && App.activeChat) renderMessages(App.activeChat);
-                                    // Убрана автоматическая перерисовка ленты при обновлении данных
                                     updateChatList();
                                 }
                             }
@@ -731,6 +730,7 @@
                             <div class="profile-input-group"><label>DISPLAY NAME (up to 9 chars)</label><input type="text" id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}" placeholder="Your name"></div>
                             <div class="profile-input-group"><label>PASSWORD</label><div class="password-wrapper"><input type="password" id="settingsPassword" value="${userData.password || ''}"><button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button></div></div>
                             <div class="profile-input-group"><label>AVATAR</label><button class="change-file-btn" id="changeAvatarBtn">CHANGE</button><input type="file" id="settingsAvatar" accept="image/*" style="display:none;"></div>
+                            <div class="profile-input-group"><label>BANNER</label><button class="change-file-btn" id="changeBannerBtn">CHANGE</button><input type="file" id="settingsBanner" accept="image/*" style="display:none;"></div>
                             <div class="profile-input-group"><label>CHAT WALLPAPER</label><button class="change-file-btn" id="changeWallpaperBtn">CHANGE</button><input type="file" id="settingsWallpaper" accept="image/*" style="display:none;"></div>
                             <div class="profile-input-group">
                                 <label>THEME</label>
@@ -769,13 +769,21 @@
                     else { passInput.type = 'password'; btn.textContent = '👁️'; }
                 };
                 
-                let tempAvatar = null, tempWallpaper = null;
+                let tempAvatar = null, tempBanner = null, tempWallpaper = null;
                 document.getElementById('changeAvatarBtn').addEventListener('click', () => document.getElementById('settingsAvatar').click());
                 document.getElementById('settingsAvatar').addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
                     const reader = new FileReader();
                     reader.onload = (ev) => compressImage(ev.target.result, 200, 200, 0.7, (compressed) => { tempAvatar = compressed; showNotification('Avatar selected'); });
+                    reader.readAsDataURL(file);
+                });
+                document.getElementById('changeBannerBtn').addEventListener('click', () => document.getElementById('settingsBanner').click());
+                document.getElementById('settingsBanner').addEventListener('change', (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => compressImage(ev.target.result, 1200, 400, 0.7, (compressed) => { tempBanner = compressed; showNotification('Banner selected'); });
                     reader.readAsDataURL(file);
                 });
                 document.getElementById('changeWallpaperBtn').addEventListener('click', () => document.getElementById('settingsWallpaper').click());
@@ -847,6 +855,7 @@
                         App.users[App.currentUser].password = newPassword;
                     }
                     if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
+                    if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                     if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
                     if (pendingTheme !== currentTheme) applyTheme(pendingTheme);
                     if (pendingPrivacy !== currentPrivacy) updatePrivacySetting(pendingPrivacy);
