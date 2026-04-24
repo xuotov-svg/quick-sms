@@ -131,7 +131,7 @@
         }
         
         .verified-icon {
-            display: none; /* убираем галочки */
+            display: none;
         }
         
         .messages-container {
@@ -841,7 +841,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function(){
-            // === SUPABASE INIT ===
             const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
             const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
             
@@ -850,7 +849,6 @@
                 realtime: { params: { eventsPerSecond: 10 } }
             });
 
-            // Глобальные переменные приложения
             const App = { 
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null, pending2FA: null,
@@ -876,7 +874,6 @@
 
             const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
 
-            // === SUPABASE FUNCTIONS ===
             const STATE_ROW_ID = 1;
             
             async function loadAppState() {
@@ -1034,9 +1031,6 @@
                 render();
             }
 
-            function setupRealtimeListener(chatId, chatPartner) {}
-            function setupUserListener(username) {}
-            
             function updateLastSeen(username) {
                 if (App.users[username] && username === App.currentUser) {
                     App.users[username].lastSeen = Date.now();
@@ -1044,7 +1038,6 @@
                 }
             }
 
-            // === HELPER FUNCTIONS ===
             let loadingStartTime = Date.now();
             const MIN_LOADING_TIME = 1000;
             
@@ -1569,7 +1562,6 @@
                 });
             }
 
-            // ===== FEED =====
             let feedPage = 0;
             const FEED_PAGE_SIZE = 10;
             let feedPosts = [];
@@ -2136,13 +2128,75 @@
                 if (createPostBtn) createPostBtn.addEventListener('click', openCreatePostModal);
             }
 
-            function sendMessage() { ... } // unchanged
+            function sendMessage() { 
+                const textInput = document.getElementById('messageText'); 
+                const text = textInput ? textInput.value.trim() : ''; 
+                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Enter message or select file', 'error'); return; } 
+                const from = App.currentUser; 
+                const to = App.activeChat; 
+                if (!to) { showNotification('Select a chat', 'error'); return; } 
+                if (!canUserMessage(from, to)) { showNotification('You cannot message this user', 'error'); return; } 
+                try { 
+                    let mediaData = null; 
+                    let isVideoMsg = false; 
+                    if (App.tempVideo) { mediaData = App.tempVideo; isVideoMsg = true; } 
+                    else if (App.tempPhoto) { mediaData = App.tempPhoto; } 
+                    const message = { from, text: text || '', time: Date.now(), photo: mediaData, isVideo: isVideoMsg, likes: {}, dislikes: {} };
+                    const chatId = [from, to].sort().join('_'); 
+                    if (!App.chats[chatId]) App.chats[chatId] = { user1: from, user2: to, messages: [] }; 
+                    App.chats[chatId].messages.push(message); 
+                    saveToSupabase(); 
+                    renderMessages(to); 
+                    playHappySound(); 
+                    if (textInput) textInput.value = ''; 
+                    App.tempPhoto = null; 
+                    App.tempVideo = null; 
+                    const fileInput = document.getElementById('fileUpload'); 
+                    const videoInput = document.getElementById('videoUpload'); 
+                    if (fileInput) fileInput.value = ''; 
+                    if (videoInput) videoInput.value = ''; 
+                    updateChatList(); 
+                } catch (error) { console.error('Send error:', error); showNotification('Send error', 'error'); } 
+            }
 
-            function renderMessages(chatPartner) { ... } // unchanged
+            function renderMessages(chatPartner) { 
+                const messagesContainer = document.getElementById('messageList'); 
+                if (!messagesContainer) return; 
+                let messages = []; 
+                const chatId = [App.currentUser, chatPartner].sort().join('_'); 
+                const chat = App.chats[chatId]; 
+                messages = chat ? chat.messages : []; 
+                let html = ''; 
+                if (messages && messages.length > 0) messages.forEach((msg, idx) => { html += renderMessage(msg, idx, App.currentUser, chatPartner); }); 
+                else html = '<div style="text-align:center; color: var(--text-secondary); margin-top:20px; padding:20px;">No messages</div>'; 
+                messagesContainer.innerHTML = html; 
+                setTimeout(() => { messagesContainer.scrollTop = messagesContainer.scrollHeight; }, 100); 
+                updateChatHeaderStatus(chatPartner); 
+            }
 
-            function renderMessage(msg, idx, currentUser, chatPartner) { ... } // unchanged
+            function renderMessage(msg, idx, currentUser, chatPartner) { 
+                const isMe = msg.from === currentUser; 
+                const isSystem = msg.from === 'SYSTEM'; 
+                const fromUserDisplay = isSystem ? 'SYSTEM' : formatUserNameWithBadge(msg.from);
+                let canDelete = isMe; 
+                let mediaHtml = ''; 
+                if (msg.photo) { if (msg.isVideo) { mediaHtml = `<video controls class="media-preview"><source src="${msg.photo}" type="video/mp4"></video>`; } else { mediaHtml = `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`; } } 
+                let messageText = msg.text || ''; 
+                const messageClass = isMe ? 'me' : ''; 
+                const fullDate = new Date(msg.time).toLocaleString();
+                
+                return `<div class="message ${messageClass} ${isSystem ? 'system-message' : ''}">${!isMe && !isSystem ? `<small><span class="message-username" onclick="window.openProfileModal('${msg.from}')">${fromUserDisplay}</span></small><br>` : ''}${isSystem ? `<small>🔔 SYSTEM</small><br>` : ''}<div class="message-text">${messageText}</div>${mediaHtml}<div class="time">${fullDate}</div><div style="display: flex; justify-content: flex-end; margin-top: 4px;">${canDelete ? `<div class="msg-actions"><button onclick="window.deleteMessage('${chatPartner}', ${idx})">DELETE</button></div>` : ''}</div></div>`; 
+            }
 
-            function updateChatList() { ... } // unchanged
+            function updateChatList() { 
+                const chatsContainer = document.getElementById('chatsList'); 
+                if (!chatsContainer || !App.currentUser) return; 
+                let chatsList = getChatListForUser(App.currentUser); 
+                let html = ''; 
+                chatsList.forEach(chat => { html += renderChatItem(chat, chat === App.activeChat, App.currentUser); }); 
+                chatsContainer.innerHTML = html; 
+                document.querySelectorAll('.chat-item').forEach(el => { el.addEventListener('click', (e) => { if (e.target.closest('.delete-chat-icon')) return; const chatId = el.dataset.chat; if (App.activeChat === chatId) { if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } return; } App.activeChat = chatId; localStorage.setItem('yolk_active_chat', chatId); if (window.innerWidth < 768) { App.sidebarOpen = false; document.querySelector('.sidebar').classList.remove('open'); } document.querySelectorAll('.chat-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); render(); }); }); 
+            }
 
             function renderChatItem(u, active, currentUser) { 
                 let display = formatUserNameWithBadge(u);
@@ -2151,22 +2205,94 @@
                 return `<div class="chat-item ${active ? 'active' : ''}" data-chat="${u}">${avatarHtml}<div style="flex:1;"><div class="username-display">${display}</div></div><span class="delete-chat-icon" onclick="window.deleteChat('${u}', event)"><img src="${ICONS.DELETE}" style="width:20px;height:20px;"></span></div>`; 
             }
 
-            function getChatListForUser(user) { ... } // unchanged
+            function getChatListForUser(user) { 
+                let set = new Set(); 
+                Object.keys(App.chats || {}).forEach(key => { 
+                    const c = App.chats[key]; 
+                    if (c) { 
+                        if (c.user1 === user) set.add(c.user2); 
+                        if (c.user2 === user) set.add(c.user1); 
+                    } 
+                }); 
+                return Array.from(set); 
+            }
             
-            function handleFileSelect(e) { ... } // unchanged
-            function handleVideoSelect(e) { ... } // unchanged
+            function handleFileSelect(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { compressImage(ev.target.result, 800, 800, 0.6, (compressed) => { App.tempPhoto = compressed; showNotification('Photo added, write text and send'); }); }; reader.readAsDataURL(file); }
+            function handleVideoSelect(e) { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) { showNotification('Video max 20 MB', 'error'); return; } const reader = new FileReader(); reader.onload = (ev) => { App.tempVideo = ev.target.result; showNotification('Video added, write text and send'); }; reader.readAsDataURL(file); }
             
-            function addUserBySearch() { ... } // unchanged
+            function addUserBySearch() { 
+                let query = document.getElementById('searchUserInput').value.trim().toLowerCase(); 
+                if (!query) { showNotification('Enter username', 'error'); return; } 
+                if (!query.startsWith('@')) query = '@' + query; 
+                let mainUser = findMainUsername(query);
+                if (!mainUser) {
+                    if (App.users[query]) mainUser = query;
+                }
+                if (!mainUser || !App.users[mainUser]) { showNotification('User not found', 'error'); return; } 
+                if (mainUser === App.currentUser) { showNotification('This is you', 'error'); return; } 
+                if (!canUserMessage(App.currentUser, mainUser)) { showNotification('This user does not accept messages from strangers', 'error'); return; } 
+                ensureChat(App.currentUser, mainUser); 
+                App.activeChat = mainUser; 
+                localStorage.setItem('yolk_active_chat', mainUser); 
+                if (window.innerWidth < 768) App.sidebarOpen = false; 
+                document.getElementById('searchUserInput').value = ''; 
+                render(); 
+                showNotification(`Chat with ${getDisplayName(mainUser)} created`); 
+            }
             
-            window.deleteChat = function(chat, event) { ... } // unchanged
-            window.deleteMessage = function(chatPartner, idx) { ... } // unchanged
-            window.openImageModal = function(src) { ... } // unchanged
+            window.deleteChat = function(chat, event) { 
+                event.stopPropagation(); 
+                if (!confirm(`Delete chat with ${getDisplayName(chat)}?`)) return; 
+                const user = App.currentUser; 
+                const chatId = [user, chat].sort().join('_'); 
+                if (App.chats[chatId]) delete App.chats[chatId]; 
+                if (App.activeChat === chat) { 
+                    App.activeChat = null; 
+                    localStorage.removeItem('yolk_active_chat'); 
+                } 
+                saveToSupabase(); 
+                render(); 
+                showNotification('Chat deleted'); 
+            };
+            
+            window.deleteMessage = function(chatPartner, idx) { 
+                const from = App.currentUser; 
+                try { 
+                    const chatId = [from, chatPartner].sort().join('_'); 
+                    const msgs = App.chats[chatId]?.messages; 
+                    if (msgs && msgs[idx]) { 
+                        msgs.splice(idx, 1); 
+                        saveToSupabase(); 
+                        showNotification('Deleted'); 
+                        renderMessages(chatPartner); 
+                    } 
+                } catch (error) { console.error('Delete error:', error); showNotification('Delete error', 'error'); } 
+            };
+            
+            window.openImageModal = function(src) { 
+                const modalHtml = `<div class="modal-overlay" id="imageModal" onclick="this.remove()"><div style="max-width:90%; max-height:90%; display:flex; justify-content:center; align-items:center;"><img src="${src}" style="max-width:100%; max-height:100%; border-radius:12px;"></div></div>`; 
+                document.body.insertAdjacentHTML('beforeend', modalHtml); 
+            };
 
-            function updateChatHeaderStatus(username) { ... } // unchanged
+            function updateChatHeaderStatus(username) { 
+                const headerInfo = document.querySelector('.chat-header-info'); 
+                if (!headerInfo) return; 
+                const existingStatus = headerInfo.querySelector('.chat-user-status'); 
+                if (existingStatus) existingStatus.remove(); 
+                const existingNameStrong = headerInfo.querySelector('strong'); 
+                if (existingNameStrong) { 
+                    existingNameStrong.innerHTML = formatUserNameWithBadge(username);
+                } 
+                const isOnline = isUserOnline(username); 
+                const lastSeenText = formatLastSeen(App.users[username]?.lastSeen, username); 
+                const statusDiv = document.createElement('div'); 
+                statusDiv.className = 'chat-user-status' + (isOnline ? '' : ' offline'); 
+                statusDiv.textContent = isOnline ? 'online' : `last seen ${lastSeenText}`; 
+                headerInfo.appendChild(statusDiv); 
+            }
 
             function initBots() { App.systemBots = []; saveToSupabase(); }
 
-            // === INITIALIZATION ===
             window.addEventListener('load', () => { 
                 loadingStartTime = Date.now();
                 initBots(); 
