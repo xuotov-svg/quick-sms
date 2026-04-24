@@ -970,21 +970,17 @@
     if (App.feedFilter === 'all') {
         const nonMyPosts = posts.filter(p => p.author !== App.currentUser);
         if (nonMyPosts.length === 0) {
-            App.allPostsShuffled = [];
-            App.allPostsIndex = 0;
             const fc = document.getElementById('feedPostsContainer');
             if (fc) {
                 fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet.</div>';
-                fc._feedCycle = 0;
-                fc._feedBaseArray = [];
+                fc._feedPool = [];
             }
             return;
         }
         const fc = document.getElementById('feedPostsContainer');
         if (fc) {
             fc.innerHTML = '';
-            fc._feedCycle = 0;
-            fc._feedBaseArray = shuffleArray([...nonMyPosts]);
+            fc._feedPool = shuffleArray([...nonMyPosts]);
         }
         renderFeed();
     } else if (App.feedFilter === 'liked') {
@@ -1007,47 +1003,21 @@ function shuffleArray(array) {
     return arr;
 }
 
-function getNextBatchOfPosts(fc) {
-    if (!fc._feedBaseArray || fc._feedBaseArray.length === 0) return [];
-    
-    const batchSize = 10;
-    const cycle = fc._feedCycle;
-    const baseArray = fc._feedBaseArray;
-    
-    let postsToShow = [];
-    
-    for (let i = 0; i < batchSize; i++) {
-        if (!baseArray[cycle]) break;
-        
-        if (cycle < baseArray.length) {
-            postsToShow.push(baseArray[cycle]);
-        }
-        
-        fc._feedCycle++;
-        
-        // Когда дошли до конца — перемешиваем и начинаем заново
-        if (fc._feedCycle >= baseArray.length) {
-            fc._feedBaseArray = shuffleArray([...baseArray]);
-            fc._feedCycle = 0;
-        }
-    }
-    
-    return postsToShow;
-}
-
 function renderFeed() {
     const fc = document.getElementById('feedPostsContainer');
     if (!fc) return;
     if (App.feedFilter !== 'all') return;
     
-    const postsToShow = getNextBatchOfPosts(fc);
-    
-    if (postsToShow.length === 0) {
-        if (!fc.innerHTML) {
-            fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet.</div>';
-        }
-        return;
+    if (!fc._feedPool || fc._feedPool.length === 0) {
+        const posts = App.posts || [];
+        const nonMyPosts = posts.filter(p => p.author !== App.currentUser);
+        if (nonMyPosts.length === 0) return;
+        fc._feedPool = shuffleArray([...nonMyPosts]);
     }
+    
+    // Берём от 5 до 10 случайных постов из пула
+    const batchSize = Math.min(5 + Math.floor(Math.random() * 6), fc._feedPool.length);
+    const postsToShow = fc._feedPool.splice(0, batchSize);
     
     let html = '';
     postsToShow.forEach(post => {
@@ -1069,6 +1039,45 @@ function renderFeed() {
             </div>
         </div>`;
     });
+    
+    fc.insertAdjacentHTML('beforeend', html);
+    
+    fc.onscroll = function() {
+        if (fc.scrollTop + fc.clientHeight >= fc.scrollHeight - 100) {
+            renderFeed();
+        }
+    };
+}
+
+function renderStaticFeed(postsArray) {
+    const fc = document.getElementById('feedPostsContainer');
+    if (!fc) return;
+    if (postsArray.length === 0) {
+        fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts.</div>';
+        return;
+    }
+    let html = '';
+    postsArray.forEach(post => {
+        const author = App.users[post.author] || {};
+        const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`;
+        const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
+        const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length;
+        const liked = post.likes && post.likes[App.currentUser];
+        const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER;
+        const isSub = isFollowing(App.currentUser, post.author);
+        const subBtn = post.author !== App.currentUser ? `<button class="${isSub ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSub ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
+        html += `<div class="post-card" data-post-id="${post.id}">
+            <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
+            <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
+            <div class="post-stats">
+                <button class="post-like ${liked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF}" style="width:24px;height:24px;"> <span>${likes}</span></button>
+                <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${comments}</span></button>
+                ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
+            </div>
+        </div>`;
+    });
+    fc.innerHTML = html;
+}
     
     fc.insertAdjacentHTML('beforeend', html);
     
