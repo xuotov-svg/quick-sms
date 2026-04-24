@@ -246,7 +246,8 @@
         body.light-theme .post-dislike,
         body.light-theme .post-comment,
         body.light-theme .post-delete,
-        body.light-theme .create-post-btn {
+        body.light-theme .create-post-btn,
+        body.light-theme .feed-filter-btn {
             filter: none !important;
         }
         
@@ -557,17 +558,57 @@
         .feed-container {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 0 0 16px;
             background: var(--glass-bg);
             position: relative;
             z-index: 5;
             width: 100%;
         }
+        .feed-filters {
+            position: sticky;
+            top: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            padding: 12px 16px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .feed-filter-btn {
+            flex: 1;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            padding: 14px 8px;
+            border-radius: 28px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+        .feed-filter-btn.active {
+            background: var(--accent);
+            color: #000000;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+            transform: scale(1.02);
+        }
+        .feed-filter-btn:hover {
+            background: rgba(212, 175, 55, 0.25);
+            border-color: var(--accent);
+        }
+        .feed-filter-btn.active:hover {
+            background: var(--accent);
+            filter: brightness(1.05);
+        }
         .post-card {
             background: var(--glass-bg);
             border-radius: 24px;
             padding: 18px;
-            margin-bottom: 20px;
+            margin: 0 16px 20px;
             border: 1px solid var(--glass-border);
             box-shadow: 0 8px 28px var(--shadow);
             transition: transform 0.2s, box-shadow 0.2s;
@@ -754,7 +795,8 @@
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {}, feedFilter: 'all'
+                typingTimeouts: {}, lastPostTime: {}, feedFilter: 'all', allPostsShuffled: [], allPostsIndex: 0,
+                soundEnabled: true
             };
             App.systemBots = [];
             
@@ -1030,10 +1072,6 @@
                             <div class="profile-input-group"><label>DISPLAY NAME (up to 9 chars)</label><input type="text" id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}" placeholder="Your name"></div>
                             <div class="profile-input-group"><label>PASSWORD</label><div class="password-wrapper"><input type="password" id="settingsPassword" value="${userData.password || ''}"><button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button></div></div>
                             <div class="profile-input-group"><label>AVATAR</label><button class="change-file-btn" id="changeAvatarBtn">CHANGE</button><input type="file" id="settingsAvatar" accept="image/*" style="display:none;"></div>
-                            <div class="profile-input-group"><label>BANNER</label>
-                                <div class="banner-container" style="height:100px; margin-bottom:8px;">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
-                                <button class="change-file-btn" id="changeBannerBtn">CHANGE</button><input type="file" id="settingsBanner" accept="image/*" style="display:none;">
-                            </div>
                             <div class="profile-input-group">
                                 <label>THEME</label>
                                 <div class="toggle-switch ${pendingTheme === 'light' ? 'active' : ''}" id="themeToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${pendingTheme === 'light' ? 'Light' : 'Dark'}</span></div>
@@ -1071,21 +1109,13 @@
                     else { passInput.type = 'password'; btn.textContent = '👁️'; }
                 };
                 
-                let tempAvatar = null, tempBanner = null;
+                let tempAvatar = null;
                 document.getElementById('changeAvatarBtn').addEventListener('click', () => document.getElementById('settingsAvatar').click());
                 document.getElementById('settingsAvatar').addEventListener('change', (e) => {
                     const file = e.target.files[0];
                     if (!file) return;
                     const reader = new FileReader();
                     reader.onload = (ev) => compressImage(ev.target.result, 200, 200, 0.7, (compressed) => { tempAvatar = compressed; showNotification('Avatar selected'); });
-                    reader.readAsDataURL(file);
-                });
-                document.getElementById('changeBannerBtn').addEventListener('click', () => document.getElementById('settingsBanner').click());
-                document.getElementById('settingsBanner').addEventListener('change', (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = (ev) => compressImage(ev.target.result, 800, 200, 0.7, (compressed) => { tempBanner = compressed; showNotification('Banner selected'); });
                     reader.readAsDataURL(file);
                 });
                 
@@ -1149,7 +1179,6 @@
                         App.users[App.currentUser].password = newPassword;
                     }
                     if (tempAvatar) App.users[App.currentUser].avatar = tempAvatar;
-                    if (tempBanner) App.users[App.currentUser].banner = tempBanner;
                     if (pendingTheme !== currentTheme) applyTheme(pendingTheme);
                     if (pendingPrivacy !== currentPrivacy) updatePrivacySetting(pendingPrivacy);
                     saveToSupabase();
@@ -1258,49 +1287,52 @@
                 document.getElementById('closeProfileModalBtn').addEventListener('click', () => document.getElementById('profileModalOverlay').remove());
             }
 
-            let feedPage = 0;
-            let feedPosts = [], isLoadingFeed = false;
-
-            function getFilteredPosts(filter) {
-                let all = [...App.posts].sort((a,b) => b.time - a.time);
-                if (filter === 'all') {
-                    return all.filter(p => p.author !== App.currentUser);
-                } else if (filter === 'liked') {
-                    return all.filter(p => p.likes && p.likes[App.currentUser]);
-                } else if (filter === 'my') {
-                    return all.filter(p => p.author === App.currentUser);
-                }
-                return all;
-            }
-
             function initFeed() {
-                feedPosts = getFilteredPosts(App.feedFilter);
-                feedPage = 0;
-                const fc = document.getElementById('feedPostsContainer');
-                if (fc) fc.innerHTML = '';
-                isLoadingFeed = false;
-                renderFeed();
+                const posts = App.posts || [];
+                if (App.feedFilter === 'all') {
+                    const nonMyPosts = posts.filter(p => p.author !== App.currentUser);
+                    App.allPostsShuffled = shuffleArray([...nonMyPosts]);
+                    App.allPostsIndex = 0;
+                    const fc = document.getElementById('feedPostsContainer');
+                    if (fc) fc.innerHTML = '';
+                    renderFeed();
+                } else if (App.feedFilter === 'liked') {
+                    const likedPosts = posts.filter(p => p.likes && p.likes[App.currentUser]).sort((a,b) => b.time - a.time);
+                    renderStaticFeed(likedPosts);
+                } else if (App.feedFilter === 'my') {
+                    const myPosts = posts.filter(p => p.author === App.currentUser).sort((a,b) => b.time - a.time);
+                    renderStaticFeed(myPosts);
+                }
                 applyWallpaperToFeed();
                 updateFeedFilterUI();
             }
 
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
             function renderFeed() {
                 const fc = document.getElementById('feedPostsContainer');
-                if (!fc || isLoadingFeed) return;
-                if (feedPosts.length === 0) {
+                if (!fc) return;
+                if (App.feedFilter !== 'all') return;
+                if (App.allPostsShuffled.length === 0) {
                     fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet.</div>';
                     return;
                 }
-                const start = feedPage * 10, end = start + 10;
-                let postsToShow = feedPosts.slice(start, end);
-                if (postsToShow.length === 0) {
-                    feedPage = 0;
-                    postsToShow = feedPosts.slice(0, 10);
-                    feedPage = 1;
-                } else {
-                    feedPage++;
+                let postsToShow = [];
+                const needed = 10;
+                for (let i = 0; i < needed; i++) {
+                    if (App.allPostsIndex >= App.allPostsShuffled.length) {
+                        App.allPostsShuffled = shuffleArray([...App.allPostsShuffled]);
+                        App.allPostsIndex = 0;
+                    }
+                    postsToShow.push(App.allPostsShuffled[App.allPostsIndex]);
+                    App.allPostsIndex++;
                 }
-                isLoadingFeed = true;
                 let html = '';
                 postsToShow.forEach(post => {
                     const author = App.users[post.author] || {};
@@ -1322,8 +1354,39 @@
                     </div>`;
                 });
                 fc.insertAdjacentHTML('beforeend', html);
-                isLoadingFeed = false;
-                fc.onscroll = () => { if (fc.scrollTop + fc.clientHeight >= fc.scrollHeight - 100) renderFeed(); };
+                fc.onscroll = () => {
+                    if (fc.scrollTop + fc.clientHeight >= fc.scrollHeight - 100) renderFeed();
+                };
+            }
+
+            function renderStaticFeed(postsArray) {
+                const fc = document.getElementById('feedPostsContainer');
+                if (!fc) return;
+                if (postsArray.length === 0) {
+                    fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts.</div>';
+                    return;
+                }
+                let html = '';
+                postsArray.forEach(post => {
+                    const author = App.users[post.author] || {};
+                    const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`;
+                    const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
+                    const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length;
+                    const liked = post.likes && post.likes[App.currentUser];
+                    const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER;
+                    const isSub = isFollowing(App.currentUser, post.author);
+                    const subBtn = post.author !== App.currentUser ? `<button class="${isSub ? 'unsubscribe-btn' : 'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto; padding:4px 10px;">${isSub ? 'UNFOLLOW' : 'FOLLOW'}</button>` : '';
+                    html += `<div class="post-card" data-post-id="${post.id}">
+                        <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
+                        <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
+                        <div class="post-stats">
+                            <button class="post-like ${liked ? 'active' : ''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF}" style="width:24px;height:24px;"> <span>${likes}</span></button>
+                            <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;height:24px;"> <span>${comments}</span></button>
+                            ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;height:24px;"></button>` : ''}
+                        </div>
+                    </div>`;
+                });
+                fc.innerHTML = html;
             }
 
             function updateFeedFilterUI() {
@@ -1441,13 +1504,12 @@
             }
 
             function renderAuth() {
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch" style="text-align:center; margin-top: 20px;"><span style="color: var(--text-secondary);">Don't have an account? </span><a href="#" id="showRegisterLink" style="color: var(--accent); font-weight: bold; text-decoration: none;">Sign up</a></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="registerBtn">SIGN UP</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch" id="showRegisterLink" style="cursor:pointer; color: var(--accent); font-weight: bold; text-align: center; margin-top: 20px;">Don't have an account? Sign up</div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="registerBtn">SIGN UP</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
             }
 
             function attachAuthEvents() {
                 const errorDiv = document.getElementById('authError');
-                document.getElementById('showRegisterLink')?.addEventListener('click', (e) => {
-                    e.preventDefault();
+                document.getElementById('showRegisterLink')?.addEventListener('click', () => {
                     document.getElementById('loginForm').style.display='none';
                     document.getElementById('registerForm').style.display='block';
                 });
@@ -1509,12 +1571,12 @@
                         </div>
                         ` : `
                         <div class="feed-container">
-                            <div class="feed-filters" style="position: sticky; top: 0; background: var(--glass-bg); padding: 10px; display: flex; gap: 8px; z-index: 10; border-bottom: 1px solid var(--glass-border);">
-                                <button class="tab active" id="filterAllBtn">ALL POSTS</button>
-                                <button class="tab" id="filterLikedBtn">LIKED POSTS</button>
-                                <button class="tab" id="filterMyBtn">MY POSTS</button>
+                            <div class="feed-filters">
+                                <button class="feed-filter-btn active" id="filterAllBtn">ALL POSTS</button>
+                                <button class="feed-filter-btn" id="filterLikedBtn">LIKED POSTS</button>
+                                <button class="feed-filter-btn" id="filterMyBtn">MY POSTS</button>
                             </div>
-                            <div id="feedPostsContainer" style="padding:0 16px;"></div>
+                            <div id="feedPostsContainer"></div>
                         </div>
                         <button class="create-post-btn" id="createPostBtn">+</button>
                         `}
@@ -1543,18 +1605,15 @@
                 document.getElementById('settingsTab')?.addEventListener('click', openProfileSettings);
                 document.getElementById('createPostBtn')?.addEventListener('click', openCreatePostModal);
                 
-                const filterAllBtn = document.getElementById('filterAllBtn');
-                const filterLikedBtn = document.getElementById('filterLikedBtn');
-                const filterMyBtn = document.getElementById('filterMyBtn');
-                filterAllBtn?.addEventListener('click', () => {
+                document.getElementById('filterAllBtn')?.addEventListener('click', () => {
                     App.feedFilter = 'all';
                     initFeed();
                 });
-                filterLikedBtn?.addEventListener('click', () => {
+                document.getElementById('filterLikedBtn')?.addEventListener('click', () => {
                     App.feedFilter = 'liked';
                     initFeed();
                 });
-                filterMyBtn?.addEventListener('click', () => {
+                document.getElementById('filterMyBtn')?.addEventListener('click', () => {
                     App.feedFilter = 'my';
                     initFeed();
                 });
