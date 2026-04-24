@@ -754,7 +754,7 @@
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false, dataLoaded: false,
                 tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null, tempWallpaper: null,
                 privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null, tempPostVideo: null,
-                typingTimeouts: {}, lastPostTime: {} 
+                typingTimeouts: {}, lastPostTime: {}, feedFilter: 'all'
             };
             App.systemBots = [];
             
@@ -1030,7 +1030,10 @@
                             <div class="profile-input-group"><label>DISPLAY NAME (up to 9 chars)</label><input type="text" id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}" placeholder="Your name"></div>
                             <div class="profile-input-group"><label>PASSWORD</label><div class="password-wrapper"><input type="password" id="settingsPassword" value="${userData.password || ''}"><button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button></div></div>
                             <div class="profile-input-group"><label>AVATAR</label><button class="change-file-btn" id="changeAvatarBtn">CHANGE</button><input type="file" id="settingsAvatar" accept="image/*" style="display:none;"></div>
-                            <div class="profile-input-group"><label>BANNER</label><button class="change-file-btn" id="changeBannerBtn">CHANGE</button><input type="file" id="settingsBanner" accept="image/*" style="display:none;"></div>
+                            <div class="profile-input-group"><label>BANNER</label>
+                                <div class="banner-container" style="height:100px; margin-bottom:8px;">${userData.banner ? `<img src="${userData.banner}" class="banner-image">` : '<div class="banner-placeholder">No banner</div>'}</div>
+                                <button class="change-file-btn" id="changeBannerBtn">CHANGE</button><input type="file" id="settingsBanner" accept="image/*" style="display:none;">
+                            </div>
                             <div class="profile-input-group">
                                 <label>THEME</label>
                                 <div class="toggle-switch ${pendingTheme === 'light' ? 'active' : ''}" id="themeToggle"><div class="toggle-checkbox"></div><span class="toggle-label">${pendingTheme === 'light' ? 'Light' : 'Dark'}</span></div>
@@ -1258,21 +1261,45 @@
             let feedPage = 0;
             let feedPosts = [], isLoadingFeed = false;
 
+            function getFilteredPosts(filter) {
+                let all = [...App.posts].sort((a,b) => b.time - a.time);
+                if (filter === 'all') {
+                    return all.filter(p => p.author !== App.currentUser);
+                } else if (filter === 'liked') {
+                    return all.filter(p => p.likes && p.likes[App.currentUser]);
+                } else if (filter === 'my') {
+                    return all.filter(p => p.author === App.currentUser);
+                }
+                return all;
+            }
+
             function initFeed() {
+                feedPosts = getFilteredPosts(App.feedFilter);
                 feedPage = 0;
-                feedPosts = [...App.posts].sort((a,b) => b.time - a.time);
-                const fc = document.getElementById('feedContainer'); if (fc) fc.innerHTML = '';
+                const fc = document.getElementById('feedPostsContainer');
+                if (fc) fc.innerHTML = '';
                 isLoadingFeed = false;
                 renderFeed();
                 applyWallpaperToFeed();
+                updateFeedFilterUI();
             }
 
             function renderFeed() {
-                const fc = document.getElementById('feedContainer'); if (!fc || isLoadingFeed) return;
-                if (feedPosts.length === 0) { fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet. Tap + to create first!</div>'; return; }
+                const fc = document.getElementById('feedPostsContainer');
+                if (!fc || isLoadingFeed) return;
+                if (feedPosts.length === 0) {
+                    fc.innerHTML = '<div style="text-align:center; padding:40px; color: var(--text-secondary);">No posts yet.</div>';
+                    return;
+                }
                 const start = feedPage * 10, end = start + 10;
                 let postsToShow = feedPosts.slice(start, end);
-                if (postsToShow.length === 0) { feedPage = 0; postsToShow = feedPosts.slice(0,10); feedPage = 1; }
+                if (postsToShow.length === 0) {
+                    feedPage = 0;
+                    postsToShow = feedPosts.slice(0, 10);
+                    feedPage = 1;
+                } else {
+                    feedPage++;
+                }
                 isLoadingFeed = true;
                 let html = '';
                 postsToShow.forEach(post => {
@@ -1295,9 +1322,21 @@
                     </div>`;
                 });
                 fc.insertAdjacentHTML('beforeend', html);
-                feedPage++;
                 isLoadingFeed = false;
                 fc.onscroll = () => { if (fc.scrollTop + fc.clientHeight >= fc.scrollHeight - 100) renderFeed(); };
+            }
+
+            function updateFeedFilterUI() {
+                const btns = {
+                    all: document.getElementById('filterAllBtn'),
+                    liked: document.getElementById('filterLikedBtn'),
+                    my: document.getElementById('filterMyBtn')
+                };
+                Object.keys(btns).forEach(key => {
+                    if (btns[key]) {
+                        btns[key].classList.toggle('active', App.feedFilter === key);
+                    }
+                });
             }
 
             window.toggleLikePost = function(id) {
@@ -1341,7 +1380,7 @@
                 if (author === App.currentUser) return;
                 const isSub = isFollowing(App.currentUser, author);
                 if (isSub) unsubscribeFromUser(App.currentUser, author); else subscribeToUser(App.currentUser, author);
-                document.querySelectorAll(`.post-card[data-author="${author}"]`).forEach(card => {
+                document.querySelectorAll(`.post-card[data-post-id="${postId}"]`).forEach(card => {
                     const btn = card.querySelector('.subscribe-btn, .unsubscribe-btn');
                     if (btn) { btn.textContent = isSub ? 'FOLLOW' : 'UNFOLLOW'; btn.className = isSub ? 'subscribe-btn' : 'unsubscribe-btn'; }
                 });
@@ -1402,12 +1441,16 @@
             }
 
             function renderAuth() {
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch"><button class="btn btn-secondary" id="showRegisterBtn">CREATE ACCOUNT</button></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="registerBtn">SIGN UP</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>USERNAME</label><input id="loginUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="loginPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="loginBtn">LOGIN</button></div><div class="auth-switch" style="text-align:center; margin-top: 20px;"><span style="color: var(--text-secondary);">Don't have an account? </span><a href="#" id="showRegisterLink" style="color: var(--accent); font-weight: bold; text-decoration: none;">Sign up</a></div></div><div id="registerForm" style="display: none;"><div class="input-group"><label>USERNAME</label><input id="regUsername" type="text" placeholder="lowercase letters and digits, 4-15 chars"></div><div class="input-group"><label>EMAIL</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>PASSWORD</label><input id="regPassword" type="password" placeholder="Latin letters and digits"></div><button class="btn" id="registerBtn">SIGN UP</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← BACK</button></div></div><div id="authError" class="auth-error"></div></div></div>`;
             }
 
             function attachAuthEvents() {
                 const errorDiv = document.getElementById('authError');
-                document.getElementById('showRegisterBtn')?.addEventListener('click', () => { document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='block'; });
+                document.getElementById('showRegisterLink')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.getElementById('loginForm').style.display='none';
+                    document.getElementById('registerForm').style.display='block';
+                });
                 document.getElementById('showLoginBtn')?.addEventListener('click', () => { document.getElementById('registerForm').style.display='none'; document.getElementById('loginForm').style.display='block'; });
                 document.getElementById('loginBtn')?.addEventListener('click', () => {
                     let username = document.getElementById('loginUsername').value.trim().toLowerCase();
@@ -1465,7 +1508,14 @@
                             ${canUserMessage(user, App.activeChat) ? `<div class="input-area"><input type="text" id="messageText" placeholder="MESSAGE..." autofocus oninput="sendTypingIndicator('${App.activeChat}')"><label for="fileUpload" class="file-label">PHOTO</label><label for="videoUpload" class="file-label">VIDEO</label><input type="file" id="fileUpload" accept="image/*"><input type="file" id="videoUpload" accept="video/*"><button class="send-btn" id="sendMsgBtn">➤</button></div>` : `<div class="input-area" style="justify-content:center;"><div class="blocked-message">${blockedMessage}</div></div>`}
                         </div>
                         ` : `
-                        <div class="feed-container" id="feedContainer"></div>
+                        <div class="feed-container">
+                            <div class="feed-filters" style="position: sticky; top: 0; background: var(--glass-bg); padding: 10px; display: flex; gap: 8px; z-index: 10; border-bottom: 1px solid var(--glass-border);">
+                                <button class="tab active" id="filterAllBtn">ALL POSTS</button>
+                                <button class="tab" id="filterLikedBtn">LIKED POSTS</button>
+                                <button class="tab" id="filterMyBtn">MY POSTS</button>
+                            </div>
+                            <div id="feedPostsContainer" style="padding:0 16px;"></div>
+                        </div>
                         <button class="create-post-btn" id="createPostBtn">+</button>
                         `}
                     </div>
@@ -1492,6 +1542,22 @@
                 }));
                 document.getElementById('settingsTab')?.addEventListener('click', openProfileSettings);
                 document.getElementById('createPostBtn')?.addEventListener('click', openCreatePostModal);
+                
+                const filterAllBtn = document.getElementById('filterAllBtn');
+                const filterLikedBtn = document.getElementById('filterLikedBtn');
+                const filterMyBtn = document.getElementById('filterMyBtn');
+                filterAllBtn?.addEventListener('click', () => {
+                    App.feedFilter = 'all';
+                    initFeed();
+                });
+                filterLikedBtn?.addEventListener('click', () => {
+                    App.feedFilter = 'liked';
+                    initFeed();
+                });
+                filterMyBtn?.addEventListener('click', () => {
+                    App.feedFilter = 'my';
+                    initFeed();
+                });
             }
 
             function sendMessage() { 
