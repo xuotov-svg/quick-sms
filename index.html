@@ -128,7 +128,8 @@
         @media (min-width: 768px) {
             .sidebar { position: relative; transform: translateX(0); width: 300px; }
             .back-btn { display: none !important; }
-            .bottom-nav { display: none !important; }
+            .bottom-nav { display: flex !important; }
+            .bottom-nav .nav-chats { display: none; }
         }
         .user-profile { padding: 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--glass-border); background: var(--glass-bg); }
         .avatar { width: 48px; height: 48px; background: rgba(212,175,55,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text); font-weight: 500; overflow: hidden; flex-shrink: 0; }
@@ -234,7 +235,6 @@
         .add-comment { margin-top: 16px; display: flex; gap: 8px; }
         .add-comment input { flex: 1; background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 20px; padding: 8px 12px; color: var(--text); }
         @media (max-width: 768px) { .main-container { margin-bottom: 60px; } .create-post-btn { bottom: 70px; } }
-        .bottom-nav { display: flex; }
         .badge-icon { display: inline-block; width: 28px; height: 28px; vertical-align: middle; margin-left: 4px; }
         .media-btn-icon { width: 28px; height: 28px; object-fit: contain; cursor: pointer; background: rgba(212,175,55,0.2); border: 1px solid var(--glass-border); border-radius: 50%; padding: 6px; transition: all 0.2s; }
         .media-btn-icon:hover { background: rgba(212,175,55,0.35); transform: scale(1.08); }
@@ -549,7 +549,7 @@
             function showNotification(msg, type='success') { const n = document.createElement('div'); n.className = 'notification' + (type==='error' ? ' error' : ''); n.textContent = msg; document.body.appendChild(n); setTimeout(()=> n.remove(), 3000); }
             function compressImage(dataUrl, mw, mh, q, cb) { const img = new Image(); img.onload = () => { let w=img.width, h=img.height; if(w>mw){ h = (h*mw)/w; w=mw; } if(h>mh){ w = (w*mh)/h; h=mh; } const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg', q)); }; img.src=dataUrl; }
             function generateId() { return Date.now()+'_'+Math.random().toString(36).substr(2,9); }
-            function isValidUsername(s) { return /^[a-z][a-z0-9]{3,14}$/.test(s); }
+            function isValidUsername(s) { return /^[a-z][a-z0-9]{2,8}$/.test(s); }
             function isValidPassword(s) { return /^[A-Za-z0-9]+$/.test(s); }
             function isUserOnline(u) { const ls = App.users[u]?.lastSeen; return ls ? (Date.now()-ls) < 300000 : false; }
 
@@ -767,7 +767,7 @@
             }
 
             function renderAuth() {
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>Username</label><input id="loginUsername" placeholder="lowercase, 4-15 chars"></div><div class="input-group"><label>Email</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="loginPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="loginBtn">Login</button></div><div class="auth-switch" id="showRegisterLink" style="color:var(--accent); cursor:pointer;">Don't have an account? Sign up</div><div id="registerForm" style="display:none;"><div class="input-group"><label>Username</label><input id="regUsername" placeholder="lowercase, 4-15 chars"></div><div class="input-group"><label>Email</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="regPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="registerBtn">Sign up</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← Back</button></div></div><div id="authError" class="auth-error"></div></div></div></div>`;
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>Username</label><input id="loginUsername" placeholder="lowercase, 3-9 chars"></div><div class="input-group"><label>Email</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="loginPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="loginBtn">Login</button></div><div class="auth-switch" id="showRegisterLink" style="color:var(--accent); cursor:pointer;">Don't have an account? Sign up</div><div id="registerForm" style="display:none;"><div class="input-group"><label>Username</label><input id="regUsername" placeholder="lowercase, 3-9 chars"></div><div class="input-group"><label>Email</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="regPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="registerBtn">Sign up</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← Back</button></div></div><div id="authError" class="auth-error"></div></div></div></div>`;
             }
             function attachAuthEvents() {
                 const errorDiv = document.getElementById('authError');
@@ -776,7 +776,7 @@
                 document.getElementById('loginBtn')?.addEventListener('click', ()=>{
                     let username = document.getElementById('loginUsername').value.trim().toLowerCase();
                     const email = document.getElementById('loginEmail').value.trim(), pass = document.getElementById('loginPassword').value.trim();
-                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; }
                     if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; }
                     const clean = '@'+username;
                     let main = findMainUsername(clean) || (App.users[clean] ? clean : null);
@@ -791,7 +791,7 @@
                 document.getElementById('registerBtn')?.addEventListener('click', ()=>{
                     let username = document.getElementById('regUsername').value.trim().toLowerCase();
                     const email = document.getElementById('regEmail').value.trim(), pass = document.getElementById('regPassword').value.trim();
-                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username'; return; }
+                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; }
                     if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; }
                     if (!pass) { errorDiv.innerText = 'Enter password'; return; }
                     if (!isValidPassword(pass)) { errorDiv.innerText = 'Password Latin letters/digits only'; return; }
@@ -839,7 +839,7 @@
                 </div>
                 <div class="bottom-nav">
                     <div class="nav-item ${App.activeTab==='feed'?'active':''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png"></div>
-                    <div class="nav-item ${App.activeTab==='chats'?'active':''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png"></div>
+                    <div class="nav-item nav-chats ${App.activeTab==='chats'?'active':''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png"></div>
                     <div class="nav-item" id="settingsTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v4.png"></div>
                 </div>`;
             }
