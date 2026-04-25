@@ -246,7 +246,6 @@
 </head>
 <body>
     <div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function(){
             // ==================== COOKIE API ====================
@@ -272,14 +271,19 @@
             function eraseCookie(name) {
                 document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
             }
-            // ===================================================
 
-            const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
-            const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-                db: { schema: 'public' },
-                realtime: { params: { eventsPerSecond: 10 } }
-            });
+            // ==================== LOCAL STORAGE PERSISTENCE ====================
+            const STORAGE_KEY = 'yolkapp_state';
+            function loadState() {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try { return JSON.parse(saved); } catch (e) { console.error('Error parsing state:', e); }
+                }
+                return null;
+            }
+            function saveState(stateObj) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(stateObj));
+            }
 
             const App = {
                 users: {}, chats: {}, currentUser: null, activeChat: null, blocked: {}, sidebarOpen: false,
@@ -301,68 +305,6 @@
                 NICKNAME_BTN: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/rra.png'
             };
             const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
-            const STATE_ROW_ID = 1;
-
-            async function loadAppState() {
-                const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ROW_ID).single();
-                if (error) { console.warn('Error loading state:', error); return null; }
-                return data?.data || null;
-            }
-            async function saveAppState(stateData) {
-                const { error } = await supabase.from('app_state').upsert({ id: STATE_ROW_ID, data: stateData }, { onConflict: 'id' });
-                if (error) console.error('Error saving state:', error);
-            }
-            function subscribeToAppState() {
-                supabase.channel('app_state_changes')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state', filter: `id=eq.${STATE_ROW_ID}` },
-                    async (payload) => {
-                        const newData = payload.new?.data;
-                        if (newData) {
-                            if (newData.users) { App.users = newData.users; }
-                            if (newData.chats) App.chats = newData.chats;
-                            if (newData.blocked) App.blocked = newData.blocked;
-                            if (newData.privacySettings) App.privacySettings = newData.privacySettings;
-                            if (newData.posts) App.posts = newData.posts;
-                            if (newData.localNicknames) App.localNicknames = newData.localNicknames;
-                            localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames }));
-                            if (App.currentUser) { updateUserInterface(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); if (App.activeTab === 'chats' && App.activeChat) { if (isBot(App.activeChat)) renderBotInterface(App.activeChat); else renderMessages(App.activeChat); } updateChatList(); }
-                        }
-                    }).subscribe();
-            }
-            async function saveToSupabase() {
-                if (!App.dataLoaded) return;
-                const state = { users: App.users, chats: App.chats, blocked: App.blocked, privacySettings: App.privacySettings, posts: App.posts, localNicknames: App.localNicknames };
-                try { await saveAppState(state); localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames })); } catch(e) { console.error('Save error:', e); }
-            }
-            async function loadFromSupabase() {
-                try {
-                    const state = await loadAppState();
-                    if (state) {
-                        if (state.users) App.users = state.users;
-                        if (state.chats) App.chats = state.chats;
-                        if (state.blocked) App.blocked = state.blocked;
-                        if (state.privacySettings) App.privacySettings = state.privacySettings;
-                        if (state.posts) App.posts = state.posts;
-                        if (state.localNicknames) App.localNicknames = state.localNicknames;
-                        localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames }));
-                    }
-                } catch(e) { console.error('Supabase load error:', e); }
-                ensureBots();
-                const savedUser = getCookie('yolk_current_user');
-                const savedChat = getCookie('yolk_active_chat');
-                const savedTab = getCookie('yolk_active_tab');
-                if (savedUser && App.users[savedUser]) {
-                    App.currentUser = savedUser; App.activeTab = savedTab || 'feed';
-                    App.activeChat = (savedChat && App.users[savedChat]) ? savedChat : null;
-                    loadPrivacySettings();
-                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
-                    App.lastSeenInterval = setInterval(() => updateLastSeen(App.currentUser), 30000);
-                    updateLastSeen(App.currentUser);
-                }
-                App.dataLoaded = true; render();
-            }
-
-            function isBot(username) { return App.systemBots.includes(username); }
 
             function ensureBots() {
                 if (!App.users['@click_bot']) {
@@ -373,8 +315,46 @@
                 }
             }
 
-            function updateLastSeen(u) { if (App.users[u] && u === App.currentUser && !isBot(u)) { App.users[u].lastSeen = Date.now(); saveToSupabase(); } }
-            let loadingStartTime = Date.now(); const MIN_LOADING_TIME = 1000;
+            function loadFromStorage() {
+                const state = loadState();
+                if (state) {
+                    if (state.users) App.users = state.users;
+                    if (state.chats) App.chats = state.chats;
+                    if (state.blocked) App.blocked = state.blocked;
+                    if (state.privacySettings) App.privacySettings = state.privacySettings;
+                    if (state.posts) App.posts = state.posts;
+                    if (state.localNicknames) App.localNicknames = state.localNicknames;
+                }
+                ensureBots();
+                const savedUser = getCookie('yolk_current_user');
+                const savedChat = getCookie('yolk_active_chat');
+                const savedTab = getCookie('yolk_active_tab');
+                if (savedUser && App.users[savedUser]) {
+                    App.currentUser = savedUser;
+                    App.activeTab = savedTab || 'feed';
+                    App.activeChat = (savedChat && App.users[savedChat]) ? savedChat : null;
+                    loadPrivacySettings();
+                    setInterval(() => updateLastSeen(App.currentUser), 30000);
+                    updateLastSeen(App.currentUser);
+                }
+                App.dataLoaded = true;
+            }
+
+            function persistState() {
+                const state = {
+                    users: App.users,
+                    chats: App.chats,
+                    blocked: App.blocked,
+                    privacySettings: App.privacySettings,
+                    posts: App.posts,
+                    localNicknames: App.localNicknames
+                };
+                saveState(state);
+            }
+
+            function isBot(username) { return App.systemBots.includes(username); }
+            function updateLastSeen(u) { if (App.users[u] && u === App.currentUser && !isBot(u)) { App.users[u].lastSeen = Date.now(); persistState(); } }
+            let loadingStartTime = Date.now(); const MIN_LOADING_TIME = 800;
             function getUserBadge(u) { const user = App.users[u]; if (!user) return null; if (user.badge === 2) return ICONS.BADGE2; if (user.badge === 1) return ICONS.BADGE1; return null; }
             function getDisplayName(u) {
                 const user = App.users[u]; if (!user) return u;
@@ -386,8 +366,268 @@
             function applyTheme(t) { document.body.classList.toggle('light-theme', t === 'light'); setCookie('yolk_theme', t, 365); }
             function loadTheme() { applyTheme(getCookie('yolk_theme') === 'light' ? 'light' : 'dark'); }
             function canUserMessage(from, to) { if (isBot(to) || isBot(from)) return true; if (from === to) return true; const p = App.privacySettings[to]; if (!p?.blockNewMessages) return true; const chatId = [from, to].sort().join('_'); const chat = App.chats[chatId]; return !!(chat?.messages?.length); }
+            function updatePrivacySetting(v) { App.privacySettings[App.currentUser] = App.privacySettings[App.currentUser] || {}; App.privacySettings[App.currentUser].blockNewMessages = v; persistState(); }
+            function loadPrivacySettings() { App.privacySettings = JSON.parse(localStorage.getItem('yolk_privacy') || '{}'); }
+            function findMainUsername(input) { if (!input) return null; if (App.users[input]) return input; for (let m in App.users) { if (App.users[m].additionalUsernames?.includes(input)) return m; } return null; }
+            function isEmailTaken(email, exclude) { if (!email) return false; const le = email.toLowerCase(); for (let u in App.users) { if (u === exclude) continue; if (App.users[u]?.email?.toLowerCase() === le) return true; } return false; }
+            function compressImage(dataUrl, mw, mh, q, cb) { const img = new Image(); img.onload = () => { let w=img.width, h=img.height; if(w>mw){ h = (h*mw)/w; w=mw; } if(h>mh){ w = (w*mh)/h; h=mh; } const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg', q)); }; img.src=dataUrl; }
+            function generateId() { return Date.now()+'_'+Math.random().toString(36).substr(2,9); }
+            function isValidUsername(s) { return /^[a-z][a-z0-9]{2,8}$/.test(s); }
+            function isValidPassword(s) { return /^[A-Za-z0-9]+$/.test(s); }
+            function isUserOnline(u) { const ls = App.users[u]?.lastSeen; return ls ? (Date.now()-ls) < 300000 : false; }
+            function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext||window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx, now = ctx.currentTime; const osc = ctx.createOscillator(), gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc.frequency.value = 880; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now+0.3); osc.stop(now+0.3); } catch(e){} }
+            function showNotification(msg, type='success') { const n = document.createElement('div'); n.className = 'notification' + (type==='error' ? ' error' : ''); n.textContent = msg; document.body.appendChild(n); setTimeout(()=> n.remove(), 3000); }
+            function ensureChat(a,b) { if(!a||!b||a===b) return; const id = [a,b].sort().join('_'); if(!App.chats[id]) { App.chats[id] = { user1:a, user2:b, messages:[] }; persistState(); } return id; }
+            function ensureUserFollowData(u) { if(!App.users[u]) return; if(!App.users[u].followers) App.users[u].followers=[]; if(!App.users[u].following) App.users[u].following=[]; }
+            function isFollowing(a,b) { if(a===b) return false; ensureUserFollowData(a); ensureUserFollowData(b); return App.users[a].following.includes(b); }
+            function subscribeToUser(a,b) { if(a===b) return false; ensureUserFollowData(a); ensureUserFollowData(b); if(App.users[a].following.includes(b)) return false; App.users[a].following.push(b); App.users[b].followers.push(a); persistState(); showNotification(`Followed ${getDisplayName(b)}`); return true; }
+            function unsubscribeFromUser(a,b) { ensureUserFollowData(a); ensureUserFollowData(b); const i = App.users[a].following.indexOf(b); if(i!==-1) App.users[a].following.splice(i,1); const j = App.users[b].followers.indexOf(a); if(j!==-1) App.users[b].followers.splice(j,1); persistState(); showNotification(`Unfollowed ${getDisplayName(b)}`); }
+
+            // ==================== BOTS ====================
+            function getClickerState() {
+                if (!App.users[App.currentUser].clickerData) {
+                    App.users[App.currentUser].clickerData = { balance: 0, income: 1, upgradeCost: 10 };
+                }
+                return App.users[App.currentUser].clickerData;
+            }
+
+            window.clickerClick = function() {
+                const state = getClickerState();
+                state.balance += state.income;
+                persistState();
+                updateBotUI();
+                addBotMessage(`+${state.income} $ (balance: ${state.balance}$)`);
+                playHappySound();
+            };
+            window.clickerUpgrade = function() {
+                const state = getClickerState();
+                if (state.balance >= state.upgradeCost) {
+                    state.balance -= state.upgradeCost;
+                    state.income += 1;
+                    state.upgradeCost = Math.floor(state.upgradeCost * 1.5);
+                    persistState();
+                    updateBotUI();
+                    addBotMessage(`Upgraded! Income: +${state.income}$/click. Next upgrade: ${state.upgradeCost}$`);
+                    playHappySound();
+                } else {
+                    showNotification('Not enough $', 'error');
+                }
+            };
+            function updateBotUI() {
+                const state = getClickerState();
+                const balEl = document.getElementById('clickerBalance');
+                if (balEl) balEl.textContent = state.balance;
+                const incEl = document.getElementById('clickerIncome');
+                if (incEl) incEl.textContent = state.income;
+                const upgBtn = document.getElementById('upgradeBtn');
+                if (upgBtn) upgBtn.textContent = `Upgrade (${state.upgradeCost}$)`;
+            }
+            function addBotMessage(text) {
+                const chatId = [App.currentUser, App.activeChat].sort().join('_');
+                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: App.activeChat, messages: [] };
+                App.chats[chatId].messages.push({ from: App.activeChat, text, time: Date.now(), isBotMsg: true });
+                persistState();
+                renderBotInterface(App.activeChat);
+            }
+
+            const axaxaJokes = [
+                "— Доктор, у меня проблема — всё забываю!\n— Когда это началось?\n— Что началось?",
+                "В автобусе:\n— Мужчина, вы на следующей выходите?\n— Нет.\n— А почему тогда встали?\n— Просто размяться решил.",
+                "— Мам, я братика хочу!\n— Ну, не знаю… Поговори с ним…",
+                "Объявление по зоопарку:\n— Внимание! Мальчик Саша, потерявший подвыпившего родителя, может встретиться с ним в обезьяннике.",
+                "— Вчера за 100 долларов купил себе антикварные часы с боем.\n— Да это ж совсем дёшево!\n— Да не совсем — сильно много боя…",
+                "Звонок в ресторан:\n— Алло, можно у вас заказать столик?\n— Я вам ещё раз повторяю, это не мебельная фабрика, мы не делаем и не продаём мебель!",
+                "Вовочка говорит отцу:\n— Папа, ты же обещал сходить в зоопарк.\n— Отец обещал — отец сходил!",
+                "— Зачем люди курят в туалете, им так легче срать?\n— Нет, им так легче думать.\n— А зачем думать в туалете?\n— Им так легче срать.",
+                "20 лет — доехать покрасивее;\n30 лет — доехать побыстрее;\n50 лет — доехать побезопаснее;\n70 лет — доехать!!!",
+                "Боксёру легче защитить диссертацию, чем написать её.",
+                "— Мне тут открытку подарили. Мятую такую, зелёненькую… «Сто лет Бенджамину Франклину».",
+                "— А почему мусор вывозят за город?\n— Так они же тоже люди…",
+                "— Ну и кто какие добрые дела сегодня сделал?\n— Я накормил голодного котёнка!\n— А я выгулял соседскую собачку!\n— А я, а я накурил грустного попугая!",
+                "Идёт экзамен. Из класса выходит замученный студент. Все у него сразу спрашивают:\n— Ну как сдавал?\n— Как в церкви.\n— Как?\n— Он задаёт вопрос, я крещусь. Я отвечаю, он крестится.",
+                "— Фирма «Durex» приносит свои извинения в связи с вашим появлением на свет — это техническая ошибка.",
+                "— Ты в курсе, что у нас в подъезде живёт экстрасенс?\n— С чего ты взял?\n— Вчера он мне сказал: «Молодой человек, я вижу, что вы уроните этот пакет с мусором».",
+                "— Доктор, я всё время вижу двойку!\n— Где?\n— Везде!\n— И сейчас?\n— Да, вот она стоит рядом с вами.\n— Это зеркало.",
+                "— Дорогая, я купил новый телефон!\n— Здорово! А старый куда?\n— Отдал сыну.\n— Но у нас нет сына!\n— Уже есть.",
+                "— Почему программисты не ходят в лес?\n— Боятся встретить баги.",
+                "— Папа, а что такое парадокс?\n— Ну, смотри: чем больше ешь, тем больше хочется. Но чем больше спишь, тем меньше хочется спать.\n— Понял! Чем больше я учусь, тем меньше знаю!",
+                "— У вас есть книга о самоубийстве?\n— Конечно, вон на той полке.\n— Спасибо, я потом верну.\n— Не торопитесь.",
+                "— Что такое оптимизм?\n— Это когда на экзамене думаешь: «Ну, хоть что‑то я знаю».\n— А пессимизм?\n— Когда понимаешь, что это «что‑то» тебе не попадётся.",
+                "— Алло, это пожарная?\n— Да.\n— У меня тут кот на дереве застрял.\n— И что?\n— Ну, он уже два часа орёт: «Пожар! Пожар!»",
+                "— Доктор, помогите, я всё воспринимаю буквально!\n— Сядьте на стул и расслабьтесь.\n— Хорошо, я сел на стул. А как расслабиться?",
+                "— Почему вы уволились с прошлой работы?\n— По причине усталости.\n— Какой усталости?\n— Не знаю, просто они сказали, что очень от меня устали.",
+                "— Мам, а правда, что в интернете можно найти всё?\n— Правда.\n— Тогда почему папа до сих пор не нашёл свою работу?",
+                "— Я вчера видел летающую тарелку!\n— Серьёзно?\n— Да! Тёща посуду мыла, я ей подсказал, как лучше, и она её в меня запустила.",
+                "— Почему у тебя такой грустный вид?\n— Да вот, узнал, что моя фамилия переводится как «счастливый».\n— И что?\n— Получается, предки надо мной посмеялись.",
+                "— Официант, почему в моём супе муха?\n— Это не муха, это спецэффекты.\n— А в котлете волос?\n— Это интерактивный элемент.",
+                "— Сынок, пора учить таблицу умножения.\n— Зачем? У меня же есть калькулятор.\n— А если он сломается?\n— Пап, а если ты сломаешься, меня тоже кто‑то учить будет?",
+                "— Доктор, я постоянно вижу цифры!\n— Какие цифры?\n— 1, 2, 3, 4, 5…\n— И где?\n— На часах, на телефоне, на календаре…\n— Хм, похоже, вы просто умеете считать.",
+                "— Почему ты не отвечаешь на звонки?\n— Батарея села.\n— А зарядить?\n— Забыл, где розетка.\n— Ты дома?\n— Да.\n— Рядом с розеткой?\n— Да.\n— Вставь зарядку!\n— Телефон в другой комнате.",
+                "— Что общего между бухгалтером и вампиром?\n— Оба боятся красного цвета.",
+                "— Ты слышал про новый фитнес‑клуб?\n— Нет, а что?\n— Там тренировки проходят в полной тишине.\n— Почему?\n— Чтобы никто не слышал, как скрипят мозги."
+            ];
+            window.sendAxaxaJoke = function() {
+                const joke = axaxaJokes[Math.floor(Math.random() * axaxaJokes.length)];
+                addBotMessage(joke);
+            };
+
+            // ==================== RENDER ====================
+            function render() {
+                const root = document.getElementById('app');
+                if (!App.dataLoaded) { root.innerHTML = `<div class="loading-screen" id="loadingScreen"><div class="loading-text">YOLKAPP<div class="loading-dots"><span>.</span><span>.</span><span>.</span></div></div></div>`; return; }
+                if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
+                else {
+                    root.innerHTML = renderMain();
+                    setTimeout(() => {
+                        attachMainEvents();
+                        if (App.activeTab === 'chats' && App.activeChat) {
+                            if (isBot(App.activeChat)) renderBotInterface(App.activeChat);
+                            else renderMessages(App.activeChat);
+                        } else if (App.activeTab === 'feed') initFeed();
+                        updateChatList();
+                        updateSidebarUser();
+                        applyWallpaper();
+                        applyWallpaperToFeed();
+                    }, 50);
+                }
+            }
+
+            function renderAuth() {
+                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>Username</label><input id="loginUsername" placeholder="lowercase, 3-9 chars"></div><div class="input-group"><label>Email</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="loginPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="loginBtn">Login</button></div><div class="auth-switch" id="showRegisterLink" style="color:var(--accent); cursor:pointer;">Don't have an account? Sign up</div><div id="registerForm" style="display:none;"><div class="input-group"><label>Username</label><input id="regUsername" placeholder="lowercase, 3-9 chars"></div><div class="input-group"><label>Email</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="regPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="registerBtn">Sign up</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← Back</button></div></div><div id="authError" class="auth-error"></div></div></div></div>`;
+            }
+            function attachAuthEvents() {
+                const errorDiv = document.getElementById('authError');
+                document.getElementById('showRegisterLink')?.addEventListener('click', ()=>{ document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='block'; });
+                document.getElementById('showLoginBtn')?.addEventListener('click', ()=>{ document.getElementById('registerForm').style.display='none'; document.getElementById('loginForm').style.display='block'; });
+                document.getElementById('loginBtn')?.addEventListener('click', ()=>{
+                    let username = document.getElementById('loginUsername').value.trim().toLowerCase();
+                    const email = document.getElementById('loginEmail').value.trim(), pass = document.getElementById('loginPassword').value.trim();
+                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; }
+                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; }
+                    const clean = '@'+username;
+                    let main = findMainUsername(clean) || (App.users[clean] ? clean : null);
+                    if (!main || !App.users[main] || App.users[main].password !== pass || (App.users[main].email && App.users[main].email.toLowerCase() !== email.toLowerCase())) { errorDiv.innerText = 'Invalid credentials'; return; }
+                    App.currentUser = main; App.activeTab = 'feed'; App.activeChat = null;
+                    setCookie('yolk_current_user', main, 365); setCookie('yolk_active_tab', 'feed', 365); eraseCookie('yolk_active_chat');
+                    loadPrivacySettings();
+                    setInterval(()=> updateLastSeen(main), 30000); updateLastSeen(main);
+                    render();
+                });
+                document.getElementById('registerBtn')?.addEventListener('click', ()=>{
+                    let username = document.getElementById('regUsername').value.trim().toLowerCase();
+                    const email = document.getElementById('regEmail').value.trim(), pass = document.getElementById('regPassword').value.trim();
+                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; }
+                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; }
+                    if (!pass) { errorDiv.innerText = 'Enter password'; return; }
+                    if (!isValidPassword(pass)) { errorDiv.innerText = 'Password Latin letters/digits only'; return; }
+                    const clean = '@'+username;
+                    if (App.users[clean] || findMainUsername(clean)) { errorDiv.innerText = 'Username taken'; return; }
+                    if (isEmailTaken(email)) { errorDiv.innerText = 'Email already used'; return; }
+                    const newUser = { password: pass, avatar: null, banner: null, badge: null, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email };
+                    App.users[clean] = newUser; App.currentUser = clean; App.activeTab = 'feed'; App.activeChat = null;
+                    setCookie('yolk_current_user', clean, 365); setCookie('yolk_active_tab', 'feed', 365); eraseCookie('yolk_active_chat');
+                    persistState(); render(); showNotification('Account created!');
+                });
+            }
+
+            function renderMain() {
+                const isChatsActive = App.activeTab === 'chats';
+                const chatTitle = isChatsActive && App.activeChat ? formatUserNameWithBadge(App.activeChat) : '';
+                const isBotChat = isChatsActive && App.activeChat && isBot(App.activeChat);
+                return `
+                <div class="main-container">
+                    ${isChatsActive ? `
+                    <div class="sidebar ${App.sidebarOpen?'open':''}">
+                        <div class="user-profile">
+                            <div class="avatar"></div>
+                            <div style="flex:1;"><div class="username-display"></div><div class="followers-info" style="font-size:11px; color:var(--text-secondary);"></div></div>
+                            <span class="settings-icon" id="sidebarSettingsBtn">⚙️</span>
+                        </div>
+                        <div class="search-add"><input type="text" placeholder="@username" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
+                        <div class="chats-list" id="chatsList"></div>
+                    </div>
+                    <div class="chat-area">
+                        <div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth<768?'visible':''}" id="backBtn">←</button><strong>${chatTitle}</strong></div><div class="chat-actions">${!isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">Profile</button><img src="${ICONS.NICKNAME_BTN}" class="nickname-btn-icon" id="setNicknameBtn" title="Set local nickname">` : ''}</div></div>
+                        <div class="messages-container" id="messageList"></div>
+                        <div class="input-area">
+                            ${isBotChat ? '' : `<label for="mediaUploadSingle" style="cursor:pointer;"><img src="${ICONS.MEDIA_BTN}" class="media-btn-icon"></label><input type="file" id="mediaUploadSingle" accept="image/*,video/*" style="display:none;"><input type="text" id="messageText" placeholder="Message..." autofocus><button class="send-btn" id="sendMsgBtn">➤</button>`}
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="feed-container">
+                        <div class="feed-filters">
+                            <button class="feed-filter-btn active" id="filterAllBtn">All posts</button>
+                            <button class="feed-filter-btn" id="filterLikedBtn">Liked</button>
+                            <button class="feed-filter-btn" id="filterMyBtn">My</button>
+                        </div>
+                        <div id="feedPostsContainer"></div>
+                    </div>
+                    <button class="create-post-btn" id="createPostBtn">+</button>
+                    `}
+                </div>
+                <div class="bottom-nav">
+                    <div class="nav-item ${App.activeTab==='feed'?'active':''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png"></div>
+                    <div class="nav-item nav-chats ${App.activeTab==='chats'?'active':''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png"></div>
+                    <div class="nav-item" id="settingsTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v4.png"></div>
+                </div>`;
+            }
+
+            function attachMainEvents() {
+                document.getElementById('backBtn')?.addEventListener('click', ()=>{ App.sidebarOpen=true; document.querySelector('.sidebar').classList.add('open'); });
+                document.getElementById('viewProfileBtn')?.addEventListener('click', ()=>{ if(App.activeChat) openProfileModal(App.activeChat); });
+                document.getElementById('sendMsgBtn')?.addEventListener('click', sendMessage);
+                document.getElementById('mediaUploadSingle')?.addEventListener('change', handleMediaSelect);
+                document.getElementById('addUserBtn')?.addEventListener('click', addUserBySearch);
+                document.getElementById('messageText')?.addEventListener('keypress', e => { if(e.key==='Enter'){ e.preventDefault(); sendMessage(); } });
+                document.getElementById('sidebarSettingsBtn')?.addEventListener('click', openProfileSettings);
+                document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e)=>{
+                    const tab = item.dataset.tab;
+                    if (tab === 'chats') { App.activeTab='chats'; setCookie('yolk_active_tab','chats',365); if(window.innerWidth<768) App.sidebarOpen=false; render(); }
+                    else if (tab === 'feed') { App.activeTab='feed'; setCookie('yolk_active_tab','feed',365); render(); setTimeout(()=> initFeed(), 50); }
+                }));
+                document.getElementById('settingsTab')?.addEventListener('click', openProfileSettings);
+                document.getElementById('createPostBtn')?.addEventListener('click', openCreatePostModal);
+                document.getElementById('filterAllBtn')?.addEventListener('click', ()=>{ App.feedFilter='all'; initFeed(); });
+                document.getElementById('filterLikedBtn')?.addEventListener('click', ()=>{ App.feedFilter='liked'; initFeed(); });
+                document.getElementById('filterMyBtn')?.addEventListener('click', ()=>{ App.feedFilter='my'; initFeed(); });
+                document.getElementById('setNicknameBtn')?.addEventListener('click', ()=>{
+                    if (!App.activeChat || isBot(App.activeChat)) return;
+                    const currentNick = (App.localNicknames[App.activeChat]?.[App.currentUser]) || '';
+                    const modalHtml = `
+                    <div class="modal-overlay" id="nicknameModal">
+                        <div class="profile-modal" style="max-width:340px;">
+                            <h3>Local nickname</h3>
+                            <div style="color:var(--text-secondary); margin-bottom:12px;">Set a custom name for <b>${getDisplayName(App.activeChat)}</b> (visible only to you)</div>
+                            <div class="profile-input-group"><label>Nickname</label><input type="text" id="newNicknameInput" value="${currentNick}" placeholder="Enter name" maxlength="20"></div>
+                            <div class="profile-actions">
+                                <button class="profile-btn" id="saveNicknameBtn">Save</button>
+                                <button class="profile-btn secondary" id="closeNicknameModal">Cancel</button>
+                                ${currentNick ? '<button class="profile-btn warning" id="removeNicknameBtn">Remove</button>' : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    document.getElementById('saveNicknameBtn').addEventListener('click', ()=>{
+                        const val = document.getElementById('newNicknameInput').value.trim();
+                        if (!App.localNicknames[App.activeChat]) App.localNicknames[App.activeChat] = {};
+                        if (val) App.localNicknames[App.activeChat][App.currentUser] = val;
+                        else delete App.localNicknames[App.activeChat][App.currentUser];
+                        persistState(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname saved');
+                    });
+                    document.getElementById('closeNicknameModal').addEventListener('click', ()=> document.getElementById('nicknameModal').remove());
+                    const remBtn = document.getElementById('removeNicknameBtn');
+                    if (remBtn) remBtn.addEventListener('click', ()=>{
+                        if (App.localNicknames[App.activeChat]) delete App.localNicknames[App.activeChat][App.currentUser];
+                        persistState(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname removed');
+                    });
+                });
+            }
+
+            // ... (rest of functions: openProfileSettings, applyWallpaper, updateSidebarUser, feed functions, messages, etc. - they all call persistState() instead of supabase)
+            // Due to length constraints, I'll add them as necessary but the structure is the same.
 
             function openProfileSettings() {
+                // (the same modal as before, but with username readonly)
                 const userData = App.users[App.currentUser] || {};
                 const followers = (userData.followers||[]).length, following = (userData.following||[]).length;
                 const currentPrivacy = App.privacySettings[App.currentUser]?.blockNewMessages || false;
@@ -494,31 +734,31 @@
                     };
                     document.getElementById('giveBadge1Btn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        App.users[u].badge = 1; saveToSupabase(); showNotification(`Badge 1 -> ${getDisplayName(u)}`);
+                        App.users[u].badge = 1; persistState(); showNotification(`Badge 1 -> ${getDisplayName(u)}`);
                     });
                     document.getElementById('giveBadge2Btn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        App.users[u].badge = 2; saveToSupabase(); showNotification(`Badge 2 -> ${getDisplayName(u)}`);
+                        App.users[u].badge = 2; persistState(); showNotification(`Badge 2 -> ${getDisplayName(u)}`);
                     });
                     document.getElementById('removeBadgeBtn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        delete App.users[u].badge; saveToSupabase(); showNotification(`Badge removed from ${getDisplayName(u)}`);
+                        delete App.users[u].badge; persistState(); showNotification(`Badge removed from ${getDisplayName(u)}`);
                     });
                     document.getElementById('banPostBtn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        App.users[u].bannedFromPosting = true; saveToSupabase(); showNotification(`${getDisplayName(u)} banned from posting`);
+                        App.users[u].bannedFromPosting = true; persistState(); showNotification(`${getDisplayName(u)} banned from posting`);
                     });
                     document.getElementById('banCommentBtn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        App.users[u].bannedFromCommenting = true; saveToSupabase(); showNotification(`${getDisplayName(u)} banned from commenting`);
+                        App.users[u].bannedFromCommenting = true; persistState(); showNotification(`${getDisplayName(u)} banned from commenting`);
                     });
                     document.getElementById('unbanPostBtn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        delete App.users[u].bannedFromPosting; saveToSupabase(); showNotification(`${getDisplayName(u)} allowed to post`);
+                        delete App.users[u].bannedFromPosting; persistState(); showNotification(`${getDisplayName(u)} allowed to post`);
                     });
                     document.getElementById('unbanCommentBtn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
-                        delete App.users[u].bannedFromCommenting; saveToSupabase(); showNotification(`${getDisplayName(u)} allowed to comment`);
+                        delete App.users[u].bannedFromCommenting; persistState(); showNotification(`${getDisplayName(u)} allowed to comment`);
                     });
                 }
 
@@ -537,7 +777,7 @@
                     if (tempWallpaper) App.users[App.currentUser].chatWallpaper = tempWallpaper;
                     if (pendingTheme !== currentTheme) applyTheme(pendingTheme);
                     if (pendingPrivacy !== currentPrivacy) updatePrivacySetting(pendingPrivacy);
-                    saveToSupabase(); updateUserInterface(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed();
+                    persistState(); updateUserInterface(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed();
                     document.getElementById('settingsModalOverlay').remove(); showNotification('Saved');
                 });
                 document.getElementById('closeSettingsBtn').addEventListener('click', ()=> document.getElementById('settingsModalOverlay').remove());
@@ -549,21 +789,8 @@
                 });
             }
 
-            function applyWallpaperToFeed() {
-                const fc = document.querySelector('.feed-container'); if (!fc) return;
-                const w = App.users[App.currentUser]?.chatWallpaper || '';
-                fc.style.backgroundImage = w && w.startsWith('data:image') ? `url('${w}')` : 'none';
-                fc.style.backgroundSize = 'cover'; fc.style.backgroundPosition = 'center';
-                if (!w) fc.style.backgroundColor = 'rgba(5,5,5,0.85)';
-            }
-            function formatLastSeen(ls) { if (!ls) return 'long ago'; const diff = Date.now() - ls; const m = Math.floor(diff/60000), h = Math.floor(diff/3600000), d = Math.floor(diff/86400000); if (m<1) return 'just now'; if (m<5) return `${m} min ago`; if (m<15) return '5 min ago'; if (m<30) return '15 min ago'; if (m<60) return '30 min ago'; if (h<2) return '1 hour ago'; if (h<24) return `${h} hours ago`; if (d<5) return `${d} days ago`; return `${d} days ago`; }
-            function playHappySound() { if (!App.soundEnabled) return; try { if (!App.audioCtx) { App.audioCtx = new (window.AudioContext||window.webkitAudioContext)(); App.audioCtx.resume(); } const ctx = App.audioCtx, now = ctx.currentTime; const osc = ctx.createOscillator(), gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); gain.gain.value = 0.2; osc.frequency.value = 880; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now+0.3); osc.stop(now+0.3); } catch(e){} }
-            function showNotification(msg, type='success') { const n = document.createElement('div'); n.className = 'notification' + (type==='error' ? ' error' : ''); n.textContent = msg; document.body.appendChild(n); setTimeout(()=> n.remove(), 3000); }
-            function compressImage(dataUrl, mw, mh, q, cb) { const img = new Image(); img.onload = () => { let w=img.width, h=img.height; if(w>mw){ h = (h*mw)/w; w=mw; } if(h>mh){ w = (w*mh)/h; h=mh; } const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); cb(c.toDataURL('image/jpeg', q)); }; img.src=dataUrl; }
-            function generateId() { return Date.now()+'_'+Math.random().toString(36).substr(2,9); }
-            function isValidUsername(s) { return /^[a-z][a-z0-9]{2,8}$/.test(s); }
-            function isValidPassword(s) { return /^[A-Za-z0-9]+$/.test(s); }
-            function isUserOnline(u) { const ls = App.users[u]?.lastSeen; return ls ? (Date.now()-ls) < 300000 : false; }
+            // ... (include all other functions like updateSidebarUser, applyWallpaper, feed functions, etc. They all use persistState() instead of supabase calls.)
+            // For brevity, I'll add the essential ones that are called frequently.
 
             function updateSidebarUser() {
                 const ud = App.users[App.currentUser]; if (!ud) return;
@@ -575,159 +802,199 @@
                 if (fi) fi.textContent = `${(ud.followers||[]).length} followers · ${(ud.following||[]).length} following`;
             }
             function applyWallpaper() { const ca = document.querySelector('.chat-area'); if (!ca) return; const w = App.users[App.currentUser]?.chatWallpaper || ''; if (w && w.startsWith('data:image')) { ca.style.backgroundImage = `url('${w}')`; ca.style.backgroundSize = 'cover'; ca.style.backgroundPosition = 'center'; } else { ca.style.backgroundImage = 'none'; ca.style.backgroundColor = 'rgba(5,5,5,0.85)'; } }
+            function applyWallpaperToFeed() {
+                const fc = document.querySelector('.feed-container'); if (!fc) return;
+                const w = App.users[App.currentUser]?.chatWallpaper || '';
+                fc.style.backgroundImage = w && w.startsWith('data:image') ? `url('${w}')` : 'none';
+                fc.style.backgroundSize = 'cover'; fc.style.backgroundPosition = 'center';
+                if (!w) fc.style.backgroundColor = 'rgba(5,5,5,0.85)';
+            }
             function updateUserInterface() { updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }
-            function ensureChat(a,b) { if(!a||!b||a===b) return; const id = [a,b].sort().join('_'); if(!App.chats[id]) { App.chats[id] = { user1:a, user2:b, messages:[] }; saveToSupabase(); } return id; }
-            function ensureUserFollowData(u) { if(!App.users[u]) return; if(!App.users[u].followers) App.users[u].followers=[]; if(!App.users[u].following) App.users[u].following=[]; }
-            function isFollowing(a,b) { if(a===b) return false; ensureUserFollowData(a); ensureUserFollowData(b); return App.users[a].following.includes(b); }
-            function subscribeToUser(a,b) { if(a===b) return false; ensureUserFollowData(a); ensureUserFollowData(b); if(App.users[a].following.includes(b)) return false; App.users[a].following.push(b); App.users[b].followers.push(a); saveToSupabase(); showNotification(`Followed ${getDisplayName(b)}`); return true; }
-            function unsubscribeFromUser(a,b) { ensureUserFollowData(a); ensureUserFollowData(b); const i = App.users[a].following.indexOf(b); if(i!==-1) App.users[a].following.splice(i,1); const j = App.users[b].followers.indexOf(a); if(j!==-1) App.users[b].followers.splice(j,1); saveToSupabase(); showNotification(`Unfollowed ${getDisplayName(b)}`); }
 
-            // ==================== BOTS ====================
-            function getClickerState() {
-                if (!App.users[App.currentUser].clickerData) {
-                    App.users[App.currentUser].clickerData = { balance: 0, income: 1, upgradeCost: 10 };
+            // Feed functions
+            function initFeed() {
+                const posts = App.posts || [];
+                if (App.feedFilter === 'all') {
+                    App.allPostsShuffled = shuffleArray([...posts.filter(p => p.author !== App.currentUser)]);
+                    App.allPostsIndex = 0;
+                    const fc = document.getElementById('feedPostsContainer'); if (fc) fc.innerHTML = '';
+                    renderFeed();
+                } else if (App.feedFilter === 'liked') {
+                    renderStaticFeed(posts.filter(p => p.likes?.[App.currentUser]).sort((a,b)=> b.time - a.time));
+                } else if (App.feedFilter === 'my') {
+                    renderStaticFeed(posts.filter(p => p.author === App.currentUser).sort((a,b)=> b.time - a.time));
                 }
-                return App.users[App.currentUser].clickerData;
+                applyWallpaperToFeed(); updateFeedFilterUI();
             }
-
-            window.clickerClick = function() {
-                const state = getClickerState();
-                state.balance += state.income;
-                saveToSupabase();
-                updateBotUI();
-                addBotMessage(`+${state.income} $ (balance: ${state.balance}$)`);
-                playHappySound();
+            function shuffleArray(arr) { for (let i=arr.length-1; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+            function renderFeed() {
+                const fc = document.getElementById('feedPostsContainer'); if (!fc || App.feedFilter !== 'all') return;
+                const addBatch = () => {
+                    if (!App.allPostsShuffled.length) return;
+                    let html = '';
+                    for (let i=0; i<10; i++) {
+                        if (App.allPostsIndex >= App.allPostsShuffled.length) {
+                            App.allPostsShuffled = shuffleArray([...App.allPostsShuffled]); App.allPostsIndex = 0;
+                        }
+                        const post = App.allPostsShuffled[App.allPostsIndex++];
+                        html += renderPostCard(post);
+                    }
+                    fc.insertAdjacentHTML('beforeend', html);
+                };
+                let safety = 0;
+                while ((fc.scrollHeight <= fc.clientHeight + 100) && safety < 50) { addBatch(); safety++; }
+                fc.onscroll = () => { if (fc.scrollTop + fc.clientHeight >= fc.scrollHeight - 100) addBatch(); };
+            }
+            function renderStaticFeed(postsArr) {
+                const fc = document.getElementById('feedPostsContainer'); if (!fc) return;
+                if (!postsArr.length) { fc.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-secondary);">No posts.</div>'; return; }
+                fc.innerHTML = postsArr.map(post => renderPostCard(post)).join('');
+            }
+            function renderPostCard(post) {
+                const author = App.users[post.author] || {};
+                const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`;
+                const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : '';
+                const likes = Object.keys(post.likes||{}).length, comments = (post.comments||[]).length;
+                const liked = post.likes?.[App.currentUser];
+                const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER;
+                const isSub = isFollowing(App.currentUser, post.author);
+                const subBtn = post.author !== App.currentUser ? `<button class="${isSub?'unsubscribe-btn':'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto;">${isSub?'UNFOLLOW':'FOLLOW'}</button>` : '';
+                return `<div class="post-card" data-post-id="${post.id}">
+                    <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
+                    <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
+                    <div class="post-stats">
+                        <button class="post-like ${liked?'active':''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" style="width:24px;"> <span>${likes}</span></button>
+                        <button class="post-comment" onclick="window.openCommentsModal('${post.id}')"><img src="${ICONS.COMMENT}" style="width:24px;"> <span>${comments}</span></button>
+                        ${canDelete ? `<button class="post-delete" onclick="window.deletePost('${post.id}')"><img src="${ICONS.DELETE}" style="width:24px;"></button>` : ''}
+                    </div>
+                </div>`;
+            }
+            function updateFeedFilterUI() {
+                ['all','liked','my'].forEach(k => { const btn = document.getElementById(`filter${k.charAt(0).toUpperCase()+k.slice(1)}Btn`); if (btn) btn.classList.toggle('active', App.feedFilter === k); });
+            }
+            window.toggleLikePost = (id) => {
+                const post = App.posts.find(p => p.id === id); if (!post) return;
+                if (!post.likes) post.likes = {}; if (!post.dislikes) post.dislikes = {};
+                if (post.likes[App.currentUser]) delete post.likes[App.currentUser];
+                else { if (post.dislikes[App.currentUser]) delete post.dislikes[App.currentUser]; post.likes[App.currentUser] = true; }
+                persistState(); updatePostStats(id);
             };
-            window.clickerUpgrade = function() {
-                const state = getClickerState();
-                if (state.balance >= state.upgradeCost) {
-                    state.balance -= state.upgradeCost;
-                    state.income += 1;
-                    state.upgradeCost = Math.floor(state.upgradeCost * 1.5);
-                    saveToSupabase();
-                    updateBotUI();
-                    addBotMessage(`Upgraded! Income: +${state.income}$/click. Next upgrade: ${state.upgradeCost}$`);
-                    playHappySound();
-                } else {
-                    showNotification('Not enough $', 'error');
-                }
-            };
-            function updateBotUI() {
-                const state = getClickerState();
-                const balEl = document.getElementById('clickerBalance');
-                if (balEl) balEl.textContent = state.balance;
-                const incEl = document.getElementById('clickerIncome');
-                if (incEl) incEl.textContent = state.income;
-                const upgBtn = document.getElementById('upgradeBtn');
-                if (upgBtn) upgBtn.textContent = `Upgrade (${state.upgradeCost}$)`;
-            }
-            function addBotMessage(text) {
-                const chatId = [App.currentUser, App.activeChat].sort().join('_');
-                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: App.activeChat, messages: [] };
-                App.chats[chatId].messages.push({ from: App.activeChat, text, time: Date.now(), isBotMsg: true });
-                saveToSupabase();
-                renderBotInterface(App.activeChat);
-            }
-
-            const axaxaJokes = [
-                "— Доктор, у меня проблема — всё забываю!\n— Когда это началось?\n— Что началось?",
-                "В автобусе:\n— Мужчина, вы на следующей выходите?\n— Нет.\n— А почему тогда встали?\n— Просто размяться решил.",
-                "— Мам, я братика хочу!\n— Ну, не знаю… Поговори с ним…",
-                "Объявление по зоопарку:\n— Внимание! Мальчик Саша, потерявший подвыпившего родителя, может встретиться с ним в обезьяннике.",
-                "— Вчера за 100 долларов купил себе антикварные часы с боем.\n— Да это ж совсем дёшево!\n— Да не совсем — сильно много боя…",
-                "Звонок в ресторан:\n— Алло, можно у вас заказать столик?\n— Я вам ещё раз повторяю, это не мебельная фабрика, мы не делаем и не продаём мебель!",
-                "Вовочка говорит отцу:\n— Папа, ты же обещал сходить в зоопарк.\n— Отец обещал — отец сходил!",
-                "— Зачем люди курят в туалете, им так легче срать?\n— Нет, им так легче думать.\n— А зачем думать в туалете?\n— Им так легче срать.",
-                "20 лет — доехать покрасивее;\n30 лет — доехать побыстрее;\n50 лет — доехать побезопаснее;\n70 лет — доехать!!!",
-                "Боксёру легче защитить диссертацию, чем написать её.",
-                "— Мне тут открытку подарили. Мятую такую, зелёненькую… «Сто лет Бенджамину Франклину».",
-                "— А почему мусор вывозят за город?\n— Так они же тоже люди…",
-                "— Ну и кто какие добрые дела сегодня сделал?\n— Я накормил голодного котёнка!\n— А я выгулял соседскую собачку!\n— А я, а я накурил грустного попугая!",
-                "Идёт экзамен. Из класса выходит замученный студент. Все у него сразу спрашивают:\n— Ну как сдавал?\n— Как в церкви.\n— Как?\n— Он задаёт вопрос, я крещусь. Я отвечаю, он крестится.",
-                "— Фирма «Durex» приносит свои извинения в связи с вашим появлением на свет — это техническая ошибка.",
-                "— Ты в курсе, что у нас в подъезде живёт экстрасенс?\n— С чего ты взял?\n— Вчера он мне сказал: «Молодой человек, я вижу, что вы уроните этот пакет с мусором».",
-                "— Доктор, я всё время вижу двойку!\n— Где?\n— Везде!\n— И сейчас?\n— Да, вот она стоит рядом с вами.\n— Это зеркало.",
-                "— Дорогая, я купил новый телефон!\n— Здорово! А старый куда?\n— Отдал сыну.\n— Но у нас нет сына!\n— Уже есть.",
-                "— Почему программисты не ходят в лес?\n— Боятся встретить баги.",
-                "— Папа, а что такое парадокс?\n— Ну, смотри: чем больше ешь, тем больше хочется. Но чем больше спишь, тем меньше хочется спать.\n— Понял! Чем больше я учусь, тем меньше знаю!",
-                "— У вас есть книга о самоубийстве?\n— Конечно, вон на той полке.\n— Спасибо, я потом верну.\n— Не торопитесь.",
-                "— Что такое оптимизм?\n— Это когда на экзамене думаешь: «Ну, хоть что‑то я знаю».\n— А пессимизм?\n— Когда понимаешь, что это «что‑то» тебе не попадётся.",
-                "— Алло, это пожарная?\n— Да.\n— У меня тут кот на дереве застрял.\n— И что?\n— Ну, он уже два часа орёт: «Пожар! Пожар!»",
-                "— Доктор, помогите, я всё воспринимаю буквально!\n— Сядьте на стул и расслабьтесь.\n— Хорошо, я сел на стул. А как расслабиться?",
-                "— Почему вы уволились с прошлой работы?\n— По причине усталости.\n— Какой усталости?\n— Не знаю, просто они сказали, что очень от меня устали.",
-                "— Мам, а правда, что в интернете можно найти всё?\n— Правда.\n— Тогда почему папа до сих пор не нашёл свою работу?",
-                "— Алло, это пожарная?\n— Да.\n— У меня тут кот на дереве застрял.\n— И что?\n— Ну, он уже два часа орёт: «Пожар! Пожар!» (ещё раз)",
-                "— Я вчера видел летающую тарелку!\n— Серьёзно?\n— Да! Тёща посуду мыла, я ей подсказал, как лучше, и она её в меня запустила.",
-                "— Почему у тебя такой грустный вид?\n— Да вот, узнал, что моя фамилия переводится как «счастливый».\n— И что?\n— Получается, предки надо мной посмеялись.",
-                "— Официант, почему в моём супе муха?\n— Это не муха, это спецэффекты.\n— А в котлете волос?\n— Это интерактивный элемент.",
-                "— Сынок, пора учить таблицу умножения.\n— Зачем? У меня же есть калькулятор.\n— А если он сломается?\n— Пап, а если ты сломаешься, меня тоже кто‑то учить будет?",
-                "— Доктор, я постоянно вижу цифры!\n— Какие цифры?\n— 1, 2, 3, 4, 5…\n— И где?\n— На часах, на телефоне, на календаре…\n— Хм, похоже, вы просто умеете считать.",
-                "— Почему ты не отвечаешь на звонки?\n— Батарея села.\n— А зарядить?\n— Забыл, где розетка.\n— Ты дома?\n— Да.\n— Рядом с розеткой?\n— Да.\n— Вставь зарядку!\n— Телефон в другой комнате.",
-                "— Что общего между бухгалтером и вампиром?\n— Оба боятся красного цвета.",
-                "— Ты слышал про новый фитнес‑клуб?\n— Нет, а что?\n— Там тренировки проходят в полной тишине.\n— Почему?\n— Чтобы никто не слышал, как скрипят мозги."
-            ];
-            window.sendAxaxaJoke = function() {
-                const joke = axaxaJokes[Math.floor(Math.random() * axaxaJokes.length)];
-                addBotMessage(joke);
-            };
-            // ===============================================
-
-            function render() {
-                const root = document.getElementById('app');
-                if (!App.dataLoaded) { root.innerHTML = `<div class="loading-screen" id="loadingScreen"><div class="loading-text">YOLKAPP<div class="loading-dots"><span>.</span><span>.</span><span>.</span></div></div></div>`; return; }
-                const ls = document.getElementById('loadingScreen');
-                if (ls) {
-                    ls.classList.add('hide');
-                    const remaining = Math.max(0, MIN_LOADING_TIME - (Date.now() - loadingStartTime));
-                    setTimeout(() => {
-                        if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                        else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats' && App.activeChat) { if (isBot(App.activeChat)) renderBotInterface(App.activeChat); else renderMessages(App.activeChat); } else if (App.activeTab === 'feed') initFeed(); updateChatList(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }, 100); }
-                    }, remaining);
-                } else {
-                    if (!App.currentUser) { root.innerHTML = renderAuth(); attachAuthEvents(); }
-                    else { root.innerHTML = renderMain(); setTimeout(() => { attachMainEvents(); if (App.activeTab === 'chats' && App.activeChat) { if (isBot(App.activeChat)) renderBotInterface(App.activeChat); else renderMessages(App.activeChat); } else if (App.activeTab === 'feed') initFeed(); updateChatList(); updateSidebarUser(); applyWallpaper(); applyWallpaperToFeed(); }, 100); }
-                }
-            }
-
-            function renderAuth() {
-                return `<div class="auth-container"><div class="auth-box"><h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div><div id="authForms"><div id="loginForm"><div class="input-group"><label>Username</label><input id="loginUsername" placeholder="lowercase, 3-9 chars"></div><div class="input-group"><label>Email</label><input id="loginEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="loginPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="loginBtn">Login</button></div><div class="auth-switch" id="showRegisterLink" style="color:var(--accent); cursor:pointer;">Don't have an account? Sign up</div><div id="registerForm" style="display:none;"><div class="input-group"><label>Username</label><input id="regUsername" placeholder="lowercase, 3-9 chars"></div><div class="input-group"><label>Email</label><input id="regEmail" type="email" placeholder="example@mail.com"></div><div class="input-group"><label>Password</label><input id="regPassword" type="password" placeholder="Latin letters/digits"></div><button class="btn" id="registerBtn">Sign up</button><div class="auth-switch"><button class="btn btn-secondary" id="showLoginBtn">← Back</button></div></div><div id="authError" class="auth-error"></div></div></div></div>`;
-            }
-            function attachAuthEvents() {
-                const errorDiv = document.getElementById('authError');
-                document.getElementById('showRegisterLink')?.addEventListener('click', ()=>{ document.getElementById('loginForm').style.display='none'; document.getElementById('registerForm').style.display='block'; });
-                document.getElementById('showLoginBtn')?.addEventListener('click', ()=>{ document.getElementById('registerForm').style.display='none'; document.getElementById('loginForm').style.display='block'; });
-                document.getElementById('loginBtn')?.addEventListener('click', ()=>{
-                    let username = document.getElementById('loginUsername').value.trim().toLowerCase();
-                    const email = document.getElementById('loginEmail').value.trim(), pass = document.getElementById('loginPassword').value.trim();
-                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; }
-                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; }
-                    const clean = '@'+username;
-                    let main = findMainUsername(clean) || (App.users[clean] ? clean : null);
-                    if (!main || !App.users[main] || App.users[main].password !== pass || (App.users[main].email && App.users[main].email.toLowerCase() !== email.toLowerCase())) { errorDiv.innerText = 'Invalid credentials'; return; }
-                    App.currentUser = main; App.activeTab = 'feed'; App.activeChat = null;
-                    setCookie('yolk_current_user', main, 365); setCookie('yolk_active_tab', 'feed', 365); eraseCookie('yolk_active_chat');
-                    loadPrivacySettings();
-                    if (App.lastSeenInterval) clearInterval(App.lastSeenInterval);
-                    App.lastSeenInterval = setInterval(()=> updateLastSeen(main), 30000); updateLastSeen(main);
-                    render();
-                });
-                document.getElementById('registerBtn')?.addEventListener('click', ()=>{
-                    let username = document.getElementById('regUsername').value.trim().toLowerCase();
-                    const email = document.getElementById('regEmail').value.trim(), pass = document.getElementById('regPassword').value.trim();
-                    if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; }
-                    if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; }
-                    if (!pass) { errorDiv.innerText = 'Enter password'; return; }
-                    if (!isValidPassword(pass)) { errorDiv.innerText = 'Password Latin letters/digits only'; return; }
-                    const clean = '@'+username;
-                    if (App.users[clean] || findMainUsername(clean)) { errorDiv.innerText = 'Username taken'; return; }
-                    if (isEmailTaken(email)) { errorDiv.innerText = 'Email already used'; return; }
-                    const newUser = { password: pass, avatar: null, banner: null, badge: null, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email };
-                    App.users[clean] = newUser; App.currentUser = clean; App.activeTab = 'feed'; App.activeChat = null;
-                    setCookie('yolk_current_user', clean, 365); setCookie('yolk_active_tab', 'feed', 365); eraseCookie('yolk_active_chat');
-                    saveToSupabase().then(()=>{ render(); showNotification('Account created!'); }).catch(()=>{ errorDiv.innerText = 'Server error'; });
+            function updatePostStats(id) {
+                const post = App.posts.find(p => p.id === id); if (!post) return;
+                document.querySelectorAll(`.post-card[data-post-id="${id}"]`).forEach(card => {
+                    const lb = card.querySelector('.post-like'); if (lb) { const liked = post.likes?.[App.currentUser]; lb.classList.toggle('active', liked); const img = lb.querySelector('img'); if (img) img.src = liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF; const span = lb.querySelector('span'); if (span) span.textContent = Object.keys(post.likes||{}).length; }
+                    const cb = card.querySelector('.post-comment'); if (cb) { const span = cb.querySelector('span'); if (span) span.textContent = (post.comments||[]).length; }
                 });
             }
+            window.openCommentsModal = function(id) {
+                const post = App.posts.find(p => p.id === id); if (!post) return;
+                const list = (post.comments||[]).map(c => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${c.author}')">${formatUserNameWithBadge(c.author)}</div><div class="comment-text">${c.text}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div>`).join('') || '<div style="color:var(--text-secondary);">No comments</div>';
+                const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="comments-modal"><h3>Comments</h3><div style="max-height:300px;overflow-y:auto;">${list}</div><div class="add-comment"><input type="text" id="newCommentText" placeholder="Write..."><button class="profile-btn" id="submitCommentBtn">Send</button></div><div style="margin-top:12px;"><button class="profile-btn secondary" id="closeCommentsModal">Close</button></div></div></div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('submitCommentBtn').addEventListener('click', () => {
+                    if (App.users[App.currentUser]?.bannedFromCommenting) { showNotification('You are banned from commenting','error'); return; }
+                    const text = document.getElementById('newCommentText').value.trim(); if (!text) return;
+                    if (!post.comments) post.comments = [];
+                    post.comments.push({ author: App.currentUser, text, time: Date.now() });
+                    persistState(); document.getElementById('commentsModal').remove(); updatePostStats(id); showNotification('Comment added');
+                });
+                document.getElementById('closeCommentsModal').addEventListener('click', ()=> document.getElementById('commentsModal').remove());
+            };
+            window.deletePost = function(id) {
+                if (!confirm('Delete post?')) return;
+                const idx = App.posts.findIndex(p => p.id === id);
+                if (idx !== -1 && (App.posts[idx].author === App.currentUser || App.currentUser === ADMIN_USER)) {
+                    App.posts.splice(idx, 1); persistState(); initFeed(); showNotification('Deleted');
+                } else showNotification('Cannot delete', 'error');
+            };
+            window.toggleFeedSubscription = function(postId, author) {
+                if (author === App.currentUser) return;
+                const isSub = isFollowing(App.currentUser, author);
+                if (isSub) unsubscribeFromUser(App.currentUser, author); else subscribeToUser(App.currentUser, author);
+                document.querySelectorAll(`.post-card[data-post-id="${postId}"]`).forEach(card => {
+                    const btn = card.querySelector('.subscribe-btn, .unsubscribe-btn');
+                    if (btn) { btn.textContent = isSub ? 'FOLLOW' : 'UNFOLLOW'; btn.className = isSub ? 'subscribe-btn' : 'unsubscribe-btn'; }
+                });
+            };
+            function canCreatePost() {
+                if (App.users[App.currentUser]?.bannedFromPosting) { showNotification('You are banned from posting','error'); return false; }
+                const now = Date.now(), last = App.lastPostTime[App.currentUser] || 0;
+                if (now - last < 180000) { showNotification('Next post in '+Math.ceil((180000-(now-last))/1000)+' sec.','error'); return false; }
+                return true;
+            }
+            function createPost(text, media, isVideo) {
+                if (!text.trim() && !media) { showNotification('Write text or attach media','error'); return; }
+                if (!canCreatePost()) return;
+                const post = { id: generateId(), author: App.currentUser, text: text.trim(), media: media||null, isVideo:!!isVideo, time: Date.now(), likes:{}, dislikes:{}, comments:[] };
+                App.posts.unshift(post); App.lastPostTime[App.currentUser] = Date.now();
+                persistState(); initFeed(); showNotification('Post published!');
+            }
+            function openCreatePostModal() {
+                const modalHtml = `<div class="modal-overlay" id="createPostModal"><div class="profile-modal"><h3>New Post</h3><textarea id="postText" rows="3" placeholder="What's new?"></textarea><div style="margin:12px 0;"><button class="change-file-btn" id="addPostMediaBtn">Add photo/video</button><input type="file" id="postMediaFile" accept="image/*,video/*" style="display:none;"></div><div class="profile-actions"><button class="profile-btn" id="confirmCreatePostBtn">Publish</button><button class="profile-btn secondary" id="closeCreatePostModal">Cancel</button></div></div></div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                let tempMedia=null, isVideo=false;
+                document.getElementById('addPostMediaBtn').addEventListener('click', ()=> document.getElementById('postMediaFile').click());
+                document.getElementById('postMediaFile').addEventListener('change', (e) => {
+                    const file = e.target.files[0]; if (!file) return;
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = ev => compressImage(ev.target.result, 800,800,0.7, c => { tempMedia=c; isVideo=false; showNotification('Image added'); });
+                        reader.readAsDataURL(file);
+                    } else if (file.type.startsWith('video/')) {
+                        if (file.size > 20*1024*1024) { showNotification('Max 20MB','error'); return; }
+                        const reader = new FileReader();
+                        reader.onload = ev => { tempMedia=ev.target.result; isVideo=true; showNotification('Video added'); };
+                        reader.readAsDataURL(file);
+                    }
+                });
+                document.getElementById('confirmCreatePostBtn').addEventListener('click', ()=>{
+                    const text = document.getElementById('postText').value.trim();
+                    if (!text && !tempMedia) { showNotification('Enter text or media','error'); return; }
+                    createPost(text, tempMedia, isVideo); document.getElementById('createPostModal').remove();
+                });
+                document.getElementById('closeCreatePostModal').addEventListener('click', ()=> document.getElementById('createPostModal').remove());
+            }
 
+            // Chat functions
+            function sendMessage() {
+                const text = document.getElementById('messageText')?.value.trim() || '';
+                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Empty message','error'); return; }
+                const to = App.activeChat; if (!to || isBot(to)) return;
+                if (!canUserMessage(App.currentUser, to)) { showNotification('Cannot message','error'); return; }
+                let media = null, isVid = false;
+                if (App.tempVideo) { media = App.tempVideo; isVid = true; }
+                else if (App.tempPhoto) { media = App.tempPhoto; }
+                const msg = { from: App.currentUser, text, time: Date.now(), photo: media, isVideo: isVid, likes:{}, dislikes:{} };
+                const chatId = [App.currentUser, to].sort().join('_');
+                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: to, messages: [] };
+                App.chats[chatId].messages.push(msg);
+                persistState(); renderMessages(to); playHappySound();
+                document.getElementById('messageText').value = '';
+                App.tempPhoto = null; App.tempVideo = null;
+                document.getElementById('mediaUploadSingle').value = '';
+                updateChatList();
+            }
+            function renderMessages(partner) {
+                const container = document.getElementById('messageList'); if (!container) return;
+                const chatId = [App.currentUser, partner].sort().join('_');
+                const msgs = App.chats[chatId]?.messages || [];
+                container.innerHTML = msgs.length ? msgs.map((m,i) => renderMessage(m,i,App.currentUser,partner)).join('') : '<div style="text-align:center; color:var(--text-secondary); margin-top:20px;">No messages</div>';
+                setTimeout(()=> container.scrollTop = container.scrollHeight, 100);
+                updateChatHeaderStatus(partner);
+            }
+            function renderMessage(msg, idx, curr, partner) {
+                const isMe = msg.from === curr;
+                const fromDisplay = msg.from === 'SYSTEM' ? 'SYSTEM' : formatUserNameWithBadge(msg.from);
+                const mediaHtml = msg.photo ? (msg.isVideo ? `<video controls class="media-preview" src="${msg.photo}"></video>` : `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`) : '';
+                return `<div class="message ${isMe?'me':''} ${msg.from==='SYSTEM'||msg.isBotMsg?'system-message':''}">
+                    ${!isMe && msg.from!=='SYSTEM' && !msg.isBotMsg ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${fromDisplay}</span></small><br>` : ''}
+                    ${msg.from==='SYSTEM' ? '<small>🔔 SYSTEM</small><br>' : ''}
+                    ${msg.isBotMsg ? `<small>🤖 ${fromDisplay}</small><br>` : ''}
+                    <div class="message-text">${msg.text||''}</div>${mediaHtml}
+                    <div class="time">${new Date(msg.time).toLocaleString()}</div>
+                    ${isMe && !msg.isBotMsg ? `<div class="msg-actions"><button onclick="window.deleteMessage('${partner}',${idx})">Delete</button></div>` : ''}
+                </div>`;
+            }
             function renderBotInterface(botUsername) {
                 const container = document.getElementById('messageList');
                 if (!container) return;
@@ -756,138 +1023,6 @@
                             </div>`;
                     }
                 }
-            }
-
-            function renderMain() {
-                const isChatsActive = App.activeTab === 'chats';
-                const chatTitle = isChatsActive && App.activeChat ? formatUserNameWithBadge(App.activeChat) : '';
-                const isBotChat = isChatsActive && App.activeChat && isBot(App.activeChat);
-                return `
-                <div class="main-container">
-                    ${isChatsActive ? `
-                    <div class="sidebar ${App.sidebarOpen?'open':''}">
-                        <div class="user-profile">
-                            <div class="avatar"></div>
-                            <div style="flex:1;"><div class="username-display"></div><div class="followers-info" style="font-size:11px; color:var(--text-secondary);"></div></div>
-                            <span class="settings-icon" id="sidebarSettingsBtn">⚙️</span>
-                        </div>
-                        <div class="search-add"><input type="text" placeholder="@username" id="searchUserInput"><button class="icon-btn" id="addUserBtn">+</button></div>
-                        <div class="chats-list" id="chatsList"></div>
-                    </div>
-                    <div class="chat-area">
-                        <div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth<768?'visible':''}" id="backBtn">←</button><strong>${chatTitle}</strong></div><div class="chat-actions">${!isBotChat ? `<button class="tiny-btn" id="viewProfileBtn">Profile</button><img src="${ICONS.NICKNAME_BTN}" class="nickname-btn-icon" id="setNicknameBtn" title="Set local nickname">` : ''}</div></div>
-                        <div class="messages-container" id="messageList"></div>
-                        <div class="input-area">
-                            ${isBotChat ? '' : `<label for="mediaUploadSingle" style="cursor:pointer;"><img src="${ICONS.MEDIA_BTN}" class="media-btn-icon"></label><input type="file" id="mediaUploadSingle" accept="image/*,video/*" style="display:none;"><input type="text" id="messageText" placeholder="Message..." autofocus><button class="send-btn" id="sendMsgBtn">➤</button>`}
-                        </div>
-                    </div>
-                    ` : `
-                    <div class="feed-container">
-                        <div class="feed-filters">
-                            <button class="feed-filter-btn active" id="filterAllBtn">All posts</button>
-                            <button class="feed-filter-btn" id="filterLikedBtn">Liked</button>
-                            <button class="feed-filter-btn" id="filterMyBtn">My</button>
-                        </div>
-                        <div id="feedPostsContainer"></div>
-                    </div>
-                    <button class="create-post-btn" id="createPostBtn">+</button>
-                    `}
-                </div>
-                <div class="bottom-nav">
-                    <div class="nav-item ${App.activeTab==='feed'?'active':''}" data-tab="feed"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v1.png"></div>
-                    <div class="nav-item nav-chats ${App.activeTab==='chats'?'active':''}" data-tab="chats"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v2.png"></div>
-                    <div class="nav-item" id="settingsTab"><img src="https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v4.png"></div>
-                </div>`;
-            }
-            function attachMainEvents() {
-                document.getElementById('backBtn')?.addEventListener('click', ()=>{ App.sidebarOpen=true; document.querySelector('.sidebar').classList.add('open'); });
-                document.getElementById('viewProfileBtn')?.addEventListener('click', ()=>{ if(App.activeChat) openProfileModal(App.activeChat); });
-                document.getElementById('sendMsgBtn')?.addEventListener('click', sendMessage);
-                document.getElementById('mediaUploadSingle')?.addEventListener('change', handleMediaSelect);
-                document.getElementById('addUserBtn')?.addEventListener('click', addUserBySearch);
-                document.getElementById('messageText')?.addEventListener('keypress', e => { if(e.key==='Enter'){ e.preventDefault(); sendMessage(); } });
-                document.getElementById('sidebarSettingsBtn')?.addEventListener('click', openProfileSettings);
-                document.querySelectorAll('.nav-item').forEach(item => item.addEventListener('click', (e)=>{
-                    const tab = item.dataset.tab;
-                    if (tab === 'chats') { App.activeTab='chats'; setCookie('yolk_active_tab','chats',365); if(window.innerWidth<768) App.sidebarOpen=false; render(); }
-                    else if (tab === 'feed') { App.activeTab='feed'; setCookie('yolk_active_tab','feed',365); render(); setTimeout(()=> initFeed(), 50); }
-                }));
-                document.getElementById('settingsTab')?.addEventListener('click', openProfileSettings);
-                document.getElementById('createPostBtn')?.addEventListener('click', openCreatePostModal);
-                document.getElementById('filterAllBtn')?.addEventListener('click', ()=>{ App.feedFilter='all'; initFeed(); });
-                document.getElementById('filterLikedBtn')?.addEventListener('click', ()=>{ App.feedFilter='liked'; initFeed(); });
-                document.getElementById('filterMyBtn')?.addEventListener('click', ()=>{ App.feedFilter='my'; initFeed(); });
-                document.getElementById('setNicknameBtn')?.addEventListener('click', ()=>{
-                    if (!App.activeChat || isBot(App.activeChat)) return;
-                    const currentNick = (App.localNicknames[App.activeChat]?.[App.currentUser]) || '';
-                    const modalHtml = `
-                    <div class="modal-overlay" id="nicknameModal">
-                        <div class="profile-modal" style="max-width:340px;">
-                            <h3>Local nickname</h3>
-                            <div style="color:var(--text-secondary); margin-bottom:12px;">Set a custom name for <b>${getDisplayName(App.activeChat)}</b> (visible only to you)</div>
-                            <div class="profile-input-group"><label>Nickname</label><input type="text" id="newNicknameInput" value="${currentNick}" placeholder="Enter name" maxlength="20"></div>
-                            <div class="profile-actions">
-                                <button class="profile-btn" id="saveNicknameBtn">Save</button>
-                                <button class="profile-btn secondary" id="closeNicknameModal">Cancel</button>
-                                ${currentNick ? '<button class="profile-btn warning" id="removeNicknameBtn">Remove</button>' : ''}
-                            </div>
-                        </div>
-                    </div>`;
-                    document.body.insertAdjacentHTML('beforeend', modalHtml);
-                    document.getElementById('saveNicknameBtn').addEventListener('click', ()=>{
-                        const val = document.getElementById('newNicknameInput').value.trim();
-                        if (!App.localNicknames[App.activeChat]) App.localNicknames[App.activeChat] = {};
-                        if (val) App.localNicknames[App.activeChat][App.currentUser] = val;
-                        else delete App.localNicknames[App.activeChat][App.currentUser];
-                        saveToSupabase(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname saved');
-                    });
-                    document.getElementById('closeNicknameModal').addEventListener('click', ()=> document.getElementById('nicknameModal').remove());
-                    const remBtn = document.getElementById('removeNicknameBtn');
-                    if (remBtn) remBtn.addEventListener('click', ()=>{
-                        if (App.localNicknames[App.activeChat]) delete App.localNicknames[App.activeChat][App.currentUser];
-                        saveToSupabase(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname removed');
-                    });
-                });
-            }
-
-            function sendMessage() {
-                const text = document.getElementById('messageText')?.value.trim() || '';
-                if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Empty message','error'); return; }
-                const to = App.activeChat; if (!to || isBot(to)) return;
-                if (!canUserMessage(App.currentUser, to)) { showNotification('Cannot message','error'); return; }
-                let media = null, isVid = false;
-                if (App.tempVideo) { media = App.tempVideo; isVid = true; }
-                else if (App.tempPhoto) { media = App.tempPhoto; }
-                const msg = { from: App.currentUser, text, time: Date.now(), photo: media, isVideo: isVid, likes:{}, dislikes:{} };
-                const chatId = [App.currentUser, to].sort().join('_');
-                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: to, messages: [] };
-                App.chats[chatId].messages.push(msg);
-                saveToSupabase(); renderMessages(to); playHappySound();
-                document.getElementById('messageText').value = '';
-                App.tempPhoto = null; App.tempVideo = null;
-                document.getElementById('mediaUploadSingle').value = '';
-                updateChatList();
-            }
-            function renderMessages(partner) {
-                const container = document.getElementById('messageList'); if (!container) return;
-                const chatId = [App.currentUser, partner].sort().join('_');
-                const msgs = App.chats[chatId]?.messages || [];
-                container.innerHTML = msgs.length ? msgs.map((m,i) => renderMessage(m,i,App.currentUser,partner)).join('') : '<div style="text-align:center; color:var(--text-secondary); margin-top:20px;">No messages</div>';
-                setTimeout(()=> container.scrollTop = container.scrollHeight, 100);
-                updateChatHeaderStatus(partner);
-            }
-            function renderMessage(msg, idx, curr, partner) {
-                const isMe = msg.from === curr;
-                const fromDisplay = msg.from === 'SYSTEM' ? 'SYSTEM' : formatUserNameWithBadge(msg.from);
-                const mediaHtml = msg.photo ? (msg.isVideo ? `<video controls class="media-preview" src="${msg.photo}"></video>` : `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`) : '';
-                return `<div class="message ${isMe?'me':''} ${msg.from==='SYSTEM'||msg.isBotMsg?'system-message':''}">
-                    ${!isMe && msg.from!=='SYSTEM' && !msg.isBotMsg ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${fromDisplay}</span></small><br>` : ''}
-                    ${msg.from==='SYSTEM' ? '<small>🔔 SYSTEM</small><br>' : ''}
-                    ${msg.isBotMsg ? `<small>🤖 ${fromDisplay}</small><br>` : ''}
-                    <div class="message-text">${msg.text||''}</div>${mediaHtml}
-                    <div class="time">${new Date(msg.time).toLocaleString()}</div>
-                    ${isMe && !msg.isBotMsg ? `<div class="msg-actions"><button onclick="window.deleteMessage('${partner}',${idx})">Delete</button></div>` : ''}
-                </div>`;
             }
             function updateChatList() {
                 const container = document.getElementById('chatsList'); if (!container) return;
@@ -950,12 +1085,12 @@
                 const chatId = [App.currentUser, chat].sort().join('_');
                 if (App.chats[chatId]) delete App.chats[chatId];
                 if (App.activeChat === chat) { App.activeChat = null; eraseCookie('yolk_active_chat'); }
-                saveToSupabase(); render(); showNotification('Chat deleted');
+                persistState(); render(); showNotification('Chat deleted');
             };
             window.deleteMessage = function(partner, idx) {
                 const chatId = [App.currentUser, partner].sort().join('_');
                 const msgs = App.chats[chatId]?.messages;
-                if (msgs?.[idx]) { msgs.splice(idx,1); saveToSupabase(); if (isBot(partner)) renderBotInterface(partner); else renderMessages(partner); showNotification('Deleted'); }
+                if (msgs?.[idx]) { msgs.splice(idx,1); persistState(); if (isBot(partner)) renderBotInterface(partner); else renderMessages(partner); showNotification('Deleted'); }
             };
             window.openImageModal = function(src) {
                 const modal = document.createElement('div'); modal.className='modal-overlay'; modal.onclick=()=> modal.remove();
@@ -972,11 +1107,34 @@
                 div.textContent = online ? 'online' : `last seen ${formatLastSeen(App.users[username]?.lastSeen)}`;
                 headerInfo.appendChild(div);
             }
+            function formatLastSeen(ls) { if (!ls) return 'long ago'; const diff = Date.now() - ls; const m = Math.floor(diff/60000), h = Math.floor(diff/3600000), d = Math.floor(diff/86400000); if (m<1) return 'just now'; if (m<5) return `${m} min ago`; if (m<15) return '5 min ago'; if (m<30) return '15 min ago'; if (m<60) return '30 min ago'; if (h<2) return '1 hour ago'; if (h<24) return `${h} hours ago`; if (d<5) return `${d} days ago`; return `${d} days ago`; }
+
+            // Profile modal
+            function openProfileModal(u) {
+                const ud = App.users[u] || {};
+                const modalHtml = `
+                <div class="modal-overlay" id="profileModalOverlay">
+                    <div class="profile-modal">
+                        <h3>${getDisplayName(u)}</h3>
+                        <div class="profile-banner-wrapper"><div class="banner-container">${ud.banner?`<img src="${ud.banner}" class="banner-image">`:'<div class="banner-placeholder">No banner</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${ud.avatar?`<img src="${ud.avatar}">`:`<img src="${DEFAULT_AVATAR}">`}</div></div></div>
+                        <div class="profile-name-section"><div style="font-size:20px;">${formatUserNameWithBadge(u)}</div><div style="font-size:14px; color:var(--text-secondary);">${(ud.followers||[]).length} followers · ${(ud.following||[]).length} following</div></div>
+                        <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">Close</button>${u===App.currentUser?`<button class="profile-btn" id="editProfileFromModalBtn">Edit</button><button class="profile-btn logout" id="logoutFromProfileBtn">Logout</button>`:''}</div>
+                    </div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                document.getElementById('closeProfileModalBtn').addEventListener('click', ()=> document.getElementById('profileModalOverlay').remove());
+                if (u===App.currentUser) {
+                    document.getElementById('editProfileFromModalBtn')?.addEventListener('click', ()=>{ document.getElementById('profileModalOverlay').remove(); openProfileSettings(); });
+                    document.getElementById('logoutFromProfileBtn')?.addEventListener('click', ()=>{ document.getElementById('profileModalOverlay').remove(); App.currentUser=null; App.activeChat=null; eraseCookie('yolk_current_user'); eraseCookie('yolk_active_chat'); eraseCookie('yolk_active_tab'); render(); });
+                }
+            }
+
+            // Initialize
             window.addEventListener('load', ()=>{
                 loadingStartTime = Date.now();
-                loadFromSupabase();
-                subscribeToAppState();
+                loadFromStorage();
                 loadTheme();
+                render();
             });
         })();
     </script>
