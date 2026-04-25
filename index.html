@@ -240,6 +240,8 @@
         .media-btn-icon:hover { background: rgba(212,175,55,0.35); transform: scale(1.08); }
         .nickname-btn-icon { width: 28px; height: 28px; object-fit: contain; cursor: pointer; background: rgba(212,175,55,0.2); border: 1px solid var(--glass-border); border-radius: 50%; padding: 4px; transition: all 0.2s; }
         .nickname-btn-icon:hover { background: rgba(212,175,55,0.35); transform: scale(1.08); }
+        .bot-btn { background: #2a2a2a; color: #d4af37; border: 1px solid #d4af37; padding: 8px 16px; border-radius: 20px; margin: 4px 4px 0 0; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .bot-btn:hover { background: #d4af37; color: #000; }
     </style>
 </head>
 <body>
@@ -288,6 +290,8 @@
             };
             App.systemBots = [];
             const ADMIN_USER = '@durov';
+            const CLICK_BOT_USERNAME = '@click_bot';
+            const CLICK_BOT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/ooox.jpg';
             const ICONS = {
                 LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
@@ -332,6 +336,29 @@
                 const state = { users: App.users, chats: App.chats, blocked: App.blocked, privacySettings: App.privacySettings, posts: App.posts, localNicknames: App.localNicknames };
                 try { await saveAppState(state); localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames })); } catch(e) { console.error('Save error:', e); }
             }
+
+            // Инициализация бота кликера
+            function initClickBot() {
+                if (!App.users[CLICK_BOT_USERNAME]) {
+                    App.users[CLICK_BOT_USERNAME] = {
+                        password: '',
+                        avatar: CLICK_BOT_AVATAR,
+                        banner: null,
+                        badge: null,
+                        lastSeen: Date.now(),
+                        chatWallpaper: '',
+                        followers: [],
+                        following: [],
+                        additionalUsernames: [],
+                        displayName: 'Click Bot',
+                        email: 'click_bot@yolkapp.com',
+                        isBot: true
+                    };
+                    // Убедимся, что бот сохраняется
+                    saveToSupabase();
+                }
+            }
+
             async function loadFromSupabase() {
                 try {
                     const state = await loadAppState();
@@ -345,6 +372,8 @@
                         localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames }));
                     }
                 } catch(e) { console.error('Supabase load error:', e); }
+                // Создаем бота, если его нет в данных
+                initClickBot();
                 const savedUser = getCookie('yolk_current_user');
                 const savedChat = getCookie('yolk_active_chat');
                 const savedTab = getCookie('yolk_active_tab');
@@ -376,6 +405,75 @@
             function findMainUsername(input) { if (!input) return null; if (App.users[input]) return input; for (let m in App.users) { if (App.users[m].additionalUsernames?.includes(input)) return m; } return null; }
             function isEmailTaken(email, exclude) { if (!email) return false; const le = email.toLowerCase(); for (let u in App.users) { if (u === exclude) continue; if (App.users[u]?.email?.toLowerCase() === le) return true; } return false; }
 
+            // Работа с ботом-кликером
+            function getClickBotData(user) {
+                if (!App.users[user]) return null;
+                if (!App.users[user].clickBotData) {
+                    App.users[user].clickBotData = {
+                        balance: 0,
+                        incomePerClick: 1,
+                        upgradeCost: 10
+                    };
+                }
+                return App.users[user].clickBotData;
+            }
+
+            function handleBotCommand(cmd) {
+                if (!App.activeChat || App.activeChat !== CLICK_BOT_USERNAME) return;
+                const data = getClickBotData(App.currentUser);
+                if (!data) return;
+                const parts = cmd.trim().split(' ');
+                const action = parts[0];
+                let reply = '';
+                if (action === '!click') {
+                    data.balance += data.incomePerClick;
+                    reply = `💎 +${data.incomePerClick}$\nБаланс: ${data.balance}$`;
+                } else if (action === '!upgrade') {
+                    if (data.balance >= data.upgradeCost) {
+                        data.balance -= data.upgradeCost;
+                        data.incomePerClick += 1;
+                        data.upgradeCost = Math.floor(data.upgradeCost * 1.5);
+                        reply = `🚀 Улучшено! Доход за клик: ${data.incomePerClick}$\nСледующая стоимость: ${data.upgradeCost}$`;
+                    } else {
+                        reply = `❌ Недостаточно средств. Нужно ${data.upgradeCost}$, у вас ${data.balance}$`;
+                    }
+                } else if (action === '!balance') {
+                    reply = `💰 Баланс: ${data.balance}$\n⚡ Доход за клик: ${data.incomePerClick}$\n🔧 Улучшение стоит: ${data.upgradeCost}$`;
+                } else {
+                    reply = 'Неизвестная команда. Используйте кнопки.';
+                }
+                saveToSupabase();
+                // Отправляем ответ бота
+                const botMsg = {
+                    from: CLICK_BOT_USERNAME,
+                    text: reply + '\n\n' + generateBotButtons(),
+                    time: Date.now(),
+                    photo: null,
+                    isVideo: false,
+                    likes: {},
+                    dislikes: {}
+                };
+                const chatId = [App.currentUser, CLICK_BOT_USERNAME].sort().join('_');
+                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: CLICK_BOT_USERNAME, messages: [] };
+                App.chats[chatId].messages.push(botMsg);
+                saveToSupabase();
+                renderMessages(CLICK_BOT_USERNAME);
+            }
+
+            function generateBotButtons() {
+                const data = getClickBotData(App.currentUser);
+                if (!data) return '';
+                return `<button class="bot-btn" onclick="window.clickBotAction('!click')">💎 Клик (+${data.incomePerClick}$)</button>
+                        <button class="bot-btn" onclick="window.clickBotAction('!upgrade')">🚀 Улучшить (${data.upgradeCost}$)</button>
+                        <button class="bot-btn" onclick="window.clickBotAction('!balance')">💰 Баланс</button>`;
+            }
+
+            window.clickBotAction = function(cmd) {
+                if (App.activeChat !== CLICK_BOT_USERNAME) return;
+                document.getElementById('messageText').value = ''; // очищаем поле ввода
+                handleBotCommand(cmd);
+            };
+
             function openProfileSettings() {
                 const userData = App.users[App.currentUser] || {};
                 const followers = (userData.followers||[]).length, following = (userData.following||[]).length;
@@ -395,6 +493,7 @@
                         </div>
                         <div style="padding:20px 24px; max-height:45vh; overflow-y:auto;">
                             <div style="font-weight:700; color:var(--accent); margin-bottom:12px;">Account</div>
+                            <div class="profile-input-group"><label>Username</label><div style="padding:10px 14px; background: var(--input-bg); border:1px solid var(--glass-border); border-radius:12px; color: var(--text-secondary);">${App.currentUser}</div></div>
                             <div class="profile-input-group"><label>Email</label><input id="settingsEmail" value="${pendingEmail}"></div>
                             <div class="profile-input-group"><label>Display name</label><input id="settingsDisplayName" maxlength="9" value="${pendingDisplayName}"></div>
                             <div class="profile-input-group"><label>Password</label><div class="password-wrapper"><input type="password" id="settingsPassword" value="${userData.password||''}"><button class="toggle-password" onclick="window.toggleSettingsPassword()">👁️</button></div></div>
@@ -682,6 +781,7 @@
             }
             window.openCommentsModal = function(id) {
                 const post = App.posts.find(p => p.id === id); if (!post) return;
+                if (!post.comments) post.comments = []; // Инициализация, чтобы избежать ошибки
                 const list = (post.comments||[]).map(c => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${c.author}')">${formatUserNameWithBadge(c.author)}</div><div class="comment-text">${c.text}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div>`).join('') || '<div style="color:var(--text-secondary);">No comments</div>';
                 const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="comments-modal"><h3>Comments</h3><div style="max-height:300px;overflow-y:auto;">${list}</div><div class="add-comment"><input type="text" id="newCommentText" placeholder="Write..."><button class="profile-btn" id="submitCommentBtn">Send</button></div><div style="margin-top:12px;"><button class="profile-btn secondary" id="closeCommentsModal">Close</button></div></div></div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -897,6 +997,14 @@
                 const text = document.getElementById('messageText')?.value.trim() || '';
                 if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Empty message','error'); return; }
                 const to = App.activeChat; if (!to) return;
+                // Если это бот-кликер, обрабатываем команду
+                if (to === CLICK_BOT_USERNAME) {
+                    handleBotCommand(text);
+                    document.getElementById('messageText').value = '';
+                    App.tempPhoto = null; App.tempVideo = null;
+                    document.getElementById('mediaUploadSingle').value = '';
+                    return;
+                }
                 if (!canUserMessage(App.currentUser, to)) { showNotification('Cannot message','error'); return; }
                 let media = null, isVid = false;
                 if (App.tempVideo) { media = App.tempVideo; isVid = true; }
@@ -915,6 +1023,10 @@
                 const container = document.getElementById('messageList'); if (!container) return;
                 const chatId = [App.currentUser, partner].sort().join('_');
                 const msgs = App.chats[chatId]?.messages || [];
+                // Если чат с ботом и сообщений нет, отправим приветственное
+                if (partner === CLICK_BOT_USERNAME && msgs.length === 0) {
+                    handleBotCommand('!start');
+                }
                 container.innerHTML = msgs.length ? msgs.map((m,i) => renderMessage(m,i,App.currentUser,partner)).join('') : '<div style="text-align:center; color:var(--text-secondary); margin-top:20px;">No messages</div>';
                 setTimeout(()=> container.scrollTop = container.scrollHeight, 100);
                 updateChatHeaderStatus(partner);
@@ -923,12 +1035,14 @@
                 const isMe = msg.from === curr;
                 const fromDisplay = msg.from === 'SYSTEM' ? 'SYSTEM' : formatUserNameWithBadge(msg.from);
                 const mediaHtml = msg.photo ? (msg.isVideo ? `<video controls class="media-preview" src="${msg.photo}"></video>` : `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`) : '';
+                // Обработка кнопок бота (они уже в тексте)
+                const textHtml = msg.text ? msg.text.replace(/\n/g, '<br>') : '';
                 return `<div class="message ${isMe?'me':''} ${msg.from==='SYSTEM'?'system-message':''}">
                     ${!isMe && msg.from!=='SYSTEM' ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${fromDisplay}</span></small><br>` : ''}
                     ${msg.from==='SYSTEM' ? '<small>🔔 SYSTEM</small><br>' : ''}
-                    <div class="message-text">${msg.text||''}</div>${mediaHtml}
+                    <div class="message-text">${textHtml}</div>${mediaHtml}
                     <div class="time">${new Date(msg.time).toLocaleString()}</div>
-                    ${isMe ? `<div class="msg-actions"><button onclick="window.deleteMessage('${partner}',${idx})">Delete</button></div>` : ''}
+                    ${isMe && msg.from !== CLICK_BOT_USERNAME ? `<div class="msg-actions"><button onclick="window.deleteMessage('${partner}',${idx})">Delete</button></div>` : ''}
                 </div>`;
             }
             function updateChatList() {
@@ -1008,6 +1122,12 @@
                 const headerInfo = document.querySelector('.chat-header-info'); if (!headerInfo) return;
                 const existing = headerInfo.querySelector('.chat-user-status'); if (existing) existing.remove();
                 const strong = headerInfo.querySelector('strong'); if (strong) strong.innerHTML = formatUserNameWithBadge(username);
+                if (username === CLICK_BOT_USERNAME) {
+                    const div = document.createElement('div'); div.className = 'chat-user-status';
+                    div.textContent = 'online';
+                    headerInfo.appendChild(div);
+                    return;
+                }
                 const online = isUserOnline(username);
                 const div = document.createElement('div'); div.className = 'chat-user-status' + (online?'':' offline');
                 div.textContent = online ? 'online' : `last seen ${formatLastSeen(App.users[username]?.lastSeen)}`;
@@ -1022,4 +1142,4 @@
         })();
     </script>
 </body>
-</html> 
+</html>
