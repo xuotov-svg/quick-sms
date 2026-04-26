@@ -3,76 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Yolkapp — стена и лента</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%235181b8'/%3E%3Ccircle cx='50' cy='45' r='12' fill='%23fff'/%3E%3C/svg%3E">
+  <title>Yolkapp</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37'/%3E%3C/svg%3E">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    :root {
+      --gold: #d4af37;
+      --gold-dark: #b8960b;
+      --bg: #0a0a0a;
+      --panel: #111;
+      --text: #eee;
+      --text-secondary: #aaa;
+      --border: #2a2a2a;
+      --glass: rgba(20,20,25,0.85);
+      --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background: #edeef0;
+      background: #0a0a0a;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      min-height: 100vh;
-      padding: 0;
       -webkit-tap-highlight-color: transparent;
+      color: var(--text);
     }
     #app {
       width: 100%;
       max-width: 600px;
-      background: #edeef0;
+      background: var(--bg);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 20px rgba(0,0,0,0.05);
       position: relative;
+      box-shadow: var(--shadow);
     }
-    /* VK-style header */
-    .vk-header {
-      background: #4a76a8;
-      color: white;
+    /* Header */
+    .header {
+      background: var(--glass);
+      backdrop-filter: blur(20px);
       padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
       z-index: 20;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .vk-header .logo {
+    .logo {
       font-weight: 700;
       font-size: 20px;
-      letter-spacing: 0.5px;
+      color: var(--gold);
+      letter-spacing: 1px;
     }
-    .vk-header .search-box {
+    .search-box {
       flex: 1;
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
       border-radius: 20px;
       padding: 6px 14px;
       display: flex;
       align-items: center;
       gap: 6px;
     }
-    .vk-header .search-box input {
+    .search-box input {
       background: transparent;
       border: none;
       outline: none;
-      color: white;
+      color: var(--text);
       width: 100%;
       font-size: 14px;
     }
-    .vk-header .search-box input::placeholder { color: rgba(255,255,255,0.7); }
-    .vk-header .profile-thumb {
-      width: 32px; height: 32px; border-radius: 50%; background: #fff; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    .search-box input::placeholder { color: #666; }
+    .profile-thumb {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--border); cursor: pointer; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
     }
-    .vk-header .profile-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
     /* Tabs */
     .tabs {
       display: flex;
-      background: white;
-      border-bottom: 1px solid #e0e0e0;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
       position: sticky;
       top: 52px;
       z-index: 15;
@@ -82,12 +96,13 @@
       text-align: center;
       padding: 12px;
       font-weight: 500;
-      color: #555;
+      color: #888;
       cursor: pointer;
       border-bottom: 2px solid transparent;
       transition: 0.2s;
     }
-    .tab.active { color: #4a76a8; border-bottom-color: #4a76a8; }
+    .tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
     /* Feed */
     .feed-container {
       flex: 1;
@@ -95,13 +110,19 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      overflow-y: auto;
+      max-height: calc(100vh - 104px);
     }
     .post-card {
-      background: white;
-      border-radius: 12px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
       padding: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
     }
+    .post-card:hover { transform: translateY(-2px); }
     .post-header {
       display: flex;
       align-items: center;
@@ -110,69 +131,139 @@
       cursor: pointer;
     }
     .post-avatar {
-      width: 40px; height: 40px; border-radius: 50%; background: #e0e0e0;
-      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #2a2a2a; display: flex; align-items: center; justify-content: center;
+      overflow: hidden; border: 1px solid var(--border);
     }
     .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
-    .post-author { font-weight: 600; color: #2a5885; }
+    .post-author { font-weight: 600; color: var(--gold); }
     .post-time { font-size: 12px; color: #888; }
     .post-text { margin: 8px 0; line-height: 1.4; word-break: break-word; }
-    .hashtag { color: #4a76a8; cursor: pointer; }
+    .hashtag { color: var(--gold); cursor: pointer; text-decoration: underline; }
     .post-media img, .post-media video {
-      max-width: 100%; max-height: 400px; border-radius: 8px; margin-top: 8px;
+      max-width: 100%; max-height: 400px; border-radius: 12px; margin-top: 8px;
+      border: 1px solid var(--border); cursor: pointer;
     }
     .post-actions {
-      display: flex; gap: 16px; margin-top: 12px; border-top: 1px solid #f0f0f0; padding-top: 10px;
+      display: flex; gap: 16px; margin-top: 12px;
+      border-top: 1px solid var(--border); padding-top: 10px;
     }
     .action-btn {
-      background: none; border: none; color: #888; cursor: pointer; display: flex; align-items: center; gap: 4px; font-size: 14px;
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; font-size: 14px;
+      color: #aaa; transition: 0.2s;
     }
-    .action-btn.liked { color: #4a76a8; }
-    .action-btn img { width: 20px; height: 20px; }
-    /* Профиль */
-    .profile-wall {
-      padding: 16px;
-    }
+    .action-btn img { width: 22px; height: 22px; }
+    .action-btn.liked { filter: drop-shadow(0 0 6px var(--gold)); }
+    .action-btn:hover { opacity: 0.8; }
+
+    /* Profile */
+    .profile-wall { padding: 16px; }
     .profile-card {
-      background: white; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 16px;
+      background: var(--glass);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid var(--border);
+      text-align: center;
+      margin-bottom: 16px;
     }
+    .profile-banner {
+      width: 100%; height: 120px; border-radius: 12px; background: #1a1a1a;
+      margin-bottom: -40px; overflow: hidden; border: 1px solid var(--border);
+    }
+    .profile-banner img { width: 100%; height: 100%; object-fit: cover; }
     .profile-avatar-large {
-      width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; background: #e0e0e0; overflow: hidden;
+      width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px;
+      background: #2a2a2a; overflow: hidden; border: 3px solid var(--gold);
     }
     .profile-avatar-large img { width: 100%; height: 100%; object-fit: cover; }
-    .profile-name { font-size: 20px; font-weight: 700; }
-    .profile-username { color: #888; margin: 4px 0 8px; }
+    .profile-name { font-size: 20px; font-weight: 700; color: var(--gold); }
+    .profile-username { color: #aaa; margin: 4px 0 8px; }
+    .profile-bio { color: #ccc; margin-bottom: 12px; font-style: italic; }
     .follow-btn {
-      background: #4a76a8; color: white; border: none; padding: 8px 24px; border-radius: 20px; font-weight: 600; cursor: pointer;
+      background: var(--gold); color: #000; border: none; padding: 8px 24px;
+      border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s;
     }
-    .follow-btn.unfollow { background: #e0e0e0; color: #333; }
+    .follow-btn.unfollow { background: #444; color: #fff; }
+    .follow-btn:hover { filter: brightness(1.1); }
+
     .create-post-btn {
-      position: fixed; bottom: 20px; right: 20px; background: #4a76a8; color: white; border: none;
-      width: 56px; height: 56px; border-radius: 50%; font-size: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      position: fixed; bottom: 20px; right: 20px; background: var(--gold);
+      color: #000; border: none; width: 56px; height: 56px;
+      border-radius: 50%; font-size: 28px; box-shadow: 0 4px 20px rgba(212,175,55,0.4);
       cursor: pointer; z-index: 30; display: flex; align-items: center; justify-content: center;
+      transition: 0.2s;
     }
+    .create-post-btn:hover { transform: scale(1.05); }
+
+    /* Modals */
     .modal-overlay {
-      position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5);
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
       display: flex; align-items: center; justify-content: center; z-index: 1000;
+      animation: fadeIn 0.2s;
     }
     .modal {
-      background: white; border-radius: 16px; width: 90%; max-width: 420px; padding: 20px; max-height: 80vh; overflow-y: auto;
+      background: var(--glass);
+      backdrop-filter: blur(30px);
+      border-radius: 24px;
+      width: 90%; max-width: 420px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      color: var(--text);
+      max-height: 80vh; overflow-y: auto;
     }
     .modal input, .modal textarea {
-      width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; font-family: inherit;
+      width: 100%; padding: 12px; margin: 8px 0;
+      background: rgba(0,0,0,0.4); border: 1px solid var(--border);
+      border-radius: 12px; color: #fff; font-size: 14px; outline: none;
     }
+    .modal input:focus, .modal textarea:focus { border-color: var(--gold); }
     .btn {
-      background: #4a76a8; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600;
+      background: var(--gold); color: #000; border: none;
+      padding: 12px 24px; border-radius: 24px; font-weight: 600;
+      cursor: pointer; transition: 0.2s; margin: 4px;
     }
-    .btn.secondary { background: #e0e0e0; color: #333; }
+    .btn.secondary { background: #333; color: #fff; }
+    .btn:hover { filter: brightness(1.1); }
     .comments-section { max-height: 200px; overflow-y: auto; margin: 12px 0; }
-    .comment { padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
-    .comment-author { font-weight: 600; color: #2a5885; cursor: pointer; }
-    .error { color: #c00; margin-top: 8px; }
-    .auth-box {
-      background: white; border-radius: 16px; padding: 32px 24px; width: 90%; max-width: 360px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin: auto; text-align: center;
+    .comment { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .comment-author { font-weight: 600; color: var(--gold); cursor: pointer; }
+
+    /* Auth screens */
+    .auth-container {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle at top, #1a1a2e, #0a0a0a);
+      min-height: 100vh;
     }
+    .auth-box {
+      background: var(--glass);
+      backdrop-filter: blur(40px);
+      padding: 36px 28px;
+      border-radius: 32px;
+      border: 1px solid rgba(212,175,55,0.2);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+      width: 92%; max-width: 380px;
+      text-align: center;
+      animation: fadeIn 0.4s;
+    }
+    .auth-box h2 { color: var(--gold); margin-bottom: 8px; font-size: 32px; letter-spacing: 2px; }
+    .auth-subtitle { color: #aaa; margin-bottom: 24px; }
+    .input-group { margin-bottom: 16px; text-align: left; }
+    .input-group label { display: block; margin-bottom: 6px; color: #aaa; font-size: 13px; }
+    .input-group input {
+      width: 100%; padding: 14px 18px; background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border); border-radius: 14px; color: #fff;
+      font-size: 15px; outline: none;
+    }
+    .input-group input:focus { border-color: var(--gold); }
+    .auth-error { color: #ff6b6b; margin-top: 12px; }
+    .auth-switch { margin-top: 20px; color: var(--gold); cursor: pointer; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .loading-screen { position: fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; display:flex; justify-content:center; align-items:center; z-index:9999; color:var(--gold); font-size:32px; }
   </style>
 </head>
 <body>
@@ -184,30 +275,41 @@
     const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
     const STATE_ID = 1;
+    const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
+    const ICONS = {
+      LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
+      LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
+      COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
+      DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png'
+    };
 
     // --- State ---
     let users = {};
     let posts = [];
     let currentUser = null;
     let activeTab = 'feed'; // 'feed' | 'profile' | 'userProfile'
-    let viewedProfile = null; // если смотрим чужой профиль
+    let viewedProfile = null;
     let searchQuery = '';
+    let feedPage = 0;
+    const POSTS_PER_PAGE = 10;
     let dataLoaded = false;
+    let feedContainerEl = null;
 
     // --- Cookie helpers ---
-    function setCookie(name,value,days){var e="";if(days){var d=new Date();d.setTime(d.getTime()+24*60*60*1000*days);e="; expires="+d.toUTCString()}document.cookie=name+"="+(value||"")+e+"; path=/; SameSite=Lax"}
-    function getCookie(name){var n=name+"=";var ca=document.cookie.split(';');for(var i=0;i<ca.length;i++){var c=ca[i];while(c.charAt(0)===' ')c=c.substring(1);if(c.indexOf(n)===0)return c.substring(n.length)}return null}
-    function eraseCookie(name){document.cookie=name+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'}
+    function setCookie(n,v,d){ var e=""; if(d){var t=new Date();t.setTime(t.getTime()+864e5*d);e="; expires="+t.toUTCString();} document.cookie=n+"="+(v||"")+e+"; path=/; SameSite=Lax"; }
+    function getCookie(n){ var ne=n+"="; var ca=document.cookie.split(';'); for(var i=0;i<ca.length;i++){var c=ca[i];while(c.charAt(0)===' ')c=c.substring(1);if(c.indexOf(ne)===0)return c.substring(ne.length);} return null; }
+    function eraseCookie(n){ document.cookie=n+'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
 
-    // --- Supabase state sync ---
+    // --- Supabase state ---
     async function loadState(){
-      const {data,error} = await supabase.from('app_state').select('data').eq('id',STATE_ID).single();
-      if(!error && data?.data){
-        if(data.data.users) users = data.data.users;
-        if(data.data.posts) posts = data.data.posts;
-      }
+      try {
+        const {data, error} = await supabase.from('app_state').select('data').eq('id',STATE_ID).single();
+        if(!error && data?.data){
+          if(data.data.users) users = data.data.users;
+          if(data.data.posts) posts = data.data.posts;
+        }
+      } catch(e){}
       dataLoaded = true;
       const saved = getCookie('yolk_user');
       if(saved && users[saved]) currentUser = saved;
@@ -223,18 +325,10 @@
     function generateId(){ return Date.now()+'_'+Math.random().toString(36).substr(2,9); }
     function extractHashtags(text){
       const matches = text.match(/#[а-яА-Яa-zA-Z0-9_]+/g);
-      return matches ? matches.map(t=>t.toLowerCase()) : [];
+      return matches ? [...new Set(matches.map(t=>t.toLowerCase()))] : [];
     }
-    function getDisplayName(u){
-      const user = users[u];
-      if(!user) return u;
-      return user.displayName || u.substring(1);
-    }
-    function formatUsername(u){
-      const user = users[u];
-      const dn = user?.displayName || u.substring(1);
-      return `${dn} @${u.substring(1)}`;
-    }
+    function getDisplayName(u){ const user = users[u]; return user?.displayName || u.substring(1); }
+    function formatUsername(u){ return `${getDisplayName(u)} @${u.substring(1)}`; }
 
     // --- Auth ---
     function isValidUsername(s){ return /^[a-z][a-z0-9]{2,8}$/.test(s); }
@@ -243,6 +337,7 @@
       setCookie('yolk_user', u, 365);
       activeTab = 'feed';
       viewedProfile = null;
+      feedPage = 0;
       render();
     }
     function logout(){
@@ -269,24 +364,22 @@
       };
       posts.unshift(post);
       saveState();
+      feedPage = 0;
       render();
     }
-
     function deletePost(id){
       posts = posts.filter(p=>p.id!==id);
       saveState();
       render();
     }
-
     function toggleLike(postId){
       const post = posts.find(p=>p.id===postId);
       if(!post) return;
       if(post.likes[currentUser]) delete post.likes[currentUser];
       else post.likes[currentUser] = true;
       saveState();
-      renderPostStats(postId);
+      updatePostStatsInDOM(postId);
     }
-
     function addComment(postId, text){
       const post = posts.find(p=>p.id===postId);
       if(!post) return;
@@ -315,7 +408,39 @@
       render();
     }
 
-    // --- UI render ---
+    // --- Infinite feed ---
+    function getFilteredPosts(){
+      if(searchQuery.startsWith('#')){
+        const tag = searchQuery.toLowerCase();
+        return posts.filter(p=> p.hashtags?.includes(tag));
+      } else if(searchQuery){
+        const q = searchQuery.toLowerCase();
+        return posts.filter(p=> p.text.toLowerCase().includes(q));
+      }
+      return [...posts];
+    }
+
+    function loadMoreFeed(){
+      const container = document.getElementById('feedContainer');
+      if(!container || activeTab!=='feed') return;
+      const filtered = getFilteredPosts();
+      const start = feedPage * POSTS_PER_PAGE;
+      const end = start + POSTS_PER_PAGE;
+      const batch = filtered.slice(start, end);
+      if(batch.length === 0) return;
+      feedPage++;
+      batch.forEach(post => {
+        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+      });
+    }
+
+    function resetFeed(){
+      feedPage = 0;
+      const container = document.getElementById('feedContainer');
+      if(container) container.innerHTML = '';
+      loadMoreFeed();
+    }
+
     function renderPostCard(post, showAuthor=true){
       const author = users[post.author] || {};
       const avatar = author.avatar || DEFAULT_AVATAR;
@@ -323,8 +448,8 @@
       const comments = (post.comments||[]).length;
       const liked = post.likes?.[currentUser] || false;
       const mediaHtml = post.media ? (post.isVideo ? 
-        `<video controls src="${post.media}" style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;"></video>` :
-        `<img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:8px;margin-top:8px;" onclick="window.openImage('${post.media}')">`) : '';
+        `<video controls src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;margin-top:8px;"></video>` :
+        `<img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;margin-top:8px;" onclick="window.openImage('${post.media}')">`) : '';
       const textWithHashtags = post.text.replace(/#[а-яА-Яa-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();searchByHashtag(\'$&\')">$&</span>');
       const canDelete = post.author === currentUser;
       return `
@@ -340,28 +465,33 @@
           <div class="post-text">${textWithHashtags}</div>
           ${mediaHtml}
           <div class="post-actions">
-            <button class="action-btn ${liked?'liked':''}" onclick="window.toggleLike('${post.id}')">
-              ❤️ ${likes}
+            <button class="action-btn ${liked?'liked':''}" onclick="event.stopPropagation();toggleLike('${post.id}')">
+              <img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}"> ${likes}
             </button>
-            <button class="action-btn" onclick="window.openComments('${post.id}')">
-              💬 ${comments}
+            <button class="action-btn" onclick="event.stopPropagation();openComments('${post.id}')">
+              <img src="${ICONS.COMMENT}"> ${comments}
             </button>
-            ${canDelete ? `<button class="action-btn" onclick="window.deletePostById('${post.id}')">🗑️</button>` : ''}
+            ${canDelete ? `<button class="action-btn" onclick="event.stopPropagation();deletePostById('${post.id}')"><img src="${ICONS.DELETE}"></button>` : ''}
           </div>
         </div>
       `;
     }
 
-    function renderFeed(){
-      let filtered = posts;
-      if(searchQuery.startsWith('#')){
-        const tag = searchQuery.toLowerCase();
-        filtered = posts.filter(p=> p.hashtags?.includes(tag));
-      } else if(searchQuery){
-        const q = searchQuery.toLowerCase();
-        filtered = posts.filter(p=> p.text.toLowerCase().includes(q));
+    function updatePostStatsInDOM(postId){
+      const post = posts.find(p=>p.id===postId);
+      if(!post) return;
+      const card = document.getElementById('post-'+postId);
+      if(!card) return;
+      const likeBtn = card.querySelector('.action-btn:first-child');
+      if(likeBtn){
+        const liked = post.likes?.[currentUser] || false;
+        likeBtn.classList.toggle('liked', liked);
+        likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}"> ${Object.keys(post.likes||{}).length}`;
       }
-      return filtered.map(p=>renderPostCard(p, true)).join('') || '<div style="text-align:center;color:#888;padding:40px;">Нет постов</div>';
+      const commentBtn = card.querySelector('.action-btn:nth-child(2)');
+      if(commentBtn){
+        commentBtn.innerHTML = `<img src="${ICONS.COMMENT}"> ${(post.comments||[]).length}`;
+      }
     }
 
     function renderProfileWall(username){
@@ -372,7 +502,7 @@
 
     function render(){
       if(!dataLoaded){
-        document.getElementById('app').innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100vh;">Загрузка...</div>';
+        document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>';
         return;
       }
       if(!currentUser){
@@ -386,12 +516,12 @@
       const myProfile = users[currentUser] || {};
 
       const headerHtml = `
-        <div class="vk-header">
+        <div class="header">
           <div class="logo">Yolkapp</div>
           <div class="search-box">
-            <input type="text" placeholder="Поиск постов или #хэштег" id="searchInput" value="${searchQuery}">
+            <input type="text" placeholder="Поиск или #хэштег" id="searchInput" value="${searchQuery}">
           </div>
-          <div class="profile-thumb" onclick="window.goToMyProfile()">
+          <div class="profile-thumb" onclick="goToMyProfile()">
             <img src="${myProfile.avatar || DEFAULT_AVATAR}">
           </div>
         </div>
@@ -399,26 +529,29 @@
 
       const tabsHtml = `
         <div class="tabs">
-          <div class="tab ${activeTab==='feed'?'active':''}" onclick="window.switchTab('feed')">Лента</div>
-          <div class="tab ${activeTab==='profile'?'active':''}" onclick="window.switchTab('profile')">Мой профиль</div>
+          <div class="tab ${activeTab==='feed'?'active':''}" onclick="switchTab('feed')">Лента</div>
+          <div class="tab ${activeTab==='profile'?'active':''}" onclick="switchTab('profile')">Мой профиль</div>
           ${activeTab==='userProfile' ? `<div class="tab active">${getDisplayName(viewedProfile)}</div>` : ''}
         </div>
       `;
 
       let contentHtml = '';
       if(activeTab === 'feed'){
-        contentHtml = `<div class="feed-container">${renderFeed()}</div>`;
+        contentHtml = `<div class="feed-container" id="feedContainer" onscroll="handleFeedScroll()"></div>`;
       } else if(activeTab === 'profile'){
         contentHtml = `
           <div class="profile-wall">
             <div class="profile-card">
+              ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
               <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}"></div>
               <div class="profile-name">${getDisplayName(currentUser)}</div>
               <div class="profile-username">@${currentUser.substring(1)}</div>
+              <div class="profile-bio">${profile.bio || ''}</div>
               <div>${(profile.followers||[]).length} подписчиков · ${(profile.following||[]).length} подписок</div>
-              <button class="btn secondary" onclick="logout()" style="margin-top:12px;">Выйти</button>
+              <button class="btn secondary" onclick="openEditProfile()" style="margin-top:12px;">Редактировать</button>
+              <button class="btn secondary" onclick="logout()">Выйти</button>
             </div>
-            <h3 style="margin-bottom:8px;">Моя стена</h3>
+            <h3 style="margin-bottom:8px;color:var(--gold);">Моя стена</h3>
             ${renderProfileWall(currentUser)}
           </div>
         `;
@@ -427,47 +560,64 @@
         contentHtml = `
           <div class="profile-wall">
             <div class="profile-card">
+              ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
               <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}"></div>
               <div class="profile-name">${getDisplayName(profileUser)}</div>
               <div class="profile-username">@${profileUser.substring(1)}</div>
+              <div class="profile-bio">${profile.bio || ''}</div>
               <div>${(profile.followers||[]).length} подписчиков · ${(profile.following||[]).length} подписок</div>
-              <button class="follow-btn ${isSub?'unfollow':''}" onclick="window.toggleFollowUser('${profileUser}')">${isSub?'Отписаться':'Подписаться'}</button>
+              <button class="follow-btn ${isSub?'unfollow':''}" onclick="toggleFollowUser('${profileUser}')">${isSub?'Отписаться':'Подписаться'}</button>
             </div>
-            <h3 style="margin-bottom:8px;">Стена ${getDisplayName(profileUser)}</h3>
+            <h3 style="margin-bottom:8px;color:var(--gold);">Стена ${getDisplayName(profileUser)}</h3>
             ${renderProfileWall(profileUser)}
           </div>
         `;
       }
 
-      document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml + 
-        `<div class="create-post-btn" onclick="window.openCreatePost()">+</div>`;
+      document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml +
+        `<div class="create-post-btn" onclick="openCreatePost()">+</div>`;
 
       document.getElementById('searchInput')?.addEventListener('input', (e)=>{
         searchQuery = e.target.value;
-        render();
+        if(activeTab==='feed') resetFeed();
+        else render();
       });
+
+      if(activeTab==='feed') {
+        feedContainerEl = document.getElementById('feedContainer');
+        resetFeed();
+      }
+    }
+
+    function handleFeedScroll(){
+      const el = document.getElementById('feedContainer');
+      if(!el) return;
+      if(el.scrollTop + el.clientHeight >= el.scrollHeight - 200){
+        loadMoreFeed();
+      }
     }
 
     function renderAuth(){
       return `
-        <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#edeef0;">
+        <div class="auth-container">
           <div class="auth-box">
-            <h2 style="color:#4a76a8;margin-bottom:16px;">Yolkapp</h2>
+            <h2>Yolkapp</h2>
+            <div class="auth-subtitle">Добро пожаловать</div>
             <div id="loginForm">
-              <input id="loginUsername" placeholder="username (без @)">
-              <input id="loginEmail" placeholder="email">
-              <input id="loginPassword" type="password" placeholder="Пароль">
-              <button class="btn" id="loginBtn" style="width:100%;margin-top:12px;">Войти</button>
-              <div style="margin-top:12px;color:#4a76a8;cursor:pointer;" id="showRegister">Регистрация</div>
+              <div class="input-group"><label>Имя пользователя</label><input id="loginUsername" placeholder="без @"></div>
+              <div class="input-group"><label>Email</label><input id="loginEmail" placeholder="example@mail.com"></div>
+              <div class="input-group"><label>Пароль</label><input id="loginPassword" type="password"></div>
+              <button class="btn" id="loginBtn" style="width:100%;">Войти</button>
+              <div class="auth-switch" id="showRegister">Нет аккаунта? Зарегистрироваться</div>
             </div>
             <div id="registerForm" style="display:none;">
-              <input id="regUsername" placeholder="username (3-9 латиница)">
-              <input id="regEmail" placeholder="email">
-              <input id="regPassword" type="password" placeholder="Пароль">
-              <button class="btn" id="registerBtn" style="width:100%;margin-top:12px;">Зарегистрироваться</button>
-              <div style="margin-top:12px;color:#4a76a8;cursor:pointer;" id="showLogin">Назад</div>
+              <div class="input-group"><label>Имя пользователя</label><input id="regUsername" placeholder="3-9 латинских букв/цифр"></div>
+              <div class="input-group"><label>Email</label><input id="regEmail" placeholder="example@mail.com"></div>
+              <div class="input-group"><label>Пароль</label><input id="regPassword" type="password"></div>
+              <button class="btn" id="registerBtn" style="width:100%;">Зарегистрироваться</button>
+              <div class="auth-switch" id="showLogin">← Назад</div>
             </div>
-            <div id="authError" class="error"></div>
+            <div id="authError" class="auth-error"></div>
           </div>
         </div>
       `;
@@ -504,6 +654,8 @@
           password: p,
           email: e,
           avatar: null,
+          banner: null,
+          bio: '',
           displayName: raw,
           followers: [],
           following: []
@@ -513,24 +665,11 @@
       });
     }
 
-    // --- Global actions ---
-    window.switchTab = (tab) => {
-      activeTab = tab;
-      viewedProfile = null;
-      searchQuery = '';
-      render();
-    };
-    window.goToMyProfile = () => {
-      activeTab = 'profile';
-      viewedProfile = null;
-      render();
-    };
-    window.openUserProfile = (username) => {
-      activeTab = 'userProfile';
-      viewedProfile = username;
-      render();
-    };
-    window.toggleLike = (id) => { toggleLike(id); };
+    // --- Global actions (привязываются к window) ---
+    window.switchTab = (tab) => { activeTab = tab; viewedProfile = null; searchQuery = ''; render(); };
+    window.goToMyProfile = () => { activeTab = 'profile'; viewedProfile = null; render(); };
+    window.openUserProfile = (u) => { activeTab = 'userProfile'; viewedProfile = u; render(); };
+    window.toggleLike = (id) => toggleLike(id);
     window.deletePostById = (id) => { if(confirm('Удалить пост?')) deletePost(id); };
     window.openComments = (postId) => {
       const post = posts.find(p=>p.id===postId);
@@ -541,7 +680,7 @@
         <div class="modal">
           <h3>Комментарии</h3>
           <div class="comments-section">
-            ${(post.comments||[]).map(c=>`<div class="comment"><span class="comment-author" onclick="window.openUserProfile('${c.author}');this.closest('.modal-overlay').remove()">${getDisplayName(c.author)}</span>: ${c.text}</div>`).join('')||'Нет комментариев'}
+            ${(post.comments||[]).map(c=>`<div class="comment"><span class="comment-author" onclick="openUserProfile('${c.author}');this.closest('.modal-overlay').remove()">${getDisplayName(c.author)}</span>: ${c.text}</div>`).join('')||'Нет комментариев'}
           </div>
           <input id="commentText" placeholder="Ваш комментарий">
           <button class="btn" id="submitComment">Отправить</button>
@@ -585,19 +724,60 @@
         }
       };
     };
-    window.toggleFollowUser = (target) => { toggleFollow(target); };
-    window.searchByHashtag = (tag) => {
-      searchQuery = tag;
-      activeTab = 'feed';
-      viewedProfile = null;
-      render();
-    };
+    window.toggleFollowUser = (target) => toggleFollow(target);
+    window.searchByHashtag = (tag) => { searchQuery = tag; if(activeTab==='feed') resetFeed(); else { activeTab='feed'; render(); } };
     window.openImage = (src) => {
       const modal = document.createElement('div');
       modal.className='modal-overlay';
       modal.onclick = ()=>modal.remove();
       modal.innerHTML = `<img src="${src}" style="max-width:90%;max-height:90%;border-radius:12px;">`;
       document.body.appendChild(modal);
+    };
+    window.openEditProfile = () => {
+      const user = users[currentUser];
+      const modal = document.createElement('div');
+      modal.className='modal-overlay';
+      modal.innerHTML = `
+        <div class="modal">
+          <h3>Редактировать профиль</h3>
+          <div class="input-group"><label>Имя</label><input id="editDisplayName" value="${user.displayName||''}"></div>
+          <div class="input-group"><label>Описание</label><input id="editBio" value="${user.bio||''}"></div>
+          <div class="input-group"><label>Аватар (URL или файл)</label><input type="file" id="editAvatar" accept="image/*"></div>
+          <div class="input-group"><label>Баннер (URL или файл)</label><input type="file" id="editBanner" accept="image/*"></div>
+          <button class="btn" id="saveProfileBtn">Сохранить</button>
+          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      document.getElementById('saveProfileBtn').onclick = () => {
+        const dn = document.getElementById('editDisplayName').value.trim();
+        const bio = document.getElementById('editBio').value.trim();
+        if(dn) users[currentUser].displayName = dn;
+        users[currentUser].bio = bio;
+        const avatarFile = document.getElementById('editAvatar').files[0];
+        const bannerFile = document.getElementById('editBanner').files[0];
+        const processImages = (callback) => {
+          let tasks = 0;
+          if(avatarFile){
+            tasks++;
+            const reader = new FileReader();
+            reader.onload = (e) => { users[currentUser].avatar = e.target.result; tasks--; if(tasks===0) callback(); };
+            reader.readAsDataURL(avatarFile);
+          }
+          if(bannerFile){
+            tasks++;
+            const reader = new FileReader();
+            reader.onload = (e) => { users[currentUser].banner = e.target.result; tasks--; if(tasks===0) callback(); };
+            reader.readAsDataURL(bannerFile);
+          }
+          if(tasks===0) callback();
+        };
+        processImages(()=>{
+          saveState();
+          modal.remove();
+          render();
+        });
+      };
     };
 
     // Инициализация
