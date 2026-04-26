@@ -2247,8 +2247,8 @@
                 </div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml); const textarea = document.getElementById('postText'); const charCount = document.getElementById('postCharCount'); const previewArea = document.getElementById('postMediaPreview');
                 textarea.addEventListener('input', () => { const len = textarea.value.length;
-                    charCount.textContent = len + ' / 500'; if (len > 500) textarea.value = textarea.value.substring(0, 500);
-                    charCount.style.color = len > 400 ? '#ff9800' : 'var(--text-secondary)'; });
+                    charCount.textContent = len + ' / 3000'; if (len > 3000) textarea.value = textarea.value.substring(0, 3000);
+                    charCount.style.color = len > 2500 ? '#ff9800' : 'var(--text-secondary)'; });
 
                 function showMediaPreview(src, vid) { previewArea.style.display = 'flex';
                     previewArea.innerHTML = vid ? `<video controls src="${src}" style="max-width:100%;max-height:200px;border-radius:14px;"></video>` : `<img src="${src}" style="max-width:100%;max-height:200px;border-radius:14px;">`;
