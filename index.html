@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -181,9 +181,11 @@
     .profile-name { font-size: 20px; font-weight: 700; color: var(--gold); }
     .profile-username { color: #aaa; margin: 4px 0 8px; }
     .profile-bio { color: #ccc; margin-bottom: 12px; font-style: italic; }
+    .badge-icon { width: 24px; height: 24px; vertical-align: middle; margin-left: 4px; }
     .follow-btn {
       background: var(--gold); color: #000; border: none; padding: 8px 24px;
       border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s;
+      margin: 6px;
     }
     .follow-btn.unfollow { background: #444; color: #fff; }
     .follow-btn:hover { filter: brightness(1.1); }
@@ -208,7 +210,7 @@
       background: var(--glass);
       backdrop-filter: blur(30px);
       border-radius: 24px;
-      width: 90%; max-width: 420px;
+      width: 90%; max-width: 440px;
       padding: 24px;
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
@@ -223,11 +225,18 @@
     .modal input:focus, .modal textarea:focus { border-color: var(--gold); }
     .btn {
       background: var(--gold); color: #000; border: none;
-      padding: 12px 24px; border-radius: 24px; font-weight: 600;
+      padding: 10px 20px; border-radius: 20px; font-weight: 600;
       cursor: pointer; transition: 0.2s; margin: 4px;
     }
     .btn.secondary { background: #333; color: #fff; }
+    .btn.warning { background: #c0392b; color: #fff; }
     .btn:hover { filter: brightness(1.1); }
+    .custom-file-btn {
+      display: inline-block; padding: 10px 16px; background: rgba(255,255,255,0.1);
+      border: 1px solid var(--border); border-radius: 20px; color: #ccc;
+      cursor: pointer; font-size: 14px; margin: 4px 0; transition: 0.2s;
+    }
+    .custom-file-btn:hover { background: rgba(212,175,55,0.2); }
     .comments-section { max-height: 200px; overflow-y: auto; margin: 12px 0; }
     .comment { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
     .comment-author { font-weight: 600; color: var(--gold); cursor: pointer; }
@@ -276,12 +285,16 @@
     const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const STATE_ID = 1;
+    const ADMIN_USER = '@durov';
     const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
     const ICONS = {
       LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
       LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
       COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
-      DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png'
+      DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
+      BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
+      BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png',
+      BADGE3: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B0%D1%83%D1%81%D1%83%D1%81%D1%862.png'
     };
 
     // --- State ---
@@ -291,10 +304,10 @@
     let activeTab = 'feed'; // 'feed' | 'profile' | 'userProfile'
     let viewedProfile = null;
     let searchQuery = '';
-    let feedPage = 0;
-    const POSTS_PER_PAGE = 10;
+    let feedShuffled = [];
+    let feedIndex = 0;
+    let feedScrollPos = 0;
     let dataLoaded = false;
-    let feedContainerEl = null;
 
     // --- Cookie helpers ---
     function setCookie(n,v,d){ var e=""; if(d){var t=new Date();t.setTime(t.getTime()+864e5*d);e="; expires="+t.toUTCString();} document.cookie=n+"="+(v||"")+e+"; path=/; SameSite=Lax"; }
@@ -308,6 +321,20 @@
         if(!error && data?.data){
           if(data.data.users) users = data.data.users;
           if(data.data.posts) posts = data.data.posts;
+        }
+        // Ensure admin exists
+        if(!users[ADMIN_USER]){
+          users[ADMIN_USER] = {
+            password: 'admin123',
+            email: 'durov@yolkapp.com',
+            avatar: null,
+            banner: null,
+            bio: 'Founder of Yolkapp',
+            displayName: 'Durov',
+            followers: [],
+            following: [],
+            badges: [1,2,3]
+          };
         }
       } catch(e){}
       dataLoaded = true;
@@ -324,11 +351,21 @@
     // --- Helpers ---
     function generateId(){ return Date.now()+'_'+Math.random().toString(36).substr(2,9); }
     function extractHashtags(text){
-      const matches = text.match(/#[а-яА-Яa-zA-Z0-9_]+/g);
+      const matches = text.match(/#[a-zA-Z0-9_]+/g);
       return matches ? [...new Set(matches.map(t=>t.toLowerCase()))] : [];
     }
     function getDisplayName(u){ const user = users[u]; return user?.displayName || u.substring(1); }
     function formatUsername(u){ return `${getDisplayName(u)} @${u.substring(1)}`; }
+    function getUserBadges(u){
+      const b = users[u]?.badges;
+      if(!b || !b.length) return '';
+      return b.map(id => {
+        if(id===1) return `<img src="${ICONS.BADGE1}" class="badge-icon">`;
+        if(id===2) return `<img src="${ICONS.BADGE2}" class="badge-icon">`;
+        if(id===3) return `<img src="${ICONS.BADGE3}" class="badge-icon">`;
+        return '';
+      }).join('');
+    }
 
     // --- Auth ---
     function isValidUsername(s){ return /^[a-z][a-z0-9]{2,8}$/.test(s); }
@@ -337,7 +374,8 @@
       setCookie('yolk_user', u, 365);
       activeTab = 'feed';
       viewedProfile = null;
-      feedPage = 0;
+      feedShuffled = [];
+      feedIndex = 0;
       render();
     }
     function logout(){
@@ -348,7 +386,64 @@
       render();
     }
 
-    // --- Posts ---
+    // --- Posts & Feed ---
+    function shuffleArray(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+    function getFeedPosts(){
+      let filtered = posts;
+      if(searchQuery.startsWith('#')){
+        const tag = searchQuery.toLowerCase();
+        filtered = posts.filter(p=> p.hashtags?.includes(tag));
+      } else if(searchQuery){
+        const q = searchQuery.toLowerCase();
+        filtered = posts.filter(p=> p.text.toLowerCase().includes(q));
+      }
+      return filtered;
+    }
+
+    function loadMoreFeed(){
+      const container = document.getElementById('feedContainer');
+      if(!container || activeTab!=='feed') return;
+      const filtered = getFeedPosts();
+      if(filtered.length === 0) return;
+      // Если список изменился или ещё не инициализирован
+      if(feedShuffled.length === 0 || feedShuffled[0]?.source !== filtered){
+        feedShuffled = shuffleArray([...filtered]);
+        feedShuffled.source = filtered;
+        feedIndex = 0;
+      }
+      const batchSize = 8;
+      for(let i=0; i<batchSize; i++){
+        if(feedIndex >= feedShuffled.length){
+          feedShuffled = shuffleArray([...filtered]);
+          feedIndex = 0;
+        }
+        const post = feedShuffled[feedIndex++];
+        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+      }
+    }
+
+    function resetFeed(){
+      feedShuffled = [];
+      feedIndex = 0;
+      const container = document.getElementById('feedContainer');
+      if(container){
+        container.innerHTML = '';
+        loadMoreFeed();
+      }
+    }
+
+    function saveFeedScroll(){
+      const el = document.getElementById('feedContainer');
+      if(el) feedScrollPos = el.scrollTop;
+    }
+    function restoreFeedScroll(){
+      setTimeout(()=>{
+        const el = document.getElementById('feedContainer');
+        if(el) el.scrollTop = feedScrollPos;
+      }, 50);
+    }
+
     function addPost(text, media=null, isVideo=false){
       if(!currentUser) return;
       const hashtags = extractHashtags(text);
@@ -364,14 +459,22 @@
       };
       posts.unshift(post);
       saveState();
-      feedPage = 0;
+      feedShuffled = [];
+      feedIndex = 0;
       render();
     }
+
     function deletePost(id){
+      const post = posts.find(p=>p.id===id);
+      if(!post) return;
+      if(post.author !== currentUser && currentUser !== ADMIN_USER) return;
       posts = posts.filter(p=>p.id!==id);
       saveState();
+      feedShuffled = [];
+      feedIndex = 0;
       render();
     }
+
     function toggleLike(postId){
       const post = posts.find(p=>p.id===postId);
       if(!post) return;
@@ -380,12 +483,13 @@
       saveState();
       updatePostStatsInDOM(postId);
     }
+
     function addComment(postId, text){
       const post = posts.find(p=>p.id===postId);
       if(!post) return;
       post.comments.push({ author: currentUser, text, time: Date.now() });
       saveState();
-      render();
+      updatePostStatsInDOM(postId);
     }
 
     // --- Follow ---
@@ -408,57 +512,46 @@
       render();
     }
 
-    // --- Infinite feed ---
-    function getFilteredPosts(){
-      if(searchQuery.startsWith('#')){
-        const tag = searchQuery.toLowerCase();
-        return posts.filter(p=> p.hashtags?.includes(tag));
-      } else if(searchQuery){
-        const q = searchQuery.toLowerCase();
-        return posts.filter(p=> p.text.toLowerCase().includes(q));
+    // --- Badges (admin) ---
+    function giveBadge(targetUser, badgeNum){
+      if(currentUser !== ADMIN_USER) return;
+      if(!users[targetUser]) return;
+      if(!users[targetUser].badges) users[targetUser].badges = [];
+      if(!users[targetUser].badges.includes(badgeNum)){
+        users[targetUser].badges.push(badgeNum);
+        saveState();
+        render();
+        alert(`Badge ${badgeNum} given to ${getDisplayName(targetUser)}`);
       }
-      return [...posts];
+    }
+    function removeBadges(targetUser){
+      if(currentUser !== ADMIN_USER) return;
+      if(!users[targetUser]) return;
+      users[targetUser].badges = [];
+      saveState();
+      render();
+      alert(`Badges removed from ${getDisplayName(targetUser)}`);
     }
 
-    function loadMoreFeed(){
-      const container = document.getElementById('feedContainer');
-      if(!container || activeTab!=='feed') return;
-      const filtered = getFilteredPosts();
-      const start = feedPage * POSTS_PER_PAGE;
-      const end = start + POSTS_PER_PAGE;
-      const batch = filtered.slice(start, end);
-      if(batch.length === 0) return;
-      feedPage++;
-      batch.forEach(post => {
-        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
-      });
-    }
-
-    function resetFeed(){
-      feedPage = 0;
-      const container = document.getElementById('feedContainer');
-      if(container) container.innerHTML = '';
-      loadMoreFeed();
-    }
-
+    // --- Render post card ---
     function renderPostCard(post, showAuthor=true){
       const author = users[post.author] || {};
       const avatar = author.avatar || DEFAULT_AVATAR;
       const likes = Object.keys(post.likes||{}).length;
       const comments = (post.comments||[]).length;
       const liked = post.likes?.[currentUser] || false;
-      const mediaHtml = post.media ? (post.isVideo ? 
+      const mediaHtml = post.media ? (post.isVideo ?
         `<video controls src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;margin-top:8px;"></video>` :
         `<img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;margin-top:8px;" onclick="window.openImage('${post.media}')">`) : '';
-      const textWithHashtags = post.text.replace(/#[а-яА-Яa-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();searchByHashtag(\'$&\')">$&</span>');
-      const canDelete = post.author === currentUser;
+      const textWithHashtags = post.text.replace(/#[a-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();searchByHashtag(\'$&\')">$&</span>');
+      const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
       return `
         <div class="post-card" id="post-${post.id}">
           ${showAuthor ? `
           <div class="post-header" onclick="openUserProfile('${post.author}')">
             <div class="post-avatar"><img src="${avatar}"></div>
             <div>
-              <div class="post-author">${formatUsername(post.author)}</div>
+              <div class="post-author">${formatUsername(post.author)} ${getUserBadges(post.author)}</div>
               <div class="post-time">${new Date(post.time).toLocaleString()}</div>
             </div>
           </div>` : ''}
@@ -466,10 +559,10 @@
           ${mediaHtml}
           <div class="post-actions">
             <button class="action-btn ${liked?'liked':''}" onclick="event.stopPropagation();toggleLike('${post.id}')">
-              <img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}"> ${likes}
+              <img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}"> <span>${likes}</span>
             </button>
             <button class="action-btn" onclick="event.stopPropagation();openComments('${post.id}')">
-              <img src="${ICONS.COMMENT}"> ${comments}
+              <img src="${ICONS.COMMENT}"> <span>${comments}</span>
             </button>
             ${canDelete ? `<button class="action-btn" onclick="event.stopPropagation();deletePostById('${post.id}')"><img src="${ICONS.DELETE}"></button>` : ''}
           </div>
@@ -486,20 +579,22 @@
       if(likeBtn){
         const liked = post.likes?.[currentUser] || false;
         likeBtn.classList.toggle('liked', liked);
-        likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}"> ${Object.keys(post.likes||{}).length}`;
+        likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}"> <span>${Object.keys(post.likes||{}).length}</span>`;
       }
       const commentBtn = card.querySelector('.action-btn:nth-child(2)');
       if(commentBtn){
-        commentBtn.innerHTML = `<img src="${ICONS.COMMENT}"> ${(post.comments||[]).length}`;
+        commentBtn.innerHTML = `<img src="${ICONS.COMMENT}"> <span>${(post.comments||[]).length}</span>`;
       }
     }
 
+    // --- Profile wall ---
     function renderProfileWall(username){
       const userPosts = posts.filter(p=>p.author===username);
-      if(userPosts.length===0) return '<div style="text-align:center;color:#888;padding:40px;">На стене пока пусто</div>';
+      if(userPosts.length===0) return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
       return userPosts.map(p=>renderPostCard(p, false)).join('');
     }
 
+    // --- Main render ---
     function render(){
       if(!dataLoaded){
         document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>';
@@ -519,7 +614,7 @@
         <div class="header">
           <div class="logo">Yolkapp</div>
           <div class="search-box">
-            <input type="text" placeholder="Поиск или #хэштег" id="searchInput" value="${searchQuery}">
+            <input type="text" placeholder="Search or #hashtag" id="searchInput" value="${searchQuery}">
           </div>
           <div class="profile-thumb" onclick="goToMyProfile()">
             <img src="${myProfile.avatar || DEFAULT_AVATAR}">
@@ -529,8 +624,8 @@
 
       const tabsHtml = `
         <div class="tabs">
-          <div class="tab ${activeTab==='feed'?'active':''}" onclick="switchTab('feed')">Лента</div>
-          <div class="tab ${activeTab==='profile'?'active':''}" onclick="switchTab('profile')">Мой профиль</div>
+          <div class="tab ${activeTab==='feed'?'active':''}" onclick="switchTab('feed')">Feed</div>
+          <div class="tab ${activeTab==='profile'?'active':''}" onclick="switchTab('profile')">My Profile</div>
           ${activeTab==='userProfile' ? `<div class="tab active">${getDisplayName(viewedProfile)}</div>` : ''}
         </div>
       `;
@@ -544,14 +639,14 @@
             <div class="profile-card">
               ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
               <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}"></div>
-              <div class="profile-name">${getDisplayName(currentUser)}</div>
+              <div class="profile-name">${getDisplayName(currentUser)} ${getUserBadges(currentUser)}</div>
               <div class="profile-username">@${currentUser.substring(1)}</div>
               <div class="profile-bio">${profile.bio || ''}</div>
-              <div>${(profile.followers||[]).length} подписчиков · ${(profile.following||[]).length} подписок</div>
-              <button class="btn secondary" onclick="openEditProfile()" style="margin-top:12px;">Редактировать</button>
-              <button class="btn secondary" onclick="logout()">Выйти</button>
+              <div>${(profile.followers||[]).length} followers · ${(profile.following||[]).length} following</div>
+              <button class="btn secondary" onclick="openEditProfile()" style="margin-top:12px;">Edit profile</button>
+              <button class="btn warning" onclick="logout()">Log out</button>
             </div>
-            <h3 style="margin-bottom:8px;color:var(--gold);">Моя стена</h3>
+            <h3 style="margin-bottom:8px;color:var(--gold);">My wall</h3>
             ${renderProfileWall(currentUser)}
           </div>
         `;
@@ -562,13 +657,21 @@
             <div class="profile-card">
               ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
               <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}"></div>
-              <div class="profile-name">${getDisplayName(profileUser)}</div>
+              <div class="profile-name">${getDisplayName(profileUser)} ${getUserBadges(profileUser)}</div>
               <div class="profile-username">@${profileUser.substring(1)}</div>
               <div class="profile-bio">${profile.bio || ''}</div>
-              <div>${(profile.followers||[]).length} подписчиков · ${(profile.following||[]).length} подписок</div>
-              <button class="follow-btn ${isSub?'unfollow':''}" onclick="toggleFollowUser('${profileUser}')">${isSub?'Отписаться':'Подписаться'}</button>
+              <div>${(profile.followers||[]).length} followers · ${(profile.following||[]).length} following</div>
+              <button class="follow-btn ${isSub?'unfollow':''}" onclick="toggleFollowUser('${profileUser}')">${isSub?'Unfollow':'Follow'}</button>
+              ${currentUser === ADMIN_USER ? `
+                <div style="margin-top:8px;">
+                  <button class="btn secondary" onclick="giveBadge('${profileUser}',1)">Give Badge 1</button>
+                  <button class="btn secondary" onclick="giveBadge('${profileUser}',2)">Give Badge 2</button>
+                  <button class="btn secondary" onclick="giveBadge('${profileUser}',3)">Give Badge 3</button>
+                  <button class="btn warning" onclick="removeBadges('${profileUser}')">Remove badges</button>
+                </div>
+              ` : ''}
             </div>
-            <h3 style="margin-bottom:8px;color:var(--gold);">Стена ${getDisplayName(profileUser)}</h3>
+            <h3 style="margin-bottom:8px;color:var(--gold);">${getDisplayName(profileUser)}'s wall</h3>
             ${renderProfileWall(profileUser)}
           </div>
         `;
@@ -584,8 +687,9 @@
       });
 
       if(activeTab==='feed') {
-        feedContainerEl = document.getElementById('feedContainer');
-        resetFeed();
+        const container = document.getElementById('feedContainer');
+        if(container && container.innerHTML === '') resetFeed();
+        restoreFeedScroll();
       }
     }
 
@@ -597,25 +701,26 @@
       }
     }
 
+    // --- Auth screens ---
     function renderAuth(){
       return `
         <div class="auth-container">
           <div class="auth-box">
             <h2>Yolkapp</h2>
-            <div class="auth-subtitle">Добро пожаловать</div>
+            <div class="auth-subtitle">Sign in to continue</div>
             <div id="loginForm">
-              <div class="input-group"><label>Имя пользователя</label><input id="loginUsername" placeholder="без @"></div>
+              <div class="input-group"><label>Username</label><input id="loginUsername" placeholder="without @"></div>
               <div class="input-group"><label>Email</label><input id="loginEmail" placeholder="example@mail.com"></div>
-              <div class="input-group"><label>Пароль</label><input id="loginPassword" type="password"></div>
-              <button class="btn" id="loginBtn" style="width:100%;">Войти</button>
-              <div class="auth-switch" id="showRegister">Нет аккаунта? Зарегистрироваться</div>
+              <div class="input-group"><label>Password</label><input id="loginPassword" type="password"></div>
+              <button class="btn" id="loginBtn" style="width:100%;">Log in</button>
+              <div class="auth-switch" id="showRegister">Don't have an account? Sign up</div>
             </div>
             <div id="registerForm" style="display:none;">
-              <div class="input-group"><label>Имя пользователя</label><input id="regUsername" placeholder="3-9 латинских букв/цифр"></div>
+              <div class="input-group"><label>Username</label><input id="regUsername" placeholder="3-9 latin letters/digits"></div>
               <div class="input-group"><label>Email</label><input id="regEmail" placeholder="example@mail.com"></div>
-              <div class="input-group"><label>Пароль</label><input id="regPassword" type="password"></div>
-              <button class="btn" id="registerBtn" style="width:100%;">Зарегистрироваться</button>
-              <div class="auth-switch" id="showLogin">← Назад</div>
+              <div class="input-group"><label>Password</label><input id="regPassword" type="password"></div>
+              <button class="btn" id="registerBtn" style="width:100%;">Sign up</button>
+              <div class="auth-switch" id="showLogin">← Back</div>
             </div>
             <div id="authError" class="auth-error"></div>
           </div>
@@ -638,18 +743,18 @@
         const e = document.getElementById('loginEmail').value.trim();
         const p = document.getElementById('loginPassword').value;
         if(!users[u] || users[u].password!==p || users[u].email!==e){
-          errDiv.textContent='Неверные данные'; return;
+          errDiv.textContent='Invalid credentials'; return;
         }
         loginUser(u);
       });
       document.getElementById('registerBtn')?.addEventListener('click',()=>{
         const raw = document.getElementById('regUsername').value.trim().toLowerCase();
-        if(!isValidUsername(raw)){ errDiv.textContent='username: 3-9 латинских букв/цифр'; return; }
+        if(!isValidUsername(raw)){ errDiv.textContent='Username: 3-9 latin letters/digits'; return; }
         const u = '@'+raw;
-        if(users[u]){ errDiv.textContent='Пользователь уже существует'; return; }
+        if(users[u]){ errDiv.textContent='Username already taken'; return; }
         const e = document.getElementById('regEmail').value.trim();
         const p = document.getElementById('regPassword').value;
-        if(!e || !p){ errDiv.textContent='Заполните все поля'; return; }
+        if(!e || !p){ errDiv.textContent='Fill all fields'; return; }
         users[u] = {
           password: p,
           email: e,
@@ -658,19 +763,38 @@
           bio: '',
           displayName: raw,
           followers: [],
-          following: []
+          following: [],
+          badges: []
         };
         saveState();
         loginUser(u);
       });
     }
 
-    // --- Global actions (привязываются к window) ---
-    window.switchTab = (tab) => { activeTab = tab; viewedProfile = null; searchQuery = ''; render(); };
-    window.goToMyProfile = () => { activeTab = 'profile'; viewedProfile = null; render(); };
-    window.openUserProfile = (u) => { activeTab = 'userProfile'; viewedProfile = u; render(); };
+    // --- Global actions ---
+    window.switchTab = (tab) => {
+      saveFeedScroll();
+      activeTab = tab;
+      viewedProfile = null;
+      searchQuery = '';
+      render();
+    };
+    window.goToMyProfile = () => {
+      saveFeedScroll();
+      activeTab = 'profile';
+      viewedProfile = null;
+      render();
+    };
+    window.openUserProfile = (u) => {
+      saveFeedScroll();
+      activeTab = 'userProfile';
+      viewedProfile = u;
+      render();
+    };
     window.toggleLike = (id) => toggleLike(id);
-    window.deletePostById = (id) => { if(confirm('Удалить пост?')) deletePost(id); };
+    window.deletePostById = (id) => {
+      if(confirm('Delete this post?')) deletePost(id);
+    };
     window.openComments = (postId) => {
       const post = posts.find(p=>p.id===postId);
       if(!post) return;
@@ -678,13 +802,13 @@
       modal.className='modal-overlay';
       modal.innerHTML = `
         <div class="modal">
-          <h3>Комментарии</h3>
+          <h3>Comments</h3>
           <div class="comments-section">
-            ${(post.comments||[]).map(c=>`<div class="comment"><span class="comment-author" onclick="openUserProfile('${c.author}');this.closest('.modal-overlay').remove()">${getDisplayName(c.author)}</span>: ${c.text}</div>`).join('')||'Нет комментариев'}
+            ${(post.comments||[]).map(c=>`<div class="comment"><span class="comment-author" onclick="openUserProfile('${c.author}');this.closest('.modal-overlay').remove()">${getDisplayName(c.author)}</span>: ${c.text}</div>`).join('')||'No comments yet'}
           </div>
-          <input id="commentText" placeholder="Ваш комментарий">
-          <button class="btn" id="submitComment">Отправить</button>
-          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Закрыть</button>
+          <input id="commentText" placeholder="Write a comment...">
+          <button class="btn" id="submitComment">Send</button>
+          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
         </div>
       `;
       document.body.appendChild(modal);
@@ -698,11 +822,17 @@
       modal.className='modal-overlay';
       modal.innerHTML = `
         <div class="modal">
-          <h3>Новый пост</h3>
-          <textarea id="postText" rows="4" placeholder="Что у вас нового? #хэштег"></textarea>
-          <input type="file" id="mediaFile" accept="image/*,video/*">
-          <button class="btn" id="publishBtn">Опубликовать</button>
-          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+          <h3>New post</h3>
+          <textarea id="postText" rows="4" placeholder="What's new? #hashtag"></textarea>
+          <div style="margin:8px 0;">
+            <label class="custom-file-btn">
+              <input type="file" id="mediaFile" accept="image/*,video/*" style="display:none;" onchange="document.getElementById('fileNameLabel').textContent = this.files[0]?.name || 'Choose file'">
+              📎 Choose media
+            </label>
+            <span id="fileNameLabel" style="color:#aaa; margin-left:8px;"></span>
+          </div>
+          <button class="btn" id="publishBtn">Publish</button>
+          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
         </div>
       `;
       document.body.appendChild(modal);
@@ -725,7 +855,11 @@
       };
     };
     window.toggleFollowUser = (target) => toggleFollow(target);
-    window.searchByHashtag = (tag) => { searchQuery = tag; if(activeTab==='feed') resetFeed(); else { activeTab='feed'; render(); } };
+    window.searchByHashtag = (tag) => {
+      searchQuery = tag;
+      if(activeTab==='feed') resetFeed();
+      else { activeTab='feed'; render(); }
+    };
     window.openImage = (src) => {
       const modal = document.createElement('div');
       modal.className='modal-overlay';
@@ -739,38 +873,54 @@
       modal.className='modal-overlay';
       modal.innerHTML = `
         <div class="modal">
-          <h3>Редактировать профиль</h3>
-          <div class="input-group"><label>Имя</label><input id="editDisplayName" value="${user.displayName||''}"></div>
-          <div class="input-group"><label>Описание</label><input id="editBio" value="${user.bio||''}"></div>
-          <div class="input-group"><label>Аватар (URL или файл)</label><input type="file" id="editAvatar" accept="image/*"></div>
-          <div class="input-group"><label>Баннер (URL или файл)</label><input type="file" id="editBanner" accept="image/*"></div>
-          <button class="btn" id="saveProfileBtn">Сохранить</button>
-          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Отмена</button>
+          <h3>Edit profile</h3>
+          <div class="input-group"><label>Display name</label><input id="editDisplayName" value="${user.displayName||''}"></div>
+          <div class="input-group"><label>Bio</label><input id="editBio" value="${user.bio||''}"></div>
+          <div class="input-group"><label>Email</label><input id="editEmail" value="${user.email||''}"></div>
+          <div class="input-group"><label>New password (leave blank to keep)</label><input id="editPassword" type="password"></div>
+          <div style="margin:8px 0;">
+            <label class="custom-file-btn">
+              <input type="file" id="editAvatar" accept="image/*" style="display:none;">
+              Change avatar
+            </label>
+          </div>
+          <div style="margin:8px 0;">
+            <label class="custom-file-btn">
+              <input type="file" id="editBanner" accept="image/*" style="display:none;">
+              Change banner
+            </label>
+          </div>
+          <button class="btn" id="saveProfileBtn">Save</button>
+          <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
         </div>
       `;
       document.body.appendChild(modal);
       document.getElementById('saveProfileBtn').onclick = () => {
         const dn = document.getElementById('editDisplayName').value.trim();
         const bio = document.getElementById('editBio').value.trim();
+        const email = document.getElementById('editEmail').value.trim();
+        const pass = document.getElementById('editPassword').value;
         if(dn) users[currentUser].displayName = dn;
-        users[currentUser].bio = bio;
+        if(bio) users[currentUser].bio = bio;
+        if(email) users[currentUser].email = email;
+        if(pass) users[currentUser].password = pass;
         const avatarFile = document.getElementById('editAvatar').files[0];
         const bannerFile = document.getElementById('editBanner').files[0];
-        const processImages = (callback) => {
+        const processImages = (cb) => {
           let tasks = 0;
           if(avatarFile){
             tasks++;
             const reader = new FileReader();
-            reader.onload = (e) => { users[currentUser].avatar = e.target.result; tasks--; if(tasks===0) callback(); };
+            reader.onload = (e) => { users[currentUser].avatar = e.target.result; tasks--; if(tasks===0) cb(); };
             reader.readAsDataURL(avatarFile);
           }
           if(bannerFile){
             tasks++;
             const reader = new FileReader();
-            reader.onload = (e) => { users[currentUser].banner = e.target.result; tasks--; if(tasks===0) callback(); };
+            reader.onload = (e) => { users[currentUser].banner = e.target.result; tasks--; if(tasks===0) cb(); };
             reader.readAsDataURL(bannerFile);
           }
-          if(tasks===0) callback();
+          if(tasks===0) cb();
         };
         processImages(()=>{
           saveState();
@@ -779,8 +929,10 @@
         });
       };
     };
+    window.giveBadge = (target, num) => giveBadge(target, num);
+    window.removeBadges = (target) => removeBadges(target);
 
-    // Инициализация
+    // Init
     loadState();
   })();
 </script>
