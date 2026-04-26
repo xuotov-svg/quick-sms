@@ -46,8 +46,6 @@
             position: relative;
             box-shadow: var(--shadow);
         }
-
-        /* Header */
         .header {
             background: var(--glass);
             backdrop-filter: blur(20px);
@@ -114,8 +112,6 @@
             height: 100%;
             object-fit: cover;
         }
-
-        /* Tabs */
         .tabs {
             display: flex;
             background: var(--panel);
@@ -143,8 +139,6 @@
         .tab:hover {
             color: #ccc;
         }
-
-        /* Feed */
         .feed-container {
             flex: 1;
             padding: 12px;
@@ -163,7 +157,6 @@
             background: #333;
             border-radius: 4px;
         }
-
         .post-card {
             background: var(--glass);
             backdrop-filter: blur(20px);
@@ -288,8 +281,6 @@
         .action-btn.danger:hover {
             color: #ff6b6b;
         }
-
-        /* Profile */
         .profile-wall {
             padding: 16px;
             display: flex;
@@ -402,7 +393,6 @@
             justify-content: center;
             margin-top: 10px;
         }
-
         .create-post-btn {
             position: fixed;
             bottom: 24px;
@@ -431,8 +421,6 @@
         .create-post-btn:active {
             transform: scale(0.94);
         }
-
-        /* Modals */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -612,8 +600,6 @@
         .comment-author:hover {
             text-decoration: underline;
         }
-
-        /* Auth screens */
         .auth-container {
             flex: 1;
             display: flex;
@@ -684,19 +670,32 @@
         .auth-switch:hover {
             opacity: 0.7;
         }
-
-        /* Animations */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .loading-screen {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: #0a0a0a;
             display: flex;
             justify-content: center;
@@ -708,74 +707,234 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
         }
-
         @media (max-width: 400px) {
-            .modal { padding: 20px 16px 16px; border-radius: 20px; }
-            .post-card { padding: 12px; border-radius: 14px; }
-            .btn { padding: 9px 18px; font-size: 13px; }
+            .modal {
+                padding: 20px 16px 16px;
+                border-radius: 20px;
+            }
+            .post-card {
+                padding: 12px;
+                border-radius: 14px;
+            }
+            .btn {
+                padding: 9px 18px;
+                font-size: 13px;
+            }
         }
     </style>
 </head>
 <body>
-<div id="app"></div>
+    <div id="app"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    (function() {
-        const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const STATE_ID = 1;
-        const ADMIN_USER = '@durov';
-        const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
-        const ICONS = {
-            LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
-            LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
-            COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
-            DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
-            BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
-            BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png',
-            BADGE3: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B0%D1%83%D1%81%D1%83%D1%81%D1%862.png'
-        };
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <script>
+        (function() {
+            const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const STATE_ID = 1;
+            const ADMIN_USER = '@durov';
+            const DEFAULT_AVATAR =
+                'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
+            const ICONS = {
+                LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
+                LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
+                COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
+                DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
+                BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
+                BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png',
+                BADGE3: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B0%D1%83%D1%81%D1%83%D1%81%D1%862.png'
+            };
+            const LS_KEY = 'yolkapp_state_backup';
+            const MAX_VIDEO_SIZE = 1.5 * 1024 * 1024; // 1.5 MB
 
-        // --- State ---
-        let users = {};
-        let posts = [];
-        let currentUser = null;
-        let activeTab = 'feed';
-        let viewedProfile = null;
-        let searchQuery = '';
-        let feedShuffled = [];
-        let feedIndex = 0;
-        let feedScrollPos = 0;
-        let dataLoaded = false;
-        const BATCH_SIZE = 3; // загружаем по 3 поста
+            // --- State ---
+            let users = {};
+            let posts = [];
+            let currentUser = null;
+            let activeTab = 'feed';
+            let viewedProfile = null;
+            let searchQuery = '';
+            let feedShuffled = [];
+            let feedIndex = 0;
+            let feedScrollPos = 0;
+            let dataLoaded = false;
+            const BATCH_SIZE = 3;
 
-        // --- Cookie helpers ---
-        function setCookie(n, v, d) {
-            var e = "";
-            if (d) { var t = new Date(); t.setTime(t.getTime() + 864e5 * d); e = "; expires=" + t.toUTCString(); }
-            document.cookie = n + "=" + (v || "") + e + "; path=/; SameSite=Lax";
-        }
-        function getCookie(n) {
-            var ne = n + "=";
-            var ca = document.cookie.split(';');
-            for (var i = 0; i < ca.length; i++) { var c = ca[i]; while (c.charAt(0) === ' ') c = c.substring(1); if (c.indexOf(ne) === 0) return c.substring(ne.length); }
-            return null;
-        }
-        function eraseCookie(n) { document.cookie = n + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
+            // --- Cookie helpers ---
+            function setCookie(n, v, d) {
+                var e = "";
+                if (d) { var t = new Date();
+                    t.setTime(t.getTime() + 864e5 * d);
+                    e = "; expires=" + t.toUTCString(); }
+                document.cookie = n + "=" + (v || "") + e + "; path=/; SameSite=Lax";
+            }
 
-        // --- Supabase state ---
-        async function loadState() {
-            try {
-                const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID).single();
-                if (!error && data?.data) {
-                    if (data.data.users) users = data.data.users;
-                    if (data.data.posts) posts = data.data.posts;
+            function getCookie(n) {
+                var ne = n + "=";
+                var ca = document.cookie.split(';');
+                for (var i = 0; i < ca.length; i++) { var c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1); if (c.indexOf(ne) === 0) return c.substring(ne
+                        .length); }
+                return null;
+            }
+
+            function eraseCookie(n) { document.cookie = n + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
+
+            // --- Image compression (Canvas-based) ---
+            function compressImage(file, maxWidth = 600, quality = 0.6) {
+                return new Promise((resolve, reject) => {
+                    if (!file.type.startsWith('image/')) {
+                        reject(new Error('Not an image'));
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            let w = img.width;
+                            let h = img.height;
+                            if (w > maxWidth) {
+                                h = Math.round(h * (maxWidth / w));
+                                w = maxWidth;
+                            }
+                            if (h > maxWidth) {
+                                w = Math.round(w * (maxWidth / h));
+                                h = maxWidth;
+                            }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
+                            const dataURL = canvas.toDataURL('image/jpeg', quality);
+                            resolve(dataURL);
+                        };
+                        img.onerror = () => {
+                            // Fallback: return original dataURL if canvas fails
+                            resolve(e.target.result);
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // --- Process media file (image → compress, video → size check) ---
+            function processMediaFile(file) {
+                return new Promise((resolve, reject) => {
+                    if (!file) { resolve(null); return; }
+                    if (file.type.startsWith('image/')) {
+                        compressImage(file).then(dataURL => {
+                            resolve({ dataURL, isVideo: false });
+                        }).catch(err => {
+                            // Fallback: read without compression
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve({ dataURL: e.target.result, isVideo: false });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                    } else if (file.type.startsWith('video/')) {
+                        if (file.size > MAX_VIDEO_SIZE) {
+                            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+                            const proceed = confirm(
+                                `⚠️ Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`
+                                );
+                            if (!proceed) { reject(new Error('Video too large – cancelled by user')); return; }
+                        }
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve({ dataURL: e.target.result, isVideo: true });
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    } else {
+                        reject(new Error('Unsupported file type'));
+                    }
+                });
+            }
+
+            // --- Toast ---
+            function showToast(msg, duration = 2000) {
+                const toast = document.createElement('div');
+                toast.textContent = msg;
+                toast.style.cssText = `
+                position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999;
+                background:var(--glass-strong); color:var(--gold); padding:10px 22px;
+                border-radius:24px; font-size:13px; border:1px solid var(--border);
+                box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease;
+                pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center;
+            `;
+                document.body.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.4s'; }, duration);
+                setTimeout(() => toast.remove(), duration + 500);
+            }
+
+            // --- Supabase state management ---
+            function saveToLocalStorage() {
+                try {
+                    const state = { users, posts };
+                    localStorage.setItem(LS_KEY, JSON.stringify(state));
+                } catch (e) {
+                    console.warn('localStorage save failed (maybe quota exceeded):', e.message);
                 }
+            }
+
+            function loadFromLocalStorage() {
+                try {
+                    const raw = localStorage.getItem(LS_KEY);
+                    if (!raw) return null;
+                    const state = JSON.parse(raw);
+                    if (state && typeof state.users === 'object' && Array.isArray(state.posts)) {
+                        return state;
+                    }
+                } catch (e) {
+                    console.warn('localStorage load failed:', e.message);
+                }
+                return null;
+            }
+
+            async function loadState() {
+                let supabaseOk = false;
+                try {
+                    const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID)
+                        .single();
+                    if (!error && data?.data) {
+                        if (typeof data.data.users === 'object' && data.data.users !== null) {
+                            users = data.data.users;
+                        }
+                        if (Array.isArray(data.data.posts)) {
+                            posts = data.data.posts;
+                        }
+                        supabaseOk = true;
+                    } else if (error) {
+                        console.warn('Supabase load error:', error.message);
+                    }
+                } catch (e) {
+                    console.warn('Supabase load exception:', e.message);
+                }
+
+                // Fallback to localStorage if Supabase failed or returned empty
+                if (!supabaseOk || (Object.keys(users).length === 0 && posts.length === 0)) {
+                    const local = loadFromLocalStorage();
+                    if (local) {
+                        users = local.users || {};
+                        posts = local.posts || [];
+                        console.log('Loaded state from localStorage fallback');
+                        if (!supabaseOk) showToast('⚠️ Loaded from local backup (server unavailable)', 3000);
+                    }
+                }
+
+                // Ensure admin user exists
                 if (!users[ADMIN_USER]) {
                     users[ADMIN_USER] = {
                         password: 'admin123',
@@ -789,246 +948,264 @@
                         badges: [1, 2, 3]
                     };
                 }
-            } catch (e) {}
-            dataLoaded = true;
-            const saved = getCookie('yolk_user');
-            if (saved && users[saved]) currentUser = saved;
-            render();
-        }
-        async function saveState() {
-            if (!dataLoaded) return;
-            const state = { users, posts };
-            await supabase.from('app_state').upsert({ id: STATE_ID, data: state }, { onConflict: 'id' });
-        }
 
-        // --- Helpers ---
-        function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
-        function extractHashtags(text) {
-            const matches = text.match(/#[a-zA-Z0-9_]+/g);
-            return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
-        }
-        function getDisplayName(u) { const user = users[u]; return user?.displayName || u.substring(1); }
-        function formatUsername(u) { return `${getDisplayName(u)} @${u.substring(1)}`; }
-        function getUserBadges(u) {
-            const b = users[u]?.badges;
-            if (!b || !b.length) return '';
-            return b.map(id => {
-                if (id === 1) return `<img src="${ICONS.BADGE1}" class="badge-icon" alt="badge1">`;
-                if (id === 2) return `<img src="${ICONS.BADGE2}" class="badge-icon" alt="badge2">`;
-                if (id === 3) return `<img src="${ICONS.BADGE3}" class="badge-icon" alt="badge3">`;
-                return '';
-            }).join('');
-        }
+                // Validate posts array
+                if (!Array.isArray(posts)) posts = [];
 
-        // --- Auth ---
-        function isValidUsername(s) {
-            // от 1 до 15 символов, без пробелов и @
-            return /^[^\s@]{1,15}$/.test(s);
-        }
-        function loginUser(u) {
-            currentUser = u;
-            setCookie('yolk_user', u, 365);
-            activeTab = 'feed';
-            viewedProfile = null;
-            feedShuffled = [];
-            feedIndex = 0;
-            render();
-        }
-        function logout() {
-            currentUser = null;
-            eraseCookie('yolk_user');
-            viewedProfile = null;
-            activeTab = 'feed';
-            feedShuffled = [];
-            feedIndex = 0;
-            render();
-        }
-
-        // --- Posts & Feed ---
-        function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
-
-        function getFeedPosts() {
-            let filtered = posts;
-            if (searchQuery.startsWith('#')) {
-                const tag = searchQuery.toLowerCase();
-                filtered = posts.filter(p => p.hashtags?.includes(tag));
-            } else if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                filtered = posts.filter(p => p.text.toLowerCase().includes(q));
+                dataLoaded = true;
+                const saved = getCookie('yolk_user');
+                if (saved && users[saved]) currentUser = saved;
+                render();
             }
-            return filtered;
-        }
 
-        function loadMoreFeed() {
-            const container = document.getElementById('feedContainer');
-            if (!container || activeTab !== 'feed') return;
-            const filtered = getFeedPosts();
-            if (filtered.length === 0) {
-                if (container.innerHTML === '') {
-                    container.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">No posts yet. Be the first!</div>';
+            async function saveState() {
+                if (!dataLoaded) return;
+                const state = { users, posts };
+
+                // Always save to localStorage first (synchronous fallback)
+                saveToLocalStorage();
+
+                // Then try Supabase
+                try {
+                    const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: state }, {
+                        onConflict: 'id'
+                    });
+                    if (error) {
+                        console.error('Supabase save error:', error.message);
+                        showToast('⚠️ Could not sync to server. Data saved locally.', 3500);
+                    }
+                } catch (e) {
+                    console.error('Supabase save exception:', e.message);
+                    showToast('⚠️ Server sync failed. Data saved locally only.', 3500);
                 }
-                return;
             }
-            if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
-                feedShuffled = shuffleArray([...filtered]);
-                feedShuffled._sourceId = filtered.map(p => p.id).join(',');
+
+            // --- Helpers ---
+            function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+
+            function extractHashtags(text) {
+                const matches = text.match(/#[a-zA-Z0-9_]+/g);
+                return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
+            }
+
+            function getDisplayName(u) { const user = users[u]; return user?.displayName || u.substring(1); }
+
+            function formatUsername(u) { return `${getDisplayName(u)} @${u.substring(1)}`; }
+
+            function getUserBadges(u) {
+                const b = users[u]?.badges;
+                if (!b || !b.length) return '';
+                return b.map(id => {
+                    if (id === 1) return `<img src="${ICONS.BADGE1}" class="badge-icon" alt="badge1">`;
+                    if (id === 2) return `<img src="${ICONS.BADGE2}" class="badge-icon" alt="badge2">`;
+                    if (id === 3) return `<img src="${ICONS.BADGE3}" class="badge-icon" alt="badge3">`;
+                    return '';
+                }).join('');
+            }
+
+            // --- Auth ---
+            function isValidUsername(s) {
+                return /^[^\s@]{1,15}$/.test(s);
+            }
+
+            function loginUser(u) {
+                currentUser = u;
+                setCookie('yolk_user', u, 365);
+                activeTab = 'feed';
+                viewedProfile = null;
+                feedShuffled = [];
                 feedIndex = 0;
-                if (container) container.innerHTML = '';
+                render();
             }
-            for (let i = 0; i < BATCH_SIZE; i++) {
-                if (feedIndex >= feedShuffled.length) {
+
+            function logout() {
+                currentUser = null;
+                eraseCookie('yolk_user');
+                viewedProfile = null;
+                activeTab = 'feed';
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
+            }
+
+            // --- Posts & Feed ---
+            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i +
+                        1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+            function getFeedPosts() {
+                let filtered = posts;
+                if (searchQuery.startsWith('#')) {
+                    const tag = searchQuery.toLowerCase();
+                    filtered = posts.filter(p => p.hashtags?.includes(tag));
+                } else if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    filtered = posts.filter(p => p.text.toLowerCase().includes(q));
+                }
+                return filtered;
+            }
+
+            function loadMoreFeed() {
+                const container = document.getElementById('feedContainer');
+                if (!container || activeTab !== 'feed') return;
+                const filtered = getFeedPosts();
+                if (filtered.length === 0) {
+                    if (container.innerHTML === '') {
+                        container.innerHTML =
+                            '<div style="text-align:center;color:#888;padding:40px;">No posts yet. Be the first!</div>';
+                    }
+                    return;
+                }
+                if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
                     feedShuffled = shuffleArray([...filtered]);
                     feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                     feedIndex = 0;
+                    if (container) container.innerHTML = '';
                 }
-                const post = feedShuffled[feedIndex++];
-                container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+                for (let i = 0; i < BATCH_SIZE; i++) {
+                    if (feedIndex >= feedShuffled.length) {
+                        feedShuffled = shuffleArray([...filtered]);
+                        feedShuffled._sourceId = filtered.map(p => p.id).join(',');
+                        feedIndex = 0;
+                    }
+                    const post = feedShuffled[feedIndex++];
+                    container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+                }
             }
-        }
 
-        function resetFeed() {
-            feedShuffled = [];
-            feedIndex = 0;
-            const container = document.getElementById('feedContainer');
-            if (container) {
-                container.innerHTML = '';
-                loadMoreFeed();
+            function resetFeed() {
+                feedShuffled = [];
+                feedIndex = 0;
+                const container = document.getElementById('feedContainer');
+                if (container) {
+                    container.innerHTML = '';
+                    loadMoreFeed();
+                }
             }
-        }
 
-        function saveFeedScroll() {
-            const el = document.getElementById('feedContainer');
-            if (el) feedScrollPos = el.scrollTop;
-        }
-        function restoreFeedScroll() {
-            setTimeout(() => {
+            function saveFeedScroll() {
                 const el = document.getElementById('feedContainer');
-                if (el) el.scrollTop = feedScrollPos;
-            }, 80);
-        }
-
-        function addPost(text, media = null, isVideo = false) {
-            if (!currentUser) return;
-            const hashtags = extractHashtags(text);
-            const post = {
-                id: generateId(),
-                author: currentUser,
-                text: text.trim(),
-                media, isVideo,
-                hashtags,
-                time: Date.now(),
-                likes: {},
-                comments: []
-            };
-            posts.unshift(post);
-            saveState();
-            feedShuffled = [];
-            feedIndex = 0;
-            render();
-        }
-
-        function deletePost(id) {
-            const post = posts.find(p => p.id === id);
-            if (!post) return;
-            if (post.author !== currentUser && currentUser !== ADMIN_USER) return;
-            posts = posts.filter(p => p.id !== id);
-            saveState();
-            feedShuffled = [];
-            feedIndex = 0;
-            render();
-        }
-
-        function toggleLike(postId) {
-            const post = posts.find(p => p.id === postId);
-            if (!post) return;
-            if (post.likes[currentUser]) delete post.likes[currentUser];
-            else post.likes[currentUser] = true;
-            saveState();
-            updatePostStatsInDOM(postId);
-        }
-
-        function addComment(postId, text) {
-            const post = posts.find(p => p.id === postId);
-            if (!post) return;
-            post.comments.push({ author: currentUser, text, time: Date.now() });
-            saveState();
-            updatePostStatsInDOM(postId);
-        }
-
-        // --- Follow ---
-        function isFollowing(target) {
-            if (!currentUser || !users[currentUser] || !users[target]) return false;
-            return users[currentUser].following?.includes(target) || false;
-        }
-        function toggleFollow(target) {
-            if (!currentUser || currentUser === target) return;
-            if (!users[currentUser].following) users[currentUser].following = [];
-            if (!users[target].followers) users[target].followers = [];
-            if (isFollowing(target)) {
-                users[currentUser].following = users[currentUser].following.filter(u => u !== target);
-                users[target].followers = users[target].followers.filter(u => u !== currentUser);
-            } else {
-                users[currentUser].following.push(target);
-                users[target].followers.push(currentUser);
+                if (el) feedScrollPos = el.scrollTop;
             }
-            saveState();
-            render();
-        }
 
-        // --- Badges (admin) ---
-        function giveBadge(targetUser, badgeNum) {
-            if (currentUser !== ADMIN_USER) return;
-            if (!users[targetUser]) return;
-            if (!users[targetUser].badges) users[targetUser].badges = [];
-            if (!users[targetUser].badges.includes(badgeNum)) {
-                users[targetUser].badges.push(badgeNum);
+            function restoreFeedScroll() {
+                setTimeout(() => {
+                    const el = document.getElementById('feedContainer');
+                    if (el) el.scrollTop = feedScrollPos;
+                }, 80);
+            }
+
+            function addPost(text, media = null, isVideo = false) {
+                if (!currentUser) return;
+                const hashtags = extractHashtags(text);
+                const post = {
+                    id: generateId(),
+                    author: currentUser,
+                    text: text.trim(),
+                    media,
+                    isVideo,
+                    hashtags,
+                    time: Date.now(),
+                    likes: {},
+                    comments: []
+                };
+                posts.unshift(post);
+                saveState();
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
+            }
+
+            function deletePost(id) {
+                const post = posts.find(p => p.id === id);
+                if (!post) return;
+                if (post.author !== currentUser && currentUser !== ADMIN_USER) return;
+                posts = posts.filter(p => p.id !== id);
+                saveState();
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
+            }
+
+            function toggleLike(postId) {
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                if (post.likes[currentUser]) delete post.likes[currentUser];
+                else post.likes[currentUser] = true;
+                saveState();
+                updatePostStatsInDOM(postId);
+            }
+
+            function addComment(postId, text) {
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                post.comments.push({ author: currentUser, text, time: Date.now() });
+                saveState();
+                updatePostStatsInDOM(postId);
+            }
+
+            // --- Follow ---
+            function isFollowing(target) {
+                if (!currentUser || !users[currentUser] || !users[target]) return false;
+                return users[currentUser].following?.includes(target) || false;
+            }
+
+            function toggleFollow(target) {
+                if (!currentUser || currentUser === target) return;
+                if (!users[currentUser].following) users[currentUser].following = [];
+                if (!users[target].followers) users[target].followers = [];
+                if (isFollowing(target)) {
+                    users[currentUser].following = users[currentUser].following.filter(u => u !== target);
+                    users[target].followers = users[target].followers.filter(u => u !== currentUser);
+                } else {
+                    users[currentUser].following.push(target);
+                    users[target].followers.push(currentUser);
+                }
                 saveState();
                 render();
-                showToast(`Badge ${badgeNum} given to ${getDisplayName(targetUser)}`);
             }
-        }
-        function removeBadges(targetUser) {
-            if (currentUser !== ADMIN_USER) return;
-            if (!users[targetUser]) return;
-            users[targetUser].badges = [];
-            saveState();
-            render();
-            showToast(`Badges removed from ${getDisplayName(targetUser)}`);
-        }
 
-        function showToast(msg) {
-            const toast = document.createElement('div');
-            toast.textContent = msg;
-            toast.style.cssText = `
-                position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999;
-                background:var(--glass-strong); color:var(--gold); padding:10px 22px;
-                border-radius:24px; font-size:13px; border:1px solid var(--border);
-                box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease;
-                pointer-events:none; white-space:nowrap;
-            `;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; }, 1800);
-            setTimeout(() => toast.remove(), 2300);
-        }
+            // --- Badges (admin) ---
+            function giveBadge(targetUser, badgeNum) {
+                if (currentUser !== ADMIN_USER) return;
+                if (!users[targetUser]) return;
+                if (!users[targetUser].badges) users[targetUser].badges = [];
+                if (!users[targetUser].badges.includes(badgeNum)) {
+                    users[targetUser].badges.push(badgeNum);
+                    saveState();
+                    render();
+                    showToast(`Badge ${badgeNum} given to ${getDisplayName(targetUser)}`);
+                }
+            }
 
-        // --- Render post card ---
-        function renderPostCard(post, showAuthor = true) {
-            const author = users[post.author] || {};
-            const avatar = author.avatar || DEFAULT_AVATAR;
-            const likes = Object.keys(post.likes || {}).length;
-            const comments = (post.comments || []).length;
-            const liked = post.likes?.[currentUser] || false;
-            const mediaHtml = post.media ? (post.isVideo ?
-                `<div class="post-media"><video controls src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
-                `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`
-            ) : '';
-            const textWithHashtags = post.text.replace(/#[a-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
-            const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
-            return `
+            function removeBadges(targetUser) {
+                if (currentUser !== ADMIN_USER) return;
+                if (!users[targetUser]) return;
+                users[targetUser].badges = [];
+                saveState();
+                render();
+                showToast(`Badges removed from ${getDisplayName(targetUser)}`);
+            }
+
+            // --- Render post card ---
+            function renderPostCard(post, showAuthor = true) {
+                const author = users[post.author] || {};
+                const avatar = author.avatar || DEFAULT_AVATAR;
+                const likes = Object.keys(post.likes || {}).length;
+                const comments = (post.comments || []).length;
+                const liked = post.likes?.[currentUser] || false;
+                const mediaHtml = post.media ? (post.isVideo ?
+                    `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
+                    `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`
+                ) : '';
+                const textWithHashtags = post.text.replace(/#[a-zA-Z0-9_]+/g,
+                    '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
+                const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
+                return `
             <div class="post-card" id="post-${post.id}">
                 ${showAuthor ? `
                 <div class="post-header" onclick="window.openUserProfile('${post.author}')">
-                    <div class="post-avatar"><img src="${avatar}" alt="avatar"></div>
+                    <div class="post-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
                     <div class="post-author-info">
                         <div class="post-author">${formatUsername(post.author)} ${getUserBadges(post.author)}</div>
                         <div class="post-time">${new Date(post.time).toLocaleString()}</div>
@@ -1047,61 +1224,64 @@
                 </div>
             </div>
             `;
-        }
-
-        function updatePostStatsInDOM(postId) {
-            const post = posts.find(p => p.id === postId);
-            if (!post) return;
-            const card = document.getElementById('post-' + postId);
-            if (!card) return;
-            const likeBtn = card.querySelector('.action-btn:first-of-type');
-            if (likeBtn) {
-                const liked = post.likes?.[currentUser] || false;
-                likeBtn.classList.toggle('liked', liked);
-                likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
-            }
-            const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
-            if (commentBtn) {
-                commentBtn.innerHTML = `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
-            }
-        }
-
-        // --- Profile wall ---
-        function renderProfileWall(username) {
-            const userPosts = posts.filter(p => p.author === username);
-            if (userPosts.length === 0) return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
-            return userPosts.map(p => renderPostCard(p, false)).join('');
-        }
-
-        // --- Main render ---
-        function render() {
-            if (!dataLoaded) {
-                document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>';
-                return;
-            }
-            if (!currentUser) {
-                document.getElementById('app').innerHTML = renderAuth();
-                attachAuthEvents();
-                return;
             }
 
-            const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
-            const profile = users[profileUser] || {};
-            const myProfile = users[currentUser] || {};
+            function updatePostStatsInDOM(postId) {
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                const card = document.getElementById('post-' + postId);
+                if (!card) return;
+                const likeBtn = card.querySelector('.action-btn:first-of-type');
+                if (likeBtn) {
+                    const liked = post.likes?.[currentUser] || false;
+                    likeBtn.classList.toggle('liked', liked);
+                    likeBtn.innerHTML =
+                        `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
+                }
+                const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
+                if (commentBtn) {
+                    commentBtn.innerHTML =
+                        `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
+                }
+            }
 
-            const headerHtml = `
+            // --- Profile wall ---
+            function renderProfileWall(username) {
+                const userPosts = posts.filter(p => p.author === username);
+                if (userPosts.length === 0)
+                    return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
+                return userPosts.map(p => renderPostCard(p, false)).join('');
+            }
+
+            // --- Main render ---
+            function render() {
+                if (!dataLoaded) {
+                    document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>';
+                    return;
+                }
+                if (!currentUser) {
+                    document.getElementById('app').innerHTML = renderAuth();
+                    attachAuthEvents();
+                    return;
+                }
+
+                const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
+                const profile = users[profileUser] || {};
+                const myProfile = users[currentUser] || {};
+
+                const headerHtml = `
             <div class="header">
                 <div class="logo">Yolkapp</div>
                 <div class="search-box">
                     <input type="text" placeholder="Search or #hashtag" id="searchInput" value="${searchQuery.replace(/"/g,'&quot;')}">
                 </div>
                 <div class="profile-thumb" onclick="window.goToMyProfile()">
-                    <img src="${myProfile.avatar || DEFAULT_AVATAR}" alt="me">
+                    <img src="${myProfile.avatar || DEFAULT_AVATAR}" alt="me" loading="lazy">
                 </div>
             </div>
             `;
 
-            const tabsHtml = `
+                const tabsHtml = `
             <div class="tabs">
                 <div class="tab ${activeTab==='feed'?'active':''}" onclick="window.switchTab('feed')">Feed</div>
                 <div class="tab ${activeTab==='profile'?'active':''}" onclick="window.switchTab('profile')">My Profile</div>
@@ -1109,15 +1289,16 @@
             </div>
             `;
 
-            let contentHtml = '';
-            if (activeTab === 'feed') {
-                contentHtml = `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
-            } else if (activeTab === 'profile') {
-                contentHtml = `
+                let contentHtml = '';
+                if (activeTab === 'feed') {
+                    contentHtml =
+                        `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
+                } else if (activeTab === 'profile') {
+                    contentHtml = `
                 <div class="profile-wall">
                     <div class="profile-card">
-                        ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
-                        <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar"></div>
+                        ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
+                        <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
                         <div class="profile-name">${getDisplayName(currentUser)} ${getUserBadges(currentUser)}</div>
                         <div class="profile-username">@${currentUser.substring(1)}</div>
                         <div class="profile-bio">${profile.bio || 'No bio yet'}</div>
@@ -1132,13 +1313,13 @@
                     ${renderProfileWall(currentUser)}
                 </div>
                 `;
-            } else if (activeTab === 'userProfile') {
-                const isSub = isFollowing(profileUser);
-                contentHtml = `
+                } else if (activeTab === 'userProfile') {
+                    const isSub = isFollowing(profileUser);
+                    contentHtml = `
                 <div class="profile-wall">
                     <div class="profile-card">
-                        ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
-                        <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar"></div>
+                        ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
+                        <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
                         <div class="profile-name">${getDisplayName(profileUser)} ${getUserBadges(profileUser)}</div>
                         <div class="profile-username">@${profileUser.substring(1)}</div>
                         <div class="profile-bio">${profile.bio || 'No bio yet'}</div>
@@ -1160,44 +1341,44 @@
                     ${renderProfileWall(profileUser)}
                 </div>
                 `;
+                }
+
+                document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml +
+                    `<div class="create-post-btn" onclick="window.openCreatePost()" title="New post">+</div>`;
+
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', (e) => {
+                        searchQuery = e.target.value;
+                        if (activeTab === 'feed') resetFeed();
+                        else render();
+                    });
+                }
+
+                if (activeTab === 'feed') {
+                    const container = document.getElementById('feedContainer');
+                    if (container && container.innerHTML === '') resetFeed();
+                    restoreFeedScroll();
+                }
+
+                const feedEl = document.getElementById('feedContainer');
+                if (feedEl && !feedEl._scrollBound) {
+                    feedEl._scrollBound = true;
+                    feedEl.addEventListener('scroll', handleFeedScroll);
+                }
             }
 
-            document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml +
-                `<div class="create-post-btn" onclick="window.openCreatePost()" title="New post">+</div>`;
-
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    searchQuery = e.target.value;
-                    if (activeTab === 'feed') resetFeed();
-                    else render();
-                });
+            function handleFeedScroll() {
+                const el = document.getElementById('feedContainer');
+                if (!el) return;
+                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 180) {
+                    loadMoreFeed();
+                }
             }
 
-            if (activeTab === 'feed') {
-                const container = document.getElementById('feedContainer');
-                if (container && container.innerHTML === '') resetFeed();
-                restoreFeedScroll();
-            }
-
-            const feedEl = document.getElementById('feedContainer');
-            if (feedEl && !feedEl._scrollBound) {
-                feedEl._scrollBound = true;
-                feedEl.addEventListener('scroll', handleFeedScroll);
-            }
-        }
-
-        function handleFeedScroll() {
-            const el = document.getElementById('feedContainer');
-            if (!el) return;
-            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 180) {
-                loadMoreFeed();
-            }
-        }
-
-        // --- Auth screens ---
-        function renderAuth() {
-            return `
+            // --- Auth screens ---
+            function renderAuth() {
+                return `
             <div class="auth-container">
                 <div class="auth-box">
                     <h2>Yolkapp</h2>
@@ -1220,89 +1401,89 @@
                 </div>
             </div>
             `;
-        }
+            }
 
-        function attachAuthEvents() {
-            const errDiv = document.getElementById('authError');
-            document.getElementById('showRegister')?.addEventListener('click', () => {
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('registerForm').style.display = 'block';
-                if (errDiv) errDiv.textContent = '';
-            });
-            document.getElementById('showLogin')?.addEventListener('click', () => {
-                document.getElementById('registerForm').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'block';
-                if (errDiv) errDiv.textContent = '';
-            });
-            document.getElementById('loginBtn')?.addEventListener('click', () => {
-                const u = '@' + document.getElementById('loginUsername').value.trim().toLowerCase();
-                const e = document.getElementById('loginEmail').value.trim();
-                const p = document.getElementById('loginPassword').value;
-                if (!users[u] || users[u].password !== p || users[u].email !== e) {
-                    if (errDiv) errDiv.textContent = 'Invalid credentials';
-                    return;
-                }
-                loginUser(u);
-            });
-            document.getElementById('registerBtn')?.addEventListener('click', () => {
-                const raw = document.getElementById('regUsername').value.trim();
-                if (!isValidUsername(raw)) {
-                    if (errDiv) errDiv.textContent = 'Username: 1-15 characters, no spaces or @';
-                    return;
-                }
-                const u = '@' + raw;
-                if (users[u]) { if (errDiv) errDiv.textContent = 'Username already taken'; return; }
-                const e = document.getElementById('regEmail').value.trim();
-                const p = document.getElementById('regPassword').value;
-                if (!e || !p) { if (errDiv) errDiv.textContent = 'Fill all fields'; return; }
-                users[u] = {
-                    password: p,
-                    email: e,
-                    avatar: null,
-                    banner: null,
-                    bio: '',
-                    displayName: raw,
-                    followers: [],
-                    following: [],
-                    badges: []
-                };
-                saveState();
-                loginUser(u);
-            });
-        }
+            function attachAuthEvents() {
+                const errDiv = document.getElementById('authError');
+                document.getElementById('showRegister')?.addEventListener('click', () => {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('registerForm').style.display = 'block';
+                    if (errDiv) errDiv.textContent = '';
+                });
+                document.getElementById('showLogin')?.addEventListener('click', () => {
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.getElementById('loginForm').style.display = 'block';
+                    if (errDiv) errDiv.textContent = '';
+                });
+                document.getElementById('loginBtn')?.addEventListener('click', () => {
+                    const u = '@' + document.getElementById('loginUsername').value.trim().toLowerCase();
+                    const e = document.getElementById('loginEmail').value.trim();
+                    const p = document.getElementById('loginPassword').value;
+                    if (!users[u] || users[u].password !== p || users[u].email !== e) {
+                        if (errDiv) errDiv.textContent = 'Invalid credentials';
+                        return;
+                    }
+                    loginUser(u);
+                });
+                document.getElementById('registerBtn')?.addEventListener('click', () => {
+                    const raw = document.getElementById('regUsername').value.trim();
+                    if (!isValidUsername(raw)) {
+                        if (errDiv) errDiv.textContent = 'Username: 1-15 characters, no spaces or @';
+                        return;
+                    }
+                    const u = '@' + raw;
+                    if (users[u]) { if (errDiv) errDiv.textContent = 'Username already taken'; return; }
+                    const e = document.getElementById('regEmail').value.trim();
+                    const p = document.getElementById('regPassword').value;
+                    if (!e || !p) { if (errDiv) errDiv.textContent = 'Fill all fields'; return; }
+                    users[u] = {
+                        password: p,
+                        email: e,
+                        avatar: null,
+                        banner: null,
+                        bio: '',
+                        displayName: raw,
+                        followers: [],
+                        following: [],
+                        badges: []
+                    };
+                    saveState();
+                    loginUser(u);
+                });
+            }
 
-        // --- Global actions ---
-        window.switchTab = (tab) => {
-            saveFeedScroll();
-            activeTab = tab;
-            viewedProfile = null;
-            searchQuery = '';
-            feedShuffled = [];
-            feedIndex = 0;
-            render();
-        };
-        window.goToMyProfile = () => {
-            saveFeedScroll();
-            activeTab = 'profile';
-            viewedProfile = null;
-            render();
-        };
-        window.openUserProfile = (u) => {
-            saveFeedScroll();
-            activeTab = 'userProfile';
-            viewedProfile = u;
-            render();
-        };
-        window.toggleLike = (id) => toggleLike(id);
-        window.deletePostById = (id) => {
-            if (confirm('Delete this post?')) deletePost(id);
-        };
-        window.openComments = (postId) => {
-            const post = posts.find(p => p.id === postId);
-            if (!post) return;
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
+            // --- Global actions ---
+            window.switchTab = (tab) => {
+                saveFeedScroll();
+                activeTab = tab;
+                viewedProfile = null;
+                searchQuery = '';
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
+            };
+            window.goToMyProfile = () => {
+                saveFeedScroll();
+                activeTab = 'profile';
+                viewedProfile = null;
+                render();
+            };
+            window.openUserProfile = (u) => {
+                saveFeedScroll();
+                activeTab = 'userProfile';
+                viewedProfile = u;
+                render();
+            };
+            window.toggleLike = (id) => toggleLike(id);
+            window.deletePostById = (id) => {
+                if (confirm('Delete this post?')) deletePost(id);
+            };
+            window.openComments = (postId) => {
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
             <div class="modal">
                 <h3>Comments</h3>
                 <div class="comments-section">
@@ -1317,20 +1498,21 @@
                 </div>
             </div>
             `;
-            document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-            document.getElementById('submitComment').onclick = () => {
-                const text = document.getElementById('commentText').value.trim();
-                if (text) { addComment(postId, text); modal.remove(); }
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+                document.getElementById('submitComment').onclick = () => {
+                    const text = document.getElementById('commentText').value.trim();
+                    if (text) { addComment(postId, text);
+                        modal.remove(); }
+                };
+                document.getElementById('commentText')?.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') document.getElementById('submitComment')?.click();
+                });
             };
-            document.getElementById('commentText')?.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') document.getElementById('submitComment')?.click();
-            });
-        };
-        window.openCreatePost = () => {
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
+            window.openCreatePost = () => {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
             <div class="modal">
                 <h3>New post</h3>
                 <div class="field-group">
@@ -1350,45 +1532,53 @@
                 </div>
             </div>
             `;
-            document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-            document.getElementById('publishBtn').onclick = () => {
-                const text = document.getElementById('postText').value.trim();
-                const file = document.getElementById('mediaFile').files[0];
-                if (!text && !file) return;
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const isVideo = file.type.startsWith('video');
-                        addPost(text || '', e.target.result, isVideo);
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+                document.getElementById('publishBtn').onclick = () => {
+                    const text = document.getElementById('postText').value.trim();
+                    const file = document.getElementById('mediaFile').files[0];
+                    if (!text && !file) return;
+                    const publishBtn = document.getElementById('publishBtn');
+                    if (publishBtn) publishBtn.disabled = true;
+                    if (file) {
+                        processMediaFile(file).then(result => {
+                            addPost(text || '', result.dataURL, result.isVideo);
+                            modal.remove();
+                        }).catch(err => {
+                            if (publishBtn) publishBtn.disabled = false;
+                            if (err.message && err.message.includes('cancelled')) return; // user cancelled
+                            showToast('❌ Error processing file: ' + (err.message ||
+                                'unknown error'), 3000);
+                        });
+                    } else {
+                        addPost(text);
                         modal.remove();
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    addPost(text);
-                    modal.remove();
-                }
+                    }
+                };
             };
-        };
-        window.toggleFollowUser = (target) => toggleFollow(target);
-        window.searchByHashtag = (tag) => {
-            searchQuery = tag;
-            if (activeTab === 'feed') resetFeed();
-            else { activeTab = 'feed'; feedShuffled = []; feedIndex = 0; render(); }
-        };
-        window.openImage = (src) => {
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.style.cursor = 'zoom-out';
-            modal.onclick = () => modal.remove();
-            modal.innerHTML = `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
-            document.body.appendChild(modal);
-        };
-        window.openEditProfile = () => {
-            const user = users[currentUser];
-            const modal = document.createElement('div');
-            modal.className = 'modal-overlay';
-            modal.innerHTML = `
+            window.toggleFollowUser = (target) => toggleFollow(target);
+            window.searchByHashtag = (tag) => {
+                searchQuery = tag;
+                if (activeTab === 'feed') resetFeed();
+                else { activeTab = 'feed';
+                    feedShuffled = [];
+                    feedIndex = 0;
+                    render(); }
+            };
+            window.openImage = (src) => {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.style.cursor = 'zoom-out';
+                modal.onclick = () => modal.remove();
+                modal.innerHTML =
+                    `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
+                document.body.appendChild(modal);
+            };
+            window.openEditProfile = () => {
+                const user = users[currentUser];
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
             <div class="modal">
                 <h3>Edit profile</h3>
                 <div class="field-group"><label>Display name</label><input id="editDisplayName" value="${(user.displayName||'').replace(/"/g,'&quot;')}" placeholder="Your name"></div>
@@ -1411,51 +1601,74 @@
                 </div>
             </div>
             `;
-            document.body.appendChild(modal);
-            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-            document.getElementById('saveProfileBtn').onclick = () => {
-                const dn = document.getElementById('editDisplayName').value.trim();
-                const bio = document.getElementById('editBio').value.trim();
-                const email = document.getElementById('editEmail').value.trim();
-                const pass = document.getElementById('editPassword').value;
-                if (dn) users[currentUser].displayName = dn;
-                if (bio !== undefined) users[currentUser].bio = bio;
-                if (email) users[currentUser].email = email;
-                if (pass) users[currentUser].password = pass;
-                const avatarFile = document.getElementById('editAvatar').files[0];
-                const bannerFile = document.getElementById('editBanner').files[0];
-                const processImages = (cb) => {
-                    let tasks = 0;
-                    if (avatarFile) {
-                        tasks++;
-                        const reader = new FileReader();
-                        reader.onload = (e) => { users[currentUser].avatar = e.target.result; tasks--; if (tasks === 0) cb(); };
-                        reader.readAsDataURL(avatarFile);
-                    }
-                    if (bannerFile) {
-                        tasks++;
-                        const reader = new FileReader();
-                        reader.onload = (e) => { users[currentUser].banner = e.target.result; tasks--; if (tasks === 0) cb(); };
-                        reader.readAsDataURL(bannerFile);
-                    }
-                    if (tasks === 0) cb();
-                };
-                processImages(() => {
-                    saveState();
-                    modal.remove();
-                    render();
-                    showToast('Profile updated!');
-                });
-            };
-        };
-        window.giveBadge = (target, num) => giveBadge(target, num);
-        window.removeBadges = (target) => removeBadges(target);
-        window.logout = () => logout();
-        window.handleFeedScroll = handleFeedScroll;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+                document.getElementById('saveProfileBtn').onclick = () => {
+                    const dn = document.getElementById('editDisplayName').value.trim();
+                    const bio = document.getElementById('editBio').value.trim();
+                    const email = document.getElementById('editEmail').value.trim();
+                    const pass = document.getElementById('editPassword').value;
+                    if (dn) users[currentUser].displayName = dn;
+                    if (bio !== undefined) users[currentUser].bio = bio;
+                    if (email) users[currentUser].email = email;
+                    if (pass) users[currentUser].password = pass;
+                    const avatarFile = document.getElementById('editAvatar').files[0];
+                    const bannerFile = document.getElementById('editBanner').files[0];
 
-        // Init
-        loadState();
-    })();
-</script>
+                    const saveBtn = document.getElementById('saveProfileBtn');
+                    if (saveBtn) saveBtn.disabled = true;
+
+                    const processImages = (cb) => {
+                        let tasks = 0;
+                        const checkDone = () => { tasks--; if (tasks <= 0) cb(); };
+                        if (avatarFile) {
+                            tasks++;
+                            compressImage(avatarFile, 300, 0.7).then(dataURL => {
+                                users[currentUser].avatar = dataURL;
+                                checkDone();
+                            }).catch(() => {
+                                // Fallback: read without compression
+                                const reader = new FileReader();
+                                reader.onload = (e) => { users[currentUser].avatar = e.target
+                                        .result;
+                                    checkDone(); };
+                                reader.onerror = checkDone;
+                                reader.readAsDataURL(avatarFile);
+                            });
+                        }
+                        if (bannerFile) {
+                            tasks++;
+                            compressImage(bannerFile, 800, 0.6).then(dataURL => {
+                                users[currentUser].banner = dataURL;
+                                checkDone();
+                            }).catch(() => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => { users[currentUser].banner = e.target
+                                        .result;
+                                    checkDone(); };
+                                reader.onerror = checkDone;
+                                reader.readAsDataURL(bannerFile);
+                            });
+                        }
+                        if (tasks === 0) cb();
+                    };
+
+                    processImages(() => {
+                        saveState();
+                        modal.remove();
+                        render();
+                        showToast('✅ Profile updated!');
+                    });
+                };
+            };
+            window.giveBadge = (target, num) => giveBadge(target, num);
+            window.removeBadges = (target) => removeBadges(target);
+            window.logout = () => logout();
+            window.handleFeedScroll = handleFeedScroll;
+
+            // Init
+            loadState();
+        })();
+    </script>
 </body>
 </html>
