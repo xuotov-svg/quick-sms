@@ -286,12 +286,15 @@
                 dataLoaded: false, tempPhoto: null, tempVideo: null, tempAvatar: null, tempBanner: null,
                 tempWallpaper: null, privacySettings: {}, posts: [], activeTab: 'feed', tempPostPhoto: null,
                 tempPostVideo: null, typingTimeouts: {}, lastPostTime: {}, feedFilter: 'all',
-                allPostsShuffled: [], allPostsIndex: 0, soundEnabled: true, localNicknames: {}
+                allPostsShuffled: [], allPostsIndex: 0, soundEnabled: true, localNicknames: {},
+                botBuilderStates: {}
             };
             App.systemBots = [];
             const ADMIN_USER = '@durov';
             const CLICK_BOT_USERNAME = '@click_bot';
+            const CREATE_BOT_USERNAME = '@create_bot';
             const CLICK_BOT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/ooox.jpg';
+            const CREATE_BOT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/wwjd.jpg';
             const ICONS = {
                 LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
@@ -299,6 +302,7 @@
                 DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
                 BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
                 BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png',
+                BADGE3: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B0%D1%83%D1%81%D1%83%D1%81%D1%862.png',
                 MEDIA_BTN: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%81%D1%83%D1%81.png',
                 NICKNAME_BTN: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/rra.png'
             };
@@ -337,25 +341,22 @@
                 try { await saveAppState(state); localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames })); } catch(e) { console.error('Save error:', e); }
             }
 
-            // Инициализация бота кликера
             function initClickBot() {
                 if (!App.users[CLICK_BOT_USERNAME]) {
                     App.users[CLICK_BOT_USERNAME] = {
-                        password: '',
-                        avatar: CLICK_BOT_AVATAR,
-                        banner: null,
-                        badge: null,
-                        lastSeen: Date.now(),
-                        chatWallpaper: '',
-                        followers: [],
-                        following: [],
-                        additionalUsernames: [],
-                        displayName: 'Click Bot',
-                        email: 'click_bot@yolkapp.com',
-                        isBot: true
+                        password: '', avatar: CLICK_BOT_AVATAR, banner: null, badge: null, lastSeen: Date.now(),
+                        chatWallpaper: '', followers: [], following: [], additionalUsernames: [],
+                        displayName: 'Click Bot', email: 'click_bot@yolkapp.com', isBot: true
                     };
-                    // Убедимся, что бот сохраняется
-                    saveToSupabase();
+                }
+            }
+            function initCreateBot() {
+                if (!App.users[CREATE_BOT_USERNAME]) {
+                    App.users[CREATE_BOT_USERNAME] = {
+                        password: '', avatar: CREATE_BOT_AVATAR, banner: null, badge: null, lastSeen: Date.now(),
+                        chatWallpaper: '', followers: [], following: [], additionalUsernames: [],
+                        displayName: 'Create Bot', email: 'create_bot@yolkapp.com', isBot: true
+                    };
                 }
             }
 
@@ -372,8 +373,8 @@
                         localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames }));
                     }
                 } catch(e) { console.error('Supabase load error:', e); }
-                // Создаем бота, если его нет в данных
                 initClickBot();
+                initCreateBot();
                 const savedUser = getCookie('yolk_current_user');
                 const savedChat = getCookie('yolk_active_chat');
                 const savedTab = getCookie('yolk_active_tab');
@@ -389,7 +390,7 @@
             }
             function updateLastSeen(u) { if (App.users[u] && u === App.currentUser) { App.users[u].lastSeen = Date.now(); saveToSupabase(); } }
             let loadingStartTime = Date.now(); const MIN_LOADING_TIME = 1000;
-            function getUserBadge(u) { const user = App.users[u]; if (!user) return null; if (user.badge === 2) return ICONS.BADGE2; if (user.badge === 1) return ICONS.BADGE1; return null; }
+            function getUserBadge(u) { const user = App.users[u]; if (!user) return null; if (user.badge === 3) return ICONS.BADGE3; if (user.badge === 2) return ICONS.BADGE2; if (user.badge === 1) return ICONS.BADGE1; return null; }
             function getDisplayName(u) {
                 const user = App.users[u]; if (!user) return u;
                 if (App.localNicknames?.[u]?.[App.currentUser]) return App.localNicknames[u][App.currentUser];
@@ -399,26 +400,21 @@
             function formatUserNameWithBadge(u) { const d = getDisplayName(u); const b = getUserBadge(u); return b ? `${d} <img src="${b}" class="badge-icon">` : d; }
             function applyTheme(t) { document.body.classList.toggle('light-theme', t === 'light'); setCookie('yolk_theme', t, 365); }
             function loadTheme() { applyTheme(getCookie('yolk_theme') === 'light' ? 'light' : 'dark'); }
-            function canUserMessage(from, to) { if (from === to) return true; const p = App.privacySettings[to]; if (!p?.blockNewMessages) return true; const chatId = [from, to].sort().join('_'); const chat = App.chats[chatId]; return !!(chat?.messages?.length); }
+            function canUserMessage(from, to) { if (from === to || App.users[to]?.isBot) return true; const p = App.privacySettings[to]; if (!p?.blockNewMessages) return true; const chatId = [from, to].sort().join('_'); const chat = App.chats[chatId]; return !!(chat?.messages?.length); }
             function updatePrivacySetting(v) { App.privacySettings[App.currentUser] = App.privacySettings[App.currentUser] || {}; App.privacySettings[App.currentUser].blockNewMessages = v; localStorage.setItem('yolk_privacy', JSON.stringify(App.privacySettings)); if (App.dataLoaded) saveToSupabase(); showNotification(v ? 'Strangers blocked' : 'Everyone can message'); }
             function loadPrivacySettings() { App.privacySettings = JSON.parse(localStorage.getItem('yolk_privacy') || '{}'); }
             function findMainUsername(input) { if (!input) return null; if (App.users[input]) return input; for (let m in App.users) { if (App.users[m].additionalUsernames?.includes(input)) return m; } return null; }
             function isEmailTaken(email, exclude) { if (!email) return false; const le = email.toLowerCase(); for (let u in App.users) { if (u === exclude) continue; if (App.users[u]?.email?.toLowerCase() === le) return true; } return false; }
 
-            // Работа с ботом-кликером
+            // ==================== BOT HANDLING ====================
             function getClickBotData(user) {
                 if (!App.users[user]) return null;
                 if (!App.users[user].clickBotData) {
-                    App.users[user].clickBotData = {
-                        balance: 0,
-                        incomePerClick: 1,
-                        upgradeCost: 10
-                    };
+                    App.users[user].clickBotData = { balance: 0, incomePerClick: 1, upgradeCost: 10 };
                 }
                 return App.users[user].clickBotData;
             }
-
-            function handleBotCommand(cmd) {
+            function handleClickBotCommand(cmd) {
                 if (!App.activeChat || App.activeChat !== CLICK_BOT_USERNAME) return;
                 const data = getClickBotData(App.currentUser);
                 if (!data) return;
@@ -443,35 +439,211 @@
                     reply = 'Неизвестная команда. Используйте кнопки.';
                 }
                 saveToSupabase();
-                // Отправляем ответ бота
-                const botMsg = {
-                    from: CLICK_BOT_USERNAME,
-                    text: reply + '\n\n' + generateBotButtons(),
-                    time: Date.now(),
-                    photo: null,
-                    isVideo: false,
-                    likes: {},
-                    dislikes: {}
-                };
+                const botMsg = { from: CLICK_BOT_USERNAME, text: reply + '\n\n' + generateClickBotButtons(), time: Date.now(), photo: null, isVideo: false, likes: {}, dislikes: {} };
                 const chatId = [App.currentUser, CLICK_BOT_USERNAME].sort().join('_');
                 if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: CLICK_BOT_USERNAME, messages: [] };
                 App.chats[chatId].messages.push(botMsg);
                 saveToSupabase();
                 renderMessages(CLICK_BOT_USERNAME);
             }
-
-            function generateBotButtons() {
+            function generateClickBotButtons() {
                 const data = getClickBotData(App.currentUser);
                 if (!data) return '';
                 return `<button class="bot-btn" onclick="window.clickBotAction('!click')">💎 Клик (+${data.incomePerClick}$)</button>
                         <button class="bot-btn" onclick="window.clickBotAction('!upgrade')">🚀 Улучшить (${data.upgradeCost}$)</button>
                         <button class="bot-btn" onclick="window.clickBotAction('!balance')">💰 Баланс</button>`;
             }
-
             window.clickBotAction = function(cmd) {
                 if (App.activeChat !== CLICK_BOT_USERNAME) return;
-                document.getElementById('messageText').value = ''; // очищаем поле ввода
-                handleBotCommand(cmd);
+                document.getElementById('messageText').value = '';
+                handleClickBotCommand(cmd);
+            };
+            function handleCustomBotMessage(botUsername, text) {
+                const bot = App.users[botUsername];
+                if (!bot || !bot.isBot || botUsername === CLICK_BOT_USERNAME || botUsername === CREATE_BOT_USERNAME) return;
+                if (!bot.customBot) return;
+                const type = bot.customBot.type;
+                let reply = '';
+                if (type === 'clicker') {
+                    const cdata = bot.customBot.clickerData || { incomePerClick: 1, upgradeCost: 10, maxUpgrades: 10 };
+                    let userData = App.users[App.currentUser].customBotProgress?.[botUsername];
+                    if (!userData) {
+                        if (!App.users[App.currentUser].customBotProgress) App.users[App.currentUser].customBotProgress = {};
+                        userData = App.users[App.currentUser].customBotProgress[botUsername] = { balance: 0, upgradeLevel: 0 };
+                    }
+                    if (text.startsWith('!click')) {
+                        userData.balance += cdata.incomePerClick;
+                        reply = `💎 +${cdata.incomePerClick}$\nБаланс: ${userData.balance}$`;
+                    } else if (text.startsWith('!upgrade')) {
+                        if (userData.upgradeLevel >= cdata.maxUpgrades) reply = '❌ Максимальный уровень улучшений.';
+                        else if (userData.balance >= cdata.upgradeCost) {
+                            userData.balance -= cdata.upgradeCost;
+                            userData.upgradeLevel++;
+                            cdata.upgradeCost = Math.floor(cdata.upgradeCost * 1.5);
+                            reply = `🚀 Улучшено до уровня ${userData.upgradeLevel}!\nДоход: ${cdata.incomePerClick}$, стоимость след.: ${cdata.upgradeCost}$`;
+                        } else reply = `❌ Недостаточно средств. Нужно ${cdata.upgradeCost}$, у вас ${userData.balance}$`;
+                    } else if (text.startsWith('!balance')) {
+                        reply = `💰 Баланс: ${userData.balance}$\n⚡ Доход: ${cdata.incomePerClick}$\n🔧 Уровень: ${userData.upgradeLevel}/${cdata.maxUpgrades}`;
+                    } else reply = 'Используйте кнопки.';
+                } else if (type === 'random') {
+                    const rdata = bot.customBot.randomData || { min: 1, max: 100 };
+                    if (text.startsWith('!roll')) {
+                        const num = Math.floor(Math.random() * (rdata.max - rdata.min + 1)) + rdata.min;
+                        reply = `🎲 Случайное число: ${num}`;
+                    } else reply = 'Нажмите кнопку !roll';
+                } else if (type === 'shop') {
+                    const sdata = bot.customBot.shopData || { items: [] };
+                    let userData = App.users[App.currentUser].customBotProgress?.[botUsername];
+                    if (!userData) {
+                        if (!App.users[App.currentUser].customBotProgress) App.users[App.currentUser].customBotProgress = {};
+                        userData = App.users[App.currentUser].customBotProgress[botUsername] = { balance: 100 };
+                    }
+                    if (text.startsWith('!buy ')) {
+                        const itemName = text.substring(5).trim();
+                        const item = sdata.items.find(i => i.name === itemName);
+                        if (!item) reply = 'Товар не найден.';
+                        else if (userData.balance >= item.price) {
+                            userData.balance -= item.price;
+                            reply = `✅ Куплено: ${item.name} за ${item.price}$. Остаток: ${userData.balance}$`;
+                        } else reply = `❌ Недостаточно средств. Нужно ${item.price}$, у вас ${userData.balance}$`;
+                    } else if (text.startsWith('!balance')) {
+                        reply = `💰 Баланс: ${userData.balance}$`;
+                    } else reply = 'Выберите товар:';
+                }
+                const msg = { from: botUsername, text: reply, time: Date.now(), photo: null, isVideo: false, likes: {}, dislikes: {} };
+                const chatId = [App.currentUser, botUsername].sort().join('_');
+                if (!App.chats[chatId]) App.chats[chatId] = { user1: App.currentUser, user2: botUsername, messages: [] };
+                App.chats[chatId].messages.push(msg);
+                saveToSupabase();
+                renderMessages(botUsername);
+            }
+
+            // ==================== CREATE BOT ====================
+            function handleCreateBotMessage(text, media) {
+                const user = App.currentUser;
+                if (!App.botBuilderStates[user]) {
+                    App.botBuilderStates[user] = { step: 'idle', data: {} };
+                }
+                const state = App.botBuilderStates[user];
+                const addBotMsg = (txt) => {
+                    const msg = { from: CREATE_BOT_USERNAME, text: txt, time: Date.now(), photo: null, isVideo: false, likes: {}, dislikes: {} };
+                    const chatId = [user, CREATE_BOT_USERNAME].sort().join('_');
+                    if (!App.chats[chatId]) App.chats[chatId] = { user1: user, user2: CREATE_BOT_USERNAME, messages: [] };
+                    App.chats[chatId].messages.push(msg);
+                    saveToSupabase();
+                    renderMessages(CREATE_BOT_USERNAME);
+                };
+                const processStep = (input, file) => {
+                    switch (state.step) {
+                        case 'idle':
+                            state.step = 'choose_theme';
+                            addBotMsg('👋 Привет! Я помогу создать бота. Выбери тему:\n<button class="bot-btn" onclick="window.createBotAction(\'theme_random\')">🎲 Рандом</button><button class="bot-btn" onclick="window.createBotAction(\'theme_clicker\')">💎 Кликер</button><button class="bot-btn" onclick="window.createBotAction(\'theme_shop\')">🛒 Магазин</button>');
+                            break;
+                        case 'choose_theme':
+                            if (input === 'random' || input === 'clicker' || input === 'shop') {
+                                state.data.type = input;
+                                if (input === 'random') { state.step = 'random_min'; addBotMsg('🎲 Введи минимальное число:'); }
+                                else if (input === 'clicker') { state.step = 'clicker_income'; addBotMsg('💎 Доход за клик (число):'); }
+                                else if (input === 'shop') { state.step = 'shop_items'; addBotMsg('🛒 Введи товары через запятую: название цена (например: Меч 50, Щит 30)'); }
+                            } else addBotMsg('Пожалуйста, выбери тему кнопками.');
+                            break;
+                        case 'random_min':
+                            const min = parseInt(input);
+                            if (!isNaN(min)) { state.data.randomMin = min; state.step = 'random_max'; addBotMsg(`✅ Минимум ${min}. Теперь максимум:`); }
+                            else addBotMsg('❌ Введи число.');
+                            break;
+                        case 'random_max':
+                            const max = parseInt(input);
+                            if (!isNaN(max)) { state.data.randomMax = max; state.step = 'enter_name'; addBotMsg('👍 Диапазон задан. Теперь придумай имя бота (должно заканчиваться на <b>_bot</b>):'); }
+                            else addBotMsg('❌ Введи число.');
+                            break;
+                        case 'clicker_income':
+                            const inc = parseInt(input);
+                            if (!isNaN(inc)) { state.data.clickerIncome = inc; state.step = 'clicker_cost'; addBotMsg('💎 Стоимость улучшения (число):'); }
+                            else addBotMsg('❌ Число.');
+                            break;
+                        case 'clicker_cost':
+                            const cost = parseInt(input);
+                            if (!isNaN(cost)) { state.data.clickerCost = cost; state.step = 'clicker_levels'; addBotMsg('📊 Макс. уровень улучшений (число):'); }
+                            else addBotMsg('❌ Число.');
+                            break;
+                        case 'clicker_levels':
+                            const lvls = parseInt(input);
+                            if (!isNaN(lvls)) { state.data.clickerLevels = lvls; state.step = 'enter_name'; addBotMsg('✅ Параметры кликера заданы. Имя бота (оканчивается на _bot):'); }
+                            else addBotMsg('❌ Число.');
+                            break;
+                        case 'shop_items':
+                            const itemsStr = input;
+                            const items = itemsStr.split(',').map(s => s.trim()).filter(s => s);
+                            const parsed = items.map(it => { const parts = it.split(' '); const price = parseInt(parts.pop()); const name = parts.join(' '); return { name, price: isNaN(price)? 1 : price }; });
+                            state.data.shopItems = parsed;
+                            state.step = 'enter_name';
+                            addBotMsg('🛒 Товары сохранены. Имя бота (_bot):');
+                            break;
+                        case 'enter_name':
+                            let name = input.trim().toLowerCase();
+                            if (!name.startsWith('@')) name = '@' + name;
+                            if (!name.endsWith('_bot') || !/^@[a-z][a-z0-9_]*$/.test(name)) { addBotMsg('❌ Имя должно начинаться с @ и заканчиваться на _bot (латиница).'); break; }
+                            if (App.users[name]) { addBotMsg('❌ Такое имя уже занято.'); break; }
+                            state.data.botName = name;
+                            state.step = 'enter_avatar';
+                            addBotMsg('🖼️ Отправь аватарку для бота (через кнопку 📎).');
+                            break;
+                        case 'enter_avatar':
+                            if (!file) { addBotMsg('❌ Прикрепи изображение.'); break; }
+                            state.data.avatar = file;
+                            createBotFromState(state);
+                            break;
+                    }
+                };
+                processStep(text, media);
+            }
+            function createBotFromState(state) {
+                const user = App.currentUser;
+                const name = state.data.botName;
+                const newBot = {
+                    password: '',
+                    avatar: state.data.avatar || DEFAULT_AVATAR,
+                    banner: null,
+                    badge: null,
+                    lastSeen: Date.now(),
+                    chatWallpaper: '',
+                    followers: [],
+                    following: [],
+                    additionalUsernames: [],
+                    displayName: name.substring(1),
+                    email: `${name.substring(1)}@bot.yolk`,
+                    isBot: true,
+                    customBot: { type: state.data.type, owner: user }
+                };
+                if (state.data.type === 'clicker') {
+                    newBot.customBot.clickerData = {
+                        incomePerClick: state.data.clickerIncome || 1,
+                        upgradeCost: state.data.clickerCost || 10,
+                        maxUpgrades: state.data.clickerLevels || 10
+                    };
+                } else if (state.data.type === 'random') {
+                    newBot.customBot.randomData = { min: state.data.randomMin || 1, max: state.data.randomMax || 100 };
+                } else if (state.data.type === 'shop') {
+                    newBot.customBot.shopData = { items: state.data.shopItems || [] };
+                }
+                App.users[name] = newBot;
+                delete App.botBuilderStates[user];
+                saveToSupabase();
+                const chatId = [user, name].sort().join('_');
+                if (!App.chats[chatId]) App.chats[chatId] = { user1: user, user2: name, messages: [] };
+                App.activeChat = name;
+                setCookie('yolk_active_chat', name, 365);
+                render();
+                showNotification(`Бот ${name} создан!`);
+            }
+            window.createBotAction = function(cmd) {
+                if (App.activeChat !== CREATE_BOT_USERNAME) return;
+                let text = '';
+                if (cmd === 'theme_random') text = 'random';
+                else if (cmd === 'theme_clicker') text = 'clicker';
+                else if (cmd === 'theme_shop') text = 'shop';
+                handleCreateBotMessage(text, null);
             };
 
             function openProfileSettings() {
@@ -510,6 +682,7 @@
                                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
                                     <button class="profile-btn" id="giveBadge1Btn" style="flex:1;">Badge 1</button>
                                     <button class="profile-btn" id="giveBadge2Btn" style="flex:1;">Badge 2</button>
+                                    <button class="profile-btn" id="giveBadge3Btn" style="flex:1;">Badge 3</button>
                                     <button class="profile-btn warning" id="removeBadgeBtn" style="flex:1;">Remove</button>
                                 </div>
                                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -586,6 +759,10 @@
                     document.getElementById('giveBadge2Btn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
                         App.users[u].badge = 2; saveToSupabase(); showNotification(`Badge 2 -> ${getDisplayName(u)}`);
+                    });
+                    document.getElementById('giveBadge3Btn').addEventListener('click', ()=>{
+                        const u = applyToTarget(); if(!u) return;
+                        App.users[u].badge = 3; saveToSupabase(); showNotification(`Badge 3 -> ${getDisplayName(u)}`);
                     });
                     document.getElementById('removeBadgeBtn').addEventListener('click', ()=>{
                         const u = applyToTarget(); if(!u) return;
@@ -669,6 +846,7 @@
             function subscribeToUser(a,b) { if(a===b) return false; ensureUserFollowData(a); ensureUserFollowData(b); if(App.users[a].following.includes(b)) return false; App.users[a].following.push(b); App.users[b].followers.push(a); saveToSupabase(); showNotification(`Followed ${getDisplayName(b)}`); return true; }
             function unsubscribeFromUser(a,b) { ensureUserFollowData(a); ensureUserFollowData(b); const i = App.users[a].following.indexOf(b); if(i!==-1) App.users[a].following.splice(i,1); const j = App.users[b].followers.indexOf(a); if(j!==-1) App.users[b].followers.splice(j,1); saveToSupabase(); showNotification(`Unfollowed ${getDisplayName(b)}`); }
             function openProfileModal(u) {
+                if (App.users[u]?.isBot) { showNotification('Bot profiles are not available.', 'error'); return; }
                 const ud = App.users[u] || {};
                 const modalHtml = `
                 <div class="modal-overlay" id="profileModalOverlay">
@@ -781,7 +959,7 @@
             }
             window.openCommentsModal = function(id) {
                 const post = App.posts.find(p => p.id === id); if (!post) return;
-                if (!post.comments) post.comments = []; // Инициализация, чтобы избежать ошибки
+                if (!post.comments) post.comments = [];
                 const list = (post.comments||[]).map(c => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${c.author}')">${formatUserNameWithBadge(c.author)}</div><div class="comment-text">${c.text}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div>`).join('') || '<div style="color:var(--text-secondary);">No comments</div>';
                 const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="comments-modal"><h3>Comments</h3><div style="max-height:300px;overflow-y:auto;">${list}</div><div class="add-comment"><input type="text" id="newCommentText" placeholder="Write..."><button class="profile-btn" id="submitCommentBtn">Send</button></div><div style="margin-top:12px;"><button class="profile-btn secondary" id="closeCommentsModal">Close</button></div></div></div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -907,7 +1085,9 @@
 
             function renderMain() {
                 const isChatsActive = App.activeTab === 'chats';
-                const chatTitle = formatUserNameWithBadge(App.activeChat);
+                const partner = App.activeChat;
+                const isBot = partner && App.users[partner]?.isBot;
+                const chatTitle = formatUserNameWithBadge(partner);
                 return `
                 <div class="main-container">
                     ${isChatsActive ? `
@@ -916,7 +1096,7 @@
                         <div class="chats-list" id="chatsList"></div>
                     </div>
                     <div class="chat-area">
-                        <div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth<768?'visible':''}" id="backBtn">←</button><strong>${chatTitle}</strong></div><div class="chat-actions"><button class="tiny-btn" id="viewProfileBtn">Profile</button><img src="${ICONS.NICKNAME_BTN}" class="nickname-btn-icon" id="setNicknameBtn" title="Set local nickname"></div></div>
+                        <div class="chat-header"><div class="chat-header-info"><button class="back-btn ${window.innerWidth<768?'visible':''}" id="backBtn">←</button><strong>${chatTitle}</strong></div><div class="chat-actions">${!isBot ? `<button class="tiny-btn" id="viewProfileBtn">Profile</button><img src="${ICONS.NICKNAME_BTN}" class="nickname-btn-icon" id="setNicknameBtn" title="Set local nickname">` : ''}</div></div>
                         <div class="messages-container" id="messageList"></div>
                         <div class="input-area">
                             <label for="mediaUploadSingle" style="cursor:pointer;"><img src="${ICONS.MEDIA_BTN}" class="media-btn-icon"></label>
@@ -960,46 +1140,61 @@
                 document.getElementById('filterAllBtn')?.addEventListener('click', ()=>{ App.feedFilter='all'; initFeed(); });
                 document.getElementById('filterLikedBtn')?.addEventListener('click', ()=>{ App.feedFilter='liked'; initFeed(); });
                 document.getElementById('filterMyBtn')?.addEventListener('click', ()=>{ App.feedFilter='my'; initFeed(); });
-                document.getElementById('setNicknameBtn')?.addEventListener('click', ()=>{
-                    if (!App.activeChat) return;
-                    const currentNick = (App.localNicknames[App.activeChat]?.[App.currentUser]) || '';
-                    const modalHtml = `
-                    <div class="modal-overlay" id="nicknameModal">
-                        <div class="profile-modal" style="max-width:340px;">
-                            <h3>Local nickname</h3>
-                            <div style="color:var(--text-secondary); margin-bottom:12px;">Set a custom name for <b>${getDisplayName(App.activeChat)}</b> (visible only to you)</div>
-                            <div class="profile-input-group"><label>Nickname</label><input type="text" id="newNicknameInput" value="${currentNick}" placeholder="Enter name" maxlength="20"></div>
-                            <div class="profile-actions">
-                                <button class="profile-btn" id="saveNicknameBtn">Save</button>
-                                <button class="profile-btn secondary" id="closeNicknameModal">Cancel</button>
-                                ${currentNick ? '<button class="profile-btn warning" id="removeNicknameBtn">Remove</button>' : ''}
+                if (document.getElementById('setNicknameBtn')) {
+                    document.getElementById('setNicknameBtn').addEventListener('click', ()=>{
+                        if (!App.activeChat || App.users[App.activeChat]?.isBot) return;
+                        const currentNick = (App.localNicknames[App.activeChat]?.[App.currentUser]) || '';
+                        const modalHtml = `
+                        <div class="modal-overlay" id="nicknameModal">
+                            <div class="profile-modal" style="max-width:340px;">
+                                <h3>Local nickname</h3>
+                                <div style="color:var(--text-secondary); margin-bottom:12px;">Set a custom name for <b>${getDisplayName(App.activeChat)}</b></div>
+                                <div class="profile-input-group"><label>Nickname</label><input type="text" id="newNicknameInput" value="${currentNick}" placeholder="Enter name" maxlength="20"></div>
+                                <div class="profile-actions">
+                                    <button class="profile-btn" id="saveNicknameBtn">Save</button>
+                                    <button class="profile-btn secondary" id="closeNicknameModal">Cancel</button>
+                                    ${currentNick ? '<button class="profile-btn warning" id="removeNicknameBtn">Remove</button>' : ''}
+                                </div>
                             </div>
-                        </div>
-                    </div>`;
-                    document.body.insertAdjacentHTML('beforeend', modalHtml);
-                    document.getElementById('saveNicknameBtn').addEventListener('click', ()=>{
-                        const val = document.getElementById('newNicknameInput').value.trim();
-                        if (!App.localNicknames[App.activeChat]) App.localNicknames[App.activeChat] = {};
-                        if (val) App.localNicknames[App.activeChat][App.currentUser] = val;
-                        else delete App.localNicknames[App.activeChat][App.currentUser];
-                        saveToSupabase(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname saved');
+                        </div>`;
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        document.getElementById('saveNicknameBtn').addEventListener('click', ()=>{
+                            const val = document.getElementById('newNicknameInput').value.trim();
+                            if (!App.localNicknames[App.activeChat]) App.localNicknames[App.activeChat] = {};
+                            if (val) App.localNicknames[App.activeChat][App.currentUser] = val;
+                            else delete App.localNicknames[App.activeChat][App.currentUser];
+                            saveToSupabase(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname saved');
+                        });
+                        document.getElementById('closeNicknameModal').addEventListener('click', ()=> document.getElementById('nicknameModal').remove());
+                        const remBtn = document.getElementById('removeNicknameBtn');
+                        if (remBtn) remBtn.addEventListener('click', ()=>{
+                            if (App.localNicknames[App.activeChat]) delete App.localNicknames[App.activeChat][App.currentUser];
+                            saveToSupabase(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname removed');
+                        });
                     });
-                    document.getElementById('closeNicknameModal').addEventListener('click', ()=> document.getElementById('nicknameModal').remove());
-                    const remBtn = document.getElementById('removeNicknameBtn');
-                    if (remBtn) remBtn.addEventListener('click', ()=>{
-                        if (App.localNicknames[App.activeChat]) delete App.localNicknames[App.activeChat][App.currentUser];
-                        saveToSupabase(); document.getElementById('nicknameModal').remove(); render(); showNotification('Nickname removed');
-                    });
-                });
+                }
             }
 
             function sendMessage() {
                 const text = document.getElementById('messageText')?.value.trim() || '';
                 if (!text && !App.tempPhoto && !App.tempVideo) { showNotification('Empty message','error'); return; }
                 const to = App.activeChat; if (!to) return;
-                // Если это бот-кликер, обрабатываем команду
                 if (to === CLICK_BOT_USERNAME) {
-                    handleBotCommand(text);
+                    handleClickBotCommand(text);
+                    document.getElementById('messageText').value = '';
+                    App.tempPhoto = null; App.tempVideo = null;
+                    document.getElementById('mediaUploadSingle').value = '';
+                    return;
+                }
+                if (to === CREATE_BOT_USERNAME) {
+                    handleCreateBotMessage(text, App.tempPhoto || App.tempVideo || null);
+                    document.getElementById('messageText').value = '';
+                    App.tempPhoto = null; App.tempVideo = null;
+                    document.getElementById('mediaUploadSingle').value = '';
+                    return;
+                }
+                if (App.users[to]?.isBot && to !== CLICK_BOT_USERNAME && to !== CREATE_BOT_USERNAME) {
+                    handleCustomBotMessage(to, text);
                     document.getElementById('messageText').value = '';
                     App.tempPhoto = null; App.tempVideo = null;
                     document.getElementById('mediaUploadSingle').value = '';
@@ -1023,26 +1218,22 @@
                 const container = document.getElementById('messageList'); if (!container) return;
                 const chatId = [App.currentUser, partner].sort().join('_');
                 const msgs = App.chats[chatId]?.messages || [];
-                // Если чат с ботом и сообщений нет, отправим приветственное
-                if (partner === CLICK_BOT_USERNAME && msgs.length === 0) {
-                    handleBotCommand('!start');
-                }
                 container.innerHTML = msgs.length ? msgs.map((m,i) => renderMessage(m,i,App.currentUser,partner)).join('') : '<div style="text-align:center; color:var(--text-secondary); margin-top:20px;">No messages</div>';
                 setTimeout(()=> container.scrollTop = container.scrollHeight, 100);
                 updateChatHeaderStatus(partner);
             }
             function renderMessage(msg, idx, curr, partner) {
                 const isMe = msg.from === curr;
+                const isFromBot = App.users[msg.from]?.isBot;
                 const fromDisplay = msg.from === 'SYSTEM' ? 'SYSTEM' : formatUserNameWithBadge(msg.from);
                 const mediaHtml = msg.photo ? (msg.isVideo ? `<video controls class="media-preview" src="${msg.photo}"></video>` : `<img src="${msg.photo}" class="media-preview" onclick="window.openImageModal('${msg.photo}')">`) : '';
-                // Обработка кнопок бота (они уже в тексте)
                 const textHtml = msg.text ? msg.text.replace(/\n/g, '<br>') : '';
                 return `<div class="message ${isMe?'me':''} ${msg.from==='SYSTEM'?'system-message':''}">
-                    ${!isMe && msg.from!=='SYSTEM' ? `<small><span class="message-username" onclick="openProfileModal('${msg.from}')">${fromDisplay}</span></small><br>` : ''}
+                    ${!isMe && msg.from!=='SYSTEM' ? `<small><span class="message-username" onclick="${isFromBot ? '' : `openProfileModal('${msg.from}')`}">${fromDisplay}</span></small><br>` : ''}
                     ${msg.from==='SYSTEM' ? '<small>🔔 SYSTEM</small><br>' : ''}
                     <div class="message-text">${textHtml}</div>${mediaHtml}
                     <div class="time">${new Date(msg.time).toLocaleString()}</div>
-                    ${isMe && msg.from !== CLICK_BOT_USERNAME ? `<div class="msg-actions"><button onclick="window.deleteMessage('${partner}',${idx})">Delete</button></div>` : ''}
+                    ${isMe && msg.from !== CLICK_BOT_USERNAME && msg.from !== CREATE_BOT_USERNAME ? `<div class="msg-actions"><button onclick="window.deleteMessage('${partner}',${idx})">Delete</button></div>` : ''}
                 </div>`;
             }
             function updateChatList() {
@@ -1122,11 +1313,8 @@
                 const headerInfo = document.querySelector('.chat-header-info'); if (!headerInfo) return;
                 const existing = headerInfo.querySelector('.chat-user-status'); if (existing) existing.remove();
                 const strong = headerInfo.querySelector('strong'); if (strong) strong.innerHTML = formatUserNameWithBadge(username);
-                if (username === CLICK_BOT_USERNAME) {
-                    const div = document.createElement('div'); div.className = 'chat-user-status';
-                    div.textContent = 'online';
-                    headerInfo.appendChild(div);
-                    return;
+                if (App.users[username]?.isBot) {
+                    const div = document.createElement('div'); div.className = 'chat-user-status'; div.textContent = 'online'; headerInfo.appendChild(div); return;
                 }
                 const online = isUserOnline(username);
                 const div = document.createElement('div'); div.className = 'chat-user-status' + (online?'':' offline');
