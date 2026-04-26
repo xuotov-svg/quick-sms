@@ -1561,6 +1561,12 @@
             vertical-align: middle;
             margin-left: 4px;
         }
+        .author-username {
+            color: var(--accent);
+            font-weight: 400;
+            font-size: 14px;
+            margin: 0 4px;
+        }
         .media-btn-icon {
             width: 28px;
             height: 28px;
@@ -1606,7 +1612,6 @@
             background: #d4af37;
             color: #000;
         }
-        /* Улучшенный дизайн модалки создания поста */
         .create-post-textarea {
             width: 100%;
             min-height: 100px;
@@ -1736,8 +1741,8 @@
             }
             // ===================================================
 
-            const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
-            const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
+            const SUPABASE_URL = 'https://wpmenfggqczfdhwpilsu.supabase.co';
+            const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_4POM7adBUDZsSVUt9i7hlQ_TjWTv4Re';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
                 db: { schema: 'public' },
                 realtime: { params: { eventsPerSecond: 10 } }
@@ -1839,8 +1844,20 @@
 
             function initClickBot() {
                 if (!App.users[CLICK_BOT_USERNAME]) {
-                    App.users[CLICK_BOT_USERNAME] = { password: '', avatar: CLICK_BOT_AVATAR, banner: null, badge: null, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: 'Click Bot', email: 'click_bot@yolkapp.com', isBot: true };
+                    App.users[CLICK_BOT_USERNAME] = { password: '', avatar: CLICK_BOT_AVATAR, banner: null, badges: [], lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: 'Click Bot', email: 'click_bot@yolkapp.com', isBot: true };
                     saveToSupabase();
+                }
+            }
+
+            // Конвертация старого badge в массив badges
+            function migrateBadges() {
+                for (let u in App.users) {
+                    const user = App.users[u];
+                    if (user.badge !== undefined && !user.badges) {
+                        user.badges = [user.badge];
+                        delete user.badge;
+                    }
+                    if (!user.badges) user.badges = [];
                 }
             }
 
@@ -1857,6 +1874,7 @@
                         localStorage.setItem('yolk_cache', JSON.stringify({ users: App.users, chats: App.chats, blocked: App.blocked, localNicknames: App.localNicknames }));
                     }
                 } catch (e) { console.error('Supabase load error:', e); }
+                migrateBadges();
                 initClickBot();
                 const savedUser = getCookie('yolk_current_user');
                 const savedChat = getCookie('yolk_active_chat');
@@ -1879,11 +1897,25 @@
             let loadingStartTime = Date.now();
             const MIN_LOADING_TIME = 1000;
 
-            function getUserBadge(u) { const user = App.users[u]; if (!user) return null; if (user.badge === 3) return ICONS.BADGE3; if (user.badge === 2) return ICONS.BADGE2; if (user.badge === 1) return ICONS.BADGE1; return null; }
+            // Новые значки: массив badges
+            function getUserBadges(u) {
+                const user = App.users[u];
+                if (!user || !user.badges || !user.badges.length) return '';
+                const icons = { 1: ICONS.BADGE1, 2: ICONS.BADGE2, 3: ICONS.BADGE3 };
+                return user.badges.map(b => `<img src="${icons[b] || ''}" class="badge-icon">`).join('');
+            }
 
             function getDisplayName(u) { const user = App.users[u]; if (!user) return u; if (App.localNicknames?.[u]?.[App.currentUser]) return App.localNicknames[u][App.currentUser]; if (user.displayName?.trim()) return user.displayName.trim(); return u.substring(1); }
 
-            function formatUserNameWithBadge(u) { const d = getDisplayName(u); const b = getUserBadge(u); return b ? `${d} <img src="${b}" class="badge-icon">` : d; }
+            // formatUserNameWithBadge: если showUsername=true, то добавляем @username
+            function formatUserNameWithBadge(u, showUsername = false) {
+                const d = getDisplayName(u);
+                const badges = getUserBadges(u);
+                if (showUsername) {
+                    return `${d} <span class="author-username">${u}</span> ${badges}`;
+                }
+                return badges ? `${d} ${badges}` : d;
+            }
 
             function applyTheme(t) { document.body.classList.toggle('light-theme', t === 'light');
                 setCookie('yolk_theme', t, 365); }
@@ -1955,7 +1987,7 @@
                                     <button class="profile-btn" id="giveBadge1Btn" style="flex:1; font-size:12px;">Badge 1</button>
                                     <button class="profile-btn" id="giveBadge2Btn" style="flex:1; font-size:12px;">Badge 2</button>
                                     <button class="profile-btn" id="giveBadge3Btn" style="flex:1; font-size:12px; background:rgba(255,215,0,0.3);">Badge 3</button>
-                                    <button class="profile-btn warning" id="removeBadgeBtn" style="flex:1; font-size:12px;">Remove</button>
+                                    <button class="profile-btn warning" id="removeLastBadgeBtn" style="flex:1; font-size:12px;">Remove Last</button>
                                 </div>
                                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
                                     <button class="profile-btn" id="banPostBtn" style="flex:1; font-size:12px;">Ban posts</button>
@@ -2001,20 +2033,24 @@
                     document.getElementById('privacyToggle').classList.toggle('active', pendingPrivacy);
                     document.getElementById('privacyToggle').querySelector('.toggle-label').textContent = pendingPrivacy ? 'On' : 'Off'; }); if (App.currentUser === ADMIN_USER) { const applyToTarget = (action) => { let target = document.getElementById('adminBadgeUsername').value.trim().toLowerCase(); if (!target.startsWith('@')) target = '@' + target; const main = findMainUsername(target) || (App.users[target] ? target : null); if (!main) { showNotification('User not found', 'error'); return null; } return main; };
                     document.getElementById('giveBadge1Btn').addEventListener('click', () => { const u = applyToTarget(); if (!u) return;
-                        App.users[u].badge = 1;
+                        App.users[u].badges = App.users[u].badges || [];
+                        App.users[u].badges.push(1);
                         saveToSupabase();
                         showNotification(`Badge 1 -> ${getDisplayName(u)}`); });
                     document.getElementById('giveBadge2Btn').addEventListener('click', () => { const u = applyToTarget(); if (!u) return;
-                        App.users[u].badge = 2;
+                        App.users[u].badges = App.users[u].badges || [];
+                        App.users[u].badges.push(2);
                         saveToSupabase();
                         showNotification(`Badge 2 -> ${getDisplayName(u)}`); });
                     document.getElementById('giveBadge3Btn').addEventListener('click', () => { const u = applyToTarget(); if (!u) return;
-                        App.users[u].badge = 3;
+                        App.users[u].badges = App.users[u].badges || [];
+                        App.users[u].badges.push(3);
                         saveToSupabase();
                         showNotification(`Badge 3 -> ${getDisplayName(u)}`); });
-                    document.getElementById('removeBadgeBtn').addEventListener('click', () => { const u = applyToTarget(); if (!u) return; delete App.users[u].badge;
-                        saveToSupabase();
-                        showNotification(`Badge removed from ${getDisplayName(u)}`); });
+                    document.getElementById('removeLastBadgeBtn').addEventListener('click', () => { const u = applyToTarget(); if (!u) return;
+                        App.users[u].badges = App.users[u].badges || []; if (App.users[u].badges.length) { const removed = App.users[u].badges.pop();
+                            saveToSupabase();
+                            showNotification(`Removed badge ${removed} from ${getDisplayName(u)}`); } else { showNotification('No badges to remove', 'error'); } });
                     document.getElementById('banPostBtn').addEventListener('click', () => { const u = applyToTarget(); if (!u) return;
                         App.users[u].bannedFromPosting = true;
                         saveToSupabase();
@@ -2129,7 +2165,7 @@
             function openProfileModal(u) { if (isBot(u)) { showNotification('Bot profiles are not viewable', 'error'); return; } const ud = App.users[u] || {}; const modalHtml = `
                 <div class="modal-overlay" id="profileModalOverlay">
                     <div class="profile-modal">
-                        <h3>${getDisplayName(u)}</h3>
+                        <h3>${formatUserNameWithBadge(u)}</h3>
                         <div class="profile-banner-wrapper"><div class="banner-container">${ud.banner?`<img src="${ud.banner}" class="banner-image">`:'<div class="banner-placeholder">No banner</div>'}</div><div class="profile-avatar-overlay"><div class="avatar-large">${ud.avatar?`<img src="${ud.avatar}">`:`<img src="${DEFAULT_AVATAR}">`}</div></div></div>
                         <div class="profile-name-section"><div style="font-size:20px;">${formatUserNameWithBadge(u)}</div><div style="font-size:14px; color:var(--text-secondary);">${(ud.followers||[]).length} followers · ${(ud.following||[]).length} following</div></div>
                         <div class="profile-actions"><button class="profile-btn secondary" id="closeProfileModalBtn">Close</button>${u===App.currentUser?`<button class="profile-btn" id="editProfileFromModalBtn">Edit</button><button class="profile-btn logout" id="logoutFromProfileBtn">Logout</button>`:''}</div>
@@ -2162,7 +2198,7 @@
                             App.allPostsIndex = 0; } const post = App.allPostsShuffled[App.allPostsIndex++]; if (!post) continue; const author = App.users[post.author] || {}; const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`; const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : ''; const likes = Object.keys(post.likes || {}).length,
                         comments = (post.comments || []).length; const liked = post.likes?.[App.currentUser]; const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER; const isSub = isFollowing(App.currentUser, post.author); const subBtn = post.author !== App.currentUser ? `<button class="${isSub?'unsubscribe-btn':'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto;">${isSub?'UNFOLLOW':'FOLLOW'}</button>` : '';
                     html += `<div class="post-card" data-post-id="${post.id}">
-                            <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
+                            <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author, true)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
                             <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
                             <div class="post-stats">
                                 <button class="post-like ${liked?'active':''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" style="width:24px;"> <span>${likes}</span></button>
@@ -2178,7 +2214,7 @@
                 postsArr.forEach(post => { const author = App.users[post.author] || {}; const avatarHtml = author.avatar ? `<img src="${author.avatar}" class="post-avatar-img">` : `<img src="${DEFAULT_AVATAR}" class="post-avatar-img">`; const mediaHtml = post.media ? (post.isVideo ? `<video controls class="post-media" src="${post.media}"></video>` : `<img src="${post.media}" class="post-media" onclick="window.openImageModal('${post.media}')">`) : ''; const likes = Object.keys(post.likes || {}).length,
                         comments = (post.comments || []).length; const liked = post.likes?.[App.currentUser]; const canDelete = post.author === App.currentUser || App.currentUser === ADMIN_USER; const isSub = isFollowing(App.currentUser, post.author); const subBtn = post.author !== App.currentUser ? `<button class="${isSub?'unsubscribe-btn':'subscribe-btn'}" onclick="window.toggleFeedSubscription('${post.id}','${post.author}')" style="margin-left:auto;">${isSub?'UNFOLLOW':'FOLLOW'}</button>` : '';
                     html += `<div class="post-card" data-post-id="${post.id}">
-                        <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
+                        <div class="post-header" onclick="openProfileModal('${post.author}')"><div class="post-avatar">${avatarHtml}</div><div style="flex:1;"><div class="post-author">${formatUserNameWithBadge(post.author, true)}</div><div class="post-time">${new Date(post.time).toLocaleString()}</div></div>${subBtn}</div>
                         <div class="post-text">${post.text.replace(/\n/g,'<br>')}</div>${mediaHtml}
                         <div class="post-stats">
                             <button class="post-like ${liked?'active':''}" onclick="window.toggleLikePost('${post.id}')"><img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" style="width:24px;"> <span>${likes}</span></button>
@@ -2199,7 +2235,7 @@
                 document.querySelectorAll(`.post-card[data-post-id="${id}"]`).forEach(card => { const lb = card.querySelector('.post-like'); if (lb) { const liked = post.likes?.[App.currentUser];
                         lb.classList.toggle('active', liked); const img = lb.querySelector('img'); if (img) img.src = liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF; const span = lb.querySelector('span'); if (span) span.textContent = Object.keys(post.likes || {}).length; } const cb = card.querySelector('.post-comment'); if (cb) { const span = cb.querySelector('span'); if (span) span.textContent = (post.comments || []).length; } }); }
 
-            window.openCommentsModal = function(id) { const post = App.posts.find(p => p.id === id); if (!post) return; if (!post.comments) post.comments = []; const list = (post.comments || []).map(c => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${c.author}')">${formatUserNameWithBadge(c.author)}</div><div class="comment-text">${c.text}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div>`).join('') || '<div style="color:var(--text-secondary);">No comments</div>'; const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="comments-modal"><h3>Comments</h3><div style="max-height:300px;overflow-y:auto;">${list}</div><div class="add-comment"><input type="text" id="newCommentText" placeholder="Write..."><button class="profile-btn" id="submitCommentBtn">Send</button></div><div style="margin-top:12px;"><button class="profile-btn secondary" id="closeCommentsModal">Close</button></div></div></div>`;
+            window.openCommentsModal = function(id) { const post = App.posts.find(p => p.id === id); if (!post) return; if (!post.comments) post.comments = []; const list = (post.comments || []).map(c => `<div class="comment-item"><div class="comment-author" onclick="openProfileModal('${c.author}')">${formatUserNameWithBadge(c.author, true)}</div><div class="comment-text">${c.text}</div><div class="comment-time">${new Date(c.time).toLocaleString()}</div></div>`).join('') || '<div style="color:var(--text-secondary);">No comments</div>'; const modalHtml = `<div class="modal-overlay" id="commentsModal"><div class="comments-modal"><h3>Comments</h3><div style="max-height:300px;overflow-y:auto;">${list}</div><div class="add-comment"><input type="text" id="newCommentText" placeholder="Write..."><button class="profile-btn" id="submitCommentBtn">Send</button></div><div style="margin-top:12px;"><button class="profile-btn secondary" id="closeCommentsModal">Close</button></div></div></div>`;
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 document.getElementById('submitCommentBtn').addEventListener('click', () => { if (App.users[App.currentUser]?.bannedFromCommenting) { showNotification('You are banned from commenting', 'error'); return; } const text = document.getElementById('newCommentText').value.trim(); if (!text) return; if (!post.comments) post.comments = [];
                     post.comments.push({ author: App.currentUser, text, time: Date.now() });
@@ -2378,7 +2414,7 @@
                     updateLastSeen(main);
                     render(); });
                 document.getElementById('registerBtn')?.addEventListener('click', () => { let username = document.getElementById('regUsername').value.trim().toLowerCase(); const email = document.getElementById('regEmail').value.trim(),
-                        pass = document.getElementById('regPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; } if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; } if (!pass) { errorDiv.innerText = 'Enter password'; return; } if (!isValidPassword(pass)) { errorDiv.innerText = 'Password Latin letters/digits only'; return; } const clean = '@' + username; if (App.users[clean] || findMainUsername(clean)) { errorDiv.innerText = 'Username taken'; return; } if (isEmailTaken(email)) { errorDiv.innerText = 'Email already used'; return; } const newUser = { password: pass, avatar: null, banner: null, badge: null, lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email };
+                        pass = document.getElementById('regPassword').value.trim(); if (!isValidUsername(username)) { errorDiv.innerText = 'Invalid username (3-9 lowercase letters/digits)'; return; } if (!email || !/^\S+@\S+\.\S+$/.test(email)) { errorDiv.innerText = 'Valid email required'; return; } if (!pass) { errorDiv.innerText = 'Enter password'; return; } if (!isValidPassword(pass)) { errorDiv.innerText = 'Password Latin letters/digits only'; return; } const clean = '@' + username; if (App.users[clean] || findMainUsername(clean)) { errorDiv.innerText = 'Username taken'; return; } if (isEmailTaken(email)) { errorDiv.innerText = 'Email already used'; return; } const newUser = { password: pass, avatar: null, banner: null, badges: [], lastSeen: Date.now(), chatWallpaper: '', followers: [], following: [], additionalUsernames: [], displayName: username, email: email };
                     App.users[clean] = newUser;
                     App.currentUser = clean;
                     App.activeTab = 'feed';
