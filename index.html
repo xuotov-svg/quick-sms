@@ -2273,7 +2273,7 @@
                             showMediaPreview(ev.target.result, true);
                             showNotification('Video added'); };
                         reader.readAsDataURL(file); } });
-                document.getElementById('confirmCreatePostBtn').addEventListener('click', () => { const text = textarea.value.trim(); if (!text && !tempMedia) { showNotification('Enter text or media', 'error'); return; } if (text.length > 500) { showNotification('Max 500 characters', 'error'); return; }
+                document.getElementById('confirmCreatePostBtn').addEventListener('click', () => { const text = textarea.value.trim(); if (!text && !tempMedia) { showNotification('Enter text or media', 'error'); return; } if (text.length > 3000) { showNotification('Max 3000 characters', 'error'); return; }
                     createPost(text, tempMedia, isVideo);
                     document.getElementById('createPostModal').remove(); });
                 document.getElementById('closeCreatePostModal').addEventListener('click', () => document.getElementById('createPostModal').remove()); }
