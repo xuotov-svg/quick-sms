@@ -597,7 +597,6 @@
             display: inline-block;
             vertical-align: middle;
         }
-        /* Premium */
         .premium-nick {
             background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
             background-size: 200% auto;
@@ -874,6 +873,21 @@
                 setTimeout(() => toast.remove(), duration + 500);
             }
 
+            function extractHashtags(text) {
+                if (!text) return [];
+                const matches = text.match(/#[a-zA-Z0-9_]+/g);
+                return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
+            }
+
+            function normalizePosts(arr) {
+                arr.forEach(p => {
+                    if (!p.hashtags) p.hashtags = extractHashtags(p.text || '');
+                    if (!p.likes) p.likes = {};
+                    if (!p.comments) p.comments = [];
+                    if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith('data:video'));
+                });
+            }
+
             async function saveToLocalStorage() {
                 try { localStorage.setItem(LS_KEY, JSON.stringify({ users, posts })); } catch (e) {}
             }
@@ -909,9 +923,12 @@
                         badges: [1, 2, 3], premium: true
                     };
                 }
-                // ensure premium field exists
-                Object.keys(users).forEach(u => { if (typeof users[u].premium !== 'boolean') users[u].premium = false; });
-                if (!Array.isArray(posts)) posts = [];
+                // normalize missing fields
+                Object.keys(users).forEach(u => {
+                    if (typeof users[u].premium !== 'boolean') users[u].premium = false;
+                });
+                normalizePosts(posts);
+
                 dataLoaded = true;
                 const saved = getCookie('yolk_user');
                 if (saved && users[saved]) currentUser = saved;
@@ -929,25 +946,26 @@
             }
 
             function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
-            function extractHashtags(text) {
-                const matches = text.match(/#[a-zA-Z0-9_]+/g);
-                return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
-            }
             function getDisplayName(u) { const user = users[u]; return user?.displayName || u.substring(1); }
-            function formatUsername(u) {
-                const name = getDisplayName(u);
-                const premiumIcon = users[u]?.premium ? `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">` : '';
-                return `<span class="${users[u]?.premium ? 'premium-nick' : ''}">${name}</span> ${premiumIcon} @${u.substring(1)}`;
-            }
+
             function getUserBadges(u) {
-                const b = users[u]?.badges;
-                if (!b || !b.length) return '';
-                return b.map(id => {
+                const badges = users[u]?.badges || [];
+                let html = badges.map(id => {
                     if (id === 1) return `<img src="${ICONS.BADGE1}" class="badge-icon" alt="badge1">`;
                     if (id === 2) return `<img src="${ICONS.BADGE2}" class="badge-icon" alt="badge2">`;
                     if (id === 3) return `<img src="${ICONS.BADGE3}" class="badge-icon" alt="badge3">`;
                     return '';
                 }).join('');
+                if (users[u]?.premium) {
+                    html += `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">`;
+                }
+                return html;
+            }
+
+            function formatUsernameForPost(u) {
+                const name = getDisplayName(u);
+                const premiumClass = users[u]?.premium ? 'premium-nick' : '';
+                return `<span class="${premiumClass}">${name}</span> @${u.substring(1)}`;
             }
 
             function isValidUsername(s) { return /^[^\s@]{1,15}$/.test(s); }
@@ -1002,7 +1020,10 @@
 
             function addPost(text, media = null, isVideo = false) {
                 if (!currentUser) return;
-                const post = { id: generateId(), author: currentUser, text: text.trim(), media, isVideo, hashtags: extractHashtags(text), time: Date.now(), likes: {}, comments: [] };
+                const post = {
+                    id: generateId(), author: currentUser, text: text.trim(), media, isVideo,
+                    hashtags: extractHashtags(text), time: Date.now(), likes: {}, comments: []
+                };
                 posts.unshift(post); saveState(); feedShuffled = []; feedIndex = 0; render();
             }
             function deletePost(id) {
@@ -1081,7 +1102,7 @@
                 <div class="post-header" onclick="window.openUserProfile('${post.author}')">
                     <div class="post-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
                     <div class="post-author-info">
-                        <div class="post-author">${formatUsername(post.author)} ${getUserBadges(post.author)}</div>
+                        <div class="post-author">${formatUsernameForPost(post.author)} ${getUserBadges(post.author)}</div>
                         <div class="post-time">${new Date(post.time).toLocaleString()}</div>
                     </div>
                 </div>` : ''}
@@ -1120,7 +1141,6 @@
                 return userPosts.map(p => renderPostCard(p, false)).join('');
             }
 
-            // Premium modal
             function openPremiumModal() {
                 const modal = document.createElement('div');
                 modal.className = 'modal-overlay';
@@ -1175,6 +1195,8 @@
                 ${activeTab==='userProfile' ? `<div class="tab active">${getDisplayName(viewedProfile)}</div>` : ''}
             </div>`;
 
+                const premiumClass = (u) => users[u]?.premium ? 'premium-nick' : '';
+
                 let contentHtml = '';
                 if (activeTab === 'feed') {
                     contentHtml = `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
@@ -1184,7 +1206,9 @@
                     <div class="profile-card">
                         ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
                         <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
-                        <div class="profile-name">${getDisplayName(currentUser)} ${getUserBadges(currentUser)} ${users[currentUser].premium ? `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">` : ''}</div>
+                        <div class="profile-name">
+                            <span class="${premiumClass(currentUser)}">${getDisplayName(currentUser)}</span> ${getUserBadges(currentUser)}
+                        </div>
                         <div class="profile-username">@${currentUser.substring(1)}</div>
                         <div class="profile-bio">${profile.bio || 'No bio yet'}</div>
                         <div class="profile-stats">
@@ -1213,7 +1237,9 @@
                     <div class="profile-card">
                         ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
                         <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
-                        <div class="profile-name">${getDisplayName(profileUser)} ${getUserBadges(profileUser)} ${users[profileUser].premium ? `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">` : ''}</div>
+                        <div class="profile-name">
+                            <span class="${premiumClass(profileUser)}">${getDisplayName(profileUser)}</span> ${getUserBadges(profileUser)}
+                        </div>
                         <div class="profile-username">@${profileUser.substring(1)}</div>
                         <div class="profile-bio">${profile.bio || 'No bio yet'}</div>
                         <div class="profile-stats">
