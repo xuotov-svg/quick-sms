@@ -1326,7 +1326,7 @@
                     repostHTML = `
                     <div class="repost-block">
                         <div class="original-author" onclick="event.stopPropagation();window.openUserProfile('${post.repostAuthor}')">
-                            🔁 Repost from <span class="${origPremium}">${escapeHTML(origName)}</span> @${escapeHTML(post.repostAuthor.substring(1))}
+                            Repost from <span class="${origPremium}">${escapeHTML(origName)}</span> @${escapeHTML(post.repostAuthor.substring(1))}
                         </div>
                         <div class="original-text">${escapeHTML(post.repostText || '')}</div>
                         ${origMediaHTML}
@@ -1373,7 +1373,6 @@
                 </div>
             </div>`;
             }
-
             function updatePostStatsInDOM(postId) {
                 const post = posts.find(p => p.id === postId);
                 if (!post) return;
