@@ -617,12 +617,8 @@
             font-weight: 700;
         }
         @keyframes shimmer {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 200% center;
-            }
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
         .shimmer-text {
             background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
@@ -745,31 +741,16 @@
             opacity: 0.7;
         }
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
         .loading-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: #0a0a0a;
             display: flex;
             justify-content: center;
@@ -781,15 +762,9 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
         @keyframes pulse {
-            0%,
-            100% {
-                opacity: 0.5;
-            }
-            50% {
-                opacity: 1;
-            }
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
-
         .user-search-card {
             background: var(--glass);
             backdrop-filter: blur(20px);
@@ -802,7 +777,7 @@
             gap: 12px;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             animation: fadeIn 0.3s ease;
         }
         .user-search-card:hover {
@@ -810,111 +785,46 @@
             transform: translateY(-1px);
         }
         .user-search-card .usc-avatar {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: #2a2a2a;
-            border: 1px solid var(--border);
-            flex-shrink: 0;
+            width: 44px; height: 44px; border-radius: 50%;
+            overflow: hidden; background: #2a2a2a;
+            border: 1px solid var(--border); flex-shrink: 0;
         }
         .user-search-card .usc-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
         }
-        .user-search-card .usc-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .user-search-card .usc-name {
-            font-weight: 600;
-            color: var(--text);
-            font-size: 14px;
-        }
-        .user-search-card .usc-username {
-            font-size: 12px;
-            color: #888;
-        }
+        .user-search-card .usc-info { flex: 1; min-width: 0; }
+        .user-search-card .usc-name { font-weight: 600; color: var(--text); font-size: 14px; }
+        .user-search-card .usc-username { font-size: 12px; color: #888; }
         .user-search-card .usc-bio {
-            font-size: 11px;
-            color: #aaa;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
+            font-size: 11px; color: #aaa;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
         }
-        .user-search-card .usc-badges {
-            display: inline-flex;
-            gap: 2px;
-            margin-left: 4px;
-            vertical-align: middle;
-        }
-        .user-search-card .usc-badges img {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-        }
-        .user-search-card .usc-arrow {
-            color: #888;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
+        .user-search-card .usc-badges { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
+        .user-search-card .usc-badges img { width: 18px; height: 18px; object-fit: contain; }
+        .user-search-card .usc-arrow { color: #888; font-size: 18px; flex-shrink: 0; }
         .search-info-bar {
-            padding: 8px 12px;
-            color: #aaa;
-            font-size: 12px;
-            background: rgba(212, 175, 55, 0.05);
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            text-align: center;
-            margin-bottom: 4px;
+            padding: 8px 12px; color: #aaa; font-size: 12px;
+            background: rgba(212,175,55,0.05); border-radius: 10px;
+            border: 1px solid var(--border); text-align: center; margin-bottom: 4px;
         }
         .clear-search-btn {
-            background: none;
-            border: 1px solid var(--border);
-            color: #aaa;
-            padding: 6px 14px;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: 0.2s;
-            align-self: center;
-            margin-top: 4px;
+            background: none; border: 1px solid var(--border); color: #aaa;
+            padding: 6px 14px; border-radius: 16px; cursor: pointer; font-size: 12px;
+            transition: 0.2s; align-self: center; margin-top: 4px;
         }
-        .clear-search-btn:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-        }
-
+        .clear-search-btn:hover { border-color: var(--gold); color: var(--gold); }
         @media (max-width: 400px) {
-            .modal {
-                padding: 20px 16px 16px;
-                border-radius: 20px;
-            }
-            .post-card {
-                padding: 12px;
-                border-radius: 14px;
-            }
-            .btn {
-                padding: 9px 18px;
-                font-size: 13px;
-            }
-            .user-search-card {
-                padding: 10px 12px;
-                gap: 8px;
-            }
-            .user-search-card .usc-avatar {
-                width: 36px;
-                height: 36px;
-            }
+            .modal { padding: 20px 16px 16px; border-radius: 20px; }
+            .post-card { padding: 12px; border-radius: 14px; }
+            .btn { padding: 9px 18px; font-size: 13px; }
+            .user-search-card { padding: 10px 12px; gap: 8px; }
+            .user-search-card .usc-avatar { width: 36px; height: 36px; }
         }
     </style>
 </head>
 <body>
     <div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         (function() {
             const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
@@ -922,8 +832,7 @@
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             const STATE_ID = 1;
             const ADMIN_USER = '@durov';
-            const DEFAULT_AVATAR =
-                'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
+            const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
             const ICONS = {
                 LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
@@ -951,25 +860,20 @@
             let feedScrollPos = 0;
             let dataLoaded = false;
             const BATCH_SIZE = 3;
+            let searchTimeout = null;   // debounce timer
 
             function setCookie(n, v, d) {
                 var e = "";
-                if (d) { var t = new Date();
-                    t.setTime(t.getTime() + 864e5 * d);
-                    e = "; expires=" + t.toUTCString(); }
+                if (d) { var t = new Date(); t.setTime(t.getTime() + 864e5 * d); e = "; expires=" + t.toUTCString(); }
                 document.cookie = n + "=" + (v || "") + e + "; path=/; SameSite=Lax";
             }
-
             function getCookie(n) {
                 var ne = n + "=";
                 var ca = document.cookie.split(';');
-                for (var i = 0; i < ca.length; i++) { var c = ca[i]; while (c.charAt(0) === ' ') c = c.substring(
-                        1); if (c.indexOf(ne) === 0) return c.substring(ne.length); }
+                for (var i = 0; i < ca.length; i++) { var c = ca[i]; while (c.charAt(0) === ' ') c = c.substring(1); if (c.indexOf(ne) === 0) return c.substring(ne.length); }
                 return null;
             }
-
-            function eraseCookie(n) { document.cookie = n +
-                    '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
+            function eraseCookie(n) { document.cookie = n + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
 
             function compressImage(file, maxWidth = 600, quality = 0.6) {
                 return new Promise((resolve, reject) => {
@@ -978,15 +882,11 @@
                     reader.onload = (e) => {
                         const img = new Image();
                         img.onload = () => {
-                            let w = img.width,
-                                h = img.height;
-                            if (w > maxWidth) { h = Math.round(h * (maxWidth / w));
-                                w = maxWidth; }
-                            if (h > maxWidth) { w = Math.round(w * (maxWidth / h));
-                                h = maxWidth; }
+                            let w = img.width, h = img.height;
+                            if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+                            if (h > maxWidth) { w = Math.round(w * (maxWidth / h)); h = maxWidth; }
                             const canvas = document.createElement('canvas');
-                            canvas.width = w;
-                            canvas.height = h;
+                            canvas.width = w; canvas.height = h;
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, w, h);
                             resolve(canvas.toDataURL('image/jpeg', quality));
@@ -1006,17 +906,14 @@
                         compressImage(file).then(dataURL => resolve({ dataURL, isVideo: false }))
                             .catch(err => {
                                 const reader = new FileReader();
-                                reader.onload = (e) => resolve({ dataURL: e.target.result,
-                                    isVideo: false });
+                                reader.onload = (e) => resolve({ dataURL: e.target.result, isVideo: false });
                                 reader.onerror = reject;
                                 reader.readAsDataURL(file);
                             });
                     } else if (file.type.startsWith('video/')) {
                         if (file.size > MAX_VIDEO_SIZE) {
                             const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-                            if (!confirm(
-                                    `⚠️ Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`
-                                    )) {
+                            if (!confirm(`Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`)) {
                                 reject(new Error('Video too large – cancelled by user'));
                                 return;
                             }
@@ -1032,11 +929,9 @@
             function showToast(msg, duration = 2000) {
                 const toast = document.createElement('div');
                 toast.textContent = msg;
-                toast.style.cssText =
-                    `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--glass-strong); color:var(--gold); padding:10px 22px; border-radius:24px; font-size:13px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center;`;
+                toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--glass-strong); color:var(--gold); padding:10px 22px; border-radius:24px; font-size:13px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center;`;
                 document.body.appendChild(toast);
-                setTimeout(() => { toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.4s'; }, duration);
+                setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; }, duration);
                 setTimeout(() => toast.remove(), duration + 500);
             }
 
@@ -1057,8 +952,7 @@
                     if (!p.hashtags) p.hashtags = extractHashtags(p.text || '');
                     if (!p.likes) p.likes = {};
                     if (!p.comments) p.comments = [];
-                    if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith(
-                        'data:video'));
+                    if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith('data:video'));
                 });
             }
 
@@ -1080,19 +974,16 @@
             async function loadState() {
                 let supabaseOk = false;
                 try {
-                    const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID)
-                        .single();
+                    const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID).single();
                     if (!error && data?.data) {
-                        if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data
-                            .users;
+                        if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data.users;
                         if (Array.isArray(data.data.posts)) posts = data.data.posts;
                         supabaseOk = true;
                     }
                 } catch (e) {}
                 if (!supabaseOk || (Object.keys(users).length === 0 && posts.length === 0)) {
                     const local = loadFromLocalStorage();
-                    if (local) { users = local.users || {};
-                        posts = local.posts || []; }
+                    if (local) { users = local.users || {}; posts = local.posts || []; }
                 }
                 if (!users[ADMIN_USER]) {
                     users[ADMIN_USER] = {
@@ -1115,7 +1006,6 @@
                     if (!users[u].following) users[u].following = [];
                 });
                 normalizePosts(posts);
-
                 dataLoaded = true;
                 const saved = getCookie('yolk_user');
                 if (saved && users[saved]) currentUser = saved;
@@ -1123,18 +1013,16 @@
             }
 
             async function saveState() {
-                if (!dataLoaded) return;
-                const state = { users, posts };
+                // всегда сохраняем локально
                 saveToLocalStorage();
+                if (!dataLoaded) return;   // серверная синхронизация только после загрузки
                 try {
-                    const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: state }, {
-                        onConflict: 'id' });
-                    if (error) showToast('⚠️ Could not sync to server', 3500);
-                } catch (e) { showToast('⚠️ Server sync failed', 3500); }
+                    const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, { onConflict: 'id' });
+                    if (error) showToast('Could not sync to server', 3500);
+                } catch (e) { showToast('Server sync failed', 3500); }
             }
 
             function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
-
             function getDisplayName(u) { const user = users[u]; return user?.displayName || u.substring(1); }
 
             function getUserBadges(u) {
@@ -1145,9 +1033,7 @@
                     if (id === 3) return `<img src="${ICONS.BADGE3}" class="badge-icon" alt="badge3">`;
                     return '';
                 }).join('');
-                if (users[u]?.premium) {
-                    html += `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">`;
-                }
+                if (users[u]?.premium) html += `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">`;
                 return html;
             }
 
@@ -1159,10 +1045,7 @@
                     if (id === 3) return `<img src="${ICONS.BADGE3}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b3">`;
                     return '';
                 }).join('');
-                if (users[u]?.premium) {
-                    html +=
-                        `<img src="${ICONS.PREMIUM_EGG}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="prem">`;
-                }
+                if (users[u]?.premium) html += `<img src="${ICONS.PREMIUM_EGG}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="prem">`;
                 return html;
             }
 
@@ -1178,9 +1061,7 @@
                 return div.innerHTML;
             }
 
-            function isValidUsername(s) {
-                return /^[a-zA-Z][a-zA-Z0-9_]{0,14}$/.test(s);
-            }
+            function isValidUsername(s) { return /^[a-zA-Z][a-zA-Z0-9_]{0,14}$/.test(s); }
 
             function loginUser(u) {
                 currentUser = u;
@@ -1204,9 +1085,7 @@
                 render();
             }
 
-            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (
-                    i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
             function getFeedPosts() {
                 let filtered = posts;
@@ -1225,16 +1104,14 @@
             function searchUsers(query) {
                 if (!query.startsWith('@')) return [];
                 const q = query.toLowerCase().trim();
-                if (q.length <= 1) return [];
+                if (q.length < 3) return [];   // минимум 3 символа (включая @)
                 const results = [];
                 Object.keys(users).forEach(u => {
                     if (u.toLowerCase().includes(q)) {
                         results.push(u);
                     } else {
                         const dn = (users[u]?.displayName || '').toLowerCase();
-                        if (dn.includes(q.substring(1))) {
-                            results.push(u);
-                        }
+                        if (dn.includes(q.substring(1))) results.push(u);
                     }
                 });
                 return results;
@@ -1247,8 +1124,7 @@
                 const filtered = getFeedPosts();
                 if (filtered.length === 0) {
                     if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
-                        container.innerHTML =
-                            '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+                        container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
                     }
                     return;
                 }
@@ -1269,15 +1145,9 @@
                 }
             }
 
-            function resetFeed() { feedShuffled = [];
-                feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = '';
-                    loadMoreFeed(); } }
-
-            function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el
-                    .scrollTop; }
-
-            function restoreFeedScroll() { setTimeout(() => { const el = document.getElementById('feedContainer'); if (
-                        el) el.scrollTop = feedScrollPos; }, 80); }
+            function resetFeed() { feedShuffled = []; feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = ''; loadMoreFeed(); } }
+            function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el.scrollTop; }
+            function restoreFeedScroll() { setTimeout(() => { const el = document.getElementById('feedContainer'); if (el) el.scrollTop = feedScrollPos; }, 80); }
 
             function addPost(text, media = null, isVideo = false) {
                 if (!currentUser) return;
@@ -1385,17 +1255,13 @@
                 const liked = post.likes?.[currentUser] || false;
                 const mediaHtml = post.media ? (post.isVideo ?
                     `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
-                    `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`
-                ) : '';
+                    `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`) : '';
 
                 let textHTML = escapeHTML(post.text || '');
-                textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g,
-                    '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
+                textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
                 textHTML = textHTML.replace(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g, function(match) {
                     const u = match.toLowerCase();
-                    if (users[u]) {
-                        return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
-                    }
+                    if (users[u]) return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
                     return match;
                 });
 
@@ -1433,18 +1299,15 @@
                 if (likeBtn) {
                     const liked = post.likes?.[currentUser] || false;
                     likeBtn.classList.toggle('liked', liked);
-                    likeBtn.innerHTML =
-                        `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
+                    likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
                 }
                 const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
-                if (commentBtn) commentBtn.innerHTML =
-                    `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
+                if (commentBtn) commentBtn.innerHTML = `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
             }
 
             function renderProfileWall(username) {
                 const userPosts = posts.filter(p => p.author === username);
-                if (userPosts.length === 0)
-                    return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
+                if (userPosts.length === 0) return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
                 return userPosts.map(p => renderPostCard(p, false)).join('');
             }
 
@@ -1453,9 +1316,9 @@
                 if (results.length === 0) {
                     return `
                 <div class="feed-container">
-                    <div class="search-info-bar">🔍 No users found for "${escapeHTML(query)}"</div>
+                    <div class="search-info-bar">No users found for "${escapeHTML(query)}"</div>
                     <div style="text-align:center;color:#888;padding:30px;">Try a different username</div>
-                    <button class="clear-search-btn" onclick="window.clearSearch()">← Clear search</button>
+                    <button class="clear-search-btn" onclick="window.clearSearch()">Clear search</button>
                 </div>`;
                 }
                 let cardsHTML = results.map(u => {
@@ -1475,14 +1338,14 @@
                         ${bio ? `<div class="usc-bio">${escapeHTML(bio)}</div>` : ''}
                         <div style="font-size:10px;color:#666;margin-top:2px;">${followers} followers · ${following} following</div>
                     </div>
-                    <div class="usc-arrow">→</div>
+                    <div class="usc-arrow">&gt;</div>
                 </div>`;
                 }).join('');
                 return `
             <div class="feed-container" id="feedContainer">
-                <div class="search-info-bar">👤 ${results.length} user${results.length>1?'s':''} found for "${escapeHTML(query)}"</div>
+                <div class="search-info-bar">${results.length} user${results.length>1?'s':''} found for "${escapeHTML(query)}"</div>
                 ${cardsHTML}
-                <button class="clear-search-btn" onclick="window.clearSearch()">← Clear search</button>
+                <button class="clear-search-btn" onclick="window.clearSearch()">Clear search</button>
             </div>`;
             }
 
@@ -1504,7 +1367,7 @@
                     <div class="feature">
                         <span>And respect!</span>
                     </div>
-                    <div class="price">PRICE - 299₽ OR $3.90</div>
+                    <div class="price">PRICE - 299 RUB or $3.90</div>
                     <p style="margin-top:12px;font-size:13px;color:#aaa;">To purchase, write to Telegram <a href="https://t.me/yolkappru" target="_blank" style="color:var(--gold);">@yolkappru</a></p>
                     <div class="btn-row" style="justify-content:center;">
                         <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
@@ -1515,10 +1378,8 @@
             }
 
             function render() {
-                if (!dataLoaded) { document.getElementById('app').innerHTML =
-                        '<div class="loading-screen">YOLKAPP</div>'; return; }
-                if (!currentUser) { document.getElementById('app').innerHTML = renderAuth();
-                    attachAuthEvents(); return; }
+                if (!dataLoaded) { document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>'; return; }
+                if (!currentUser) { document.getElementById('app').innerHTML = renderAuth(); attachAuthEvents(); return; }
 
                 const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
                 const profile = users[profileUser] || {};
@@ -1546,11 +1407,13 @@
 
                 let contentHtml = '';
                 if (activeTab === 'feed') {
-                    if (searchQuery.startsWith('@')) {
+                    if (searchQuery.startsWith('@') && searchQuery.length >= 3) {
                         contentHtml = renderUserSearchResults(searchQuery);
+                    } else if (searchQuery.startsWith('@') && searchQuery.length < 3) {
+                        // показываем пустую заглушку с подсказкой
+                        contentHtml = `<div class="feed-container" style="text-align:center;color:#888;padding:40px;">Type at least 3 characters to search users</div>`;
                     } else {
-                        contentHtml =
-                            `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
+                        contentHtml = `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
                     }
                 } else if (activeTab === 'profile') {
                     contentHtml = `
@@ -1620,34 +1483,38 @@
                 const searchInput = document.getElementById('searchInput');
                 if (searchInput) {
                     searchInput.addEventListener('input', (e) => {
-                        const prevQuery = searchQuery;
-                        searchQuery = e.target.value;
-                        const prevWasAt = prevQuery.startsWith('@');
-                        const nowIsAt = searchQuery.startsWith('@');
-                        if (activeTab === 'feed') {
-                            if (nowIsAt || prevWasAt) {
-                                render();
+                        const val = e.target.value;
+                        searchQuery = val;
+                        if (searchTimeout) clearTimeout(searchTimeout);
+                        searchTimeout = setTimeout(() => {
+                            if (searchQuery.startsWith('@')) {
+                                if (searchQuery.length >= 3) {
+                                    if (activeTab !== 'feed') {
+                                        activeTab = 'feed';
+                                        feedShuffled = []; feedIndex = 0;
+                                    }
+                                    render();
+                                } else if (searchQuery.length < 3) {
+                                    // показываем страницу-заглушку, если активна feed
+                                    if (activeTab === 'feed') render();
+                                }
                             } else {
-                                resetFeed();
+                                // обычный поиск
+                                if (activeTab !== 'feed') {
+                                    activeTab = 'feed';
+                                    feedShuffled = []; feedIndex = 0;
+                                    render();
+                                } else {
+                                    resetFeed();
+                                }
                             }
-                        } else if (nowIsAt) {
-                            activeTab = 'feed';
-                            feedShuffled = [];
-                            feedIndex = 0;
-                            render();
-                        } else if (searchQuery) {
-                            activeTab = 'feed';
-                            feedShuffled = [];
-                            feedIndex = 0;
-                            render();
-                        } else {
-                            render();
-                        }
+                        }, 400);
                     });
                     searchInput.addEventListener('keydown', (e) => {
                         if (e.key === 'Escape') {
                             searchQuery = '';
                             searchInput.value = '';
+                            if (searchTimeout) clearTimeout(searchTimeout);
                             if (activeTab === 'feed') resetFeed();
                             else render();
                         }
@@ -1658,6 +1525,8 @@
                     const container = document.getElementById('feedContainer');
                     if (container && container.innerHTML === '') resetFeed();
                     restoreFeedScroll();
+                } else if (activeTab === 'feed' && searchQuery.startsWith('@') && searchQuery.length < 3) {
+                    // ничего не делаем, уже отрендерили заглушку
                 }
 
                 const feedEl = document.getElementById('feedContainer');
@@ -1719,11 +1588,10 @@
                     }
                     loginUser(u);
                 });
-                document.getElementById('registerBtn')?.addEventListener('click', () => {
+                document.getElementById('registerBtn')?.addEventListener('click', async () => {
                     const raw = document.getElementById('regUsername').value.trim();
                     if (!isValidUsername(raw)) {
-                        if (errDiv) errDiv.textContent =
-                            'Username: 1-15 characters, English letters only (a-z, A-Z), numbers and underscores allowed. Must start with a letter.';
+                        if (errDiv) errDiv.textContent = 'Username: 1-15 characters, English letters only (a-z, A-Z), numbers and underscores allowed. Must start with a letter.';
                         return;
                     }
                     const u = '@' + raw.toLowerCase();
@@ -1731,9 +1599,12 @@
                     const e = document.getElementById('regEmail').value.trim();
                     const p = document.getElementById('regPassword').value;
                     if (!e || !p) { if (errDiv) errDiv.textContent = 'Fill all fields'; return; }
-                    users[u] = { password: p, email: e, avatar: null, banner: null, bio: '', displayName: raw,
-                        followers: [], following: [], badges: [], premium: false };
-                    saveState();
+                    users[u] = { password: p, email: e, avatar: null, banner: null, bio: '', displayName: raw, followers: [], following: [], badges: [], premium: false };
+                    // гарантированно сохраняем локально и пытаемся синхронизировать
+                    saveToLocalStorage();
+                    if (dataLoaded) {
+                        try { await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, { onConflict: 'id' }); } catch (e) {}
+                    }
                     loginUser(u);
                 });
                 document.getElementById('regUsername')?.addEventListener('input', function() {
@@ -1746,23 +1617,10 @@
                 });
             }
 
-            window.switchTab = (tab) => { saveFeedScroll();
-                activeTab = tab;
-                viewedProfile = null;
-                searchQuery = '';
-                feedShuffled = [];
-                feedIndex = 0;
-                render(); };
-            window.goToMyProfile = () => { saveFeedScroll();
-                activeTab = 'profile';
-                viewedProfile = null;
-                searchQuery = '';
-                render(); };
-            window.openUserProfile = (u) => { saveFeedScroll();
-                activeTab = 'userProfile';
-                viewedProfile = u;
-                searchQuery = '';
-                render(); };
+            // глобальные функции
+            window.switchTab = (tab) => { saveFeedScroll(); activeTab = tab; viewedProfile = null; searchQuery = ''; feedShuffled = []; feedIndex = 0; if (searchTimeout) clearTimeout(searchTimeout); render(); };
+            window.goToMyProfile = () => { saveFeedScroll(); activeTab = 'profile'; viewedProfile = null; searchQuery = ''; render(); };
+            window.openUserProfile = (u) => { saveFeedScroll(); activeTab = 'userProfile'; viewedProfile = u; searchQuery = ''; render(); };
             window.toggleLike = (id) => toggleLike(id);
             window.deletePostById = (id) => { if (confirm('Delete this post?')) deletePost(id); };
             window.openComments = (postId) => {
@@ -1783,11 +1641,9 @@
                 modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
                 document.getElementById('submitComment').onclick = () => {
                     const text = document.getElementById('commentText').value.trim();
-                    if (text) { addComment(postId, text);
-                        modal.remove(); }
+                    if (text) { addComment(postId, text); modal.remove(); }
                 };
-                document.getElementById('commentText')?.addEventListener('keydown', (e) => { if (e.key === 'Enter')
-                        document.getElementById('submitComment')?.click(); });
+                document.getElementById('commentText')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('submitComment')?.click(); });
             };
             window.openCreatePost = () => {
                 const modal = document.createElement('div');
@@ -1813,14 +1669,9 @@
                     const publishBtn = document.getElementById('publishBtn');
                     if (publishBtn) publishBtn.disabled = true;
                     if (file) {
-                        processMediaFile(file).then(result => { addPost(text || '', result.dataURL, result
-                                .isVideo);
-                            modal.remove(); })
-                            .catch(err => { if (publishBtn) publishBtn.disabled = false; if (!err.message
-                                    ?.includes('cancelled')) showToast('❌ Error: ' + err.message,
-                                    3000); });
-                    } else { addPost(text);
-                        modal.remove(); }
+                        processMediaFile(file).then(result => { addPost(text || '', result.dataURL, result.isVideo); modal.remove(); })
+                            .catch(err => { if (publishBtn) publishBtn.disabled = false; if (!err.message?.includes('cancelled')) showToast('Error: ' + err.message, 3000); });
+                    } else { addPost(text); modal.remove(); }
                 };
             };
             window.toggleFollowUser = (target) => toggleFollow(target);
@@ -1828,16 +1679,14 @@
                 searchQuery = tag;
                 const input = document.getElementById('searchInput');
                 if (input) input.value = tag;
+                if (searchTimeout) clearTimeout(searchTimeout);
                 if (activeTab === 'feed') {
-                    feedShuffled = [];
-                    feedIndex = 0;
+                    feedShuffled = []; feedIndex = 0;
                     const container = document.getElementById('feedContainer');
-                    if (container) { container.innerHTML = '';
-                        loadMoreFeed(); }
+                    if (container) { container.innerHTML = ''; loadMoreFeed(); }
                 } else {
                     activeTab = 'feed';
-                    feedShuffled = [];
-                    feedIndex = 0;
+                    feedShuffled = []; feedIndex = 0;
                     render();
                 }
             };
@@ -1845,19 +1694,16 @@
                 searchQuery = '';
                 const input = document.getElementById('searchInput');
                 if (input) input.value = '';
+                if (searchTimeout) clearTimeout(searchTimeout);
                 if (activeTab === 'feed') resetFeed();
-                else { activeTab = 'feed';
-                    feedShuffled = [];
-                    feedIndex = 0;
-                    render(); }
+                else { activeTab = 'feed'; feedShuffled = []; feedIndex = 0; render(); }
             };
             window.openImage = (src) => {
                 const modal = document.createElement('div');
                 modal.className = 'modal-overlay';
                 modal.style.cursor = 'zoom-out';
                 modal.onclick = () => modal.remove();
-                modal.innerHTML =
-                    `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
+                modal.innerHTML = `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
                 document.body.appendChild(modal);
             };
             window.openEditProfile = () => {
@@ -1897,28 +1743,11 @@
                     const processImages = (cb) => {
                         let tasks = 0;
                         const checkDone = () => { tasks--; if (tasks <= 0) cb(); };
-                        if (avatarFile) { tasks++;
-                            compressImage(avatarFile, 300, 0.7).then(dataURL => { users[currentUser].avatar =
-                                    dataURL;
-                                checkDone(); }).catch(() => { const r = new FileReader();
-                                r.onload = (e) => { users[currentUser].avatar = e.target.result;
-                                    checkDone(); };
-                                r.onerror = checkDone;
-                                r.readAsDataURL(avatarFile); }); }
-                        if (bannerFile) { tasks++;
-                            compressImage(bannerFile, 800, 0.6).then(dataURL => { users[currentUser].banner =
-                                    dataURL;
-                                checkDone(); }).catch(() => { const r = new FileReader();
-                                r.onload = (e) => { users[currentUser].banner = e.target.result;
-                                    checkDone(); };
-                                r.onerror = checkDone;
-                                r.readAsDataURL(bannerFile); }); }
+                        if (avatarFile) { tasks++; compressImage(avatarFile, 300, 0.7).then(dataURL => { users[currentUser].avatar = dataURL; checkDone(); }).catch(() => { const r = new FileReader(); r.onload = (e) => { users[currentUser].avatar = e.target.result; checkDone(); }; r.onerror = checkDone; r.readAsDataURL(avatarFile); }); }
+                        if (bannerFile) { tasks++; compressImage(bannerFile, 800, 0.6).then(dataURL => { users[currentUser].banner = dataURL; checkDone(); }).catch(() => { const r = new FileReader(); r.onload = (e) => { users[currentUser].banner = e.target.result; checkDone(); }; r.onerror = checkDone; r.readAsDataURL(bannerFile); }); }
                         if (tasks === 0) cb();
                     };
-                    processImages(() => { saveState();
-                        modal.remove();
-                        render();
-                        showToast('✅ Profile updated!'); });
+                    processImages(() => { saveState(); modal.remove(); render(); showToast('Profile updated!'); });
                 };
             };
             window.giveBadge = (target, num) => giveBadge(target, num);
