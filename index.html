@@ -292,6 +292,30 @@
         .action-btn.danger:hover {
             color: #ff6b6b;
         }
+        /* стили для репоста */
+        .repost-block {
+            background: rgba(212, 175, 55, 0.06);
+            border-left: 3px solid var(--gold);
+            padding: 12px 14px;
+            margin: 12px 0 8px;
+            border-radius: 8px;
+        }
+        .repost-block .original-author {
+            font-weight: 600;
+            color: var(--gold);
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+        .repost-block .original-text {
+            color: #ccc;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .repost-block .post-media img,
+        .repost-block .post-media video {
+            max-height: 200px;
+            margin-top: 6px;
+        }
         .profile-wall {
             padding: 16px;
             display: flex;
@@ -844,7 +868,8 @@
                 PREMIUM_EGG: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1632.png',
                 EDIT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/rra.png',
                 LOGOUT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1634.png',
-                PREMIUM_BUTTON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png'
+                PREMIUM_BUTTON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png',
+                REPOST: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1651.png'
             };
             const LS_KEY = 'yolkapp_state_backup';
             const MAX_VIDEO_SIZE = 1.5 * 1024 * 1024;
@@ -860,7 +885,7 @@
             let feedScrollPos = 0;
             let dataLoaded = false;
             const BATCH_SIZE = 3;
-            let searchTimeout = null;   // debounce timer
+            let searchTimeout = null;
 
             function setCookie(n, v, d) {
                 var e = "";
@@ -953,6 +978,8 @@
                     if (!p.likes) p.likes = {};
                     if (!p.comments) p.comments = [];
                     if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith('data:video'));
+                    // поддержка старых постов без repost
+                    if (typeof p.isRepost === 'undefined') p.isRepost = false;
                 });
             }
 
@@ -1013,9 +1040,8 @@
             }
 
             async function saveState() {
-                // всегда сохраняем локально
                 saveToLocalStorage();
-                if (!dataLoaded) return;   // серверная синхронизация только после загрузки
+                if (!dataLoaded) return;
                 try {
                     const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, { onConflict: 'id' });
                     if (error) showToast('Could not sync to server', 3500);
@@ -1104,7 +1130,8 @@
             function searchUsers(query) {
                 if (!query.startsWith('@')) return [];
                 const q = query.toLowerCase().trim();
-                if (q.length < 3) return [];   // минимум 3 символа (включая @)
+                // ИЗМЕНЕНО: минимальная длина 2 символа (включая @)
+                if (q.length < 2) return [];
                 const results = [];
                 Object.keys(users).forEach(u => {
                     if (u.toLowerCase().includes(q)) {
@@ -1160,13 +1187,43 @@
                     hashtags: extractHashtags(text),
                     time: Date.now(),
                     likes: {},
-                    comments: []
+                    comments: [],
+                    isRepost: false
                 };
                 posts.unshift(post);
                 saveState();
                 feedShuffled = [];
                 feedIndex = 0;
                 render();
+            }
+
+            // Новая функция для создания репоста
+            function repostPost(originalPostId, userText) {
+                if (!currentUser) return;
+                const original = posts.find(p => p.id === originalPostId);
+                if (!original) return;
+                const newPost = {
+                    id: generateId(),
+                    author: currentUser,
+                    text: userText.trim(),
+                    media: null,
+                    isVideo: null,
+                    hashtags: extractHashtags(userText),
+                    time: Date.now(),
+                    likes: {},
+                    comments: [],
+                    isRepost: true,
+                    repostAuthor: original.author,
+                    repostText: original.text,
+                    repostMedia: original.media,
+                    repostIsVideo: original.isVideo
+                };
+                posts.unshift(newPost);
+                saveState();
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
+                showToast('Post reposted to your wall!');
             }
 
             function deletePost(id) {
@@ -1253,6 +1310,29 @@
                 const likes = Object.keys(post.likes || {}).length;
                 const comments = (post.comments || []).length;
                 const liked = post.likes?.[currentUser] || false;
+
+                // Обработка репоста
+                let repostHTML = '';
+                if (post.isRepost && post.repostAuthor) {
+                    const origAuthor = users[post.repostAuthor] || {};
+                    const origName = getDisplayName(post.repostAuthor);
+                    const origPremium = origAuthor.premium ? 'premium-nick' : '';
+                    let origMediaHTML = '';
+                    if (post.repostMedia) {
+                        origMediaHTML = post.repostIsVideo
+                            ? `<div class="post-media"><video controls preload="metadata" src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;"></video></div>`
+                            : `<div class="post-media"><img src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;" loading="lazy" onclick="window.openImage('${post.repostMedia.replace(/'/g, "\\'")}')"></div>`;
+                    }
+                    repostHTML = `
+                    <div class="repost-block">
+                        <div class="original-author" onclick="event.stopPropagation();window.openUserProfile('${post.repostAuthor}')">
+                            🔁 Repost from <span class="${origPremium}">${escapeHTML(origName)}</span> @${escapeHTML(post.repostAuthor.substring(1))}
+                        </div>
+                        <div class="original-text">${escapeHTML(post.repostText || '')}</div>
+                        ${origMediaHTML}
+                    </div>`;
+                }
+
                 const mediaHtml = post.media ? (post.isVideo ?
                     `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
                     `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`) : '';
@@ -1276,14 +1356,18 @@
                         <div class="post-time">${new Date(post.time).toLocaleString()}</div>
                     </div>
                 </div>` : ''}
-                <div class="post-text">${textHTML}</div>
+                ${post.text ? `<div class="post-text">${textHTML}</div>` : ''}
                 ${mediaHtml}
+                ${repostHTML}
                 <div class="post-actions">
                     <button class="action-btn ${liked?'liked':''}" onclick="event.stopPropagation();window.toggleLike('${post.id}')">
                         <img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${likes}</span>
                     </button>
                     <button class="action-btn" onclick="event.stopPropagation();window.openComments('${post.id}')">
                         <img src="${ICONS.COMMENT}" alt="comment"> <span>${comments}</span>
+                    </button>
+                    <button class="action-btn" onclick="event.stopPropagation();window.openRepost('${post.id}')">
+                        <img src="${ICONS.REPOST}" alt="repost">
                     </button>
                     ${canDelete ? `<button class="action-btn danger" onclick="event.stopPropagation();window.deletePostById('${post.id}')"><img src="${ICONS.DELETE}" alt="delete"></button>` : ''}
                 </div>
@@ -1407,11 +1491,11 @@
 
                 let contentHtml = '';
                 if (activeTab === 'feed') {
-                    if (searchQuery.startsWith('@') && searchQuery.length >= 3) {
+                    // Изменено условие: поиск пользователей начинается с 2 символов (@ + буква)
+                    if (searchQuery.startsWith('@') && searchQuery.length >= 2) {
                         contentHtml = renderUserSearchResults(searchQuery);
-                    } else if (searchQuery.startsWith('@') && searchQuery.length < 3) {
-                        // показываем пустую заглушку с подсказкой
-                        contentHtml = `<div class="feed-container" style="text-align:center;color:#888;padding:40px;">Type at least 3 characters to search users</div>`;
+                    } else if (searchQuery.startsWith('@') && searchQuery.length < 2) {
+                        contentHtml = `<div class="feed-container" style="text-align:center;color:#888;padding:40px;">Type at least 2 characters to search users</div>`;
                     } else {
                         contentHtml = `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
                     }
@@ -1488,18 +1572,17 @@
                         if (searchTimeout) clearTimeout(searchTimeout);
                         searchTimeout = setTimeout(() => {
                             if (searchQuery.startsWith('@')) {
-                                if (searchQuery.length >= 3) {
+                                // теперь поиск юзеров с 2 символов
+                                if (searchQuery.length >= 2) {
                                     if (activeTab !== 'feed') {
                                         activeTab = 'feed';
                                         feedShuffled = []; feedIndex = 0;
                                     }
                                     render();
-                                } else if (searchQuery.length < 3) {
-                                    // показываем страницу-заглушку, если активна feed
+                                } else if (searchQuery.length < 2) {
                                     if (activeTab === 'feed') render();
                                 }
                             } else {
-                                // обычный поиск
                                 if (activeTab !== 'feed') {
                                     activeTab = 'feed';
                                     feedShuffled = []; feedIndex = 0;
@@ -1525,8 +1608,8 @@
                     const container = document.getElementById('feedContainer');
                     if (container && container.innerHTML === '') resetFeed();
                     restoreFeedScroll();
-                } else if (activeTab === 'feed' && searchQuery.startsWith('@') && searchQuery.length < 3) {
-                    // ничего не делаем, уже отрендерили заглушку
+                } else if (activeTab === 'feed' && searchQuery.startsWith('@') && searchQuery.length < 2) {
+                    // уже показано сообщение
                 }
 
                 const feedEl = document.getElementById('feedContainer');
@@ -1600,7 +1683,6 @@
                     const p = document.getElementById('regPassword').value;
                     if (!e || !p) { if (errDiv) errDiv.textContent = 'Fill all fields'; return; }
                     users[u] = { password: p, email: e, avatar: null, banner: null, bio: '', displayName: raw, followers: [], following: [], badges: [], premium: false };
-                    // гарантированно сохраняем локально и пытаемся синхронизировать
                     saveToLocalStorage();
                     if (dataLoaded) {
                         try { await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, { onConflict: 'id' }); } catch (e) {}
@@ -1617,7 +1699,7 @@
                 });
             }
 
-            // глобальные функции
+            // Глобальные функции
             window.switchTab = (tab) => { saveFeedScroll(); activeTab = tab; viewedProfile = null; searchQuery = ''; feedShuffled = []; feedIndex = 0; if (searchTimeout) clearTimeout(searchTimeout); render(); };
             window.goToMyProfile = () => { saveFeedScroll(); activeTab = 'profile'; viewedProfile = null; searchQuery = ''; render(); };
             window.openUserProfile = (u) => { saveFeedScroll(); activeTab = 'userProfile'; viewedProfile = u; searchQuery = ''; render(); };
@@ -1644,6 +1726,38 @@
                     if (text) { addComment(postId, text); modal.remove(); }
                 };
                 document.getElementById('commentText')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('submitComment')?.click(); });
+            };
+            window.openRepost = (postId) => {
+                const post = posts.find(p => p.id === postId);
+                if (!post) return;
+                // Нельзя репостить свой же пост? Не будем ограничивать, но можно добавить при желании
+                const originalAuthorName = getDisplayName(post.author);
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+            <div class="modal">
+                <h3>Repost</h3>
+                <div style="margin-bottom:12px; padding:10px; background:rgba(212,175,55,0.06); border-left:3px solid var(--gold); border-radius:8px;">
+                    <div style="font-weight:600;color:var(--gold);">${escapeHTML(originalAuthorName)} @${escapeHTML(post.author.substring(1))}</div>
+                    <div style="color:#ccc;font-size:13px;margin-top:4px;">${escapeHTML(post.text || '')}</div>
+                    ${post.media ? (post.isVideo ? `<video controls src="${post.media}" style="max-width:100%;max-height:150px;margin-top:6px;border-radius:6px;"></video>` : `<img src="${post.media}" style="max-width:100%;max-height:150px;margin-top:6px;border-radius:6px;">`) : ''}
+                </div>
+                <div class="field-group">
+                    <label>Add your comment (optional)</label>
+                    <textarea id="repostText" rows="3" placeholder="What do you think?"></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                    <button class="btn" id="doRepost">Repost</button>
+                </div>
+            </div>`;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+                document.getElementById('doRepost').onclick = () => {
+                    const text = document.getElementById('repostText').value;
+                    repostPost(postId, text);
+                    modal.remove();
+                };
             };
             window.openCreatePost = () => {
                 const modal = document.createElement('div');
