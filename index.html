@@ -226,6 +226,17 @@
         .hashtag:hover {
             opacity: 0.7;
         }
+        .atuser {
+            color: #5b9bd5;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: opacity 0.2s;
+            font-weight: 500;
+        }
+        .atuser:hover {
+            opacity: 0.7;
+        }
         .post-media img,
         .post-media video {
             max-width: 100%;
@@ -606,8 +617,12 @@
             font-weight: 700;
         }
         @keyframes shimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
+            0% {
+                background-position: 0% center;
+            }
+            100% {
+                background-position: 200% center;
+            }
         }
         .shimmer-text {
             background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
@@ -730,12 +745,24 @@
             opacity: 0.7;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .loading-screen {
             position: fixed;
@@ -754,19 +781,140 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
         }
+
+        .user-search-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+        .user-search-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-1px);
+        }
+        .user-search-card .usc-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .user-search-card .usc-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .user-search-card .usc-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .user-search-card .usc-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 14px;
+        }
+        .user-search-card .usc-username {
+            font-size: 12px;
+            color: #888;
+        }
+        .user-search-card .usc-bio {
+            font-size: 11px;
+            color: #aaa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .user-search-card .usc-badges {
+            display: inline-flex;
+            gap: 2px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+        .user-search-card .usc-badges img {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+        .user-search-card .usc-arrow {
+            color: #888;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .search-info-bar {
+            padding: 8px 12px;
+            color: #aaa;
+            font-size: 12px;
+            background: rgba(212, 175, 55, 0.05);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .clear-search-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: #aaa;
+            padding: 6px 14px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+            align-self: center;
+            margin-top: 4px;
+        }
+        .clear-search-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
         @media (max-width: 400px) {
-            .modal { padding: 20px 16px 16px; border-radius: 20px; }
-            .post-card { padding: 12px; border-radius: 14px; }
-            .btn { padding: 9px 18px; font-size: 13px; }
+            .modal {
+                padding: 20px 16px 16px;
+                border-radius: 20px;
+            }
+            .post-card {
+                padding: 12px;
+                border-radius: 14px;
+            }
+            .btn {
+                padding: 9px 18px;
+                font-size: 13px;
+            }
+            .user-search-card {
+                padding: 10px 12px;
+                gap: 8px;
+            }
+            .user-search-card .usc-avatar {
+                width: 36px;
+                height: 36px;
+            }
         }
     </style>
 </head>
 <body>
     <div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
     <script>
         (function() {
             const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
@@ -774,7 +922,8 @@
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             const STATE_ID = 1;
             const ADMIN_USER = '@durov';
-            const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
+            const DEFAULT_AVATAR =
+                'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
             const ICONS = {
                 LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
                 LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
@@ -805,16 +954,22 @@
 
             function setCookie(n, v, d) {
                 var e = "";
-                if (d) { var t = new Date(); t.setTime(t.getTime() + 864e5 * d); e = "; expires=" + t.toUTCString(); }
+                if (d) { var t = new Date();
+                    t.setTime(t.getTime() + 864e5 * d);
+                    e = "; expires=" + t.toUTCString(); }
                 document.cookie = n + "=" + (v || "") + e + "; path=/; SameSite=Lax";
             }
+
             function getCookie(n) {
                 var ne = n + "=";
                 var ca = document.cookie.split(';');
-                for (var i = 0; i < ca.length; i++) { var c = ca[i]; while (c.charAt(0) === ' ') c = c.substring(1); if (c.indexOf(ne) === 0) return c.substring(ne.length); }
+                for (var i = 0; i < ca.length; i++) { var c = ca[i]; while (c.charAt(0) === ' ') c = c.substring(
+                        1); if (c.indexOf(ne) === 0) return c.substring(ne.length); }
                 return null;
             }
-            function eraseCookie(n) { document.cookie = n + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
+
+            function eraseCookie(n) { document.cookie = n +
+                    '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
 
             function compressImage(file, maxWidth = 600, quality = 0.6) {
                 return new Promise((resolve, reject) => {
@@ -823,11 +978,17 @@
                     reader.onload = (e) => {
                         const img = new Image();
                         img.onload = () => {
-                            let w = img.width, h = img.height;
-                            if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
-                            if (h > maxWidth) { w = Math.round(w * (maxWidth / h)); h = maxWidth; }
-                            const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-                            const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                            let w = img.width,
+                                h = img.height;
+                            if (w > maxWidth) { h = Math.round(h * (maxWidth / w));
+                                w = maxWidth; }
+                            if (h > maxWidth) { w = Math.round(w * (maxWidth / h));
+                                h = maxWidth; }
+                            const canvas = document.createElement('canvas');
+                            canvas.width = w;
+                            canvas.height = h;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, w, h);
                             resolve(canvas.toDataURL('image/jpeg', quality));
                         };
                         img.onerror = () => resolve(e.target.result);
@@ -843,17 +1004,21 @@
                     if (!file) { resolve(null); return; }
                     if (file.type.startsWith('image/')) {
                         compressImage(file).then(dataURL => resolve({ dataURL, isVideo: false }))
-                        .catch(err => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => resolve({ dataURL: e.target.result, isVideo: false });
-                            reader.onerror = reject;
-                            reader.readAsDataURL(file);
-                        });
+                            .catch(err => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => resolve({ dataURL: e.target.result,
+                                    isVideo: false });
+                                reader.onerror = reject;
+                                reader.readAsDataURL(file);
+                            });
                     } else if (file.type.startsWith('video/')) {
                         if (file.size > MAX_VIDEO_SIZE) {
                             const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-                            if (!confirm(`⚠️ Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`)) {
-                                reject(new Error('Video too large – cancelled by user')); return;
+                            if (!confirm(
+                                    `⚠️ Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`
+                                    )) {
+                                reject(new Error('Video too large – cancelled by user'));
+                                return;
                             }
                         }
                         const reader = new FileReader();
@@ -867,9 +1032,11 @@
             function showToast(msg, duration = 2000) {
                 const toast = document.createElement('div');
                 toast.textContent = msg;
-                toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--glass-strong); color:var(--gold); padding:10px 22px; border-radius:24px; font-size:13px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center;`;
+                toast.style.cssText =
+                    `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--glass-strong); color:var(--gold); padding:10px 22px; border-radius:24px; font-size:13px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center;`;
                 document.body.appendChild(toast);
-                setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; }, duration);
+                setTimeout(() => { toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.4s'; }, duration);
                 setTimeout(() => toast.remove(), duration + 500);
             }
 
@@ -879,18 +1046,26 @@
                 return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
             }
 
+            function extractAtUsers(text) {
+                if (!text) return [];
+                const matches = text.match(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g);
+                return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
+            }
+
             function normalizePosts(arr) {
                 arr.forEach(p => {
                     if (!p.hashtags) p.hashtags = extractHashtags(p.text || '');
                     if (!p.likes) p.likes = {};
                     if (!p.comments) p.comments = [];
-                    if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith('data:video'));
+                    if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith(
+                        'data:video'));
                 });
             }
 
             async function saveToLocalStorage() {
                 try { localStorage.setItem(LS_KEY, JSON.stringify({ users, posts })); } catch (e) {}
             }
+
             function loadFromLocalStorage() {
                 try {
                     const raw = localStorage.getItem(LS_KEY);
@@ -905,27 +1080,39 @@
             async function loadState() {
                 let supabaseOk = false;
                 try {
-                    const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID).single();
+                    const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID)
+                        .single();
                     if (!error && data?.data) {
-                        if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data.users;
+                        if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data
+                            .users;
                         if (Array.isArray(data.data.posts)) posts = data.data.posts;
                         supabaseOk = true;
                     }
                 } catch (e) {}
                 if (!supabaseOk || (Object.keys(users).length === 0 && posts.length === 0)) {
                     const local = loadFromLocalStorage();
-                    if (local) { users = local.users || {}; posts = local.posts || []; }
+                    if (local) { users = local.users || {};
+                        posts = local.posts || []; }
                 }
                 if (!users[ADMIN_USER]) {
                     users[ADMIN_USER] = {
-                        password: 'admin123', email: 'durov@yolkapp.com', avatar: null, banner: null,
-                        bio: 'Founder of Yolkapp', displayName: 'Durov', followers: [], following: [],
-                        badges: [1, 2, 3], premium: true
+                        password: 'admin123',
+                        email: 'durov@yolkapp.com',
+                        avatar: null,
+                        banner: null,
+                        bio: 'Founder of Yolkapp',
+                        displayName: 'Durov',
+                        followers: [],
+                        following: [],
+                        badges: [1, 2, 3],
+                        premium: true
                     };
                 }
-                // normalize missing fields
                 Object.keys(users).forEach(u => {
                     if (typeof users[u].premium !== 'boolean') users[u].premium = false;
+                    if (!users[u].badges) users[u].badges = [];
+                    if (!users[u].followers) users[u].followers = [];
+                    if (!users[u].following) users[u].following = [];
                 });
                 normalizePosts(posts);
 
@@ -940,12 +1127,14 @@
                 const state = { users, posts };
                 saveToLocalStorage();
                 try {
-                    const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: state }, { onConflict: 'id' });
+                    const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: state }, {
+                        onConflict: 'id' });
                     if (error) showToast('⚠️ Could not sync to server', 3500);
                 } catch (e) { showToast('⚠️ Server sync failed', 3500); }
             }
 
             function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+
             function getDisplayName(u) { const user = users[u]; return user?.displayName || u.substring(1); }
 
             function getUserBadges(u) {
@@ -962,40 +1151,105 @@
                 return html;
             }
 
+            function getUserBadgesSmall(u) {
+                const badges = users[u]?.badges || [];
+                let html = badges.map(id => {
+                    if (id === 1) return `<img src="${ICONS.BADGE1}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b1">`;
+                    if (id === 2) return `<img src="${ICONS.BADGE2}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b2">`;
+                    if (id === 3) return `<img src="${ICONS.BADGE3}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b3">`;
+                    return '';
+                }).join('');
+                if (users[u]?.premium) {
+                    html +=
+                        `<img src="${ICONS.PREMIUM_EGG}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="prem">`;
+                }
+                return html;
+            }
+
             function formatUsernameForPost(u) {
                 const name = getDisplayName(u);
                 const premiumClass = users[u]?.premium ? 'premium-nick' : '';
-                return `<span class="${premiumClass}">${name}</span> @${u.substring(1)}`;
+                return `<span class="${premiumClass}">${escapeHTML(name)}</span> @${escapeHTML(u.substring(1))}`;
             }
 
-            function isValidUsername(s) { return /^[^\s@]{1,15}$/.test(s); }
+            function escapeHTML(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function isValidUsername(s) {
+                return /^[a-zA-Z][a-zA-Z0-9_]{0,14}$/.test(s);
+            }
+
             function loginUser(u) {
-                currentUser = u; setCookie('yolk_user', u, 365);
-                activeTab = 'feed'; viewedProfile = null; feedShuffled = []; feedIndex = 0; render();
-            }
-            function logout() {
-                currentUser = null; eraseCookie('yolk_user'); viewedProfile = null;
-                activeTab = 'feed'; feedShuffled = []; feedIndex = 0; render();
+                currentUser = u;
+                setCookie('yolk_user', u, 365);
+                activeTab = 'feed';
+                viewedProfile = null;
+                feedShuffled = [];
+                feedIndex = 0;
+                searchQuery = '';
+                render();
             }
 
-            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+            function logout() {
+                currentUser = null;
+                eraseCookie('yolk_user');
+                viewedProfile = null;
+                activeTab = 'feed';
+                feedShuffled = [];
+                feedIndex = 0;
+                searchQuery = '';
+                render();
+            }
+
+            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (
+                    i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
             function getFeedPosts() {
                 let filtered = posts;
                 if (searchQuery.startsWith('#')) {
-                    const tag = searchQuery.toLowerCase();
+                    const tag = searchQuery.toLowerCase().trim();
                     filtered = posts.filter(p => p.hashtags?.includes(tag));
+                } else if (searchQuery.startsWith('@')) {
+                    return [];
                 } else if (searchQuery) {
                     const q = searchQuery.toLowerCase();
                     filtered = posts.filter(p => p.text.toLowerCase().includes(q));
                 }
                 return filtered;
             }
+
+            function searchUsers(query) {
+                if (!query.startsWith('@')) return [];
+                const q = query.toLowerCase().trim();
+                if (q.length <= 1) return [];
+                const results = [];
+                Object.keys(users).forEach(u => {
+                    if (u.toLowerCase().includes(q)) {
+                        results.push(u);
+                    } else {
+                        const dn = (users[u]?.displayName || '').toLowerCase();
+                        if (dn.includes(q.substring(1))) {
+                            results.push(u);
+                        }
+                    }
+                });
+                return results;
+            }
+
             function loadMoreFeed() {
                 const container = document.getElementById('feedContainer');
                 if (!container || activeTab !== 'feed') return;
+                if (searchQuery.startsWith('@')) return;
                 const filtered = getFeedPosts();
                 if (filtered.length === 0) {
-                    if (container.innerHTML === '') container.innerHTML = '<div style="text-align:center;color:#888;padding:40px;">No posts yet. Be the first!</div>';
+                    if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
+                        container.innerHTML =
+                            '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+                    }
                     return;
                 }
                 if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
@@ -1014,42 +1268,70 @@
                     container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
                 }
             }
-            function resetFeed() { feedShuffled = []; feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = ''; loadMoreFeed(); } }
-            function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el.scrollTop; }
-            function restoreFeedScroll() { setTimeout(() => { const el = document.getElementById('feedContainer'); if (el) el.scrollTop = feedScrollPos; }, 80); }
+
+            function resetFeed() { feedShuffled = [];
+                feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = '';
+                    loadMoreFeed(); } }
+
+            function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el
+                    .scrollTop; }
+
+            function restoreFeedScroll() { setTimeout(() => { const el = document.getElementById('feedContainer'); if (
+                        el) el.scrollTop = feedScrollPos; }, 80); }
 
             function addPost(text, media = null, isVideo = false) {
                 if (!currentUser) return;
                 const post = {
-                    id: generateId(), author: currentUser, text: text.trim(), media, isVideo,
-                    hashtags: extractHashtags(text), time: Date.now(), likes: {}, comments: []
+                    id: generateId(),
+                    author: currentUser,
+                    text: text.trim(),
+                    media,
+                    isVideo,
+                    hashtags: extractHashtags(text),
+                    time: Date.now(),
+                    likes: {},
+                    comments: []
                 };
-                posts.unshift(post); saveState(); feedShuffled = []; feedIndex = 0; render();
+                posts.unshift(post);
+                saveState();
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
             }
+
             function deletePost(id) {
                 const post = posts.find(p => p.id === id);
                 if (!post) return;
                 if (post.author !== currentUser && currentUser !== ADMIN_USER) return;
-                posts = posts.filter(p => p.id !== id); saveState(); feedShuffled = []; feedIndex = 0; render();
+                posts = posts.filter(p => p.id !== id);
+                saveState();
+                feedShuffled = [];
+                feedIndex = 0;
+                render();
             }
+
             function toggleLike(postId) {
                 const post = posts.find(p => p.id === postId);
                 if (!post) return;
                 if (post.likes[currentUser]) delete post.likes[currentUser];
                 else post.likes[currentUser] = true;
-                saveState(); updatePostStatsInDOM(postId);
+                saveState();
+                updatePostStatsInDOM(postId);
             }
+
             function addComment(postId, text) {
                 const post = posts.find(p => p.id === postId);
                 if (!post) return;
                 post.comments.push({ author: currentUser, text, time: Date.now() });
-                saveState(); updatePostStatsInDOM(postId);
+                saveState();
+                updatePostStatsInDOM(postId);
             }
 
             function isFollowing(target) {
                 if (!currentUser || !users[currentUser] || !users[target]) return false;
                 return users[currentUser].following?.includes(target) || false;
             }
+
             function toggleFollow(target) {
                 if (!currentUser || currentUser === target) return;
                 if (!users[currentUser].following) users[currentUser].following = [];
@@ -1061,7 +1343,8 @@
                     users[currentUser].following.push(target);
                     users[target].followers.push(currentUser);
                 }
-                saveState(); render();
+                saveState();
+                render();
             }
 
             function giveBadge(targetUser, badgeNum) {
@@ -1069,19 +1352,29 @@
                 if (!users[targetUser]) return;
                 if (!users[targetUser].badges) users[targetUser].badges = [];
                 if (!users[targetUser].badges.includes(badgeNum)) {
-                    users[targetUser].badges.push(badgeNum); saveState(); render(); showToast(`Badge ${badgeNum} given`);
+                    users[targetUser].badges.push(badgeNum);
+                    saveState();
+                    render();
+                    showToast(`Badge ${badgeNum} given`);
                 }
             }
+
             function removeBadges(targetUser) {
                 if (currentUser !== ADMIN_USER) return;
                 if (!users[targetUser]) return;
-                users[targetUser].badges = []; saveState(); render(); showToast('Badges removed');
+                users[targetUser].badges = [];
+                saveState();
+                render();
+                showToast('Badges removed');
             }
+
             function togglePremium(targetUser) {
                 if (currentUser !== ADMIN_USER) return;
                 if (!users[targetUser]) return;
                 users[targetUser].premium = !users[targetUser].premium;
-                saveState(); render(); showToast(`Premium ${users[targetUser].premium ? 'granted' : 'revoked'} for ${getDisplayName(targetUser)}`);
+                saveState();
+                render();
+                showToast(`Premium ${users[targetUser].premium ? 'granted' : 'revoked'} for ${getDisplayName(targetUser)}`);
             }
 
             function renderPostCard(post, showAuthor = true) {
@@ -1094,7 +1387,18 @@
                     `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
                     `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`
                 ) : '';
-                const textWithHashtags = post.text.replace(/#[a-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
+
+                let textHTML = escapeHTML(post.text || '');
+                textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g,
+                    '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
+                textHTML = textHTML.replace(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g, function(match) {
+                    const u = match.toLowerCase();
+                    if (users[u]) {
+                        return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
+                    }
+                    return match;
+                });
+
                 const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
                 return `
             <div class="post-card" id="post-${post.id}">
@@ -1106,7 +1410,7 @@
                         <div class="post-time">${new Date(post.time).toLocaleString()}</div>
                     </div>
                 </div>` : ''}
-                <div class="post-text">${textWithHashtags}</div>
+                <div class="post-text">${textHTML}</div>
                 ${mediaHtml}
                 <div class="post-actions">
                     <button class="action-btn ${liked?'liked':''}" onclick="event.stopPropagation();window.toggleLike('${post.id}')">
@@ -1129,16 +1433,57 @@
                 if (likeBtn) {
                     const liked = post.likes?.[currentUser] || false;
                     likeBtn.classList.toggle('liked', liked);
-                    likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
+                    likeBtn.innerHTML =
+                        `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
                 }
                 const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
-                if (commentBtn) commentBtn.innerHTML = `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
+                if (commentBtn) commentBtn.innerHTML =
+                    `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
             }
 
             function renderProfileWall(username) {
                 const userPosts = posts.filter(p => p.author === username);
-                if (userPosts.length === 0) return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
+                if (userPosts.length === 0)
+                    return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
                 return userPosts.map(p => renderPostCard(p, false)).join('');
+            }
+
+            function renderUserSearchResults(query) {
+                const results = searchUsers(query);
+                if (results.length === 0) {
+                    return `
+                <div class="feed-container">
+                    <div class="search-info-bar">🔍 No users found for "${escapeHTML(query)}"</div>
+                    <div style="text-align:center;color:#888;padding:30px;">Try a different username</div>
+                    <button class="clear-search-btn" onclick="window.clearSearch()">← Clear search</button>
+                </div>`;
+                }
+                let cardsHTML = results.map(u => {
+                    const user = users[u] || {};
+                    const avatar = user.avatar || DEFAULT_AVATAR;
+                    const name = getDisplayName(u);
+                    const premiumClass = user.premium ? 'premium-nick' : '';
+                    const bio = user.bio || '';
+                    const followers = (user.followers || []).length;
+                    const following = (user.following || []).length;
+                    return `
+                <div class="user-search-card" onclick="window.openUserProfile('${u}')">
+                    <div class="usc-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
+                    <div class="usc-info">
+                        <div class="usc-name"><span class="${premiumClass}">${escapeHTML(name)}</span> <span class="usc-badges">${getUserBadgesSmall(u)}</span></div>
+                        <div class="usc-username">@${escapeHTML(u.substring(1))}</div>
+                        ${bio ? `<div class="usc-bio">${escapeHTML(bio)}</div>` : ''}
+                        <div style="font-size:10px;color:#666;margin-top:2px;">${followers} followers · ${following} following</div>
+                    </div>
+                    <div class="usc-arrow">→</div>
+                </div>`;
+                }).join('');
+                return `
+            <div class="feed-container" id="feedContainer">
+                <div class="search-info-bar">👤 ${results.length} user${results.length>1?'s':''} found for "${escapeHTML(query)}"</div>
+                ${cardsHTML}
+                <button class="clear-search-btn" onclick="window.clearSearch()">← Clear search</button>
+            </div>`;
             }
 
             function openPremiumModal() {
@@ -1170,8 +1515,10 @@
             }
 
             function render() {
-                if (!dataLoaded) { document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>'; return; }
-                if (!currentUser) { document.getElementById('app').innerHTML = renderAuth(); attachAuthEvents(); return; }
+                if (!dataLoaded) { document.getElementById('app').innerHTML =
+                        '<div class="loading-screen">YOLKAPP</div>'; return; }
+                if (!currentUser) { document.getElementById('app').innerHTML = renderAuth();
+                    attachAuthEvents(); return; }
 
                 const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
                 const profile = users[profileUser] || {};
@@ -1181,7 +1528,7 @@
             <div class="header">
                 <div class="logo">Yolkapp</div>
                 <div class="search-box">
-                    <input type="text" placeholder="Search or #hashtag" id="searchInput" value="${searchQuery.replace(/"/g,'&quot;')}">
+                    <input type="text" placeholder="Search, #hashtag or @user" id="searchInput" value="${searchQuery.replace(/"/g,'&quot;')}">
                 </div>
                 <div class="profile-thumb" onclick="window.goToMyProfile()">
                     <img src="${myProfile.avatar || DEFAULT_AVATAR}" alt="me" loading="lazy">
@@ -1192,14 +1539,19 @@
             <div class="tabs">
                 <div class="tab ${activeTab==='feed'?'active':''}" onclick="window.switchTab('feed')">Feed</div>
                 <div class="tab ${activeTab==='profile'?'active':''}" onclick="window.switchTab('profile')">My Profile</div>
-                ${activeTab==='userProfile' ? `<div class="tab active">${getDisplayName(viewedProfile)}</div>` : ''}
+                ${activeTab==='userProfile' ? `<div class="tab active">${escapeHTML(getDisplayName(viewedProfile))}</div>` : ''}
             </div>`;
 
-                const premiumClass = (u) => users[u]?.premium ? 'premium-nick' : '';
+                const premiumClassFn = (u) => users[u]?.premium ? 'premium-nick' : '';
 
                 let contentHtml = '';
                 if (activeTab === 'feed') {
-                    contentHtml = `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
+                    if (searchQuery.startsWith('@')) {
+                        contentHtml = renderUserSearchResults(searchQuery);
+                    } else {
+                        contentHtml =
+                            `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
+                    }
                 } else if (activeTab === 'profile') {
                     contentHtml = `
                 <div class="profile-wall">
@@ -1207,10 +1559,10 @@
                         ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
                         <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
                         <div class="profile-name">
-                            <span class="${premiumClass(currentUser)}">${getDisplayName(currentUser)}</span> ${getUserBadges(currentUser)}
+                            <span class="${premiumClassFn(currentUser)}">${escapeHTML(getDisplayName(currentUser))}</span> ${getUserBadges(currentUser)}
                         </div>
-                        <div class="profile-username">@${currentUser.substring(1)}</div>
-                        <div class="profile-bio">${profile.bio || 'No bio yet'}</div>
+                        <div class="profile-username">@${escapeHTML(currentUser.substring(1))}</div>
+                        <div class="profile-bio">${escapeHTML(profile.bio || 'No bio yet')}</div>
                         <div class="profile-stats">
                             <div><span>${(profile.followers||[]).length}</span> followers</div>
                             <div><span>${(profile.following||[]).length}</span> following</div>
@@ -1238,10 +1590,10 @@
                         ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner" style="background:#1a1a1a;"></div>'}
                         <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
                         <div class="profile-name">
-                            <span class="${premiumClass(profileUser)}">${getDisplayName(profileUser)}</span> ${getUserBadges(profileUser)}
+                            <span class="${premiumClassFn(profileUser)}">${escapeHTML(getDisplayName(profileUser))}</span> ${getUserBadges(profileUser)}
                         </div>
-                        <div class="profile-username">@${profileUser.substring(1)}</div>
-                        <div class="profile-bio">${profile.bio || 'No bio yet'}</div>
+                        <div class="profile-username">@${escapeHTML(profileUser.substring(1))}</div>
+                        <div class="profile-bio">${escapeHTML(profile.bio || 'No bio yet')}</div>
                         <div class="profile-stats">
                             <div><span>${(profile.followers||[]).length}</span> followers</div>
                             <div><span>${(profile.following||[]).length}</span> following</div>
@@ -1257,7 +1609,7 @@
                             </div>
                         ` : ''}
                     </div>
-                    <h3 style="margin-bottom:4px;color:var(--gold);font-size:16px;">${getDisplayName(profileUser)}'s wall</h3>
+                    <h3 style="margin-bottom:4px;color:var(--gold);font-size:16px;">${escapeHTML(getDisplayName(profileUser))}'s wall</h3>
                     ${renderProfileWall(profileUser)}
                 </div>`;
                 }
@@ -1268,13 +1620,41 @@
                 const searchInput = document.getElementById('searchInput');
                 if (searchInput) {
                     searchInput.addEventListener('input', (e) => {
+                        const prevQuery = searchQuery;
                         searchQuery = e.target.value;
-                        if (activeTab === 'feed') resetFeed();
-                        else render();
+                        const prevWasAt = prevQuery.startsWith('@');
+                        const nowIsAt = searchQuery.startsWith('@');
+                        if (activeTab === 'feed') {
+                            if (nowIsAt || prevWasAt) {
+                                render();
+                            } else {
+                                resetFeed();
+                            }
+                        } else if (nowIsAt) {
+                            activeTab = 'feed';
+                            feedShuffled = [];
+                            feedIndex = 0;
+                            render();
+                        } else if (searchQuery) {
+                            activeTab = 'feed';
+                            feedShuffled = [];
+                            feedIndex = 0;
+                            render();
+                        } else {
+                            render();
+                        }
+                    });
+                    searchInput.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape') {
+                            searchQuery = '';
+                            searchInput.value = '';
+                            if (activeTab === 'feed') resetFeed();
+                            else render();
+                        }
                     });
                 }
 
-                if (activeTab === 'feed') {
+                if (activeTab === 'feed' && !searchQuery.startsWith('@')) {
                     const container = document.getElementById('feedContainer');
                     if (container && container.innerHTML === '') resetFeed();
                     restoreFeedScroll();
@@ -1290,6 +1670,7 @@
             function handleFeedScroll() {
                 const el = document.getElementById('feedContainer');
                 if (!el) return;
+                if (searchQuery.startsWith('@')) return;
                 if (el.scrollTop + el.clientHeight >= el.scrollHeight - 180) loadMoreFeed();
             }
 
@@ -1305,7 +1686,7 @@
                     <div class="auth-switch" id="showRegister">Don't have an account? <b>Sign up</b></div>
                 </div>
                 <div id="registerForm" style="display:none;">
-                    <div class="input-group"><label>Username (1-15 chars, no spaces/@)</label><input id="regUsername" placeholder="yourname"></div>
+                    <div class="input-group"><label>Username (English only, 1-15 chars, letters/numbers/_ )</label><input id="regUsername" placeholder="yourname"></div>
                     <div class="input-group"><label>Email</label><input id="regEmail" placeholder="example@mail.com"></div>
                     <div class="input-group"><label>Password</label><input id="regPassword" type="password" placeholder="Create password"></div>
                     <button class="btn" id="registerBtn" style="width:100%;">Sign up</button>
@@ -1328,7 +1709,8 @@
                     if (errDiv) errDiv.textContent = '';
                 });
                 document.getElementById('loginBtn')?.addEventListener('click', () => {
-                    const u = '@' + document.getElementById('loginUsername').value.trim().toLowerCase();
+                    const rawUsername = document.getElementById('loginUsername').value.trim().toLowerCase();
+                    const u = '@' + rawUsername;
                     const e = document.getElementById('loginEmail').value.trim();
                     const p = document.getElementById('loginPassword').value;
                     if (!users[u] || users[u].password !== p || users[u].email !== e) {
@@ -1339,20 +1721,48 @@
                 });
                 document.getElementById('registerBtn')?.addEventListener('click', () => {
                     const raw = document.getElementById('regUsername').value.trim();
-                    if (!isValidUsername(raw)) { if (errDiv) errDiv.textContent = 'Username: 1-15 characters, no spaces or @'; return; }
-                    const u = '@' + raw;
+                    if (!isValidUsername(raw)) {
+                        if (errDiv) errDiv.textContent =
+                            'Username: 1-15 characters, English letters only (a-z, A-Z), numbers and underscores allowed. Must start with a letter.';
+                        return;
+                    }
+                    const u = '@' + raw.toLowerCase();
                     if (users[u]) { if (errDiv) errDiv.textContent = 'Username already taken'; return; }
                     const e = document.getElementById('regEmail').value.trim();
                     const p = document.getElementById('regPassword').value;
                     if (!e || !p) { if (errDiv) errDiv.textContent = 'Fill all fields'; return; }
-                    users[u] = { password: p, email: e, avatar: null, banner: null, bio: '', displayName: raw, followers: [], following: [], badges: [], premium: false };
-                    saveState(); loginUser(u);
+                    users[u] = { password: p, email: e, avatar: null, banner: null, bio: '', displayName: raw,
+                        followers: [], following: [], badges: [], premium: false };
+                    saveState();
+                    loginUser(u);
+                });
+                document.getElementById('regUsername')?.addEventListener('input', function() {
+                    const val = this.value;
+                    if (val && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(val) && val.length > 0) {
+                        this.style.borderColor = '#ff6b6b';
+                    } else {
+                        this.style.borderColor = '';
+                    }
                 });
             }
 
-            window.switchTab = (tab) => { saveFeedScroll(); activeTab = tab; viewedProfile = null; searchQuery = ''; feedShuffled = []; feedIndex = 0; render(); };
-            window.goToMyProfile = () => { saveFeedScroll(); activeTab = 'profile'; viewedProfile = null; render(); };
-            window.openUserProfile = (u) => { saveFeedScroll(); activeTab = 'userProfile'; viewedProfile = u; render(); };
+            window.switchTab = (tab) => { saveFeedScroll();
+                activeTab = tab;
+                viewedProfile = null;
+                searchQuery = '';
+                feedShuffled = [];
+                feedIndex = 0;
+                render(); };
+            window.goToMyProfile = () => { saveFeedScroll();
+                activeTab = 'profile';
+                viewedProfile = null;
+                searchQuery = '';
+                render(); };
+            window.openUserProfile = (u) => { saveFeedScroll();
+                activeTab = 'userProfile';
+                viewedProfile = u;
+                searchQuery = '';
+                render(); };
             window.toggleLike = (id) => toggleLike(id);
             window.deletePostById = (id) => { if (confirm('Delete this post?')) deletePost(id); };
             window.openComments = (postId) => {
@@ -1362,7 +1772,7 @@
                 modal.className = 'modal-overlay';
                 modal.innerHTML = `
             <div class="modal"><h3>Comments</h3>
-                <div class="comments-section">${(post.comments||[]).map(c=>`<div class="comment"><span class="comment-author" onclick="window.openUserProfile('${c.author}');this.closest('.modal-overlay').remove()">${getDisplayName(c.author)}</span>: ${c.text.replace(/</g,'&lt;')}</div>`).join('')||'<div style="color:#888;text-align:center;padding:12px;">No comments yet</div>'}</div>
+                <div class="comments-section">${(post.comments||[]).map(c=>`<div class="comment"><span class="comment-author" onclick="window.openUserProfile('${c.author}');this.closest('.modal-overlay').remove()">${escapeHTML(getDisplayName(c.author))}</span>: ${escapeHTML(c.text)}</div>`).join('')||'<div style="color:#888;text-align:center;padding:12px;">No comments yet</div>'}</div>
                 <div class="field-group"><input id="commentText" placeholder="Write a comment..."></div>
                 <div class="btn-row">
                     <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
@@ -1373,16 +1783,18 @@
                 modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
                 document.getElementById('submitComment').onclick = () => {
                     const text = document.getElementById('commentText').value.trim();
-                    if (text) { addComment(postId, text); modal.remove(); }
+                    if (text) { addComment(postId, text);
+                        modal.remove(); }
                 };
-                document.getElementById('commentText')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('submitComment')?.click(); });
+                document.getElementById('commentText')?.addEventListener('keydown', (e) => { if (e.key === 'Enter')
+                        document.getElementById('submitComment')?.click(); });
             };
             window.openCreatePost = () => {
                 const modal = document.createElement('div');
                 modal.className = 'modal-overlay';
                 modal.innerHTML = `
             <div class="modal"><h3>New post</h3>
-                <div class="field-group"><label>What's on your mind?</label><textarea id="postText" rows="4" placeholder="Write something... #hashtag"></textarea></div>
+                <div class="field-group"><label>What's on your mind?</label><textarea id="postText" rows="4" placeholder="Write something... #hashtag @mention"></textarea></div>
                 <div class="field-group" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                     <label class="custom-file-btn" style="margin:0;">Choose media<input type="file" id="mediaFile" accept="image/*,video/*" style="display:none;" onchange="document.getElementById('fileNameLabel').textContent = this.files[0]?.name || ''"></label>
                     <span id="fileNameLabel" class="file-name"></span>
@@ -1401,9 +1813,14 @@
                     const publishBtn = document.getElementById('publishBtn');
                     if (publishBtn) publishBtn.disabled = true;
                     if (file) {
-                        processMediaFile(file).then(result => { addPost(text || '', result.dataURL, result.isVideo); modal.remove(); })
-                        .catch(err => { if (publishBtn) publishBtn.disabled = false; if (!err.message?.includes('cancelled')) showToast('❌ Error: ' + err.message, 3000); });
-                    } else { addPost(text); modal.remove(); }
+                        processMediaFile(file).then(result => { addPost(text || '', result.dataURL, result
+                                .isVideo);
+                            modal.remove(); })
+                            .catch(err => { if (publishBtn) publishBtn.disabled = false; if (!err.message
+                                    ?.includes('cancelled')) showToast('❌ Error: ' + err.message,
+                                    3000); });
+                    } else { addPost(text);
+                        modal.remove(); }
                 };
             };
             window.toggleFollowUser = (target) => toggleFollow(target);
@@ -1411,15 +1828,36 @@
                 searchQuery = tag;
                 const input = document.getElementById('searchInput');
                 if (input) input.value = tag;
+                if (activeTab === 'feed') {
+                    feedShuffled = [];
+                    feedIndex = 0;
+                    const container = document.getElementById('feedContainer');
+                    if (container) { container.innerHTML = '';
+                        loadMoreFeed(); }
+                } else {
+                    activeTab = 'feed';
+                    feedShuffled = [];
+                    feedIndex = 0;
+                    render();
+                }
+            };
+            window.clearSearch = () => {
+                searchQuery = '';
+                const input = document.getElementById('searchInput');
+                if (input) input.value = '';
                 if (activeTab === 'feed') resetFeed();
-                else { activeTab = 'feed'; feedShuffled = []; feedIndex = 0; render(); }
+                else { activeTab = 'feed';
+                    feedShuffled = [];
+                    feedIndex = 0;
+                    render(); }
             };
             window.openImage = (src) => {
                 const modal = document.createElement('div');
                 modal.className = 'modal-overlay';
                 modal.style.cursor = 'zoom-out';
                 modal.onclick = () => modal.remove();
-                modal.innerHTML = `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
+                modal.innerHTML =
+                    `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
                 document.body.appendChild(modal);
             };
             window.openEditProfile = () => {
@@ -1428,9 +1866,9 @@
                 modal.className = 'modal-overlay';
                 modal.innerHTML = `
             <div class="modal"><h3>Edit profile</h3>
-                <div class="field-group"><label>Display name</label><input id="editDisplayName" value="${(user.displayName||'').replace(/"/g,'&quot;')}" placeholder="Your name"></div>
-                <div class="field-group"><label>Bio</label><input id="editBio" value="${(user.bio||'').replace(/"/g,'&quot;')}" placeholder="A few words about you"></div>
-                <div class="field-group"><label>Email</label><input id="editEmail" value="${(user.email||'').replace(/"/g,'&quot;')}" placeholder="your@email.com"></div>
+                <div class="field-group"><label>Display name</label><input id="editDisplayName" value="${escapeHTML(user.displayName||'')}" placeholder="Your name"></div>
+                <div class="field-group"><label>Bio</label><input id="editBio" value="${escapeHTML(user.bio||'')}" placeholder="A few words about you"></div>
+                <div class="field-group"><label>Email</label><input id="editEmail" value="${escapeHTML(user.email||'')}" placeholder="your@email.com"></div>
                 <div class="field-group"><label>New password (leave blank to keep current)</label><input id="editPassword" type="password" placeholder="New password"></div>
                 <div class="field-group" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
                     <label class="custom-file-btn" style="margin:0;">Avatar<input type="file" id="editAvatar" accept="image/*" style="display:none;"></label>
@@ -1459,11 +1897,28 @@
                     const processImages = (cb) => {
                         let tasks = 0;
                         const checkDone = () => { tasks--; if (tasks <= 0) cb(); };
-                        if (avatarFile) { tasks++; compressImage(avatarFile, 300, 0.7).then(dataURL => { users[currentUser].avatar = dataURL; checkDone(); }).catch(() => { const r = new FileReader(); r.onload = (e) => { users[currentUser].avatar = e.target.result; checkDone(); }; r.onerror = checkDone; r.readAsDataURL(avatarFile); }); }
-                        if (bannerFile) { tasks++; compressImage(bannerFile, 800, 0.6).then(dataURL => { users[currentUser].banner = dataURL; checkDone(); }).catch(() => { const r = new FileReader(); r.onload = (e) => { users[currentUser].banner = e.target.result; checkDone(); }; r.onerror = checkDone; r.readAsDataURL(bannerFile); }); }
+                        if (avatarFile) { tasks++;
+                            compressImage(avatarFile, 300, 0.7).then(dataURL => { users[currentUser].avatar =
+                                    dataURL;
+                                checkDone(); }).catch(() => { const r = new FileReader();
+                                r.onload = (e) => { users[currentUser].avatar = e.target.result;
+                                    checkDone(); };
+                                r.onerror = checkDone;
+                                r.readAsDataURL(avatarFile); }); }
+                        if (bannerFile) { tasks++;
+                            compressImage(bannerFile, 800, 0.6).then(dataURL => { users[currentUser].banner =
+                                    dataURL;
+                                checkDone(); }).catch(() => { const r = new FileReader();
+                                r.onload = (e) => { users[currentUser].banner = e.target.result;
+                                    checkDone(); };
+                                r.onerror = checkDone;
+                                r.readAsDataURL(bannerFile); }); }
                         if (tasks === 0) cb();
                     };
-                    processImages(() => { saveState(); modal.remove(); render(); showToast('✅ Profile updated!'); });
+                    processImages(() => { saveState();
+                        modal.remove();
+                        render();
+                        showToast('✅ Profile updated!'); });
                 };
             };
             window.giveBadge = (target, num) => giveBadge(target, num);
