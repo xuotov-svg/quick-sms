@@ -75,8 +75,12 @@
     .logo {
       font-weight: 700;
       font-size: 20px;
-      color: var(--gold);
       letter-spacing: 1px;
+      background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
     }
     .search-box {
       flex: 1;
@@ -147,7 +151,11 @@
       letter-spacing: 0.3px;
     }
     .tab.active {
-      color: var(--gold);
+      background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
       border-bottom-color: var(--gold);
     }
     .tab:hover {
@@ -228,9 +236,14 @@
       line-height: 1.5;
       word-break: break-word;
       font-size: 14px;
+      color: var(--text);
     }
     .hashtag {
-      color: var(--gold);
+      background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
       cursor: pointer;
       text-decoration: underline;
       text-underline-offset: 3px;
@@ -297,10 +310,12 @@
       flex-shrink: 0;
       transition: filter 0.2s;
     }
-    .action-btn.liked img {
+    .action-btn.liked img,
+    .action-btn.reposted img {
       filter: drop-shadow(0 0 6px var(--gold-glow)) brightness(1.2);
     }
-    .action-btn.liked {
+    .action-btn.liked,
+    .action-btn.reposted {
       color: var(--gold);
     }
     .action-btn.danger:hover {
@@ -320,7 +335,7 @@
       margin-bottom: 6px;
     }
     .repost-block .original-text {
-      color: #ccc;
+      color: var(--text-secondary);
       font-size: 13px;
       line-height: 1.4;
     }
@@ -379,7 +394,6 @@
     .profile-name {
       font-size: 20px;
       font-weight: 700;
-      color: var(--gold);
     }
     .profile-username {
       color: var(--text-secondary);
@@ -541,10 +555,14 @@
     .modal h3 {
       font-size: 20px;
       margin-bottom: 18px;
-      color: var(--gold);
       text-align: center;
       letter-spacing: 0.5px;
       font-weight: 700;
+      background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
     }
     .modal .field-group {
       margin-bottom: 14px;
@@ -653,22 +671,12 @@
       display: inline-block;
       vertical-align: middle;
     }
-    /* Золотой ник с легким переливом (обычные пользователи) */
-    .gold-nick {
-      background: linear-gradient(90deg, #d4af37, #e6c24a, #c9a632, #d4af37);
-      background-size: 200% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: gentleShimmer 3s ease-in-out infinite;
+    /* Обычный ник (без премиума) — цвет темы */
+    .normal-nick {
+      color: var(--text);
       font-weight: 600;
-      display: inline-block;
     }
-    @keyframes gentleShimmer {
-      0% { background-position: 0% center; }
-      50% { background-position: 100% center; }
-      100% { background-position: 0% center; }
-    }
-    /* Премиум ник с более ярким и быстрым переливом */
+    /* Премиум ник — переливающийся золотой */
     .premium-nick {
       background: linear-gradient(90deg, #ffd700, #fff8dc, #ffaa00, #ffd700);
       background-size: 200% auto;
@@ -677,6 +685,10 @@
       animation: premiumShimmer 1.5s linear infinite;
       font-weight: 700;
       display: inline-block;
+    }
+    @keyframes shimmer {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
     }
     @keyframes premiumShimmer {
       0% { background-position: 0% center; }
@@ -691,10 +703,6 @@
       font-weight: 700;
       display: inline-block;
     }
-    @keyframes shimmer {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
-    }
     .premium-modal .feature {
       margin-bottom: 16px;
       display: flex;
@@ -705,9 +713,13 @@
     .premium-modal .price {
       font-size: 18px;
       font-weight: bold;
-      color: var(--gold);
       margin-top: 12px;
       text-align: center;
+      background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
     }
     .comments-section {
       max-height: 220px;
@@ -757,7 +769,11 @@
       animation: fadeIn 0.4s;
     }
     .auth-box h2 {
-      color: var(--gold);
+      background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 2s linear infinite;
       margin-bottom: 8px;
       font-size: 32px;
       letter-spacing: 2px;
@@ -878,7 +894,6 @@
       transition: 0.2s; align-self: center; margin-top: 4px;
     }
     .clear-search-btn:hover { border-color: var(--gold); color: var(--gold); }
-    /* Переключатель темы */
     .theme-toggle {
       display: flex;
       align-items: center;
@@ -1072,6 +1087,8 @@
         if (!p.comments) p.comments = [];
         if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith('data:video'));
         if (typeof p.isRepost === 'undefined') p.isRepost = false;
+        if (p.repostCount === undefined) p.repostCount = 0;
+        if (!p.repostedBy) p.repostedBy = [];
       });
     }
 
@@ -1171,7 +1188,7 @@
     function formatUsernameForPost(u) {
       const name = getDisplayName(u);
       const isPremium = users[u]?.premium;
-      const cls = isPremium ? 'premium-nick' : 'gold-nick';
+      const cls = isPremium ? 'premium-nick' : 'normal-nick';
       return `<span class="${cls}">${escapeHTML(name)}</span> @${escapeHTML(u.substring(1))}`;
     }
 
@@ -1281,7 +1298,9 @@
         time: Date.now(),
         likes: {},
         comments: [],
-        isRepost: false
+        isRepost: false,
+        repostCount: 0,
+        repostedBy: []
       };
       posts.unshift(post);
       saveState();
@@ -1308,9 +1327,16 @@
         repostAuthor: original.author,
         repostText: original.text,
         repostMedia: original.media,
-        repostIsVideo: original.isVideo
+        repostIsVideo: original.isVideo,
+        repostCount: 0,
+        repostedBy: []
       };
       posts.unshift(newPost);
+      // Обновляем оригинальный пост
+      if (!original.repostedBy.includes(currentUser)) {
+        original.repostedBy.push(currentUser);
+        original.repostCount = (original.repostCount || 0) + 1;
+      }
       saveState();
       feedShuffled = [];
       feedIndex = 0;
@@ -1407,7 +1433,7 @@
           const user = users[u] || {};
           const avatar = user.avatar || DEFAULT_AVATAR;
           const name = getDisplayName(u);
-          const premiumClass = user.premium ? 'premium-nick' : 'gold-nick';
+          const premiumClass = user.premium ? 'premium-nick' : 'normal-nick';
           return `
           <div class="user-search-card" onclick="window.openUserProfile('${u}'); this.closest('.modal-overlay').remove();" style="margin-bottom:8px;">
             <div class="usc-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
@@ -1449,12 +1475,14 @@
       const likes = Object.keys(post.likes || {}).length;
       const comments = (post.comments || []).length;
       const liked = post.likes?.[currentUser] || false;
+      const reposted = post.repostedBy?.includes(currentUser) || false;
+      const reposts = post.repostCount || 0;
 
       let repostHTML = '';
       if (post.isRepost && post.repostAuthor) {
         const origAuthor = users[post.repostAuthor] || {};
         const origName = getDisplayName(post.repostAuthor);
-        const origPremium = origAuthor.premium ? 'premium-nick' : 'gold-nick';
+        const origPremium = origAuthor.premium ? 'premium-nick' : 'normal-nick';
         let origMediaHTML = '';
         if (post.repostMedia) {
           origMediaHTML = post.repostIsVideo
@@ -1504,8 +1532,8 @@
           <button class="action-btn" onclick="event.stopPropagation();window.openComments('${post.id}')">
             <img src="${ICONS.COMMENT}" alt="comment"> <span>${comments}</span>
           </button>
-          <button class="action-btn" onclick="event.stopPropagation();window.openRepost('${post.id}')">
-            <img src="${ICONS.REPOST}" alt="repost">
+          <button class="action-btn ${reposted?'reposted':''}" onclick="event.stopPropagation();window.openRepost('${post.id}')">
+            <img src="${ICONS.REPOST}" alt="repost"> <span>${reposts}</span>
           </button>
           ${canDelete ? `<button class="action-btn danger" onclick="event.stopPropagation();window.deletePostById('${post.id}')"><img src="${ICONS.DELETE}" alt="delete"></button>` : ''}
         </div>
@@ -1525,6 +1553,12 @@
       }
       const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
       if (commentBtn) commentBtn.innerHTML = `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
+      const repostBtn = card.querySelector('.action-btn:nth-of-type(3)');
+      if (repostBtn) {
+        const reposted = post.repostedBy?.includes(currentUser) || false;
+        repostBtn.classList.toggle('reposted', reposted);
+        repostBtn.innerHTML = `<img src="${ICONS.REPOST}" alt="repost"> <span>${post.repostCount || 0}</span>`;
+      }
     }
 
     function renderProfileWall(username) {
@@ -1547,7 +1581,7 @@
         const user = users[u] || {};
         const avatar = user.avatar || DEFAULT_AVATAR;
         const name = getDisplayName(u);
-        const premiumClass = user.premium ? 'premium-nick' : 'gold-nick';
+        const premiumClass = user.premium ? 'premium-nick' : 'normal-nick';
         const bio = user.bio || '';
         const followers = (user.followers || []).length;
         const following = (user.following || []).length;
@@ -1648,7 +1682,7 @@
         ${activeTab==='userProfile' ? `<div class="tab active">${escapeHTML(getDisplayName(viewedProfile))}</div>` : ''}
       </div>`;
 
-      const premiumClassFn = (u) => users[u]?.premium ? 'premium-nick' : 'gold-nick';
+      const premiumClassFn = (u) => users[u]?.premium ? 'premium-nick' : 'normal-nick';
 
       let contentHtml = '';
       if (activeTab === 'feed') {
@@ -1871,7 +1905,7 @@
       <div class="modal"><h3>Comments</h3>
         <div class="comments-section">${(post.comments||[]).map(c=>{
           const comAuthor = users[c.author] || {};
-          const comPremiumClass = comAuthor.premium ? 'premium-nick' : 'gold-nick';
+          const comPremiumClass = comAuthor.premium ? 'premium-nick' : 'normal-nick';
           return `<div class="comment"><span class="comment-author" onclick="window.openUserProfile('${c.author}');this.closest('.modal-overlay').remove()"><span class="${comPremiumClass}">${escapeHTML(getDisplayName(c.author))}</span></span>: ${escapeHTML(c.text)}</div>`;
         }).join('')||'<div style="color:#888;text-align:center;padding:12px;">No comments yet</div>'}</div>
         <div class="field-group"><input id="commentText" placeholder="Write a comment..."></div>
@@ -1987,29 +2021,29 @@
       const isLight = document.getElementById('app').classList.contains('light-theme');
       modal.innerHTML = `
       <div class="modal" style="max-width:460px;">
-        <h3>✨ Edit Profile</h3>
+        <h3>Edit Profile</h3>
         <div class="field-group">
-          <label>📛 Display name</label>
+          <label>Display name</label>
           <input id="editDisplayName" value="${escapeHTML(user.displayName||'')}" placeholder="Your name">
         </div>
         <div class="field-group">
-          <label>📝 Bio</label>
+          <label>Bio</label>
           <input id="editBio" value="${escapeHTML(user.bio||'')}" placeholder="A few words about you">
         </div>
         <div class="field-group">
-          <label>📧 Email</label>
+          <label>Email</label>
           <input id="editEmail" value="${escapeHTML(user.email||'')}" placeholder="your@email.com">
         </div>
         <div class="field-group">
-          <label>🔒 New password (leave blank to keep current)</label>
+          <label>New password (leave blank to keep current)</label>
           <input id="editPassword" type="password" placeholder="New password">
         </div>
         <div class="field-group" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-          <label class="custom-file-btn" style="margin:0;">🖼️ Avatar<input type="file" id="editAvatar" accept="image/*" style="display:none;"></label>
-          <label class="custom-file-btn" style="margin:0;">🎨 Banner<input type="file" id="editBanner" accept="image/*" style="display:none;"></label>
+          <label class="custom-file-btn" style="margin:0;">Avatar<input type="file" id="editAvatar" accept="image/*" style="display:none;"></label>
+          <label class="custom-file-btn" style="margin:0;">Banner<input type="file" id="editBanner" accept="image/*" style="display:none;"></label>
         </div>
         <div class="theme-toggle">
-          <span>🌓 Theme</span>
+          <span>Theme</span>
           <label class="switch">
             <input type="checkbox" id="themeSwitch" ${isLight ? 'checked' : ''}>
             <span class="slider"></span>
@@ -2018,7 +2052,7 @@
         </div>
         <div class="btn-row">
           <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
-          <button class="btn" id="saveProfileBtn">💾 Save</button>
+          <button class="btn" id="saveProfileBtn">Save</button>
         </div>
       </div>`;
       document.body.appendChild(modal);
