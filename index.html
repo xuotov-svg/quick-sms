@@ -1290,39 +1290,61 @@
         }
 
         function loadMoreFeed() {
-            const container = document.getElementById('feedContainer');
-            if (!container || activeTab !== 'feed') return;
-            if (searchQuery.startsWith('@')) return;
-            const filtered = getFeedPosts();
-            if (filtered.length === 0) {
-                if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
-                    container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
-                }
-                return;
-            }
-            if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
-                feedShuffled = shuffleArray([...filtered]);
-                feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-                feedIndex = 0;
-                if (container) container.innerHTML = '';
-            }
-            for (let i = 0; i < BATCH_SIZE; i++) {
-                if (feedIndex >= feedShuffled.length) {
-                    feedShuffled = shuffleArray([...filtered]);
-                    feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-                    feedIndex = 0;
-                }
-                const post = feedShuffled[feedIndex++];
-                container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
-            }
-        }
+    const container = document.getElementById('feedContainer');
+    if (!container || activeTab !== 'feed') return;
+    if (searchQuery && searchQuery.startsWith('@')) return;
 
-        function resetFeed() {
-            feedShuffled = [];
+    const filtered = getFeedPosts();
+    
+    // Если постов нет — показываем сообщение
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+        return;
+    }
+
+    // Если фильтр изменился или это первый заход — пересоздаём перемешанный массив
+    const currentSourceId = filtered.map(p => p.id).join(',');
+    if (feedShuffled.length === 0 || feedShuffled._sourceId !== currentSourceId) {
+        feedShuffled = shuffleArray([...filtered]);
+        feedShuffled._sourceId = currentSourceId;
+        feedIndex = 0;
+        container.innerHTML = ''; // очищаем контейнер
+    }
+
+    // Загружаем следующие BATCH_SIZE постов
+    for (let i = 0; i < BATCH_SIZE; i++) {
+        // Если дошли до конца — перемешиваем заново
+        if (feedIndex >= feedShuffled.length) {
+            feedShuffled = shuffleArray([...filtered]);
+            feedShuffled._sourceId = currentSourceId;
             feedIndex = 0;
-            const c = document.getElementById('feedContainer');
-            if (c) { c.innerHTML = ''; loadMoreFeed(); }
         }
+        const post = feedShuffled[feedIndex++];
+        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+    }
+}
+
+function handleFeedScroll() {
+    const el = document.getElementById('feedContainer');
+    if (!el) return;
+    if (searchQuery && searchQuery.startsWith('@')) return;
+    
+    // Если доскроллили до низа (с запасом 200px) — подгружаем ещё
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
+        loadMoreFeed();
+    }
+}
+
+// Функция для сброса ленты (при поиске, переключении вкладок и т.д.)
+function resetFeed() {
+    feedShuffled = [];
+    feedIndex = 0;
+    const container = document.getElementById('feedContainer');
+    if (container) {
+        container.innerHTML = '';
+        loadMoreFeed();
+    }
+}
 
         function saveFeedScroll() {
             const el = document.getElementById('feedContainer');
