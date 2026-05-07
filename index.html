@@ -28,16 +28,7 @@
             --radius-xl: 28px;
             --backdrop-blur: 30px;
         }
-        .light-theme {
-            --bg: #f2f2f7;
-            --panel: #ffffff;
-            --text: #1c1c1e;
-            --text-secondary: #555;
-            --border: rgba(0, 0, 0, 0.08);
-            --glass: rgba(255, 255, 255, 0.65);
-            --glass-strong: rgba(255, 255, 255, 0.92);
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-        }
+        /* Тема всегда тёмная, светлая тема удалена */
         body {
             background: radial-gradient(circle at 20% 20%, #2a1f2e, #050508);
             background-attachment: fixed;
@@ -62,10 +53,6 @@
                         radial-gradient(circle at 10% 70%, rgba(255,60,110,0.03) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
-        }
-        body.light-theme::before {
-            background: radial-gradient(circle at 80% 30%, rgba(212,175,55,0.08) 0%, transparent 50%),
-                        radial-gradient(circle at 10% 70%, rgba(255,100,130,0.05) 0%, transparent 50%);
         }
         #app {
             width: 100%;
@@ -456,11 +443,13 @@
             margin-bottom: -50px;
             border: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            overflow: hidden; /* добавлено, чтобы изображение не вылезало */
         }
         .profile-banner img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block; /* убираем лишние отступы */
         }
         .profile-avatar-large {
             width: 90px;
@@ -970,56 +959,7 @@
             border-color: var(--gold);
             color: var(--gold);
         }
-        .theme-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin: 12px 0;
-        }
-        .theme-toggle span {
-            font-size: 14px;
-            color: var(--text-secondary);
-        }
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 48px;
-            height: 26px;
-        }
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #555;
-            transition: 0.3s;
-            border-radius: 34px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: 0.3s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: var(--gold);
-        }
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
+        /* удалены стили для switch и theme-toggle, так как тема всегда тёмная */
         @media (max-width: 400px) {
             .modal {
                 padding: 20px 16px 16px;
@@ -1070,7 +1010,6 @@
             REPOST: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1651.png'
         };
         const LS_KEY = 'yolkapp_state_backup';
-        const THEME_KEY = 'yolkapp_theme';
         const MAX_VIDEO_SIZE = 1.5 * 1024 * 1024;
 
         let users = {};
@@ -1236,7 +1175,6 @@
             dataLoaded = true;
             const saved = getCookie('yolk_user');
             if (saved && users[saved]) currentUser = saved;
-            applyTheme();
             render();
         }
 
@@ -1742,33 +1680,12 @@
             modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
         }
 
-        function applyTheme() {
-            const theme = localStorage.getItem(THEME_KEY) || 'dark';
-            const app = document.getElementById('app');
-            if (app) {
-                app.classList.toggle('light-theme', theme === 'light');
-            }
-            document.body.classList.toggle('light-theme', theme === 'light');
-        }
-
-        function toggleTheme() {
-            const isLight = document.body.classList.contains('light-theme');
-            if (isLight) {
-                document.body.classList.remove('light-theme');
-                document.getElementById('app')?.classList.remove('light-theme');
-                localStorage.setItem(THEME_KEY, 'dark');
-                showToast('Dark theme');
-            } else {
-                document.body.classList.add('light-theme');
-                document.getElementById('app')?.classList.add('light-theme');
-                localStorage.setItem(THEME_KEY, 'light');
-                showToast('Light theme');
-            }
-        }
+        // Тема всегда тёмная — функция удалена, оставлена пустой для совместимости
+        function applyTheme() {}
 
         function render() {
             if (!dataLoaded) { document.getElementById('app').innerHTML = '<div class="loading-screen" style="display:flex;align-items:center;justify-content:center;height:100vh;color:var(--gold);font-size:36px;font-weight:800;letter-spacing:4px;">YOLKAPP</div>'; return; }
-            if (!currentUser) { document.getElementById('app').innerHTML = renderAuth(); attachAuthEvents(); applyTheme(); return; }
+            if (!currentUser) { document.getElementById('app').innerHTML = renderAuth(); attachAuthEvents(); return; }
 
             const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
             const profile = users[profileUser] || {};
@@ -1807,7 +1724,7 @@
                 contentHtml = `
                 <div class="profile-wall">
                     <div class="profile-card">
-                        ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner"></div>'}
+                        ${profile.banner ? `<div class="profile-banner" style="background-image:none;"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner"></div>'}
                         <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
                         <div class="profile-name">
                             <span class="${premiumClassFn(currentUser)}">${escapeHTML(getDisplayName(currentUser))} @${escapeHTML(currentUser.substring(1))}</span> ${getUserBadges(currentUser)}
@@ -1837,7 +1754,7 @@
                 contentHtml = `
                 <div class="profile-wall">
                     <div class="profile-card">
-                        ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner"></div>'}
+                        ${profile.banner ? `<div class="profile-banner" style="background-image:none;"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner"></div>'}
                         <div class="profile-avatar-large"><img src="${profile.avatar || DEFAULT_AVATAR}" alt="avatar" loading="lazy"></div>
                         <div class="profile-name">
                             <span class="${premiumClassFn(profileUser)}">${escapeHTML(getDisplayName(profileUser))} @${escapeHTML(profileUser.substring(1))}</span> ${getUserBadges(profileUser)}
@@ -1865,7 +1782,6 @@
 
             document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml +
                 `<div class="create-post-btn" onclick="window.openCreatePost()" title="New post">+</div>`;
-            applyTheme();
 
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
@@ -2131,7 +2047,7 @@
             const user = users[currentUser];
             const modal = document.createElement('div');
             modal.className = 'modal-overlay';
-            const isLight = document.body.classList.contains('light-theme');
+            // тема всегда тёмная, переключатель удалён
             modal.innerHTML = `
             <div class="modal" style="max-width:460px;">
                 <h3>Edit Profile</h3>
@@ -2155,14 +2071,6 @@
                     <label class="custom-file-btn" style="margin:0;">Avatar<input type="file" id="editAvatar" accept="image/*" style="display:none;"></label>
                     <label class="custom-file-btn" style="margin:0;">Banner<input type="file" id="editBanner" accept="image/*" style="display:none;"></label>
                 </div>
-                <div class="theme-toggle">
-                    <span>Theme</span>
-                    <label class="switch">
-                        <input type="checkbox" id="themeSwitch" ${isLight ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                    <span style="font-size:12px;">${isLight ? 'Light' : 'Dark'}</span>
-                </div>
                 <div class="btn-row">
                     <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
                     <button class="btn" id="saveProfileBtn">Save</button>
@@ -2170,7 +2078,6 @@
             </div>`;
             document.body.appendChild(modal);
             modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-            document.getElementById('themeSwitch').addEventListener('change', toggleTheme);
             document.getElementById('saveProfileBtn').onclick = () => {
                 const dn = document.getElementById('editDisplayName').value.trim();
                 const bio = document.getElementById('editBio').value.trim();
