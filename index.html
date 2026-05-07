@@ -1289,62 +1289,63 @@
             return results;
         }
 
-        function loadMoreFeed() {
-    const container = document.getElementById('feedContainer');
-    if (!container || activeTab !== 'feed') return;
-    if (searchQuery && searchQuery.startsWith('@')) return;
+                function loadMoreFeed() {
+            const container = document.getElementById('feedContainer');
+            if (!container || activeTab !== 'feed') return;
+            if (searchQuery && searchQuery.startsWith('@')) return;
 
-    const filtered = getFeedPosts();
-    
-    // Если постов нет — показываем сообщение
-    if (filtered.length === 0) {
-        container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
-        return;
-    }
+            const filtered = getFeedPosts();
+            
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+                return;
+            }
 
-    // Если фильтр изменился или это первый заход — пересоздаём перемешанный массив
-    const currentSourceId = filtered.map(p => p.id).join(',');
-    if (feedShuffled.length === 0 || feedShuffled._sourceId !== currentSourceId) {
-        feedShuffled = shuffleArray([...filtered]);
-        feedShuffled._sourceId = currentSourceId;
-        feedIndex = 0;
-        container.innerHTML = ''; // очищаем контейнер
-    }
+            const currentSourceId = filtered.map(p => p.id).join(',');
+            
+            // Сбрасываем, если фильтр изменился
+            if (feedShuffled.length === 0 || feedShuffled._sourceId !== currentSourceId) {
+                feedShuffled = shuffleArray([...filtered]);
+                feedShuffled._sourceId = currentSourceId;
+                feedIndex = 0;
+                container.innerHTML = '';
+            }
 
-    // Загружаем следующие BATCH_SIZE постов
-    for (let i = 0; i < BATCH_SIZE; i++) {
-        // Если дошли до конца — перемешиваем заново
-        if (feedIndex >= feedShuffled.length) {
-            feedShuffled = shuffleArray([...filtered]);
-            feedShuffled._sourceId = currentSourceId;
-            feedIndex = 0;
+            // Загружаем BATCH_SIZE постов
+            for (let i = 0; i < BATCH_SIZE; i++) {
+                // Если дошли до конца — начинает с начала (снова перемешиваем)
+                if (feedIndex >= feedShuffled.length) {
+                    feedShuffled = shuffleArray([...filtered]);
+                    feedShuffled._sourceId = currentSourceId;
+                    feedIndex = 0;
+                }
+                const post = feedShuffled[feedIndex];
+                if (post) {
+                    container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+                }
+                feedIndex++;
+            }
         }
-        const post = feedShuffled[feedIndex++];
-        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
-    }
-}
 
-function handleFeedScroll() {
-    const el = document.getElementById('feedContainer');
-    if (!el) return;
-    if (searchQuery && searchQuery.startsWith('@')) return;
-    
-    // Если доскроллили до низа (с запасом 200px) — подгружаем ещё
-    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 200) {
-        loadMoreFeed();
-    }
-}
+        function handleFeedScroll() {
+            const el = document.getElementById('feedContainer');
+            if (!el || activeTab !== 'feed') return;
+            if (searchQuery && searchQuery.startsWith('@')) return;
+            
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 250) {
+                loadMoreFeed();
+            }
+        }
 
-// Функция для сброса ленты (при поиске, переключении вкладок и т.д.)
-function resetFeed() {
-    feedShuffled = [];
-    feedIndex = 0;
-    const container = document.getElementById('feedContainer');
-    if (container) {
-        container.innerHTML = '';
-        loadMoreFeed();
-    }
-}
+        function resetFeed() {
+            feedShuffled = [];
+            feedIndex = 0;
+            const container = document.getElementById('feedContainer');
+            if (container) {
+                container.innerHTML = '';
+                loadMoreFeed();
+            }
+        }
 
         function saveFeedScroll() {
             const el = document.getElementById('feedContainer');
