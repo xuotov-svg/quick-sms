@@ -277,7 +277,7 @@
     }
     .feed-container {
         flex: 1;
-        padding: 14px 16px 160px; /* увеличен нижний отступ, чтобы гарантировать прокрутку и срабатывание scroll */
+        padding: 14px 16px 160px;
         display: flex;
         flex-direction: column;
         gap: 16px;
@@ -314,7 +314,7 @@
         transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, background 0.45s, box-shadow 0.35s;
         animation: cardFadeIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
         position: relative;
-        overflow: hidden;
+        word-wrap: break-word;
     }
     .post-card::after {
         content: '';
@@ -518,6 +518,7 @@
         transition: border-color 0.3s, background 0.45s;
         position: relative;
         z-index: 1;
+        word-wrap: break-word;
     }
     .repost-block:hover {
         border-left-color: #e6c84d;
@@ -579,7 +580,7 @@
         box-shadow: var(--shadow-gold);
         transition: background 0.45s, border-color 0.45s, box-shadow 0.45s;
         position: relative;
-        overflow: hidden;
+        overflow: hidden; /* только для псевдоэлемента, не режет контент */
     }
     .profile-card::after {
         content: '';
@@ -733,7 +734,7 @@
     .action-icon-btn {
         background: var(--glass-strong);
         border: 1px solid var(--border);
-        border-radius: var(--radius-full);
+        border-radius: 14px; /* квадратные, как просил */
         width: 46px;
         height: 46px;
         cursor: pointer;
@@ -744,9 +745,6 @@
         padding: 10px;
         flex-shrink: 0;
         box-shadow: var(--shadow-xs);
-    }
-    .profile-wall .action-icon-btn {
-        border-radius: 14px; /* квадратные кнопки в профиле */
     }
     .action-icon-btn:hover {
         background: rgba(212, 175, 55, 0.12);
