@@ -6,57 +6,39 @@
     <title>Yolkapp</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23d4af37'/%3E%3C/svg%3E">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap');
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
         :root {
             --gold: #d4af37;
-            --gold-bright: #f0c850;
-            --gold-dark: #a08020;
-            --gold-glow: rgba(212, 175, 55, 0.45);
-            --gold-neon: rgba(240, 200, 80, 0.7);
-            --bg: #060608;
-            --panel: #0c0c12;
-            --text: #e8e8ee;
-            --text-secondary: #9999aa;
-            --border: #1e1e2c;
-            --border-glow: rgba(212, 175, 55, 0.2);
-            --glass: rgba(14, 14, 24, 0.65);
-            --glass-strong: rgba(16, 16, 28, 0.88);
-            --glass-hover: rgba(20, 20, 36, 0.78);
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
-            --shadow-gold: 0 8px 32px rgba(212, 175, 55, 0.15);
-            --radius-lg: 18px;
-            --radius-xl: 22px;
-            --radius-2xl: 28px;
-            --backdrop-blur: 28px;
-            --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-display: 'Manrope', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            --aurora-speed: 18s;
-            --card-transition: 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+            --gold-dark: #b8960b;
+            --gold-glow: rgba(212, 175, 55, 0.3);
+            --bg: #0a0a0a;
+            --panel: #111;
+            --text: #eee;
+            --text-secondary: #aaa;
+            --border: #2a2a2a;
+            /* Эффект жидкого стекла: сильная прозрачность + интенсивный блюр */
+            --glass: rgba(18, 18, 22, 0.7);
+            --glass-strong: rgba(20, 20, 26, 0.9);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --radius-lg: 20px;
+            --radius-xl: 24px;
+            --backdrop-blur: 24px;
         }
-
         .light-theme {
-            --bg: #f0f0f5;
-            --panel: #ffffff;
-            --text: #1a1a28;
-            --text-secondary: #5a5a70;
-            --border: #d8d8e0;
-            --border-glow: rgba(180, 150, 60, 0.25);
+            --bg: #f5f5f5;
+            --panel: #fff;
+            --text: #222;
+            --text-secondary: #666;
+            --border: #ddd;
             --glass: rgba(255, 255, 255, 0.7);
-            --glass-strong: rgba(255, 255, 255, 0.9);
-            --glass-hover: rgba(255, 255, 255, 0.82);
-            --shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-            --shadow-gold: 0 8px 32px rgba(180, 150, 60, 0.12);
-            --gold-glow: rgba(180, 150, 60, 0.35);
-            --gold-neon: rgba(200, 160, 60, 0.5);
+            --glass-strong: rgba(255, 255, 255, 0.92);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         }
-
         body {
             background: var(--bg);
             min-height: 100vh;
@@ -65,128 +47,57 @@
             align-items: flex-start;
             -webkit-tap-highlight-color: transparent;
             color: var(--text);
-            font-family: var(--font-primary);
-            transition: background 0.4s ease, color 0.4s ease;
-            position: relative;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s, color 0.3s;
         }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background:
-                radial-gradient(ellipse at 15% 20%, rgba(212, 175, 55, 0.09) 0%, transparent 50%),
-                radial-gradient(ellipse at 85% 30%, rgba(240, 200, 80, 0.07) 0%, transparent 50%),
-                radial-gradient(ellipse at 50% 70%, rgba(180, 140, 50, 0.08) 0%, transparent 50%),
-                radial-gradient(ellipse at 25% 80%, rgba(200, 160, 60, 0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 10%, rgba(220, 180, 70, 0.05) 0%, transparent 50%);
-            background-size: 180% 180%;
-            animation: auroraFlow var(--aurora-speed) ease-in-out infinite;
-            z-index: 0;
-            pointer-events: none;
-            will-change: transform;
-        }
-
-        @keyframes auroraFlow {
-            0%,
-            100% {
-                transform: translate(0, 0) rotate(0deg);
-            }
-            20% {
-                transform: translate(2%, -1%) rotate(1deg);
-            }
-            40% {
-                transform: translate(-1%, 1.5%) rotate(-0.5deg);
-            }
-            60% {
-                transform: translate(1.5%, 0.5%) rotate(0.8deg);
-            }
-            80% {
-                transform: translate(-2%, -0.5%) rotate(-1deg);
-            }
-        }
-
         #app {
             width: 100%;
-            max-width: 620px;
-            background: transparent;
+            max-width: 600px;
+            background: var(--bg);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             position: relative;
-            z-index: 1;
-            transition: background 0.4s;
+            box-shadow: var(--shadow);
+            transition: background 0.3s, box-shadow 0.3s;
         }
-
         .header {
             background: var(--glass);
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
-            padding: 14px 18px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 20;
-            transition: all 0.35s ease;
-            box-shadow: 0 1px 20px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s, border-color 0.3s;
         }
-
         .logo {
-            font-family: var(--font-display);
-            font-weight: 800;
-            font-size: 22px;
-            letter-spacing: 1.5px;
-            background: linear-gradient(135deg, #e0c050 0%, #d4af37 25%, #f8e080 50%, #c9a030 75%, #e0c050 100%);
-            background-size: 300% auto;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.5)) drop-shadow(0 0 4px rgba(240, 200, 80, 0.4));
-            animation: logoShimmer 3.5s linear infinite;
-            cursor: pointer;
-            transition: filter 0.3s;
-            flex-shrink: 0;
+            filter: drop-shadow(0 0 8px rgba(212,175,55,0.4));
+            animation: shimmer 2.5s linear infinite;
         }
-
-        .logo:hover {
-            filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.75)) drop-shadow(0 0 8px rgba(240, 200, 80, 0.6));
-        }
-
-        @keyframes logoShimmer {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 300% center;
-            }
-        }
-
         .search-box {
             flex: 1;
-            background: rgba(128, 128, 128, 0.06);
+            background: rgba(128, 128, 128, 0.08);
             border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 7px 16px;
+            border-radius: 20px;
+            padding: 6px 14px;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            position: relative;
-            min-width: 0;
+            gap: 6px;
+            transition: border-color 0.2s, background 0.3s;
         }
         .search-box:focus-within {
             border-color: var(--gold);
-            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.07), 0 0 20px rgba(212, 175, 55, 0.12);
-            background: rgba(128, 128, 128, 0.1);
         }
         .search-box input {
             background: transparent;
@@ -195,17 +106,13 @@
             color: var(--text);
             width: 100%;
             font-size: 14px;
-            font-family: var(--font-primary);
-            letter-spacing: 0.2px;
         }
         .search-box input::placeholder {
-            color: #777;
-            letter-spacing: 0.3px;
+            color: #888;
         }
-
         .profile-thumb {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             background: var(--border);
             cursor: pointer;
@@ -214,178 +121,103 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-            position: relative;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid transparent;
+            transition: border-color 0.2s, transform 0.2s;
         }
         .profile-thumb:hover {
             border-color: var(--gold);
-            transform: scale(1.08);
-            box-shadow: 0 0 18px rgba(212, 175, 55, 0.35);
-        }
-        .profile-thumb:active {
-            transform: scale(0.94);
+            transform: scale(1.05);
         }
         .profile-thumb img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-
         .tabs {
             display: flex;
-            background: var(--glass);
-            backdrop-filter: blur(var(--backdrop-blur));
-            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+            background: var(--panel);
             border-bottom: 1px solid var(--border);
             position: sticky;
-            top: 62px;
+            top: 52px;
             z-index: 15;
-            transition: all 0.35s ease;
-            gap: 2px;
-            padding: 2px 10px;
+            transition: background 0.3s, border-color 0.3s;
         }
         .tab {
             flex: 1;
             text-align: center;
-            padding: 13px 8px;
-            font-weight: 600;
+            padding: 12px;
+            font-weight: 500;
             color: var(--text-secondary);
             cursor: pointer;
             border-bottom: 2px solid transparent;
-            transition: all 0.3s ease;
+            transition: color 0.2s, border-color 0.2s;
             font-size: 14px;
-            letter-spacing: 0.4px;
-            font-family: var(--font-primary);
-            border-radius: 6px 6px 0 0;
-            position: relative;
+            letter-spacing: 0.3px;
+        }
+        .tab.active {
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 6px rgba(212,175,55,0.5));
+            border-bottom-color: var(--gold);
+            animation: shimmer 2s linear infinite;
         }
         .tab:hover {
             color: var(--text);
-            background: rgba(212, 175, 55, 0.03);
         }
-        .tab.active {
-            background: linear-gradient(135deg, #d4af37, #f0c850, #e0c048, #d4af37);
-            background-size: 300% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.55));
-            border-bottom: 2px solid var(--gold);
-            animation: tabShimmer 2.5s linear infinite;
-            font-weight: 700;
-        }
-        @keyframes tabShimmer {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 300% center;
-            }
-        }
-
         .feed-container {
             flex: 1;
-            padding: 14px 16px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             overflow-y: auto;
-            max-height: calc(100vh - 116px);
+            max-height: calc(100vh - 104px);
             -webkit-overflow-scrolling: touch;
             scroll-behavior: smooth;
-            scrollbar-width: thin;
-            scrollbar-color: #3a3a4a transparent;
         }
         .feed-container::-webkit-scrollbar {
-            width: 6px;
-        }
-        .feed-container::-webkit-scrollbar-track {
-            background: transparent;
-            border-radius: 10px;
+            width: 4px;
         }
         .feed-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, #4a4a5a, #3a3a4a);
-            border-radius: 10px;
-            border: 1px solid rgba(212, 175, 55, 0.1);
+            background: #555;
+            border-radius: 4px;
         }
-        .feed-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, #5a5a6a, #4a4a5a);
-        }
-
         .post-card {
             background: var(--glass);
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
-            border-radius: var(--radius-xl);
-            padding: 18px 20px;
+            border-radius: var(--radius-lg);
+            padding: 16px;
             border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            transition: var(--card-transition);
-            animation: cardAppear 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
-            position: relative;
-            overflow: hidden;
-        }
-        .post-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
-            opacity: 0;
-            transition: opacity 0.4s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.2s, border-color 0.2s, background 0.3s, box-shadow 0.3s;
+            animation: fadeIn 0.35s ease;
         }
         .post-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(212, 175, 55, 0.35);
-            box-shadow: var(--shadow), var(--shadow-gold);
-            background: var(--glass-hover);
+            transform: translateY(-2px);
+            border-color: rgba(212,175,55,0.3);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
         }
-        .post-card:hover::before {
-            opacity: 1;
-        }
-        @keyframes cardAppear {
-            from {
-                opacity: 0;
-                transform: translateY(18px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
         .post-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 10px;
+            margin-bottom: 10px;
             cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        .post-header:hover {
-            transform: translateX(2px);
         }
         .post-avatar {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: #1a1a28;
+            background: #333;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            border: 2px solid var(--border);
+            border: 1px solid var(--border);
             flex-shrink: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-        .post-card:hover .post-avatar {
-            border-color: rgba(212, 175, 55, 0.4);
-            box-shadow: 0 0 16px rgba(212, 175, 55, 0.2);
         }
         .post-avatar img {
             width: 100%;
@@ -395,96 +227,65 @@
         .post-author-info {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 1px;
         }
         .post-author {
-            font-weight: 700;
+            font-weight: 600;
             font-size: 14px;
-            letter-spacing: 0.2px;
         }
         .post-time {
             font-size: 11px;
             color: #888;
-            letter-spacing: 0.3px;
         }
         .post-text {
-            margin: 10px 0;
-            line-height: 1.6;
+            margin: 8px 0;
+            line-height: 1.5;
             word-break: break-word;
-            font-size: 14.5px;
+            font-size: 14px;
             color: var(--text);
-            letter-spacing: 0.15px;
         }
-
         .hashtag {
-            background: linear-gradient(135deg, #d4af37, #f0c850, #e0c048, #d4af37);
-            background-size: 300% auto;
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: tagShimmer 2.5s linear infinite;
+            animation: shimmer 2s linear infinite;
             cursor: pointer;
             text-decoration: underline;
-            text-underline-offset: 4px;
-            text-decoration-color: rgba(212, 175, 55, 0.4);
-            transition: all 0.25s;
-            font-weight: 600;
-            letter-spacing: 0.3px;
+            text-underline-offset: 3px;
+            transition: opacity 0.2s;
         }
         .hashtag:hover {
-            opacity: 0.75;
-            text-decoration-color: rgba(212, 175, 55, 0.8);
-            filter: brightness(1.2);
+            opacity: 0.7;
         }
-        @keyframes tagShimmer {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 300% center;
-            }
-        }
-
         .atuser {
-            color: #6db3e0;
+            color: #5b9bd5;
             cursor: pointer;
             text-decoration: underline;
-            text-underline-offset: 4px;
-            text-decoration-color: rgba(109, 179, 224, 0.4);
-            transition: all 0.25s;
-            font-weight: 600;
+            text-underline-offset: 3px;
+            transition: opacity 0.2s;
+            font-weight: 500;
         }
         .atuser:hover {
-            opacity: 0.75;
-            text-decoration-color: rgba(109, 179, 224, 0.8);
-            color: #8cc8f0;
+            opacity: 0.7;
         }
-
         .post-media img,
         .post-media video {
             max-width: 100%;
-            max-height: 420px;
-            border-radius: 14px;
-            margin-top: 10px;
+            max-height: 400px;
+            border-radius: 12px;
+            margin-top: 8px;
             border: 1px solid var(--border);
             cursor: pointer;
-            transition: all 0.35s ease;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
-        .post-media img:hover,
-        .post-media video:hover {
-            border-color: rgba(212, 175, 55, 0.4);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.1);
-        }
-
         .post-actions {
             display: flex;
-            gap: 16px;
-            margin-top: 14px;
+            gap: 20px;
+            margin-top: 12px;
             border-top: 1px solid var(--border);
-            padding-top: 12px;
+            padding-top: 10px;
             align-items: center;
-            transition: border-color 0.35s;
+            transition: border-color 0.3s;
         }
         .action-btn {
             background: none;
@@ -492,133 +293,88 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            font-size: 13.5px;
-            font-weight: 500;
+            gap: 6px;
+            font-size: 14px;
             color: var(--text-secondary);
-            transition: all 0.25s ease;
-            padding: 7px 12px;
-            border-radius: 22px;
-            min-height: 38px;
+            transition: 0.2s;
+            padding: 6px 10px;
+            border-radius: 20px;
+            min-height: 36px;
             flex-shrink: 0;
-            letter-spacing: 0.2px;
-            font-family: var(--font-primary);
         }
         .action-btn:hover {
             background: rgba(128, 128, 128, 0.1);
             color: var(--text);
-            transform: translateY(-1px);
         }
         .action-btn:active {
-            transform: scale(0.92);
-            transition: transform 0.1s ease;
+            transform: scale(0.94);
         }
         .action-btn img {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
             flex-shrink: 0;
-            transition: all 0.3s ease;
+            transition: filter 0.2s;
         }
         .action-btn.liked img,
         .action-btn.reposted img {
-            filter: drop-shadow(0 0 10px var(--gold-glow)) brightness(1.3);
-            animation: heartBeat 0.5s ease;
+            filter: drop-shadow(0 0 6px var(--gold-glow)) brightness(1.2);
         }
         .action-btn.liked,
         .action-btn.reposted {
             color: var(--gold);
-            font-weight: 600;
-        }
-        @keyframes heartBeat {
-            0% {
-                transform: scale(1);
-            }
-            30% {
-                transform: scale(1.25);
-            }
-            60% {
-                transform: scale(0.9);
-            }
-            100% {
-                transform: scale(1);
-            }
         }
         .action-btn.danger:hover {
-            color: #ff5c5c;
-            background: rgba(255, 80, 80, 0.08);
+            color: #ff6b6b;
         }
-
         .repost-block {
-            background: rgba(212, 175, 55, 0.05);
+            background: rgba(212, 175, 55, 0.06);
             border-left: 3px solid var(--gold);
-            padding: 14px 16px;
-            margin: 14px 0 10px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .repost-block:hover {
-            background: rgba(212, 175, 55, 0.09);
+            padding: 12px 14px;
+            margin: 12px 0 8px;
+            border-radius: 8px;
         }
         .repost-block .original-author {
-            font-weight: 700;
+            font-weight: 600;
             color: var(--gold);
             cursor: pointer;
-            margin-bottom: 8px;
-            letter-spacing: 0.3px;
+            margin-bottom: 6px;
         }
         .repost-block .original-text {
             color: var(--text-secondary);
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.4;
         }
         .repost-block .post-media img,
         .repost-block .post-media video {
             max-height: 200px;
-            margin-top: 8px;
+            margin-top: 6px;
         }
-
         .profile-wall {
-            padding: 18px 16px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
         }
         .profile-card {
             background: var(--glass);
             backdrop-filter: blur(var(--backdrop-blur));
             -webkit-backdrop-filter: blur(var(--backdrop-blur));
-            border-radius: var(--radius-2xl);
-            padding: 24px 22px;
+            border-radius: var(--radius-xl);
+            padding: 20px;
             border: 1px solid var(--border);
             text-align: center;
-            box-shadow: var(--shadow);
-            transition: all 0.4s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .profile-card::after {
-            content: '';
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 2px;
-            background: radial-gradient(ellipse, rgba(212, 175, 55, 0.5) 0%, transparent 70%);
-            border-radius: 50%;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
         .profile-banner {
             width: 100%;
-            height: 140px;
-            border-radius: 14px;
-            background: #1a1a28 url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/kckck.jpg') center/cover no-repeat;
-            margin-bottom: -50px;
+            height: 120px;
+            border-radius: 12px;
+            background: #2a2a2a url('https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/kckck.jpg') center/cover no-repeat;
+            margin-bottom: -40px;
             overflow: hidden;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            transition: all 0.35s ease;
         }
         .profile-banner img {
             width: 100%;
@@ -626,22 +382,15 @@
             object-fit: cover;
         }
         .profile-avatar-large {
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            margin: 0 auto 14px;
-            background: #1a1a28;
+            margin: 0 auto 12px;
+            background: #333;
             overflow: hidden;
             border: 3px solid var(--gold);
-            box-shadow: 0 0 28px var(--gold-glow), 0 0 8px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 20px var(--gold-glow);
             flex-shrink: 0;
-            transition: all 0.35s ease;
-            position: relative;
-            z-index: 1;
-        }
-        .profile-avatar-large:hover {
-            box-shadow: 0 0 40px var(--gold-neon), 0 0 16px rgba(212, 175, 55, 0.5);
-            transform: scale(1.04);
         }
         .profile-avatar-large img {
             width: 100%;
@@ -649,344 +398,274 @@
             object-fit: cover;
         }
         .profile-name {
-            font-size: 21px;
-            font-weight: 800;
-            letter-spacing: 0.4px;
-            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 700;
         }
         .profile-username {
             color: var(--text-secondary);
-            margin: 5px 0 10px;
-            font-size: 13px;
-            letter-spacing: 0.3px;
+            margin: 4px 0 8px;
         }
         .profile-bio {
             color: var(--text);
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             font-style: italic;
             font-size: 14px;
-            line-height: 1.5;
-            letter-spacing: 0.2px;
+            line-height: 1.4;
         }
         .profile-stats {
             display: flex;
             justify-content: center;
-            gap: 28px;
-            margin-bottom: 14px;
+            gap: 24px;
+            margin-bottom: 12px;
             font-size: 13px;
             color: var(--text-secondary);
         }
         .profile-stats span {
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text);
             cursor: pointer;
-            transition: all 0.25s;
-            letter-spacing: 0.3px;
+            transition: color 0.2s;
         }
         .profile-stats span:hover {
             color: var(--gold);
             text-decoration: underline;
-            text-underline-offset: 4px;
         }
-
         .badge-icon {
-            width: 24px;
-            height: 24px;
+            width: 22px;
+            height: 22px;
             vertical-align: middle;
             margin-left: 3px;
             object-fit: contain;
-            filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
-            transition: transform 0.25s ease;
         }
-        .badge-icon:hover {
-            transform: scale(1.2);
-        }
-
         .follow-btn {
-            background: linear-gradient(135deg, #d4af37, #c9a030);
+            background: var(--gold);
             color: #000;
             border: none;
-            padding: 11px 30px;
-            border-radius: 26px;
-            font-weight: 700;
+            padding: 10px 28px;
+            border-radius: 24px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 8px 5px;
+            transition: 0.2s;
+            margin: 6px 4px;
             font-size: 14px;
-            letter-spacing: 0.5px;
-            font-family: var(--font-primary);
-            box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+            letter-spacing: 0.3px;
         }
         .follow-btn.unfollow {
-            background: #5a5a6a;
+            background: #666;
             color: #fff;
-            box-shadow: 0 4px 16px rgba(100, 100, 120, 0.25);
         }
         .follow-btn:hover {
-            filter: brightness(1.12);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 24px rgba(212, 175, 55, 0.45);
+            filter: brightness(1.1);
+            transform: translateY(-1px);
         }
         .follow-btn:active {
-            transform: scale(0.94);
-            transition: transform 0.1s ease;
+            transform: scale(0.96);
         }
-
         .badge-admin-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 6px;
             justify-content: center;
-            margin-top: 12px;
+            margin-top: 10px;
         }
         .action-icon-btn {
-            background: rgba(128, 128, 128, 0.08);
+            background: rgba(128, 128, 128, 0.1);
             border: 1px solid var(--border);
             border-radius: 50%;
-            width: 46px;
-            height: 46px;
+            width: 44px;
+            height: 44px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
-            padding: 9px;
+            transition: 0.2s;
+            padding: 8px;
             flex-shrink: 0;
         }
         .action-icon-btn:hover {
-            background: rgba(212, 175, 55, 0.18);
+            background: rgba(212, 175, 55, 0.2);
             border-color: var(--gold);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.2);
+            transform: translateY(-2px);
         }
         .action-icon-btn img {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             object-fit: contain;
         }
-
         .create-post-btn {
             position: fixed;
-            bottom: 28px;
-            right: 28px;
-            background: linear-gradient(135deg, #d4af37, #e0c050);
+            bottom: 24px;
+            right: 24px;
+            background: var(--gold);
             color: #000;
             border: none;
-            width: 58px;
-            height: 58px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            font-size: 30px;
-            box-shadow: 0 6px 28px rgba(212, 175, 55, 0.5), 0 0 0 4px rgba(212, 175, 55, 0.1);
+            font-size: 28px;
+            box-shadow: 0 4px 24px rgba(212, 175, 55, 0.45);
             cursor: pointer;
             z-index: 30;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+            transition: 0.25s;
             font-weight: 300;
             line-height: 1;
-            letter-spacing: 0;
         }
         .create-post-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 10px 36px rgba(212, 175, 55, 0.65), 0 0 0 8px rgba(212, 175, 55, 0.06);
+            transform: scale(1.08);
+            box-shadow: 0 6px 30px rgba(212, 175, 55, 0.6);
         }
         .create-post-btn:active {
-            transform: scale(0.9);
-            transition: transform 0.1s ease;
+            transform: scale(0.94);
         }
-
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.78);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            animation: fadeInOverlay 0.25s ease;
-        }
-        @keyframes fadeInOverlay {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+            animation: fadeIn 0.2s ease;
         }
         .modal {
             background: var(--glass-strong);
-            backdrop-filter: blur(32px);
-            -webkit-backdrop-filter: blur(32px);
-            border-radius: var(--radius-2xl);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border-radius: var(--radius-xl);
             width: 92%;
-            max-width: 460px;
-            padding: 30px 26px 24px;
-            border: 1px solid rgba(212, 175, 55, 0.18);
-            box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+            max-width: 440px;
+            padding: 28px 24px 22px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
             color: var(--text);
             max-height: 85vh;
             overflow-y: auto;
-            animation: modalSlideUp 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-            transition: all 0.4s ease;
-            scrollbar-width: thin;
-            scrollbar-color: #4a4a5a transparent;
+            animation: slideUp 0.3s ease;
+            transition: background 0.3s, border-color 0.3s;
         }
         .modal::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
         .modal::-webkit-scrollbar-thumb {
             background: #555;
-            border-radius: 4px;
-        }
-        @keyframes modalSlideUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px) scale(0.94);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            border-radius: 3px;
         }
         .modal h3 {
-            font-size: 21px;
-            margin-bottom: 20px;
+            font-size: 20px;
+            margin-bottom: 18px;
             text-align: center;
-            letter-spacing: 0.6px;
-            font-weight: 800;
-            font-family: var(--font-display);
-            background: linear-gradient(135deg, #d4af37, #f0c850, #e0c048, #d4af37);
-            background-size: 300% auto;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
-            animation: modalTitleShimmer 3s linear infinite;
-        }
-        @keyframes modalTitleShimmer {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 300% center;
-            }
+            filter: drop-shadow(0 0 8px rgba(212,175,55,0.5));
+            animation: shimmer 2.5s linear infinite;
         }
         .modal .field-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
         .modal .field-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             color: var(--text-secondary);
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-            font-family: var(--font-primary);
+            letter-spacing: 0.8px;
+            font-weight: 500;
         }
         .modal input,
         .modal textarea {
             width: 100%;
-            padding: 14px 18px;
-            background: rgba(128, 128, 128, 0.06);
+            padding: 13px 16px;
+            background: rgba(128, 128, 128, 0.08);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 14px;
             color: var(--text);
             font-size: 14px;
             outline: none;
-            transition: all 0.3s ease;
+            transition: border-color 0.25s, box-shadow 0.25s, background 0.3s;
             resize: vertical;
-            font-family: var(--font-primary);
-            letter-spacing: 0.2px;
         }
         .modal input:focus,
         .modal textarea:focus {
             border-color: var(--gold);
-            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.06), 0 0 20px rgba(212, 175, 55, 0.08);
-            background: rgba(128, 128, 128, 0.1);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.08);
         }
         .modal textarea {
-            min-height: 110px;
-            line-height: 1.6;
+            min-height: 100px;
+            line-height: 1.5;
         }
         .modal .btn-row {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: flex-end;
-            margin-top: 20px;
+            margin-top: 18px;
             flex-wrap: wrap;
         }
         .btn {
-            background: linear-gradient(135deg, #d4af37, #c9a030);
+            background: var(--gold);
             color: #000;
             border: none;
-            padding: 12px 24px;
-            border-radius: 26px;
-            font-weight: 700;
+            padding: 11px 22px;
+            border-radius: 24px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: 0.2s;
             font-size: 14px;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             display: inline-flex;
             align-items: center;
-            gap: 7px;
+            gap: 6px;
             white-space: nowrap;
-            font-family: var(--font-primary);
-            box-shadow: 0 4px 14px rgba(212, 175, 55, 0.25);
         }
         .btn:hover {
-            filter: brightness(1.12);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4);
+            filter: brightness(1.1);
+            transform: translateY(-1px);
         }
         .btn:active {
-            transform: scale(0.94);
-            transition: transform 0.1s ease;
+            transform: scale(0.95);
         }
         .btn.secondary {
-            background: #4a4a58;
+            background: #555;
             color: #fff;
-            box-shadow: 0 4px 14px rgba(80, 80, 100, 0.2);
         }
         .btn.warning {
             background: #c0392b;
             color: #fff;
-            box-shadow: 0 4px 14px rgba(192, 57, 43, 0.25);
         }
         .btn.small {
-            padding: 8px 18px;
+            padding: 7px 16px;
             font-size: 12px;
-            border-radius: 20px;
-            letter-spacing: 0.3px;
+            border-radius: 18px;
         }
-
         .custom-file-btn {
             display: inline-flex;
             align-items: center;
-            gap: 9px;
-            padding: 11px 20px;
-            background: rgba(128, 128, 128, 0.08);
+            gap: 8px;
+            padding: 10px 18px;
+            background: rgba(128, 128, 128, 0.1);
             border: 1px dashed var(--border);
-            border-radius: 16px;
+            border-radius: 14px;
             color: var(--text-secondary);
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.3s ease;
+            transition: 0.2s;
             white-space: nowrap;
-            font-family: var(--font-primary);
-            letter-spacing: 0.3px;
         }
         .custom-file-btn:hover {
-            background: rgba(212, 175, 55, 0.14);
+            background: rgba(212, 175, 55, 0.15);
             border-color: var(--gold);
             color: var(--gold);
-            border-style: solid;
         }
         .file-name {
             color: #888;
@@ -994,384 +673,254 @@
             margin-left: 8px;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 200px;
+            max-width: 180px;
             white-space: nowrap;
             display: inline-block;
             vertical-align: middle;
         }
-
+        /* Обычный ник – золотой, без анимации */
         .normal-nick {
             color: var(--gold);
-            font-weight: 700;
-            letter-spacing: 0.2px;
+            font-weight: 600;
         }
+        /* Премиум ник – переливающийся золотой с более быстрой анимацией */
         .premium-nick {
-            background: linear-gradient(135deg, #ffd700, #fff5b0, #ffaa00, #ffe060, #ffd700);
-            background-size: 300% auto;
+            background: linear-gradient(90deg, #ffd700, #fff5b0, #ffaa00, #ffd700);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: premiumShimmer 1.4s linear infinite;
-            font-weight: 800;
+            animation: premiumShimmer 1.2s linear infinite;
+            font-weight: 700;
             display: inline-block;
-            letter-spacing: 0.3px;
-            filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.5));
+        }
+        @keyframes shimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
         @keyframes premiumShimmer {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 300% center;
-            }
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
+        /* Текст с эффектом свечения для заголовков, не путать с премиум-никами */
         .shimmer-text {
-            background: linear-gradient(135deg, #d4af37, #f0c850, #e0c048, #d4af37);
-            background-size: 300% auto;
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.55));
-            animation: shimmerText 2.8s linear infinite;
-            font-weight: 800;
+            filter: drop-shadow(0 0 8px rgba(212,175,55,0.5));
+            animation: shimmer 2.5s linear infinite;
+            font-weight: 700;
             display: inline-block;
-            letter-spacing: 0.4px;
         }
-        @keyframes shimmerText {
-            0% {
-                background-position: 0% center;
-            }
-            100% {
-                background-position: 300% center;
-            }
-        }
-
         .premium-modal .feature {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             flex-wrap: wrap;
-            padding: 10px 14px;
-            border-radius: 12px;
-            background: rgba(212, 175, 55, 0.03);
-            transition: background 0.3s;
-        }
-        .premium-modal .feature:hover {
-            background: rgba(212, 175, 55, 0.07);
         }
         .premium-modal .price {
-            font-size: 19px;
-            font-weight: 800;
-            margin-top: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 12px;
             text-align: center;
-            background: linear-gradient(135deg, #d4af37, #f0c850, #e0c048, #d4af37);
-            background-size: 300% auto;
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.55));
-            animation: shimmerText 2.8s linear infinite;
-            letter-spacing: 0.5px;
+            filter: drop-shadow(0 0 8px rgba(212,175,55,0.5));
+            animation: shimmer 2.5s linear infinite;
         }
-
         .comments-section {
-            max-height: 240px;
+            max-height: 220px;
             overflow-y: auto;
-            margin: 14px 0;
-            padding-right: 6px;
-            scrollbar-width: thin;
-            scrollbar-color: #4a4a5a transparent;
+            margin: 12px 0;
+            padding-right: 4px;
         }
         .comments-section::-webkit-scrollbar {
-            width: 4px;
+            width: 3px;
         }
         .comments-section::-webkit-scrollbar-thumb {
             background: #555;
-            border-radius: 4px;
+            border-radius: 3px;
         }
         .comment {
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid var(--border);
             font-size: 13px;
-            line-height: 1.5;
-            letter-spacing: 0.2px;
+            line-height: 1.4;
         }
         .comment-author {
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: color 0.2s;
-            letter-spacing: 0.2px;
         }
         .comment-author:hover {
             text-decoration: underline;
-            text-underline-offset: 3px;
-            color: var(--gold);
         }
-
         .auth-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: radial-gradient(ellipse at 30% 20%, #1a1a2e 0%, #0a0a0f 70%);
+            background: radial-gradient(circle at top, #1a1a2e, #0a0a0a);
             min-height: 100vh;
-            position: relative;
         }
         .auth-box {
             background: var(--glass);
-            backdrop-filter: blur(44px);
-            -webkit-backdrop-filter: blur(44px);
-            padding: 44px 30px;
-            border-radius: var(--radius-2xl);
-            border: 1px solid rgba(212, 175, 55, 0.22);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            padding: 40px 28px;
+            border-radius: 32px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
             width: 92%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
-            animation: fadeInAuth 0.5s ease;
-        }
-        @keyframes fadeInAuth {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            animation: fadeIn 0.4s;
         }
         .auth-box h2 {
-            background: linear-gradient(135deg, #d4af37, #f0c850, #e0c048, #d4af37);
-            background-size: 300% auto;
+            background: linear-gradient(90deg, #d4af37, #ffd700, #f0e68c, #d4af37);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 0 14px rgba(212, 175, 55, 0.65));
-            animation: logoShimmer 3.5s linear infinite;
-            margin-bottom: 10px;
-            font-size: 34px;
-            letter-spacing: 2.5px;
-            font-family: var(--font-display);
-            font-weight: 900;
+            filter: drop-shadow(0 0 10px rgba(212,175,55,0.6));
+            animation: shimmer 2.5s linear infinite;
+            margin-bottom: 8px;
+            font-size: 32px;
+            letter-spacing: 2px;
         }
         .auth-subtitle {
             color: #aaa;
-            margin-bottom: 28px;
-            letter-spacing: 0.4px;
+            margin-bottom: 24px;
         }
         .input-group {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             text-align: left;
         }
         .input-group label {
             display: block;
-            margin-bottom: 7px;
+            margin-bottom: 6px;
             color: #aaa;
-            font-size: 12px;
-            letter-spacing: 0.6px;
-            font-weight: 600;
-            text-transform: uppercase;
+            font-size: 13px;
         }
         .input-group input {
             width: 100%;
-            padding: 15px 20px;
-            background: rgba(0, 0, 0, 0.35);
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid var(--border);
-            border-radius: 16px;
+            border-radius: 14px;
             color: #fff;
             font-size: 15px;
             outline: none;
-            transition: all 0.3s ease;
-            font-family: var(--font-primary);
-            letter-spacing: 0.3px;
+            transition: border-color 0.2s;
         }
         .input-group input:focus {
             border-color: var(--gold);
-            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.05), 0 0 20px rgba(212, 175, 55, 0.08);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.06);
         }
         .auth-error {
-            color: #ff5c5c;
-            margin-top: 14px;
+            color: #ff6b6b;
+            margin-top: 12px;
             font-size: 13px;
-            letter-spacing: 0.3px;
         }
         .auth-switch {
-            margin-top: 22px;
+            margin-top: 20px;
             color: var(--gold);
             cursor: pointer;
-            transition: all 0.25s;
-            letter-spacing: 0.3px;
-            font-weight: 500;
+            transition: opacity 0.2s;
         }
         .auth-switch:hover {
             opacity: 0.7;
-            text-decoration: underline;
-            text-underline-offset: 3px;
         }
-
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
         .loading-screen {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #060608;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a0a;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 9999;
             color: var(--gold);
-            font-size: 36px;
-            letter-spacing: 4px;
-            font-family: var(--font-display);
-            font-weight: 900;
-            animation: loadingPulse 1.6s ease-in-out infinite;
+            font-size: 32px;
+            letter-spacing: 3px;
+            animation: pulse 1.5s ease-in-out infinite;
         }
-        @keyframes loadingPulse {
-            0%,
-            100% {
-                opacity: 0.4;
-                transform: scale(0.96);
-            }
-            50% {
-                opacity: 1;
-                transform: scale(1.02);
-            }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
         }
-
         .user-search-card {
             background: var(--glass);
-            backdrop-filter: blur(22px);
-            -webkit-backdrop-filter: blur(22px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-radius: var(--radius-lg);
-            padding: 15px 18px;
+            padding: 14px 16px;
             border: 1px solid var(--border);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-            animation: cardAppear 0.35s ease;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
         }
         .user-search-card:hover {
-            border-color: rgba(212, 175, 55, 0.45);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35), var(--shadow-gold);
-            background: var(--glass-hover);
+            border-color: var(--gold);
+            transform: translateY(-1px);
         }
         .user-search-card .usc-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: #1a1a28;
-            border: 2px solid var(--border);
-            flex-shrink: 0;
-            transition: border-color 0.3s;
-        }
-        .user-search-card:hover .usc-avatar {
-            border-color: rgba(212, 175, 55, 0.5);
+            width: 44px; height: 44px; border-radius: 50%;
+            overflow: hidden; background: #333;
+            border: 1px solid var(--border); flex-shrink: 0;
         }
         .user-search-card .usc-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            width: 100%; height: 100%; object-fit: cover;
         }
-        .user-search-card .usc-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .user-search-card .usc-name {
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 0.2px;
-        }
-        .user-search-card .usc-username {
-            font-size: 12px;
-            color: var(--gold);
-        }
+        .user-search-card .usc-info { flex: 1; min-width: 0; }
+        .user-search-card .usc-name { font-weight: 600; color: var(--gold); font-size: 14px; }
+        .user-search-card .usc-username { font-size: 12px; color: var(--gold); }
         .user-search-card .usc-bio {
-            font-size: 11px;
-            color: #aaa;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 3px;
+            font-size: 11px; color: #aaa;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;
         }
-        .user-search-card .usc-badges {
-            display: inline-flex;
-            gap: 2px;
-            margin-left: 4px;
-            vertical-align: middle;
-        }
-        .user-search-card .usc-badges img {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-        }
-        .user-search-card .usc-arrow {
-            color: #888;
-            font-size: 20px;
-            flex-shrink: 0;
-            transition: all 0.3s;
-        }
-        .user-search-card:hover .usc-arrow {
-            color: var(--gold);
-            transform: translateX(3px);
-        }
-
+        .user-search-card .usc-badges { display: inline-flex; gap: 2px; margin-left: 4px; vertical-align: middle; }
+        .user-search-card .usc-badges img { width: 18px; height: 18px; object-fit: contain; }
+        .user-search-card .usc-arrow { color: #888; font-size: 18px; flex-shrink: 0; }
         .search-info-bar {
-            padding: 10px 14px;
-            color: #aaa;
-            font-size: 12px;
-            background: rgba(212, 175, 55, 0.05);
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            text-align: center;
-            margin-bottom: 6px;
-            letter-spacing: 0.4px;
+            padding: 8px 12px; color: #aaa; font-size: 12px;
+            background: rgba(212,175,55,0.05); border-radius: 10px;
+            border: 1px solid var(--border); text-align: center; margin-bottom: 4px;
         }
         .clear-search-btn {
-            background: none;
-            border: 1px solid var(--border);
-            color: #aaa;
-            padding: 8px 18px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s ease;
-            align-self: center;
-            margin-top: 6px;
-            font-family: var(--font-primary);
-            letter-spacing: 0.3px;
-            font-weight: 500;
+            background: none; border: 1px solid var(--border); color: #aaa;
+            padding: 6px 14px; border-radius: 16px; cursor: pointer; font-size: 12px;
+            transition: 0.2s; align-self: center; margin-top: 4px;
         }
-        .clear-search-btn:hover {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: rgba(212, 175, 55, 0.06);
-        }
-
+        .clear-search-btn:hover { border-color: var(--gold); color: var(--gold); }
         .theme-toggle {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
-            margin: 16px 0;
-            padding: 8px 0;
+            gap: 12px;
+            margin: 12px 0;
         }
         .theme-toggle span {
             font-size: 14px;
             color: var(--text-secondary);
-            letter-spacing: 0.3px;
         }
         .switch {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 28px;
+            width: 48px;
+            height: 26px;
         }
         .switch input {
             opacity: 0;
@@ -1385,671 +934,517 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #4a4a58;
-            transition: 0.35s ease;
+            background-color: #555;
+            transition: 0.3s;
             border-radius: 34px;
         }
         .slider:before {
             position: absolute;
             content: "";
-            height: 22px;
-            width: 22px;
+            height: 20px;
+            width: 20px;
             left: 3px;
             bottom: 3px;
             background-color: white;
-            transition: 0.35s ease;
+            transition: 0.3s;
             border-radius: 50%;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
-        input:checked+.slider {
-            background: linear-gradient(135deg, #d4af37, #c9a030);
+        input:checked + .slider {
+            background-color: var(--gold);
         }
-        input:checked+.slider:before {
+        input:checked + .slider:before {
             transform: translateX(22px);
         }
-
-        .no-posts-msg {
-            text-align: center;
-            color: #888;
-            padding: 50px 20px;
-            font-size: 14px;
-            letter-spacing: 0.3px;
-        }
-
-        @media (max-width: 420px) {
-            .modal {
-                padding: 22px 16px 18px;
-                border-radius: 20px;
-            }
-            .post-card {
-                padding: 14px;
-                border-radius: 16px;
-            }
-            .btn {
-                padding: 10px 20px;
-                font-size: 13px;
-            }
-            .user-search-card {
-                padding: 12px 14px;
-                gap: 10px;
-            }
-            .user-search-card .usc-avatar {
-                width: 38px;
-                height: 38px;
-            }
-            .post-avatar {
-                width: 38px;
-                height: 38px;
-            }
-            .header {
-                padding: 10px 12px;
-                gap: 10px;
-            }
-            .logo {
-                font-size: 19px;
-                letter-spacing: 1px;
-            }
-            .create-post-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 26px;
-                bottom: 20px;
-                right: 20px;
-            }
+        @media (max-width: 400px) {
+            .modal { padding: 20px 16px 16px; border-radius: 20px; }
+            .post-card { padding: 12px; border-radius: 14px; }
+            .btn { padding: 9px 18px; font-size: 13px; }
+            .user-search-card { padding: 10px 12px; gap: 8px; }
+            .user-search-card .usc-avatar { width: 36px; height: 36px; }
         }
     </style>
 </head>
 <body>
-    <div id="app"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    </script>
-    <script>
-        (function() {
-            const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            const STATE_ID = 1;
-            const ADMIN_USER = '@durov';
-            const DEFAULT_AVATAR =
-                'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
-            const ICONS = {
-                LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
-                LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
-                COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
-                DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
-                BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
-                BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png',
-                BADGE3: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B0%D1%83%D1%81%D1%83%D1%81%D1%862.png',
-                PREMIUM_EGG: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1632.png',
-                EDIT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/rra.png',
-                LOGOUT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1634.png',
-                PREMIUM_BUTTON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png',
-                REPOST: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1651.png'
-            };
-            const LS_KEY = 'yolkapp_state_backup';
-            const THEME_KEY = 'yolkapp_theme';
-            const MAX_VIDEO_SIZE = 1.5 * 1024 * 1024;
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    (function() {
+        const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const STATE_ID = 1;
+        const ADMIN_USER = '@durov';
+        const DEFAULT_AVATAR = 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
+        const ICONS = {
+            LIKE_OFF: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a1%20(1).png',
+            LIKE_ON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B02.png',
+            COMMENT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/a90UQ0sM4Rgn0HOlEUTZAYNmjCpfJhhqHxGE-YpNGsu36NbJmBWG6mYc7ldbIQqVgA7knkI2UYeEkhxYfE3Iyzfy.png',
+            DELETE: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/HLq3zE1ksOa0lU7rN7AVF_yeYF80CczJ_Q-6OkO95XPsNnHcitq3vb5Hz0F_JXad_V64dfE8KrylYjRuK_DcNzdX.png',
+            BADGE1: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1542.png',
+            BADGE2: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1543.png',
+            BADGE3: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D0%B0%D1%83%D1%81%D1%83%D1%81%D1%862.png',
+            PREMIUM_EGG: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1632.png',
+            EDIT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/rra.png',
+            LOGOUT: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1634.png',
+            PREMIUM_BUTTON: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/v3.png',
+            REPOST: 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/IMG_1651.png'
+        };
+        const LS_KEY = 'yolkapp_state_backup';
+        const THEME_KEY = 'yolkapp_theme';
+        const MAX_VIDEO_SIZE = 1.5 * 1024 * 1024;
 
-            let users = {};
-            let posts = [];
-            let currentUser = null;
-            let activeTab = 'feed';
-            let viewedProfile = null;
-            let searchQuery = '';
-            let feedShuffled = [];
-            let feedIndex = 0;
-            let feedScrollPos = 0;
-            let dataLoaded = false;
-            const BATCH_SIZE = 3;
-            let searchTimeout = null;
+        let users = {};
+        let posts = [];
+        let currentUser = null;
+        let activeTab = 'feed';
+        let viewedProfile = null;
+        let searchQuery = '';
+        let feedShuffled = [];
+        let feedIndex = 0;
+        let feedScrollPos = 0;
+        let dataLoaded = false;
+        const BATCH_SIZE = 3;
+        let searchTimeout = null;
 
-            function setCookie(n, v, d) {
-                var e = "";
-                if (d) {
-                    var t = new Date();
-                    t.setTime(t.getTime() + 864e5 * d);
-                    e = "; expires=" + t.toUTCString();
-                }
-                document.cookie = n + "=" + (v || "") + e + "; path=/; SameSite=Lax";
-            }
+        function setCookie(n, v, d) {
+            var e = "";
+            if (d) { var t = new Date(); t.setTime(t.getTime() + 864e5 * d); e = "; expires=" + t.toUTCString(); }
+            document.cookie = n + "=" + (v || "") + e + "; path=/; SameSite=Lax";
+        }
+        function getCookie(n) {
+            var ne = n + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) { var c = ca[i]; while (c.charAt(0) === ' ') c = c.substring(1); if (c.indexOf(ne) === 0) return c.substring(ne.length); }
+            return null;
+        }
+        function eraseCookie(n) { document.cookie = n + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax'; }
 
-            function getCookie(n) {
-                var ne = n + "=";
-                var ca = document.cookie.split(';');
-                for (var i = 0; i < ca.length; i++) {
-                    var c = ca[i];
-                    while (c.charAt(0) === ' ') c = c.substring(1);
-                    if (c.indexOf(ne) === 0) return c.substring(ne.length);
-                }
-                return null;
-            }
+        function compressImage(file, maxWidth = 600, quality = 0.6) {
+            return new Promise((resolve, reject) => {
+                if (!file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width, h = img.height;
+                        if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+                        if (h > maxWidth) { w = Math.round(w * (maxWidth / h)); h = maxWidth; }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => resolve(e.target.result);
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
 
-            function eraseCookie(n) {
-                document.cookie = n + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax';
-            }
-
-            function compressImage(file, maxWidth = 600, quality = 0.6) {
-                return new Promise((resolve, reject) => {
-                    if (!file.type.startsWith('image/')) {
-                        reject(new Error('Not an image'));
-                        return;
+        function processMediaFile(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) { resolve(null); return; }
+                if (file.type.startsWith('image/')) {
+                    compressImage(file).then(dataURL => resolve({ dataURL, isVideo: false }))
+                        .catch(err => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve({ dataURL: e.target.result, isVideo: false });
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                        });
+                } else if (file.type.startsWith('video/')) {
+                    if (file.size > MAX_VIDEO_SIZE) {
+                        const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+                        if (!confirm(`Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`)) {
+                            reject(new Error('Video too large – cancelled by user'));
+                            return;
+                        }
                     }
                     const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = new Image();
-                        img.onload = () => {
-                            let w = img.width,
-                                h = img.height;
-                            if (w > maxWidth) {
-                                h = Math.round(h * (maxWidth / w));
-                                w = maxWidth;
-                            }
-                            if (h > maxWidth) {
-                                w = Math.round(w * (maxWidth / h));
-                                h = maxWidth;
-                            }
-                            const canvas = document.createElement('canvas');
-                            canvas.width = w;
-                            canvas.height = h;
-                            const ctx = canvas.getContext('2d');
-                            ctx.drawImage(img, 0, 0, w, h);
-                            resolve(canvas.toDataURL('image/jpeg', quality));
-                        };
-                        img.onerror = () => resolve(e.target.result);
-                        img.src = e.target.result;
-                    };
+                    reader.onload = (e) => resolve({ dataURL: e.target.result, isVideo: true });
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
-                });
-            }
+                } else { reject(new Error('Unsupported file type')); }
+            });
+        }
 
-            function processMediaFile(file) {
-                return new Promise((resolve, reject) => {
-                    if (!file) {
-                        resolve(null);
-                        return;
-                    }
-                    if (file.type.startsWith('image/')) {
-                        compressImage(file).then(dataURL => resolve({
-                                dataURL,
-                                isVideo: false
-                            }))
-                            .catch(err => {
-                                const reader = new FileReader();
-                                reader.onload = (e) => resolve({
-                                    dataURL: e.target.result,
-                                    isVideo: false
-                                });
-                                reader.onerror = reject;
-                                reader.readAsDataURL(file);
-                            });
-                    } else if (file.type.startsWith('video/')) {
-                        if (file.size > MAX_VIDEO_SIZE) {
-                            const sizeMB = (file.size / 1024 / 1024).toFixed(1);
-                            if (!confirm(
-                                    `Video is ${sizeMB}MB. Videos larger than 1.5MB may NOT be saved permanently and could disappear after refresh.\n\nContinue anyway?`
-                                    )) {
-                                reject(new Error('Video too large – cancelled by user'));
-                                return;
-                            }
-                        }
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve({
-                            dataURL: e.target.result,
-                            isVideo: true
-                        });
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file);
-                    } else {
-                        reject(new Error('Unsupported file type'));
-                    }
-                });
-            }
+        function showToast(msg, duration = 2000) {
+            const toast = document.createElement('div');
+            toast.textContent = msg;
+            toast.style.cssText = `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--glass-strong); color:var(--gold); padding:10px 22px; border-radius:24px; font-size:13px; border:1px solid var(--border); box-shadow:0 8px 24px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center;`;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s'; }, duration);
+            setTimeout(() => toast.remove(), duration + 500);
+        }
 
-            function showToast(msg, duration = 2000) {
-                const toast = document.createElement('div');
-                toast.textContent = msg;
-                toast.style.cssText =
-                    `position:fixed; bottom:90px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--glass-strong); color:var(--gold); padding:11px 24px; border-radius:26px; font-size:13px; border:1px solid var(--border); box-shadow:0 10px 30px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; white-space:nowrap; max-width:90vw; text-align:center; letter-spacing:0.3px; font-weight:500;`;
-                document.body.appendChild(toast);
-                setTimeout(() => {
-                    toast.style.opacity = '0';
-                    toast.style.transition = 'opacity 0.5s ease';
-                }, duration);
-                setTimeout(() => toast.remove(), duration + 600);
-            }
+        function extractHashtags(text) {
+            if (!text) return [];
+            const matches = text.match(/#[a-zA-Z0-9_]+/g);
+            return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
+        }
 
-            function extractHashtags(text) {
-                if (!text) return [];
-                const matches = text.match(/#[a-zA-Z0-9_]+/g);
-                return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
-            }
+        function extractAtUsers(text) {
+            if (!text) return [];
+            const matches = text.match(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g);
+            return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
+        }
 
-            function extractAtUsers(text) {
-                if (!text) return [];
-                const matches = text.match(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g);
-                return matches ? [...new Set(matches.map(t => t.toLowerCase()))] : [];
-            }
+        function normalizePosts(arr) {
+            arr.forEach(p => {
+                if (!p.hashtags) p.hashtags = extractHashtags(p.text || '');
+                if (!p.likes) p.likes = {};
+                if (!p.comments) p.comments = [];
+                if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith('data:video'));
+                if (typeof p.isRepost === 'undefined') p.isRepost = false;
+                if (p.repostCount === undefined) p.repostCount = 0;
+                if (!p.repostedBy) p.repostedBy = [];
+            });
+        }
 
-            function normalizePosts(arr) {
-                arr.forEach(p => {
-                    if (!p.hashtags) p.hashtags = extractHashtags(p.text || '');
-                    if (!p.likes) p.likes = {};
-                    if (!p.comments) p.comments = [];
-                    if (typeof p.isVideo === 'undefined') p.isVideo = (p.media && p.media.startsWith(
-                        'data:video'));
-                    if (typeof p.isRepost === 'undefined') p.isRepost = false;
-                    if (p.repostCount === undefined) p.repostCount = 0;
-                    if (!p.repostedBy) p.repostedBy = [];
-                });
-            }
+        async function saveToLocalStorage() {
+            try { localStorage.setItem(LS_KEY, JSON.stringify({ users, posts })); } catch (e) {}
+        }
 
-            async function saveToLocalStorage() {
-                try {
-                    localStorage.setItem(LS_KEY, JSON.stringify({
-                        users,
-                        posts
-                    }));
-                } catch (e) {}
-            }
-
-            function loadFromLocalStorage() {
-                try {
-                    const raw = localStorage.getItem(LS_KEY);
-                    if (raw) {
-                        const state = JSON.parse(raw);
-                        if (state && typeof state.users === 'object' && Array.isArray(state.posts)) return state;
-                    }
-                } catch (e) {}
-                return null;
-            }
-
-            async function loadState() {
-                let supabaseOk = false;
-                try {
-                    const {
-                        data,
-                        error
-                    } = await supabase.from('app_state').select('data').eq('id', STATE_ID).single();
-                    if (!error && data?.data) {
-                        if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data
-                            .users;
-                        if (Array.isArray(data.data.posts)) posts = data.data.posts;
-                        supabaseOk = true;
-                    }
-                } catch (e) {}
-                if (!supabaseOk || (Object.keys(users).length === 0 && posts.length === 0)) {
-                    const local = loadFromLocalStorage();
-                    if (local) {
-                        users = local.users || {};
-                        posts = local.posts || [];
-                    }
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem(LS_KEY);
+                if (raw) {
+                    const state = JSON.parse(raw);
+                    if (state && typeof state.users === 'object' && Array.isArray(state.posts)) return state;
                 }
-                if (!users[ADMIN_USER]) {
-                    users[ADMIN_USER] = {
-                        password: 'admin123',
-                        email: 'durov@yolkapp.com',
-                        avatar: null,
-                        banner: null,
-                        bio: 'Founder of Yolkapp',
-                        displayName: 'Durov',
-                        followers: [],
-                        following: [],
-                        badges: [1, 2, 3],
-                        premium: true
-                    };
+            } catch (e) {}
+            return null;
+        }
+
+        async function loadState() {
+            let supabaseOk = false;
+            try {
+                const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID).single();
+                if (!error && data?.data) {
+                    if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data.users;
+                    if (Array.isArray(data.data.posts)) posts = data.data.posts;
+                    supabaseOk = true;
                 }
-                Object.keys(users).forEach(u => {
-                    if (typeof users[u].premium !== 'boolean') users[u].premium = false;
-                    if (!users[u].badges) users[u].badges = [];
-                    if (!users[u].followers) users[u].followers = [];
-                    if (!users[u].following) users[u].following = [];
-                });
-                normalizePosts(posts);
-                dataLoaded = true;
-                const saved = getCookie('yolk_user');
-                if (saved && users[saved]) currentUser = saved;
-                applyTheme();
-                render();
+            } catch (e) {}
+            if (!supabaseOk || (Object.keys(users).length === 0 && posts.length === 0)) {
+                const local = loadFromLocalStorage();
+                if (local) { users = local.users || {}; posts = local.posts || []; }
             }
+            if (!users[ADMIN_USER]) {
+                users[ADMIN_USER] = {
+                    password: 'admin123',
+                    email: 'durov@yolkapp.com',
+                    avatar: null,
+                    banner: null,
+                    bio: 'Founder of Yolkapp',
+                    displayName: 'Durov',
+                    followers: [],
+                    following: [],
+                    badges: [1, 2, 3],
+                    premium: true
+                };
+            }
+            Object.keys(users).forEach(u => {
+                if (typeof users[u].premium !== 'boolean') users[u].premium = false;
+                if (!users[u].badges) users[u].badges = [];
+                if (!users[u].followers) users[u].followers = [];
+                if (!users[u].following) users[u].following = [];
+            });
+            normalizePosts(posts);
+            dataLoaded = true;
+            const saved = getCookie('yolk_user');
+            if (saved && users[saved]) currentUser = saved;
+            applyTheme();
+            render();
+        }
 
-            async function saveState() {
-                saveToLocalStorage();
-                if (!dataLoaded) return;
-                try {
-                    const {
-                        error
-                    } = await supabase.from('app_state').upsert({
-                        id: STATE_ID,
-                        data: {
-                            users,
-                            posts
-                        }
-                    }, {
-                        onConflict: 'id'
-                    });
-                    if (error) showToast('Could not sync to server', 3500);
-                } catch (e) {
-                    showToast('Server sync failed', 3500);
+        async function saveState() {
+            saveToLocalStorage();
+            if (!dataLoaded) return;
+            try {
+                const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, { onConflict: 'id' });
+                if (error) showToast('Could not sync to server', 3500);
+            } catch (e) { showToast('Server sync failed', 3500); }
+        }
+
+        function generateId() { return Date.now() + '_' + Math.random().toString(36).substr(2, 9); }
+        function getDisplayName(u) { const user = users[u]; return user?.displayName || u.substring(1); }
+
+        function getUserBadges(u) {
+            const badges = users[u]?.badges || [];
+            let html = badges.map(id => {
+                if (id === 1) return `<img src="${ICONS.BADGE1}" class="badge-icon" alt="badge1">`;
+                if (id === 2) return `<img src="${ICONS.BADGE2}" class="badge-icon" alt="badge2">`;
+                if (id === 3) return `<img src="${ICONS.BADGE3}" class="badge-icon" alt="badge3">`;
+                return '';
+            }).join('');
+            if (users[u]?.premium) html += `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">`;
+            return html;
+        }
+
+        function getUserBadgesSmall(u) {
+            const badges = users[u]?.badges || [];
+            let html = badges.map(id => {
+                if (id === 1) return `<img src="${ICONS.BADGE1}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b1">`;
+                if (id === 2) return `<img src="${ICONS.BADGE2}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b2">`;
+                if (id === 3) return `<img src="${ICONS.BADGE3}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b3">`;
+                return '';
+            }).join('');
+            if (users[u]?.premium) html += `<img src="${ICONS.PREMIUM_EGG}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="prem">`;
+            return html;
+        }
+
+        function formatUsernameForPost(u) {
+            const name = getDisplayName(u);
+            const isPremium = users[u]?.premium;
+            const cls = isPremium ? 'premium-nick' : 'normal-nick';
+            return `<span class="${cls}">${escapeHTML(name)} @${escapeHTML(u.substring(1))}</span>`;
+        }
+
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function isValidUsername(s) { return /^[a-zA-Z][a-zA-Z0-9_]{0,14}$/.test(s); }
+
+        function loginUser(u) {
+            currentUser = u;
+            setCookie('yolk_user', u, 365);
+            activeTab = 'feed';
+            viewedProfile = null;
+            feedShuffled = [];
+            feedIndex = 0;
+            searchQuery = '';
+            render();
+        }
+
+        function logout() {
+            currentUser = null;
+            eraseCookie('yolk_user');
+            viewedProfile = null;
+            activeTab = 'feed';
+            feedShuffled = [];
+            feedIndex = 0;
+            searchQuery = '';
+            render();
+        }
+
+        function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+
+        function getFeedPosts() {
+            let filtered = posts;
+            if (searchQuery.startsWith('#')) {
+                const tag = searchQuery.toLowerCase().trim();
+                filtered = posts.filter(p => p.hashtags?.includes(tag));
+            } else if (searchQuery.startsWith('@')) {
+                return [];
+            } else if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = posts.filter(p => p.text.toLowerCase().includes(q));
+            }
+            return filtered;
+        }
+
+        function searchUsers(query) {
+            if (!query.startsWith('@')) return [];
+            const q = query.toLowerCase().trim();
+            if (q.length < 2) return [];
+            const results = [];
+            Object.keys(users).forEach(u => {
+                if (u.toLowerCase().includes(q)) {
+                    results.push(u);
+                } else {
+                    const dn = (users[u]?.displayName || '').toLowerCase();
+                    if (dn.includes(q.substring(1))) results.push(u);
                 }
-            }
+            });
+            return results;
+        }
 
-            function generateId() {
-                return Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        function loadMoreFeed() {
+            const container = document.getElementById('feedContainer');
+            if (!container || activeTab !== 'feed') return;
+            if (searchQuery.startsWith('@')) return;
+            const filtered = getFeedPosts();
+            if (filtered.length === 0) {
+                if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
+                    container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+                }
+                return;
             }
-
-            function getDisplayName(u) {
-                const user = users[u];
-                return user?.displayName || u.substring(1);
-            }
-
-            function getUserBadges(u) {
-                const badges = users[u]?.badges || [];
-                let html = badges.map(id => {
-                    if (id === 1) return `<img src="${ICONS.BADGE1}" class="badge-icon" alt="badge1">`;
-                    if (id === 2) return `<img src="${ICONS.BADGE2}" class="badge-icon" alt="badge2">`;
-                    if (id === 3) return `<img src="${ICONS.BADGE3}" class="badge-icon" alt="badge3">`;
-                    return '';
-                }).join('');
-                if (users[u]?.premium) html +=
-                    `<img src="${ICONS.PREMIUM_EGG}" class="badge-icon" alt="premium">`;
-                return html;
-            }
-
-            function getUserBadgesSmall(u) {
-                const badges = users[u]?.badges || [];
-                let html = badges.map(id => {
-                    if (id === 1) return `<img src="${ICONS.BADGE1}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b1">`;
-                    if (id === 2) return `<img src="${ICONS.BADGE2}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b2">`;
-                    if (id === 3) return `<img src="${ICONS.BADGE3}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="b3">`;
-                    return '';
-                }).join('');
-                if (users[u]?.premium) html +=
-                    `<img src="${ICONS.PREMIUM_EGG}" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;" alt="prem">`;
-                return html;
-            }
-
-            function formatUsernameForPost(u) {
-                const name = getDisplayName(u);
-                const isPremium = users[u]?.premium;
-                const cls = isPremium ? 'premium-nick' : 'normal-nick';
-                return `<span class="${cls}">${escapeHTML(name)} @${escapeHTML(u.substring(1))}</span>`;
-            }
-
-            function escapeHTML(str) {
-                const div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            }
-
-            function isValidUsername(s) {
-                return /^[a-zA-Z][a-zA-Z0-9_]{0,14}$/.test(s);
-            }
-
-            function loginUser(u) {
-                currentUser = u;
-                setCookie('yolk_user', u, 365);
-                activeTab = 'feed';
-                viewedProfile = null;
-                feedShuffled = [];
+            if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
+                feedShuffled = shuffleArray([...filtered]);
+                feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                 feedIndex = 0;
-                searchQuery = '';
-                render();
+                if (container) container.innerHTML = '';
             }
-
-            function logout() {
-                currentUser = null;
-                eraseCookie('yolk_user');
-                viewedProfile = null;
-                activeTab = 'feed';
-                feedShuffled = [];
-                feedIndex = 0;
-                searchQuery = '';
-                render();
-            }
-
-            function shuffleArray(arr) {
-                for (let i = arr.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [arr[i], arr[j]] = [arr[j], arr[i]];
-                }
-                return arr;
-            }
-
-            function getFeedPosts() {
-                let filtered = posts;
-                if (searchQuery.startsWith('#')) {
-                    const tag = searchQuery.toLowerCase().trim();
-                    filtered = posts.filter(p => p.hashtags?.includes(tag));
-                } else if (searchQuery.startsWith('@')) {
-                    return [];
-                } else if (searchQuery) {
-                    const q = searchQuery.toLowerCase();
-                    filtered = posts.filter(p => p.text.toLowerCase().includes(q));
-                }
-                return filtered;
-            }
-
-            function searchUsers(query) {
-                if (!query.startsWith('@')) return [];
-                const q = query.toLowerCase().trim();
-                if (q.length < 2) return [];
-                const results = [];
-                Object.keys(users).forEach(u => {
-                    if (u.toLowerCase().includes(q)) {
-                        results.push(u);
-                    } else {
-                        const dn = (users[u]?.displayName || '').toLowerCase();
-                        if (dn.includes(q.substring(1))) results.push(u);
-                    }
-                });
-                return results;
-            }
-
-            function loadMoreFeed() {
-                const container = document.getElementById('feedContainer');
-                if (!container || activeTab !== 'feed') return;
-                if (searchQuery.startsWith('@')) return;
-                const filtered = getFeedPosts();
-                if (filtered.length === 0) {
-                    if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
-                        container.innerHTML =
-                            '<div class="no-posts-msg">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;font-weight:600;" onclick="window.clearSearch()">clear search</span>.</div>';
-                    }
-                    return;
-                }
-                if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
+            for (let i = 0; i < BATCH_SIZE; i++) {
+                if (feedIndex >= feedShuffled.length) {
                     feedShuffled = shuffleArray([...filtered]);
                     feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                     feedIndex = 0;
-                    if (container) container.innerHTML = '';
                 }
-                for (let i = 0; i < BATCH_SIZE; i++) {
-                    if (feedIndex >= feedShuffled.length) {
-                        feedShuffled = shuffleArray([...filtered]);
-                        feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-                        feedIndex = 0;
-                    }
-                    const post = feedShuffled[feedIndex++];
-                    container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
-                }
+                const post = feedShuffled[feedIndex++];
+                container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
             }
+        }
 
-            function resetFeed() {
-                feedShuffled = [];
-                feedIndex = 0;
-                const c = document.getElementById('feedContainer');
-                if (c) {
-                    c.innerHTML = '';
-                    loadMoreFeed();
-                }
+        function resetFeed() { feedShuffled = []; feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = ''; loadMoreFeed(); } }
+        function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el.scrollTop; }
+        function restoreFeedScroll() { setTimeout(() => { const el = document.getElementById('feedContainer'); if (el) el.scrollTop = feedScrollPos; }, 80); }
+
+        function addPost(text, media = null, isVideo = false) {
+            if (!currentUser) return;
+            const post = {
+                id: generateId(),
+                author: currentUser,
+                text: text.trim(),
+                media,
+                isVideo,
+                hashtags: extractHashtags(text),
+                time: Date.now(),
+                likes: {},
+                comments: [],
+                isRepost: false,
+                repostCount: 0,
+                repostedBy: []
+            };
+            posts.unshift(post);
+            saveState();
+            feedShuffled = [];
+            feedIndex = 0;
+            render();
+        }
+
+        function repostPost(originalPostId, userText) {
+            if (!currentUser) return;
+            const original = posts.find(p => p.id === originalPostId);
+            if (!original) return;
+            const newPost = {
+                id: generateId(),
+                author: currentUser,
+                text: userText.trim(),
+                media: null,
+                isVideo: null,
+                hashtags: extractHashtags(userText),
+                time: Date.now(),
+                likes: {},
+                comments: [],
+                isRepost: true,
+                repostAuthor: original.author,
+                repostText: original.text,
+                repostMedia: original.media,
+                repostIsVideo: original.isVideo,
+                repostCount: 0,
+                repostedBy: []
+            };
+            posts.unshift(newPost);
+            if (!original.repostedBy.includes(currentUser)) {
+                original.repostedBy.push(currentUser);
+                original.repostCount = (original.repostCount || 0) + 1;
             }
+            saveState();
+            feedShuffled = [];
+            feedIndex = 0;
+            render();
+            showToast('Post reposted to your wall!');
+        }
 
-            function saveFeedScroll() {
-                const el = document.getElementById('feedContainer');
-                if (el) feedScrollPos = el.scrollTop;
+        function deletePost(id) {
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+            if (post.author !== currentUser && currentUser !== ADMIN_USER) return;
+            posts = posts.filter(p => p.id !== id);
+            saveState();
+            feedShuffled = [];
+            feedIndex = 0;
+            render();
+        }
+
+        function toggleLike(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+            if (post.likes[currentUser]) delete post.likes[currentUser];
+            else post.likes[currentUser] = true;
+            saveState();
+            updatePostStatsInDOM(postId);
+        }
+
+        function addComment(postId, text) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+            post.comments.push({ author: currentUser, text, time: Date.now() });
+            saveState();
+            updatePostStatsInDOM(postId);
+        }
+
+        function isFollowing(target) {
+            if (!currentUser || !users[currentUser] || !users[target]) return false;
+            return users[currentUser].following?.includes(target) || false;
+        }
+
+        function toggleFollow(target) {
+            if (!currentUser || currentUser === target) return;
+            if (!users[currentUser].following) users[currentUser].following = [];
+            if (!users[target].followers) users[target].followers = [];
+            if (isFollowing(target)) {
+                users[currentUser].following = users[currentUser].following.filter(u => u !== target);
+                users[target].followers = users[target].followers.filter(u => u !== currentUser);
+            } else {
+                users[currentUser].following.push(target);
+                users[target].followers.push(currentUser);
             }
+            saveState();
+            render();
+        }
 
-            function restoreFeedScroll() {
-                setTimeout(() => {
-                    const el = document.getElementById('feedContainer');
-                    if (el) el.scrollTop = feedScrollPos;
-                }, 80);
-            }
-
-            function addPost(text, media = null, isVideo = false) {
-                if (!currentUser) return;
-                const post = {
-                    id: generateId(),
-                    author: currentUser,
-                    text: text.trim(),
-                    media,
-                    isVideo,
-                    hashtags: extractHashtags(text),
-                    time: Date.now(),
-                    likes: {},
-                    comments: [],
-                    isRepost: false,
-                    repostCount: 0,
-                    repostedBy: []
-                };
-                posts.unshift(post);
-                saveState();
-                feedShuffled = [];
-                feedIndex = 0;
-                render();
-            }
-
-            function repostPost(originalPostId, userText) {
-                if (!currentUser) return;
-                const original = posts.find(p => p.id === originalPostId);
-                if (!original) return;
-                const newPost = {
-                    id: generateId(),
-                    author: currentUser,
-                    text: userText.trim(),
-                    media: null,
-                    isVideo: null,
-                    hashtags: extractHashtags(userText),
-                    time: Date.now(),
-                    likes: {},
-                    comments: [],
-                    isRepost: true,
-                    repostAuthor: original.author,
-                    repostText: original.text,
-                    repostMedia: original.media,
-                    repostIsVideo: original.isVideo,
-                    repostCount: 0,
-                    repostedBy: []
-                };
-                posts.unshift(newPost);
-                if (!original.repostedBy.includes(currentUser)) {
-                    original.repostedBy.push(currentUser);
-                    original.repostCount = (original.repostCount || 0) + 1;
-                }
-                saveState();
-                feedShuffled = [];
-                feedIndex = 0;
-                render();
-                showToast('Post reposted to your wall!');
-            }
-
-            function deletePost(id) {
-                const post = posts.find(p => p.id === id);
-                if (!post) return;
-                if (post.author !== currentUser && currentUser !== ADMIN_USER) return;
-                posts = posts.filter(p => p.id !== id);
-                saveState();
-                feedShuffled = [];
-                feedIndex = 0;
-                render();
-            }
-
-            function toggleLike(postId) {
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                if (post.likes[currentUser]) delete post.likes[currentUser];
-                else post.likes[currentUser] = true;
-                saveState();
-                updatePostStatsInDOM(postId);
-            }
-
-            function addComment(postId, text) {
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                post.comments.push({
-                    author: currentUser,
-                    text,
-                    time: Date.now()
-                });
-                saveState();
-                updatePostStatsInDOM(postId);
-            }
-
-            function isFollowing(target) {
-                if (!currentUser || !users[currentUser] || !users[target]) return false;
-                return users[currentUser].following?.includes(target) || false;
-            }
-
-            function toggleFollow(target) {
-                if (!currentUser || currentUser === target) return;
-                if (!users[currentUser].following) users[currentUser].following = [];
-                if (!users[target].followers) users[target].followers = [];
-                if (isFollowing(target)) {
-                    users[currentUser].following = users[currentUser].following.filter(u => u !== target);
-                    users[target].followers = users[target].followers.filter(u => u !== currentUser);
-                } else {
-                    users[currentUser].following.push(target);
-                    users[target].followers.push(currentUser);
-                }
+        function giveBadge(targetUser, badgeNum) {
+            if (currentUser !== ADMIN_USER) return;
+            if (!users[targetUser]) return;
+            if (!users[targetUser].badges) users[targetUser].badges = [];
+            if (!users[targetUser].badges.includes(badgeNum)) {
+                users[targetUser].badges.push(badgeNum);
                 saveState();
                 render();
+                showToast(`Badge ${badgeNum} given`);
             }
+        }
 
-            function giveBadge(targetUser, badgeNum) {
-                if (currentUser !== ADMIN_USER) return;
-                if (!users[targetUser]) return;
-                if (!users[targetUser].badges) users[targetUser].badges = [];
-                if (!users[targetUser].badges.includes(badgeNum)) {
-                    users[targetUser].badges.push(badgeNum);
-                    saveState();
-                    render();
-                    showToast(`Badge ${badgeNum} given`);
-                }
-            }
+        function removeBadges(targetUser) {
+            if (currentUser !== ADMIN_USER) return;
+            if (!users[targetUser]) return;
+            users[targetUser].badges = [];
+            saveState();
+            render();
+            showToast('Badges removed');
+        }
 
-            function removeBadges(targetUser) {
-                if (currentUser !== ADMIN_USER) return;
-                if (!users[targetUser]) return;
-                users[targetUser].badges = [];
-                saveState();
-                render();
-                showToast('Badges removed');
-            }
+        function togglePremium(targetUser) {
+            if (currentUser !== ADMIN_USER) return;
+            if (!users[targetUser]) return;
+            users[targetUser].premium = !users[targetUser].premium;
+            saveState();
+            render();
+            showToast(`Premium ${users[targetUser].premium ? 'granted' : 'revoked'} for ${getDisplayName(targetUser)}`);
+        }
 
-            function togglePremium(targetUser) {
-                if (currentUser !== ADMIN_USER) return;
-                if (!users[targetUser]) return;
-                users[targetUser].premium = !users[targetUser].premium;
-                saveState();
-                render();
-                showToast(
-                    `Premium ${users[targetUser].premium ? 'granted' : 'revoked'} for ${getDisplayName(targetUser)}`);
-            }
-
-            function openUserListModal(title, userList) {
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                let listHTML = '';
-                if (userList.length === 0) {
-                    listHTML = '<div style="text-align:center;color:#888;padding:20px;">No users yet</div>';
-                } else {
-                    listHTML = userList.map(u => {
-                        const user = users[u] || {};
-                        const avatar = user.avatar || DEFAULT_AVATAR;
-                        const name = getDisplayName(u);
-                        const premiumClass = user.premium ? 'premium-nick' : 'normal-nick';
-                        return `
+        function openUserListModal(title, userList) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            let listHTML = '';
+            if (userList.length === 0) {
+                listHTML = '<div style="text-align:center;color:#888;padding:20px;">No users yet</div>';
+            } else {
+                listHTML = userList.map(u => {
+                    const user = users[u] || {};
+                    const avatar = user.avatar || DEFAULT_AVATAR;
+                    const name = getDisplayName(u);
+                    const premiumClass = user.premium ? 'premium-nick' : 'normal-nick';
+                    return `
                     <div class="user-search-card" onclick="window.openUserProfile('${u}'); this.closest('.modal-overlay').remove();" style="margin-bottom:8px;">
                         <div class="usc-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
                         <div class="usc-info">
@@ -2057,9 +1452,9 @@
                         </div>
                         <div class="usc-arrow">&gt;</div>
                     </div>`;
-                    }).join('');
-                }
-                modal.innerHTML = `
+                }).join('');
+            }
+            modal.innerHTML = `
             <div class="modal" style="max-width:400px;">
                 <h3>${title}</h3>
                 <div style="max-height:60vh; overflow-y:auto; padding-right:4px;">${listHTML}</div>
@@ -2067,45 +1462,43 @@
                     <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
                 </div>
             </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.remove();
-                });
-            }
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        }
 
-            function openFollowersList(username) {
-                const user = users[username];
-                if (!user) return;
-                openUserListModal(`Followers of ${getDisplayName(username)}`, user.followers || []);
-            }
+        function openFollowersList(username) {
+            const user = users[username];
+            if (!user) return;
+            openUserListModal(`Followers of ${getDisplayName(username)}`, user.followers || []);
+        }
 
-            function openFollowingList(username) {
-                const user = users[username];
-                if (!user) return;
-                openUserListModal(`Followed by ${getDisplayName(username)}`, user.following || []);
-            }
+        function openFollowingList(username) {
+            const user = users[username];
+            if (!user) return;
+            openUserListModal(`Followed by ${getDisplayName(username)}`, user.following || []);
+        }
 
-            function renderPostCard(post, showAuthor = true) {
-                const author = users[post.author] || {};
-                const avatar = author.avatar || DEFAULT_AVATAR;
-                const likes = Object.keys(post.likes || {}).length;
-                const comments = (post.comments || []).length;
-                const liked = post.likes?.[currentUser] || false;
-                const reposted = post.repostedBy?.includes(currentUser) || false;
-                const reposts = post.repostCount || 0;
+        function renderPostCard(post, showAuthor = true) {
+            const author = users[post.author] || {};
+            const avatar = author.avatar || DEFAULT_AVATAR;
+            const likes = Object.keys(post.likes || {}).length;
+            const comments = (post.comments || []).length;
+            const liked = post.likes?.[currentUser] || false;
+            const reposted = post.repostedBy?.includes(currentUser) || false;
+            const reposts = post.repostCount || 0;
 
-                let repostHTML = '';
-                if (post.isRepost && post.repostAuthor) {
-                    const origAuthor = users[post.repostAuthor] || {};
-                    const origName = getDisplayName(post.repostAuthor);
-                    const origPremium = origAuthor.premium ? 'premium-nick' : 'normal-nick';
-                    let origMediaHTML = '';
-                    if (post.repostMedia) {
-                        origMediaHTML = post.repostIsVideo ?
-                            `<div class="post-media"><video controls preload="metadata" src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;"></video></div>` :
-                            `<div class="post-media"><img src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;" loading="lazy" onclick="window.openImage('${post.repostMedia.replace(/'/g, "\\'")}')"></div>`;
-                    }
-                    repostHTML = `
+            let repostHTML = '';
+            if (post.isRepost && post.repostAuthor) {
+                const origAuthor = users[post.repostAuthor] || {};
+                const origName = getDisplayName(post.repostAuthor);
+                const origPremium = origAuthor.premium ? 'premium-nick' : 'normal-nick';
+                let origMediaHTML = '';
+                if (post.repostMedia) {
+                    origMediaHTML = post.repostIsVideo
+                        ? `<div class="post-media"><video controls preload="metadata" src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;"></video></div>`
+                        : `<div class="post-media"><img src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;" loading="lazy" onclick="window.openImage('${post.repostMedia.replace(/'/g, "\\'")}')"></div>`;
+                }
+                repostHTML = `
                 <div class="repost-block">
                     <div class="original-author" onclick="event.stopPropagation();window.openUserProfile('${post.repostAuthor}')">
                         Repost from <span class="${origPremium}">${escapeHTML(origName)} @${escapeHTML(post.repostAuthor.substring(1))}</span>
@@ -2113,24 +1506,22 @@
                     <div class="original-text">${escapeHTML(post.repostText || '')}</div>
                     ${origMediaHTML}
                 </div>`;
-                }
+            }
 
-                const mediaHtml = post.media ? (post.isVideo ?
-                    `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
-                    `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`) :
-                    '';
+            const mediaHtml = post.media ? (post.isVideo ?
+                `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
+                `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`) : '';
 
-                let textHTML = escapeHTML(post.text || '');
-                textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g,
-                    '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
-                textHTML = textHTML.replace(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g, function(match) {
-                    const u = match.toLowerCase();
-                    if (users[u]) return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
-                    return match;
-                });
+            let textHTML = escapeHTML(post.text || '');
+            textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g, '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
+            textHTML = textHTML.replace(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g, function(match) {
+                const u = match.toLowerCase();
+                if (users[u]) return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
+                return match;
+            });
 
-                const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
-                return `
+            const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
+            return `
             <div class="post-card" id="post-${post.id}">
                 ${showAuthor ? `
                 <div class="post-header" onclick="window.openUserProfile('${post.author}')">
@@ -2156,57 +1547,54 @@
                     ${canDelete ? `<button class="action-btn danger" onclick="event.stopPropagation();window.deletePostById('${post.id}')"><img src="${ICONS.DELETE}" alt="delete"></button>` : ''}
                 </div>
             </div>`;
-            }
+        }
 
-            function updatePostStatsInDOM(postId) {
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                const card = document.getElementById('post-' + postId);
-                if (!card) return;
-                const likeBtn = card.querySelector('.action-btn:first-of-type');
-                if (likeBtn) {
-                    const liked = post.likes?.[currentUser] || false;
-                    likeBtn.classList.toggle('liked', liked);
-                    likeBtn.innerHTML =
-                        `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
-                }
-                const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
-                if (commentBtn) commentBtn.innerHTML =
-                    `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
-                const repostBtn = card.querySelector('.action-btn:nth-of-type(3)');
-                if (repostBtn) {
-                    const reposted = post.repostedBy?.includes(currentUser) || false;
-                    repostBtn.classList.toggle('reposted', reposted);
-                    repostBtn.innerHTML =
-                        `<img src="${ICONS.REPOST}" alt="repost"> <span>${post.repostCount || 0}</span>`;
-                }
+        function updatePostStatsInDOM(postId) {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+            const card = document.getElementById('post-' + postId);
+            if (!card) return;
+            const likeBtn = card.querySelector('.action-btn:first-of-type');
+            if (likeBtn) {
+                const liked = post.likes?.[currentUser] || false;
+                likeBtn.classList.toggle('liked', liked);
+                likeBtn.innerHTML = `<img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${Object.keys(post.likes||{}).length}</span>`;
             }
-
-            function renderProfileWall(username) {
-                const userPosts = posts.filter(p => p.author === username);
-                if (userPosts.length === 0) return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
-                return userPosts.map(p => renderPostCard(p, false)).join('');
+            const commentBtn = card.querySelector('.action-btn:nth-of-type(2)');
+            if (commentBtn) commentBtn.innerHTML = `<img src="${ICONS.COMMENT}" alt="comment"> <span>${(post.comments||[]).length}</span>`;
+            const repostBtn = card.querySelector('.action-btn:nth-of-type(3)');
+            if (repostBtn) {
+                const reposted = post.repostedBy?.includes(currentUser) || false;
+                repostBtn.classList.toggle('reposted', reposted);
+                repostBtn.innerHTML = `<img src="${ICONS.REPOST}" alt="repost"> <span>${post.repostCount || 0}</span>`;
             }
+        }
 
-            function renderUserSearchResults(query) {
-                const results = searchUsers(query);
-                if (results.length === 0) {
-                    return `
+        function renderProfileWall(username) {
+            const userPosts = posts.filter(p => p.author === username);
+            if (userPosts.length === 0) return '<div style="text-align:center;color:#888;padding:40px;">No posts yet.</div>';
+            return userPosts.map(p => renderPostCard(p, false)).join('');
+        }
+
+        function renderUserSearchResults(query) {
+            const results = searchUsers(query);
+            if (results.length === 0) {
+                return `
                 <div class="feed-container">
                     <div class="search-info-bar">No users found for "${escapeHTML(query)}"</div>
                     <div style="text-align:center;color:#888;padding:30px;">Try a different username</div>
                     <button class="clear-search-btn" onclick="window.clearSearch()">Clear search</button>
                 </div>`;
-                }
-                let cardsHTML = results.map(u => {
-                    const user = users[u] || {};
-                    const avatar = user.avatar || DEFAULT_AVATAR;
-                    const name = getDisplayName(u);
-                    const premiumClass = user.premium ? 'premium-nick' : 'normal-nick';
-                    const bio = user.bio || '';
-                    const followers = (user.followers || []).length;
-                    const following = (user.following || []).length;
-                    return `
+            }
+            let cardsHTML = results.map(u => {
+                const user = users[u] || {};
+                const avatar = user.avatar || DEFAULT_AVATAR;
+                const name = getDisplayName(u);
+                const premiumClass = user.premium ? 'premium-nick' : 'normal-nick';
+                const bio = user.bio || '';
+                const followers = (user.followers || []).length;
+                const following = (user.following || []).length;
+                return `
                 <div class="user-search-card" onclick="window.openUserProfile('${u}')">
                     <div class="usc-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
                     <div class="usc-info">
@@ -2216,19 +1604,19 @@
                     </div>
                     <div class="usc-arrow">&gt;</div>
                 </div>`;
-                }).join('');
-                return `
+            }).join('');
+            return `
             <div class="feed-container" id="feedContainer">
                 <div class="search-info-bar">${results.length} user${results.length>1?'s':''} found for "${escapeHTML(query)}"</div>
                 ${cardsHTML}
                 <button class="clear-search-btn" onclick="window.clearSearch()">Clear search</button>
             </div>`;
-            }
+        }
 
-            function openPremiumModal() {
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                modal.innerHTML = `
+        function openPremiumModal() {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
             <div class="modal premium-modal">
                 <h3>YOLK PREMIUM SUBSCRIPTION FOREVER</h3>
                 <div class="feature">
@@ -2249,53 +1637,43 @@
                     <button class="btn secondary" onclick="this.closest('.modal-overlay').remove()">Close</button>
                 </div>
             </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.remove();
-                });
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        }
+
+        function applyTheme() {
+            const theme = localStorage.getItem(THEME_KEY) || 'dark';
+            const app = document.getElementById('app');
+            if (app) {
+                app.classList.toggle('light-theme', theme === 'light');
             }
+            document.body.classList.toggle('light-theme', theme === 'light');
+        }
 
-            function applyTheme() {
-                const theme = localStorage.getItem(THEME_KEY) || 'dark';
-                const app = document.getElementById('app');
-                if (app) {
-                    app.classList.toggle('light-theme', theme === 'light');
-                }
-                document.body.classList.toggle('light-theme', theme === 'light');
+        function toggleTheme() {
+            const isLight = document.body.classList.contains('light-theme');
+            if (isLight) {
+                document.body.classList.remove('light-theme');
+                document.getElementById('app')?.classList.remove('light-theme');
+                localStorage.setItem(THEME_KEY, 'dark');
+                showToast('Dark theme');
+            } else {
+                document.body.classList.add('light-theme');
+                document.getElementById('app')?.classList.add('light-theme');
+                localStorage.setItem(THEME_KEY, 'light');
+                showToast('Light theme');
             }
+        }
 
-            function toggleTheme() {
-                const isLight = document.body.classList.contains('light-theme');
-                if (isLight) {
-                    document.body.classList.remove('light-theme');
-                    document.getElementById('app')?.classList.remove('light-theme');
-                    localStorage.setItem(THEME_KEY, 'dark');
-                    showToast('Dark theme');
-                } else {
-                    document.body.classList.add('light-theme');
-                    document.getElementById('app')?.classList.add('light-theme');
-                    localStorage.setItem(THEME_KEY, 'light');
-                    showToast('Light theme');
-                }
-            }
+        function render() {
+            if (!dataLoaded) { document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>'; return; }
+            if (!currentUser) { document.getElementById('app').innerHTML = renderAuth(); attachAuthEvents(); applyTheme(); return; }
 
-            function render() {
-                if (!dataLoaded) {
-                    document.getElementById('app').innerHTML = '<div class="loading-screen">YOLKAPP</div>';
-                    return;
-                }
-                if (!currentUser) {
-                    document.getElementById('app').innerHTML = renderAuth();
-                    attachAuthEvents();
-                    applyTheme();
-                    return;
-                }
+            const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
+            const profile = users[profileUser] || {};
+            const myProfile = users[currentUser] || {};
 
-                const profileUser = (activeTab === 'userProfile' && viewedProfile) ? viewedProfile : currentUser;
-                const profile = users[profileUser] || {};
-                const myProfile = users[currentUser] || {};
-
-                const headerHtml = `
+            const headerHtml = `
             <div class="header">
                 <div class="logo">Yolkapp</div>
                 <div class="search-box">
@@ -2306,28 +1684,26 @@
                 </div>
             </div>`;
 
-                const tabsHtml = `
+            const tabsHtml = `
             <div class="tabs">
                 <div class="tab ${activeTab==='feed'?'active':''}" onclick="window.switchTab('feed')">Feed</div>
                 <div class="tab ${activeTab==='profile'?'active':''}" onclick="window.switchTab('profile')">My Profile</div>
                 ${activeTab==='userProfile' ? `<div class="tab active">${escapeHTML(getDisplayName(viewedProfile))}</div>` : ''}
             </div>`;
 
-                const premiumClassFn = (u) => users[u]?.premium ? 'premium-nick' : 'normal-nick';
+            const premiumClassFn = (u) => users[u]?.premium ? 'premium-nick' : 'normal-nick';
 
-                let contentHtml = '';
-                if (activeTab === 'feed') {
-                    if (searchQuery.startsWith('@') && searchQuery.length >= 2) {
-                        contentHtml = renderUserSearchResults(searchQuery);
-                    } else if (searchQuery.startsWith('@') && searchQuery.length < 2) {
-                        contentHtml =
-                            `<div class="feed-container" style="text-align:center;color:#888;padding:40px;">Type at least 2 characters to search users</div>`;
-                    } else {
-                        contentHtml =
-                            `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
-                    }
-                } else if (activeTab === 'profile') {
-                    contentHtml = `
+            let contentHtml = '';
+            if (activeTab === 'feed') {
+                if (searchQuery.startsWith('@') && searchQuery.length >= 2) {
+                    contentHtml = renderUserSearchResults(searchQuery);
+                } else if (searchQuery.startsWith('@') && searchQuery.length < 2) {
+                    contentHtml = `<div class="feed-container" style="text-align:center;color:#888;padding:40px;">Type at least 2 characters to search users</div>`;
+                } else {
+                    contentHtml = `<div class="feed-container" id="feedContainer" onscroll="window.handleFeedScroll()"></div>`;
+                }
+            } else if (activeTab === 'profile') {
+                contentHtml = `
                 <div class="profile-wall">
                     <div class="profile-card">
                         ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner"></div>'}
@@ -2355,9 +1731,9 @@
                     <h3 style="margin-bottom:4px;color:var(--gold);font-size:16px;">My wall</h3>
                     ${renderProfileWall(currentUser)}
                 </div>`;
-                } else if (activeTab === 'userProfile') {
-                    const isSub = isFollowing(profileUser);
-                    contentHtml = `
+            } else if (activeTab === 'userProfile') {
+                const isSub = isFollowing(profileUser);
+                contentHtml = `
                 <div class="profile-wall">
                     <div class="profile-card">
                         ${profile.banner ? `<div class="profile-banner"><img src="${profile.banner}" alt="banner" loading="lazy"></div>` : '<div class="profile-banner"></div>'}
@@ -2384,75 +1760,73 @@
                     <h3 style="margin-bottom:4px;color:var(--gold);font-size:16px;">${escapeHTML(getDisplayName(profileUser))}'s wall</h3>
                     ${renderProfileWall(profileUser)}
                 </div>`;
-                }
+            }
 
-                document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml +
-                    `<div class="create-post-btn" onclick="window.openCreatePost()" title="New post">+</div>`;
-                applyTheme();
+            document.getElementById('app').innerHTML = headerHtml + tabsHtml + contentHtml +
+                `<div class="create-post-btn" onclick="window.openCreatePost()" title="New post">+</div>`;
+            applyTheme();
 
-                const searchInput = document.getElementById('searchInput');
-                if (searchInput) {
-                    searchInput.addEventListener('input', (e) => {
-                        const val = e.target.value;
-                        searchQuery = val;
-                        if (searchTimeout) clearTimeout(searchTimeout);
-                        searchTimeout = setTimeout(() => {
-                            if (searchQuery.startsWith('@')) {
-                                if (searchQuery.length >= 2) {
-                                    if (activeTab !== 'feed') {
-                                        activeTab = 'feed';
-                                        feedShuffled = [];
-                                        feedIndex = 0;
-                                    }
-                                    render();
-                                } else if (searchQuery.length < 2) {
-                                    if (activeTab === 'feed') render();
-                                }
-                            } else {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    searchQuery = val;
+                    if (searchTimeout) clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        if (searchQuery.startsWith('@')) {
+                            if (searchQuery.length >= 2) {
                                 if (activeTab !== 'feed') {
                                     activeTab = 'feed';
-                                    feedShuffled = [];
-                                    feedIndex = 0;
-                                    render();
-                                } else {
-                                    resetFeed();
+                                    feedShuffled = []; feedIndex = 0;
                                 }
+                                render();
+                            } else if (searchQuery.length < 2) {
+                                if (activeTab === 'feed') render();
                             }
-                        }, 400);
-                    });
-                    searchInput.addEventListener('keydown', (e) => {
-                        if (e.key === 'Escape') {
-                            searchQuery = '';
-                            searchInput.value = '';
-                            if (searchTimeout) clearTimeout(searchTimeout);
-                            if (activeTab === 'feed') resetFeed();
-                            else render();
+                        } else {
+                            if (activeTab !== 'feed') {
+                                activeTab = 'feed';
+                                feedShuffled = []; feedIndex = 0;
+                                render();
+                            } else {
+                                resetFeed();
+                            }
                         }
-                    });
-                }
-
-                if (activeTab === 'feed' && !searchQuery.startsWith('@')) {
-                    const container = document.getElementById('feedContainer');
-                    if (container && container.innerHTML === '') resetFeed();
-                    restoreFeedScroll();
-                }
-
-                const feedEl = document.getElementById('feedContainer');
-                if (feedEl && !feedEl._scrollBound) {
-                    feedEl._scrollBound = true;
-                    feedEl.addEventListener('scroll', handleFeedScroll);
-                }
+                    }, 400);
+                });
+                searchInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        searchQuery = '';
+                        searchInput.value = '';
+                        if (searchTimeout) clearTimeout(searchTimeout);
+                        if (activeTab === 'feed') resetFeed();
+                        else render();
+                    }
+                });
             }
 
-            function handleFeedScroll() {
-                const el = document.getElementById('feedContainer');
-                if (!el) return;
-                if (searchQuery.startsWith('@')) return;
-                if (el.scrollTop + el.clientHeight >= el.scrollHeight - 180) loadMoreFeed();
+            if (activeTab === 'feed' && !searchQuery.startsWith('@')) {
+                const container = document.getElementById('feedContainer');
+                if (container && container.innerHTML === '') resetFeed();
+                restoreFeedScroll();
             }
 
-            function renderAuth() {
-                return `
+            const feedEl = document.getElementById('feedContainer');
+            if (feedEl && !feedEl._scrollBound) {
+                feedEl._scrollBound = true;
+                feedEl.addEventListener('scroll', handleFeedScroll);
+            }
+        }
+
+        function handleFeedScroll() {
+            const el = document.getElementById('feedContainer');
+            if (!el) return;
+            if (searchQuery.startsWith('@')) return;
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight - 180) loadMoreFeed();
+        }
+
+        function renderAuth() {
+            return `
             <div class="auth-container"><div class="auth-box">
                 <h2>Yolkapp</h2><div class="auth-subtitle">Sign in to continue</div>
                 <div id="loginForm">
@@ -2471,121 +1845,70 @@
                 </div>
                 <div id="authError" class="auth-error"></div>
             </div></div>`;
-            }
+        }
 
-            function attachAuthEvents() {
-                const errDiv = document.getElementById('authError');
-                document.getElementById('showRegister')?.addEventListener('click', () => {
-                    document.getElementById('loginForm').style.display = 'none';
-                    document.getElementById('registerForm').style.display = 'block';
-                    if (errDiv) errDiv.textContent = '';
-                });
-                document.getElementById('showLogin')?.addEventListener('click', () => {
-                    document.getElementById('registerForm').style.display = 'none';
-                    document.getElementById('loginForm').style.display = 'block';
-                    if (errDiv) errDiv.textContent = '';
-                });
-                document.getElementById('loginBtn')?.addEventListener('click', () => {
-                    const rawUsername = document.getElementById('loginUsername').value.trim().toLowerCase();
-                    const u = '@' + rawUsername;
-                    const e = document.getElementById('loginEmail').value.trim();
-                    const p = document.getElementById('loginPassword').value;
-                    if (!users[u] || users[u].password !== p || users[u].email !== e) {
-                        if (errDiv) errDiv.textContent = 'Invalid credentials';
-                        return;
-                    }
-                    loginUser(u);
-                });
-                document.getElementById('registerBtn')?.addEventListener('click', async () => {
-                    const raw = document.getElementById('regUsername').value.trim();
-                    if (!isValidUsername(raw)) {
-                        if (errDiv) errDiv.textContent =
-                            'Username: 1-15 characters, English letters only (a-z, A-Z), numbers and underscores allowed. Must start with a letter.';
-                        return;
-                    }
-                    const u = '@' + raw.toLowerCase();
-                    if (users[u]) {
-                        if (errDiv) errDiv.textContent = 'Username already taken';
-                        return;
-                    }
-                    const e = document.getElementById('regEmail').value.trim();
-                    const p = document.getElementById('regPassword').value;
-                    if (!e || !p) {
-                        if (errDiv) errDiv.textContent = 'Fill all fields';
-                        return;
-                    }
-                    users[u] = {
-                        password: p,
-                        email: e,
-                        avatar: null,
-                        banner: null,
-                        bio: '',
-                        displayName: raw,
-                        followers: [],
-                        following: [],
-                        badges: [],
-                        premium: false
-                    };
-                    saveToLocalStorage();
-                    if (dataLoaded) {
-                        try {
-                            await supabase.from('app_state').upsert({
-                                id: STATE_ID,
-                                data: {
-                                    users,
-                                    posts
-                                }
-                            }, {
-                                onConflict: 'id'
-                            });
-                        } catch (e) {}
-                    }
-                    loginUser(u);
-                });
-                document.getElementById('regUsername')?.addEventListener('input', function() {
-                    const val = this.value;
-                    if (val && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(val) && val.length > 0) {
-                        this.style.borderColor = '#ff6b6b';
-                    } else {
-                        this.style.borderColor = '';
-                    }
-                });
-            }
+        function attachAuthEvents() {
+            const errDiv = document.getElementById('authError');
+            document.getElementById('showRegister')?.addEventListener('click', () => {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                if (errDiv) errDiv.textContent = '';
+            });
+            document.getElementById('showLogin')?.addEventListener('click', () => {
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                if (errDiv) errDiv.textContent = '';
+            });
+            document.getElementById('loginBtn')?.addEventListener('click', () => {
+                const rawUsername = document.getElementById('loginUsername').value.trim().toLowerCase();
+                const u = '@' + rawUsername;
+                const e = document.getElementById('loginEmail').value.trim();
+                const p = document.getElementById('loginPassword').value;
+                if (!users[u] || users[u].password !== p || users[u].email !== e) {
+                    if (errDiv) errDiv.textContent = 'Invalid credentials';
+                    return;
+                }
+                loginUser(u);
+            });
+            document.getElementById('registerBtn')?.addEventListener('click', async () => {
+                const raw = document.getElementById('regUsername').value.trim();
+                if (!isValidUsername(raw)) {
+                    if (errDiv) errDiv.textContent = 'Username: 1-15 characters, English letters only (a-z, A-Z), numbers and underscores allowed. Must start with a letter.';
+                    return;
+                }
+                const u = '@' + raw.toLowerCase();
+                if (users[u]) { if (errDiv) errDiv.textContent = 'Username already taken'; return; }
+                const e = document.getElementById('regEmail').value.trim();
+                const p = document.getElementById('regPassword').value;
+                if (!e || !p) { if (errDiv) errDiv.textContent = 'Fill all fields'; return; }
+                users[u] = { password: p, email: e, avatar: null, banner: null, bio: '', displayName: raw, followers: [], following: [], badges: [], premium: false };
+                saveToLocalStorage();
+                if (dataLoaded) {
+                    try { await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, { onConflict: 'id' }); } catch (e) {}
+                }
+                loginUser(u);
+            });
+            document.getElementById('regUsername')?.addEventListener('input', function() {
+                const val = this.value;
+                if (val && !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(val) && val.length > 0) {
+                    this.style.borderColor = '#ff6b6b';
+                } else {
+                    this.style.borderColor = '';
+                }
+            });
+        }
 
-            window.switchTab = (tab) => {
-                saveFeedScroll();
-                activeTab = tab;
-                viewedProfile = null;
-                searchQuery = '';
-                feedShuffled = [];
-                feedIndex = 0;
-                if (searchTimeout) clearTimeout(searchTimeout);
-                render();
-            };
-            window.goToMyProfile = () => {
-                saveFeedScroll();
-                activeTab = 'profile';
-                viewedProfile = null;
-                searchQuery = '';
-                render();
-            };
-            window.openUserProfile = (u) => {
-                saveFeedScroll();
-                activeTab = 'userProfile';
-                viewedProfile = u;
-                searchQuery = '';
-                render();
-            };
-            window.toggleLike = (id) => toggleLike(id);
-            window.deletePostById = (id) => {
-                if (confirm('Delete this post?')) deletePost(id);
-            };
-            window.openComments = (postId) => {
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                modal.innerHTML = `
+        window.switchTab = (tab) => { saveFeedScroll(); activeTab = tab; viewedProfile = null; searchQuery = ''; feedShuffled = []; feedIndex = 0; if (searchTimeout) clearTimeout(searchTimeout); render(); };
+        window.goToMyProfile = () => { saveFeedScroll(); activeTab = 'profile'; viewedProfile = null; searchQuery = ''; render(); };
+        window.openUserProfile = (u) => { saveFeedScroll(); activeTab = 'userProfile'; viewedProfile = u; searchQuery = ''; render(); };
+        window.toggleLike = (id) => toggleLike(id);
+        window.deletePostById = (id) => { if (confirm('Delete this post?')) deletePost(id); };
+        window.openComments = (postId) => {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
             <div class="modal"><h3>Comments</h3>
                 <div class="comments-section">${(post.comments||[]).map(c=>{
                     const comAuthor = users[c.author] || {};
@@ -2598,29 +1921,22 @@
                     <button class="btn" id="submitComment">Send</button>
                 </div>
             </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.remove();
-                });
-                document.getElementById('submitComment').onclick = () => {
-                    const text = document.getElementById('commentText').value.trim();
-                    if (text) {
-                        addComment(postId, text);
-                        modal.remove();
-                    }
-                };
-                document.getElementById('commentText')?.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') document.getElementById('submitComment')?.click();
-                });
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('submitComment').onclick = () => {
+                const text = document.getElementById('commentText').value.trim();
+                if (text) { addComment(postId, text); modal.remove(); }
             };
-            window.openRepost = (postId) => {
-                const post = posts.find(p => p.id === postId);
-                if (!post) return;
-                const originalAuthorName = getDisplayName(post.author);
-                const origPremium = users[post.author]?.premium ? 'premium-nick' : 'normal-nick';
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                modal.innerHTML = `
+            document.getElementById('commentText')?.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('submitComment')?.click(); });
+        };
+        window.openRepost = (postId) => {
+            const post = posts.find(p => p.id === postId);
+            if (!post) return;
+            const originalAuthorName = getDisplayName(post.author);
+            const origPremium = users[post.author]?.premium ? 'premium-nick' : 'normal-nick';
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
             <div class="modal">
                 <h3>Repost</h3>
                 <div style="margin-bottom:12px; padding:10px; background:rgba(212,175,55,0.06); border-left:3px solid var(--gold); border-radius:8px;">
@@ -2637,20 +1953,18 @@
                     <button class="btn" id="doRepost">Repost</button>
                 </div>
             </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.remove();
-                });
-                document.getElementById('doRepost').onclick = () => {
-                    const text = document.getElementById('repostText').value;
-                    repostPost(postId, text);
-                    modal.remove();
-                };
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('doRepost').onclick = () => {
+                const text = document.getElementById('repostText').value;
+                repostPost(postId, text);
+                modal.remove();
             };
-            window.openCreatePost = () => {
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                modal.innerHTML = `
+        };
+        window.openCreatePost = () => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.innerHTML = `
             <div class="modal"><h3>New post</h3>
                 <div class="field-group"><label>What's on your mind?</label><textarea id="postText" rows="4" placeholder="Write something... #hashtag @mention"></textarea></div>
                 <div class="field-group" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -2662,81 +1976,58 @@
                     <button class="btn" id="publishBtn">Publish</button>
                 </div>
             </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.remove();
-                });
-                document.getElementById('publishBtn').onclick = () => {
-                    const text = document.getElementById('postText').value.trim();
-                    const file = document.getElementById('mediaFile').files[0];
-                    if (!text && !file) return;
-                    const publishBtn = document.getElementById('publishBtn');
-                    if (publishBtn) publishBtn.disabled = true;
-                    if (file) {
-                        processMediaFile(file).then(result => {
-                                addPost(text || '', result.dataURL, result.isVideo);
-                                modal.remove();
-                            })
-                            .catch(err => {
-                                if (publishBtn) publishBtn.disabled = false;
-                                if (!err.message?.includes('cancelled')) showToast('Error: ' + err.message,
-                                    3000);
-                            });
-                    } else {
-                        addPost(text);
-                        modal.remove();
-                    }
-                };
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('publishBtn').onclick = () => {
+                const text = document.getElementById('postText').value.trim();
+                const file = document.getElementById('mediaFile').files[0];
+                if (!text && !file) return;
+                const publishBtn = document.getElementById('publishBtn');
+                if (publishBtn) publishBtn.disabled = true;
+                if (file) {
+                    processMediaFile(file).then(result => { addPost(text || '', result.dataURL, result.isVideo); modal.remove(); })
+                        .catch(err => { if (publishBtn) publishBtn.disabled = false; if (!err.message?.includes('cancelled')) showToast('Error: ' + err.message, 3000); });
+                } else { addPost(text); modal.remove(); }
             };
-            window.toggleFollowUser = (target) => toggleFollow(target);
-            window.searchByHashtag = (tag) => {
-                searchQuery = tag;
-                const input = document.getElementById('searchInput');
-                if (input) input.value = tag;
-                if (searchTimeout) clearTimeout(searchTimeout);
-                if (activeTab === 'feed') {
-                    feedShuffled = [];
-                    feedIndex = 0;
-                    const container = document.getElementById('feedContainer');
-                    if (container) {
-                        container.innerHTML = '';
-                        loadMoreFeed();
-                    }
-                } else {
-                    activeTab = 'feed';
-                    feedShuffled = [];
-                    feedIndex = 0;
-                    render();
-                }
-            };
-            window.clearSearch = () => {
-                searchQuery = '';
-                const input = document.getElementById('searchInput');
-                if (input) input.value = '';
-                if (searchTimeout) clearTimeout(searchTimeout);
-                if (activeTab === 'feed') resetFeed();
-                else {
-                    activeTab = 'feed';
-                    feedShuffled = [];
-                    feedIndex = 0;
-                    render();
-                }
-            };
-            window.openImage = (src) => {
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                modal.style.cursor = 'zoom-out';
-                modal.onclick = () => modal.remove();
-                modal.innerHTML =
-                    `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
-                document.body.appendChild(modal);
-            };
-            window.openEditProfile = () => {
-                const user = users[currentUser];
-                const modal = document.createElement('div');
-                modal.className = 'modal-overlay';
-                const isLight = document.body.classList.contains('light-theme');
-                modal.innerHTML = `
+        };
+        window.toggleFollowUser = (target) => toggleFollow(target);
+        window.searchByHashtag = (tag) => {
+            searchQuery = tag;
+            const input = document.getElementById('searchInput');
+            if (input) input.value = tag;
+            if (searchTimeout) clearTimeout(searchTimeout);
+            if (activeTab === 'feed') {
+                feedShuffled = []; feedIndex = 0;
+                const container = document.getElementById('feedContainer');
+                if (container) { container.innerHTML = ''; loadMoreFeed(); }
+            } else {
+                activeTab = 'feed';
+                feedShuffled = []; feedIndex = 0;
+                render();
+            }
+        };
+        window.clearSearch = () => {
+            searchQuery = '';
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+            if (searchTimeout) clearTimeout(searchTimeout);
+            if (activeTab === 'feed') resetFeed();
+            else { activeTab = 'feed'; feedShuffled = []; feedIndex = 0; render(); }
+        };
+        window.openImage = (src) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cursor = 'zoom-out';
+            modal.onclick = () => modal.remove();
+            modal.innerHTML = `<img src="${src}" style="max-width:92%;max-height:88%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.7);">`;
+            document.body.appendChild(modal);
+        };
+        window.openEditProfile = () => {
+            const user = users[currentUser];
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            const isLight = document.body.classList.contains('light-theme');
+            modal.innerHTML = `
             <div class="modal" style="max-width:460px;">
                 <h3>Edit Profile</h3>
                 <div class="field-group">
@@ -2772,81 +2063,43 @@
                     <button class="btn" id="saveProfileBtn">Save</button>
                 </div>
             </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) modal.remove();
-                });
-                document.getElementById('themeSwitch').addEventListener('change', toggleTheme);
-                document.getElementById('saveProfileBtn').onclick = () => {
-                    const dn = document.getElementById('editDisplayName').value.trim();
-                    const bio = document.getElementById('editBio').value.trim();
-                    const email = document.getElementById('editEmail').value.trim();
-                    const pass = document.getElementById('editPassword').value;
-                    if (dn) users[currentUser].displayName = dn;
-                    if (bio !== undefined) users[currentUser].bio = bio;
-                    if (email) users[currentUser].email = email;
-                    if (pass) users[currentUser].password = pass;
-                    const avatarFile = document.getElementById('editAvatar').files[0];
-                    const bannerFile = document.getElementById('editBanner').files[0];
-                    const saveBtn = document.getElementById('saveProfileBtn');
-                    if (saveBtn) saveBtn.disabled = true;
-                    const processImages = (cb) => {
-                        let tasks = 0;
-                        const checkDone = () => {
-                            tasks--;
-                            if (tasks <= 0) cb();
-                        };
-                        if (avatarFile) {
-                            tasks++;
-                            compressImage(avatarFile, 300, 0.7).then(dataURL => {
-                                users[currentUser].avatar = dataURL;
-                                checkDone();
-                            }).catch(() => {
-                                const r = new FileReader();
-                                r.onload = (e) => {
-                                    users[currentUser].avatar = e.target.result;
-                                    checkDone();
-                                };
-                                r.onerror = checkDone;
-                                r.readAsDataURL(avatarFile);
-                            });
-                        }
-                        if (bannerFile) {
-                            tasks++;
-                            compressImage(bannerFile, 800, 0.6).then(dataURL => {
-                                users[currentUser].banner = dataURL;
-                                checkDone();
-                            }).catch(() => {
-                                const r = new FileReader();
-                                r.onload = (e) => {
-                                    users[currentUser].banner = e.target.result;
-                                    checkDone();
-                                };
-                                r.onerror = checkDone;
-                                r.readAsDataURL(bannerFile);
-                            });
-                        }
-                        if (tasks === 0) cb();
-                    };
-                    processImages(() => {
-                        saveState();
-                        modal.remove();
-                        render();
-                        showToast('Profile updated!');
-                    });
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+            document.getElementById('themeSwitch').addEventListener('change', toggleTheme);
+            document.getElementById('saveProfileBtn').onclick = () => {
+                const dn = document.getElementById('editDisplayName').value.trim();
+                const bio = document.getElementById('editBio').value.trim();
+                const email = document.getElementById('editEmail').value.trim();
+                const pass = document.getElementById('editPassword').value;
+                if (dn) users[currentUser].displayName = dn;
+                if (bio !== undefined) users[currentUser].bio = bio;
+                if (email) users[currentUser].email = email;
+                if (pass) users[currentUser].password = pass;
+                const avatarFile = document.getElementById('editAvatar').files[0];
+                const bannerFile = document.getElementById('editBanner').files[0];
+                const saveBtn = document.getElementById('saveProfileBtn');
+                if (saveBtn) saveBtn.disabled = true;
+                const processImages = (cb) => {
+                    let tasks = 0;
+                    const checkDone = () => { tasks--; if (tasks <= 0) cb(); };
+                    if (avatarFile) { tasks++; compressImage(avatarFile, 300, 0.7).then(dataURL => { users[currentUser].avatar = dataURL; checkDone(); }).catch(() => { const r = new FileReader(); r.onload = (e) => { users[currentUser].avatar = e.target.result; checkDone(); }; r.onerror = checkDone; r.readAsDataURL(avatarFile); }); }
+                    if (bannerFile) { tasks++; compressImage(bannerFile, 800, 0.6).then(dataURL => { users[currentUser].banner = dataURL; checkDone(); }).catch(() => { const r = new FileReader(); r.onload = (e) => { users[currentUser].banner = e.target.result; checkDone(); }; r.onerror = checkDone; r.readAsDataURL(bannerFile); }); }
+                    if (tasks === 0) cb();
                 };
+                processImages(() => { saveState(); modal.remove(); render(); showToast('Profile updated!'); });
             };
-            window.giveBadge = (target, num) => giveBadge(target, num);
-            window.removeBadges = (target) => removeBadges(target);
-            window.togglePremiumUser = (target) => togglePremium(target);
-            window.logout = () => logout();
-            window.handleFeedScroll = handleFeedScroll;
-            window.openPremiumModal = openPremiumModal;
-            window.openFollowersList = openFollowersList;
-            window.openFollowingList = openFollowingList;
+        };
+        window.giveBadge = (target, num) => giveBadge(target, num);
+        window.removeBadges = (target) => removeBadges(target);
+        window.togglePremiumUser = (target) => togglePremium(target);
+        window.logout = () => logout();
+        window.handleFeedScroll = handleFeedScroll;
+        window.openPremiumModal = openPremiumModal;
+        window.openFollowersList = openFollowersList;
+        window.openFollowingList = openFollowingList;
 
-            loadState();
-        })();
-    </script>
+        loadState();
+    })();
+</script>
 </body>
 </html>
