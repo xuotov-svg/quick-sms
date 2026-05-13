@@ -343,151 +343,216 @@
             background: linear-gradient(180deg, rgba(245, 210, 70, 0.5), rgba(220, 170, 35, 0.7), rgba(245, 210, 70, 0.5));
         }
         .post-card {
-            background: var(--glass);
-            backdrop-filter: blur(var(--backdrop-blur));
-            -webkit-backdrop-filter: blur(var(--backdrop-blur));
-            border-radius: var(--radius-lg);
-            padding: 18px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, background 0.45s, box-shadow 0.35s;
-            animation: cardFadeIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
-            position: relative;
-            word-wrap: break-word;
-        }
-        .post-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 40%);
-            pointer-events: none;
-            border-radius: var(--radius-lg);
-            transition: opacity 0.45s;
-        }
-        .post-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(240, 200, 64, 0.35);
-            box-shadow: var(--shadow-gold), var(--shadow-lg);
-        }
-        @keyframes cardFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(18px) scale(0.97);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-        .post-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            position: relative;
-            z-index: 1;
-        }
-        .post-avatar {
-            width: 42px;
-            height: 42px;
-            border-radius: var(--radius-full);
-            background: #2a2835;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            border: 2px solid var(--border);
-            flex-shrink: 0;
-            transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
-        }
-        .post-header:hover .post-avatar {
-            border-color: rgba(240, 200, 64, 0.5);
-            box-shadow: 0 0 18px var(--gold-glow);
-            transform: scale(1.04);
-        }
-        .post-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .post-author-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .post-author {
-            font-weight: 650;
-            font-size: 14.5px;
-            letter-spacing: 0.2px;
-        }
-        .post-time {
-            font-size: 11px;
-            color: var(--text-muted);
-            letter-spacing: 0.3px;
-        }
-        .post-text {
-            margin: 10px 0;
-            line-height: 1.6;
-            word-break: break-word;
-            font-size: 14.5px;
-            color: var(--text);
-            letter-spacing: 0.15px;
-            position: relative;
-            z-index: 1;
-        }
-        .hashtag {
-            background: linear-gradient(135deg, var(--shimmer-color-1), var(--shimmer-color-2), var(--shimmer-color-3));
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: hashtagShimmer 3s linear infinite;
-            cursor: pointer;
-            text-decoration: underline;
-            text-underline-offset: 4px;
-            text-decoration-color: rgba(240, 200, 64, 0.35);
-            transition: text-decoration-color 0.25s, filter 0.25s;
-            font-weight: 550;
-        }
-        .hashtag:hover {
-            text-decoration-color: var(--gold);
-            filter: drop-shadow(0 0 6px var(--gold-glow));
-        }
-        @keyframes hashtagShimmer {
-            0%,
-            100% {
-                background-position: 0% center;
-                filter: brightness(1);
-            }
-            25% {
-                filter: brightness(1.1);
-            }
-            50% {
-                background-position: 180% center;
-                filter: brightness(1.2);
-            }
-            75% {
-                filter: brightness(1.05);
-            }
-        }
-        .atuser {
-            color: #7eb8e8;
-            cursor: pointer;
-            text-decoration: underline;
-            text-underline-offset: 4px;
-            text-decoration-color: rgba(126, 184, 232, 0.3);
-            transition: text-decoration-color 0.25s, color 0.25s, filter 0.25s;
-            font-weight: 550;
-        }
-        .atuser:hover {
-            text-decoration-color: #a0d0f8;
-            color: #a8d4f8;
-            filter: drop-shadow(0 0 4px rgba(126, 184, 232, 0.5));
-        }
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.03) 25%,
+        rgba(255, 255, 255, 0.06) 50%,
+        rgba(255, 255, 255, 0.02) 75%,
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: cardFadeIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+    position: relative;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+.post-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        ellipse at 30% 20%,
+        rgba(255, 255, 255, 0.08) 0%,
+        rgba(255, 255, 255, 0.03) 30%,
+        transparent 60%
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: glassShine 8s ease-in-out infinite;
+}
+@keyframes glassShine {
+    0%, 100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.5;
+    }
+    25% {
+        transform: translate(5%, -3%) rotate(2deg);
+        opacity: 0.7;
+    }
+    50% {
+        transform: translate(-3%, 5%) rotate(-1deg);
+        opacity: 0.6;
+    }
+    75% {
+        transform: translate(2%, 4%) rotate(1deg);
+        opacity: 0.4;
+    }
+}
+.post-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.03) 100%);
+    pointer-events: none;
+    border-radius: var(--radius-lg);
+    transition: opacity 0.45s;
+}
+.post-card:hover {
+    transform: translateY(-4px) scale(1.01);
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.12) 0%,
+        rgba(255, 255, 255, 0.05) 25%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 75%,
+        rgba(255, 255, 255, 0.07) 100%
+    );
+    border-color: rgba(240, 200, 64, 0.4);
+    border-top-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 
+        0 16px 48px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15),
+        0 0 40px rgba(240, 200, 64, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+.post-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+    transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+.post-header:hover .post-avatar {
+    border-color: rgba(240, 200, 64, 0.5);
+    box-shadow: 0 0 18px var(--gold-glow);
+    transform: scale(1.04);
+}
+.post-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.post-author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.post-author {
+    font-weight: 650;
+    font-size: 14.5px;
+    letter-spacing: 0.2px;
+}
+.post-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+}
+.post-text {
+    margin: 10px 0;
+    line-height: 1.6;
+    word-break: break-word;
+    font-size: 14.5px;
+    color: var(--text);
+    letter-spacing: 0.15px;
+    position: relative;
+    z-index: 2;
+}
+.hashtag {
+    background: linear-gradient(135deg, var(--shimmer-color-1), var(--shimmer-color-2), var(--shimmer-color-3));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: hashtagShimmer 3s linear infinite;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: rgba(240, 200, 64, 0.35);
+    transition: text-decoration-color 0.25s, filter 0.25s;
+    font-weight: 550;
+}
+.hashtag:hover {
+    text-decoration-color: var(--gold);
+    filter: drop-shadow(0 0 6px var(--gold-glow));
+}
+@keyframes hashtagShimmer {
+    0%,
+    100% {
+        background-position: 0% center;
+        filter: brightness(1);
+    }
+    25% {
+        filter: brightness(1.1);
+    }
+    50% {
+        background-position: 180% center;
+        filter: brightness(1.2);
+    }
+    75% {
+        filter: brightness(1.05);
+    }
+}
+.atuser {
+    color: #7eb8e8;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: rgba(126, 184, 232, 0.3);
+    transition: text-decoration-color 0.25s, color 0.25s, filter 0.25s;
+    font-weight: 550;
+}
+.atuser:hover {
+    text-decoration-color: #a0d0f8;
+    color: #a8d4f8;
+    filter: drop-shadow(0 0 4px rgba(126, 184, 232, 0.5));
+}
         .post-media img,
         .post-media video {
             max-width: 100%;
@@ -1957,84 +2022,177 @@
                     [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
             function getFeedPosts() {
-                let filtered = posts;
-                if (searchQuery.startsWith('#')) {
-                    const tag = searchQuery.toLowerCase().trim();
-                    filtered = posts.filter(p => p.hashtags?.includes(tag));
-                } else if (searchQuery.startsWith('@')) {
-                    return [];
-                } else if (searchQuery) {
-                    const q = searchQuery.toLowerCase();
-                    filtered = posts.filter(p => p.text.toLowerCase().includes(q));
-                }
-                return filtered;
-            }
+    let filtered = posts;
+    if (searchQuery.startsWith('#')) {
+        const tag = searchQuery.toLowerCase().trim();
+        filtered = posts.filter(p => p.hashtags?.includes(tag));
+    } else if (searchQuery.startsWith('@')) {
+        return [];
+    } else if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filtered = posts.filter(p => p.text.toLowerCase().includes(q));
+    }
+    
+    // СОРТИРОВКА С ВЕСОМ ПО СВЕЖЕСТИ
+    const now = Date.now();
+    return filtered.sort((a, b) => {
+        const hoursA = (now - (a.time || 0)) / 3600000;
+        const hoursB = (now - (b.time || 0)) / 3600000;
+        
+        const weightA = 1 / Math.log(hoursA + 2);
+        const weightB = 1 / Math.log(hoursB + 2);
+        
+        const boostA = hoursA < 6 ? (6 - hoursA) / 6 : 0;
+        const boostB = hoursB < 6 ? (6 - hoursB) / 6 : 0;
+        
+        const finalWeightA = weightA + boostA * 0.5;
+        const finalWeightB = weightB + boostB * 0.5;
+        
+        return finalWeightB - finalWeightA;
+    });
+}
 
-            function searchUsers(query) {
-                if (!query.startsWith('@')) return [];
-                const q = query.toLowerCase().trim();
-                if (q.length < 2) return [];
-                const results = [];
-                Object.keys(users).forEach(u => {
-                    if (u.toLowerCase().includes(q)) {
-                        results.push(u);
-                    } else {
-                        const dn = (users[u]?.displayName || '').toLowerCase();
-                        if (dn.includes(q.substring(1))) results.push(u);
-                    }
-                });
-                return results;
-            }
+function searchUsers(query) {
+    if (!query.startsWith('@')) return [];
+    const q = query.toLowerCase().trim();
+    if (q.length < 2) return [];
+    const results = [];
+    Object.keys(users).forEach(u => {
+        if (u.toLowerCase().includes(q)) {
+            results.push(u);
+        } else {
+            const dn = (users[u]?.displayName || '').toLowerCase();
+            if (dn.includes(q.substring(1))) results.push(u);
+        }
+    });
+    return results;
+}
 
-            function trackPostView(post) {
-                if (!currentUser) return false;
-                if (post.author === currentUser) return false;
-                if (!post.viewedBy) post.viewedBy = [];
-                if (!post.viewedBy.includes(currentUser)) {
-                    post.viewedBy.push(currentUser);
-                    post.views = (post.views || 0) + 1;
-                    return true;
-                }
-                return false;
-            }
+function trackPostView(post) {
+    if (!currentUser) return false;
+    if (post.author === currentUser) return false;
+    if (!post.viewedBy) post.viewedBy = [];
+    if (!post.viewedBy.includes(currentUser)) {
+        post.viewedBy.push(currentUser);
+        post.views = (post.views || 0) + 1;
+        return true;
+    }
+    return false;
+}
 
-            function loadMoreFeed() {
-                const container = document.getElementById('feedContainer');
-                if (!container || activeTab !== 'feed') return;
-                if (searchQuery.startsWith('@')) return;
-                const filtered = getFeedPosts();
-                if (filtered.length === 0) {
-                    if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
-                        container.innerHTML =
-                            '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
-                    }
-                    return;
-                }
-                if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
-                    feedShuffled = shuffleArray([...filtered]);
-                    feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-                    feedIndex = 0;
-                    if (container) container.innerHTML = '';
-                }
-                let stateChanged = false;
-                const renderedIds = [];
-                for (let i = 0; i < BATCH_SIZE; i++) {
-                    if (feedIndex >= feedShuffled.length) {
-                        feedShuffled = shuffleArray([...filtered]);
-                        feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-                        feedIndex = 0;
-                    }
-                    const post = feedShuffled[feedIndex++];
-                    if (trackPostView(post)) stateChanged = true;
-                    renderedIds.push(post.id);
-                    container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
-                }
-                if (stateChanged) markStateDirty();
+function loadMoreFeed() {
+    const container = document.getElementById('feedContainer');
+    if (!container || activeTab !== 'feed') return;
+    if (searchQuery.startsWith('@')) return;
+    
+    const filtered = getFeedPosts();
+    
+    if (filtered.length === 0) {
+        if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
+            container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+        }
+        return;
+    }
+    
+    // Генерируем перемешанную ленту с приоритетом новым постам
+    if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
+        const totalPosts = filtered.length;
+        const firstThird = Math.ceil(totalPosts / 3);
+        const secondThird = Math.ceil(totalPosts * 2 / 3);
+        
+        feedShuffled = [];
+        const usedIds = new Set();
+        
+        while (feedShuffled.length < totalPosts * 2) {
+            const rand = Math.random();
+            let index;
+            
+            if (rand < 0.7) {
+                index = Math.floor(Math.random() * firstThird);
+            } else if (rand < 0.9) {
+                index = firstThird + Math.floor(Math.random() * (secondThird - firstThird));
+            } else {
+                index = secondThird + Math.floor(Math.random() * (totalPosts - secondThird));
             }
+            
+            index = Math.min(index, totalPosts - 1);
+            
+            if (!usedIds.has(filtered[index].id)) {
+                feedShuffled.push(filtered[index]);
+                usedIds.add(filtered[index].id);
+            }
+        }
+        
+        filtered.forEach(post => {
+            if (!usedIds.has(post.id)) {
+                feedShuffled.push(post);
+            }
+        });
+        
+        feedShuffled._sourceId = filtered.map(p => p.id).join(',');
+        feedIndex = 0;
+        if (container) container.innerHTML = '';
+    }
+    
+    let stateChanged = false;
+    const renderedIds = [];
+    
+    for (let i = 0; i < BATCH_SIZE; i++) {
+        if (feedIndex >= feedShuffled.length) {
+            feedShuffled = [];
+            const usedIds = new Set();
+            const totalPosts = filtered.length;
+            const firstThird = Math.ceil(totalPosts / 3);
+            const secondThird = Math.ceil(totalPosts * 2 / 3);
+            
+            while (feedShuffled.length < totalPosts * 2) {
+                const rand = Math.random();
+                let index;
+                
+                if (rand < 0.7) {
+                    index = Math.floor(Math.random() * firstThird);
+                } else if (rand < 0.9) {
+                    index = firstThird + Math.floor(Math.random() * (secondThird - firstThird));
+                } else {
+                    index = secondThird + Math.floor(Math.random() * (totalPosts - secondThird));
+                }
+                
+                index = Math.min(index, totalPosts - 1);
+                
+                if (!usedIds.has(filtered[index].id)) {
+                    feedShuffled.push(filtered[index]);
+                    usedIds.add(filtered[index].id);
+                }
+            }
+            
+            filtered.forEach(post => {
+                if (!usedIds.has(post.id)) {
+                    feedShuffled.push(post);
+                }
+            });
+            
+            feedShuffled._sourceId = filtered.map(p => p.id).join(',');
+            feedIndex = 0;
+        }
+        
+        const post = feedShuffled[feedIndex++];
+        if (trackPostView(post)) stateChanged = true;
+        renderedIds.push(post.id);
+        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+    }
+    
+    if (stateChanged) markStateDirty();
+}
 
-            function resetFeed() { feedShuffled = [];
-                feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = '';
-                    loadMoreFeed(); } }
+function resetFeed() { 
+    feedShuffled = [];
+    feedIndex = 0; 
+    const c = document.getElementById('feedContainer'); 
+    if (c) { 
+        c.innerHTML = '';
+        loadMoreFeed(); 
+    } 
+}
 
             function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el
                     .scrollTop; }
@@ -2928,4 +3086,4 @@
         })();
     </script>
 </body>
-</html> 
+</html>
