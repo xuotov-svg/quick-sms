@@ -2386,82 +2386,82 @@ function resetFeed() {
             }
 
             function renderPostCard(post, showAuthor = true) {
-                const author = users[post.author] || {};
-                const avatar = author.avatar || DEFAULT_AVATAR;
-                const likes = Object.keys(post.likes || {}).length;
-                const comments = (post.comments || []).length;
-                const liked = post.likes?.[currentUser] || false;
-                const reposted = post.repostedBy?.includes(currentUser) || false;
-                const reposts = post.repostCount || 0;
-                const views = post.views || 0;
+    const author = users[post.author] || {};
+    const avatar = author.avatar || DEFAULT_AVATAR;
+    const likes = Object.keys(post.likes || {}).length;
+    const comments = (post.comments || []).length;
+    const liked = post.likes?.[currentUser] || false;
+    const reposted = post.repostedBy?.includes(currentUser) || false;
+    const reposts = post.repostCount || 0;
+    const views = post.views || 0;
 
-                let repostHTML = '';
-                if (post.isRepost && post.repostAuthor) {
-                    const origAuthor = users[post.repostAuthor] || {};
-                    const origName = getDisplayName(post.repostAuthor);
-                    const origPremium = origAuthor.premium ? 'premium-nick' : 'normal-nick';
-                    let origMediaHTML = '';
-                    if (post.repostMedia) {
-                        origMediaHTML = post.repostIsVideo ?
-                            `<div class="post-media"><video controls preload="metadata" src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;"></video></div>` :
-                            `<div class="post-media"><img src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;" loading="lazy" onclick="window.openImage('${post.repostMedia.replace(/'/g, "\\'")}')"></div>`;
-                    }
-                    repostHTML = `
-                <div class="repost-block">
-                    <div class="original-author" onclick="event.stopPropagation();window.openUserProfile('${post.repostAuthor}')">
-                        Repost from <span class="${origPremium}">${escapeHTML(origName)} @${escapeHTML(post.repostAuthor.substring(1))}</span>
-                    </div>
-                    <div class="original-text">${escapeHTML(post.repostText || '')}</div>
-                    ${origMediaHTML}
-                </div>`;
-                }
-
-                const mediaHtml = post.media ? (post.isVideo ?
-                    `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
-                    `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`) :
-                    '';
-
-                let textHTML = escapeHTML(post.text || '');
-                textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g,
-                    '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
-                textHTML = textHTML.replace(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g, function(match) {
-                    const u = match.toLowerCase();
-                    if (users[u])
-                        return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
-                    return match;
-                });
-
-                const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
-                return `
-            <div class="post-card" id="post-${post.id}">
-                ${showAuthor ? `
-                <div class="post-header" onclick="window.openUserProfile('${post.author}')">
-                    <div class="post-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
-                    <div class="post-author-info">
-                        <div class="post-author">${formatUsernameForPost(post.author)} ${getUserBadges(post.author)}</div>
-                        <div class="post-time">${new Date(post.time).toLocaleString()}</div>
-                    </div>
-                </div>` : ''}
-                ${post.text ? `<div class="post-text">${textHTML}</div>` : ''}
-                ${mediaHtml}
-                ${repostHTML}
-                <div class="post-actions">
-                    <button class="action-btn ${liked?'liked':''}" onclick="event.stopPropagation();window.toggleLike('${post.id}')">
-                        <img src="${liked?ICONS.LIKE_ON:ICONS.LIKE_OFF}" alt="like"> <span>${likes}</span>
-                    </button>
-                    <button class="action-btn" onclick="event.stopPropagation();window.openComments('${post.id}')">
-                        <img src="${ICONS.COMMENT}" alt="comment"> <span>${comments}</span>
-                    </button>
-                    <button class="action-btn ${reposted?'reposted':''}" onclick="event.stopPropagation();window.openRepost('${post.id}')">
-                        <img src="${ICONS.REPOST}" alt="repost"> <span>${reposts}</span>
-                    </button>
-                    <span class="views-display" id="views-${post.id}">
-                        <img src="${ICONS.VIEWS}" alt="views"> <span>${views}</span>
-                    </span>
-                    ${canDelete ? `<button class="action-btn danger" onclick="event.stopPropagation();window.deletePostById('${post.id}')"><img src="${ICONS.DELETE}" alt="delete"></button>` : ''}
+    let repostHTML = '';
+    if (post.isRepost && post.repostAuthor) {
+        const origAuthor = users[post.repostAuthor] || {};
+        const origName = getDisplayName(post.repostAuthor);
+        const origPremium = origAuthor.premium ? 'premium-nick' : 'normal-nick';
+        let origMediaHTML = '';
+        if (post.repostMedia) {
+            origMediaHTML = post.repostIsVideo ?
+                `<div class="post-media"><video controls preload="metadata" src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;"></video></div>` :
+                `<div class="post-media"><img src="${post.repostMedia}" style="max-width:100%;max-height:200px;border-radius:8px;" loading="lazy" onclick="window.openImage('${post.repostMedia.replace(/'/g, "\\'")}')"></div>`;
+        }
+        repostHTML = `
+            <div class="repost-block">
+                <div class="original-author" onclick="event.stopPropagation();window.openUserProfile('${post.repostAuthor}')">
+                    Repost from <span class="${origPremium}">${escapeHTML(origName)} @${escapeHTML(post.repostAuthor.substring(1))}</span>
                 </div>
+                <div class="original-text">${escapeHTML(post.repostText || '')}</div>
+                ${origMediaHTML}
             </div>`;
-            }
+    }
+
+    const mediaHtml = post.media ? (post.isVideo ?
+        `<div class="post-media"><video controls preload="metadata" src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;"></video></div>` :
+        `<div class="post-media"><img src="${post.media}" style="max-width:100%;max-height:300px;border-radius:12px;" loading="lazy" onclick="window.openImage('${post.media.replace(/'/g, "\\'")}')"></div>`) :
+        '';
+
+    let textHTML = escapeHTML(post.text || '');
+    textHTML = textHTML.replace(/#[a-zA-Z0-9_]+/g,
+        '<span class="hashtag" onclick="event.stopPropagation();window.searchByHashtag(\'$&\')">$&</span>');
+    textHTML = textHTML.replace(/@[a-zA-Z][a-zA-Z0-9_]{0,14}/g, function(match) {
+        const u = match.toLowerCase();
+        if (users[u])
+            return `<span class="atuser" onclick="event.stopPropagation();window.openUserProfile('${u}')">${match}</span>`;
+        return match;
+    });
+
+    const canDelete = (post.author === currentUser) || (currentUser === ADMIN_USER);
+    return `
+        <div class="post-card" id="post-${post.id}">
+            ${showAuthor ? `
+            <div class="post-header" onclick="window.openUserProfile('${post.author}')">
+                <div class="post-avatar"><img src="${avatar}" alt="avatar" loading="lazy"></div>
+                <div class="post-author-info">
+                    <div class="post-author">${formatUsernameForPost(post.author)} ${getUserBadges(post.author)}</div>
+                    <div class="post-time">${new Date(post.time).toLocaleString()}</div>
+                </div>
+            </div>` : ''}
+            ${post.text ? `<div class="post-text">${textHTML}</div>` : ''}
+            ${mediaHtml}
+            ${repostHTML}
+            <div class="post-actions">
+                <button class="action-btn ${liked ? 'liked' : ''}" onclick="event.stopPropagation();window.toggleLike('${post.id}')">
+                    <img src="${liked ? ICONS.LIKE_ON : ICONS.LIKE_OFF}" alt="like"> <span>${likes}</span>
+                </button>
+                <button class="action-btn" onclick="event.stopPropagation();window.openComments('${post.id}')">
+                    <img src="${ICONS.COMMENT}" alt="comment"> <span>${comments}</span>
+                </button>
+                <button class="action-btn ${reposted ? 'reposted' : ''}" onclick="event.stopPropagation();window.openRepost('${post.id}')">
+                    <img src="${ICONS.REPOST}" alt="repost"> <span>${reposts}</span>
+                </button>
+                <span class="views-display" id="views-${post.id}">
+                    <img src="${ICONS.VIEWS}" alt="views"> <span>${views}</span>
+                </span>
+                ${canDelete ? `<button class="action-btn danger" onclick="event.stopPropagation();window.deletePostById('${post.id}')"><img src="${ICONS.DELETE}" alt="delete"></button>` : ''}
+            </div>
+        </div>`;
+}
 
             function updatePostStatsInDOM(postId) {
                 const post = posts.find(p => p.id === postId);
