@@ -1957,177 +1957,85 @@
                     [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
             function getFeedPosts() {
-    let filtered = posts;
-    if (searchQuery.startsWith('#')) {
-        const tag = searchQuery.toLowerCase().trim();
-        filtered = posts.filter(p => p.hashtags?.includes(tag));
-    } else if (searchQuery.startsWith('@')) {
-        return [];
-    } else if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        filtered = posts.filter(p => p.text.toLowerCase().includes(q));
-    }
-    
-    // СОРТИРОВКА С ВЕСОМ ПО СВЕЖЕСТИ
-    const now = Date.now();
-    return filtered.sort((a, b) => {
-        const hoursA = (now - (a.time || 0)) / 3600000;
-        const hoursB = (now - (b.time || 0)) / 3600000;
-        
-        const weightA = 1 / Math.log(hoursA + 2);
-        const weightB = 1 / Math.log(hoursB + 2);
-        
-        const boostA = hoursA < 6 ? (6 - hoursA) / 6 : 0;
-        const boostB = hoursB < 6 ? (6 - hoursB) / 6 : 0;
-        
-        const finalWeightA = weightA + boostA * 0.5;
-        const finalWeightB = weightB + boostB * 0.5;
-        
-        return finalWeightB - finalWeightA;
-    });
-}
-
-function searchUsers(query) {
-    if (!query.startsWith('@')) return [];
-    const q = query.toLowerCase().trim();
-    if (q.length < 2) return [];
-    const results = [];
-    Object.keys(users).forEach(u => {
-        if (u.toLowerCase().includes(q)) {
-            results.push(u);
-        } else {
-            const dn = (users[u]?.displayName || '').toLowerCase();
-            if (dn.includes(q.substring(1))) results.push(u);
-        }
-    });
-    return results;
-}
-
-function trackPostView(post) {
-    if (!currentUser) return false;
-    if (post.author === currentUser) return false;
-    if (!post.viewedBy) post.viewedBy = [];
-    if (!post.viewedBy.includes(currentUser)) {
-        post.viewedBy.push(currentUser);
-        post.views = (post.views || 0) + 1;
-        return true;
-    }
-    return false;
-}
-
-function loadMoreFeed() {
-    const container = document.getElementById('feedContainer');
-    if (!container || activeTab !== 'feed') return;
-    if (searchQuery.startsWith('@')) return;
-    
-    const filtered = getFeedPosts();
-    
-    if (filtered.length === 0) {
-        if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
-            container.innerHTML = '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
-        }
-        return;
-    }
-    
-    // Генерируем перемешанную ленту с приоритетом новым постам
-    if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
-        const totalPosts = filtered.length;
-        const firstThird = Math.ceil(totalPosts / 3);
-        const secondThird = Math.ceil(totalPosts * 2 / 3);
-        
-        feedShuffled = [];
-        const usedIds = new Set();
-        
-        while (feedShuffled.length < totalPosts * 2) {
-            const rand = Math.random();
-            let index;
-            
-            if (rand < 0.7) {
-                index = Math.floor(Math.random() * firstThird);
-            } else if (rand < 0.9) {
-                index = firstThird + Math.floor(Math.random() * (secondThird - firstThird));
-            } else {
-                index = secondThird + Math.floor(Math.random() * (totalPosts - secondThird));
-            }
-            
-            index = Math.min(index, totalPosts - 1);
-            
-            if (!usedIds.has(filtered[index].id)) {
-                feedShuffled.push(filtered[index]);
-                usedIds.add(filtered[index].id);
-            }
-        }
-        
-        filtered.forEach(post => {
-            if (!usedIds.has(post.id)) {
-                feedShuffled.push(post);
-            }
-        });
-        
-        feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-        feedIndex = 0;
-        if (container) container.innerHTML = '';
-    }
-    
-    let stateChanged = false;
-    const renderedIds = [];
-    
-    for (let i = 0; i < BATCH_SIZE; i++) {
-        if (feedIndex >= feedShuffled.length) {
-            feedShuffled = [];
-            const usedIds = new Set();
-            const totalPosts = filtered.length;
-            const firstThird = Math.ceil(totalPosts / 3);
-            const secondThird = Math.ceil(totalPosts * 2 / 3);
-            
-            while (feedShuffled.length < totalPosts * 2) {
-                const rand = Math.random();
-                let index;
-                
-                if (rand < 0.7) {
-                    index = Math.floor(Math.random() * firstThird);
-                } else if (rand < 0.9) {
-                    index = firstThird + Math.floor(Math.random() * (secondThird - firstThird));
-                } else {
-                    index = secondThird + Math.floor(Math.random() * (totalPosts - secondThird));
+                let filtered = posts;
+                if (searchQuery.startsWith('#')) {
+                    const tag = searchQuery.toLowerCase().trim();
+                    filtered = posts.filter(p => p.hashtags?.includes(tag));
+                } else if (searchQuery.startsWith('@')) {
+                    return [];
+                } else if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    filtered = posts.filter(p => p.text.toLowerCase().includes(q));
                 }
-                
-                index = Math.min(index, totalPosts - 1);
-                
-                if (!usedIds.has(filtered[index].id)) {
-                    feedShuffled.push(filtered[index]);
-                    usedIds.add(filtered[index].id);
-                }
+                return filtered;
             }
-            
-            filtered.forEach(post => {
-                if (!usedIds.has(post.id)) {
-                    feedShuffled.push(post);
-                }
-            });
-            
-            feedShuffled._sourceId = filtered.map(p => p.id).join(',');
-            feedIndex = 0;
-        }
-        
-        const post = feedShuffled[feedIndex++];
-        if (trackPostView(post)) stateChanged = true;
-        renderedIds.push(post.id);
-        container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
-    }
-    
-    if (stateChanged) markStateDirty();
-}
 
-function resetFeed() { 
-    feedShuffled = [];
-    feedIndex = 0; 
-    const c = document.getElementById('feedContainer'); 
-    if (c) { 
-        c.innerHTML = '';
-        loadMoreFeed(); 
-    } 
-}
+            function searchUsers(query) {
+                if (!query.startsWith('@')) return [];
+                const q = query.toLowerCase().trim();
+                if (q.length < 2) return [];
+                const results = [];
+                Object.keys(users).forEach(u => {
+                    if (u.toLowerCase().includes(q)) {
+                        results.push(u);
+                    } else {
+                        const dn = (users[u]?.displayName || '').toLowerCase();
+                        if (dn.includes(q.substring(1))) results.push(u);
+                    }
+                });
+                return results;
+            }
+
+            function trackPostView(post) {
+                if (!currentUser) return false;
+                if (post.author === currentUser) return false;
+                if (!post.viewedBy) post.viewedBy = [];
+                if (!post.viewedBy.includes(currentUser)) {
+                    post.viewedBy.push(currentUser);
+                    post.views = (post.views || 0) + 1;
+                    return true;
+                }
+                return false;
+            }
+
+            function loadMoreFeed() {
+                const container = document.getElementById('feedContainer');
+                if (!container || activeTab !== 'feed') return;
+                if (searchQuery.startsWith('@')) return;
+                const filtered = getFeedPosts();
+                if (filtered.length === 0) {
+                    if (container.innerHTML === '' || container.querySelector('.no-posts-msg')) {
+                        container.innerHTML =
+                            '<div class="no-posts-msg" style="text-align:center;color:#888;padding:40px;">No posts found. Try a different search or <span style="color:var(--gold);cursor:pointer;" onclick="window.clearSearch()">clear search</span>.</div>';
+                    }
+                    return;
+                }
+                if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
+                    feedShuffled = shuffleArray([...filtered]);
+                    feedShuffled._sourceId = filtered.map(p => p.id).join(',');
+                    feedIndex = 0;
+                    if (container) container.innerHTML = '';
+                }
+                let stateChanged = false;
+                const renderedIds = [];
+                for (let i = 0; i < BATCH_SIZE; i++) {
+                    if (feedIndex >= feedShuffled.length) {
+                        feedShuffled = shuffleArray([...filtered]);
+                        feedShuffled._sourceId = filtered.map(p => p.id).join(',');
+                        feedIndex = 0;
+                    }
+                    const post = feedShuffled[feedIndex++];
+                    if (trackPostView(post)) stateChanged = true;
+                    renderedIds.push(post.id);
+                    container.insertAdjacentHTML('beforeend', renderPostCard(post, true));
+                }
+                if (stateChanged) markStateDirty();
+            }
+
+            function resetFeed() { feedShuffled = [];
+                feedIndex = 0; const c = document.getElementById('feedContainer'); if (c) { c.innerHTML = '';
+                    loadMoreFeed(); } }
+
             function saveFeedScroll() { const el = document.getElementById('feedContainer'); if (el) feedScrollPos = el
                     .scrollTop; }
 
@@ -3020,4 +2928,4 @@ function resetFeed() {
         })();
     </script>
 </body>
-</html>
+</html> 
