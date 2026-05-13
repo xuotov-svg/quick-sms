@@ -342,35 +342,63 @@
         .feed-container::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, rgba(245, 210, 70, 0.5), rgba(220, 170, 35, 0.7), rgba(245, 210, 70, 0.5));
         }
+        /* === НОВЫЙ ДИЗАЙН КАРТОЧКИ "ЖИДКОЕ СТЕКЛО" === */
         .post-card {
-            background: var(--glass);
-            backdrop-filter: blur(var(--backdrop-blur));
-            -webkit-backdrop-filter: blur(var(--backdrop-blur));
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
             border-radius: var(--radius-lg);
             padding: 18px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
+            border: 1px solid rgba(240, 200, 64, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s, background 0.45s, box-shadow 0.35s;
             animation: cardFadeIn 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
             position: relative;
             word-wrap: break-word;
+            overflow: hidden;
         }
+        /* Верхний статичный блик */
+        .post-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.18) 0%, transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+            transition: transform 0.4s ease;
+            border-radius: inherit;
+        }
+        /* Анимированный блик (жидкое стекло) */
         .post-card::after {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
-            width: 100%;
+            left: -100%;
+            width: 60%;
             height: 100%;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.015) 0%, transparent 40%);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+            transform: skewX(-20deg);
             pointer-events: none;
-            border-radius: var(--radius-lg);
-            transition: opacity 0.45s;
+            transition: left 0.55s ease;
+            z-index: 1;
+        }
+        .post-card:hover::before {
+            transform: translate(5%, 5%);
+        }
+        .post-card:hover::after {
+            left: 120%;
         }
         .post-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(240, 200, 64, 0.35);
-            box-shadow: var(--shadow-gold), var(--shadow-lg);
+            border-color: rgba(240, 200, 64, 0.4);
+            box-shadow: 0 12px 40px rgba(240, 200, 64, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.08);
         }
         @keyframes cardFadeIn {
             from {
@@ -1952,9 +1980,30 @@
                 render();
             }
 
-            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() *
-                        (i + 1));
-                    [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+            // === НОВЫЙ АЛГОРИТМ РЕКОМЕНДАЦИЙ (ВЕСОВАЯ ПЕРЕТАСОВКА) ===
+            function weightedShuffleArray(arr, weightFn) {
+                const items = arr.map((item, index) => ({ item, weight: weightFn(item), index }));
+                const result = [];
+                let totalWeight = items.reduce((sum, it) => sum + it.weight, 0);
+                while (items.length) {
+                    let r = Math.random() * totalWeight;
+                    let i = 0;
+                    for (; i < items.length; i++) {
+                        r -= items[i].weight;
+                        if (r <= 0) break;
+                    }
+                    if (i >= items.length) i = items.length - 1;
+                    const chosen = items.splice(i, 1)[0];
+                    result.push(chosen.item);
+                    totalWeight -= chosen.weight;
+                }
+                return result;
+            }
+
+            function getFeedWeight(post) {
+                const ageHours = (Date.now() - post.time) / (1000 * 60 * 60);
+                return Math.pow(0.96, ageHours); // период полураспада около 17 часов
+            }
 
             function getFeedPosts() {
                 let filtered = posts;
@@ -2010,8 +2059,9 @@
                     }
                     return;
                 }
+                // Пересоздаём взвешенный массив при изменении фильтра или первом запуске
                 if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
-                    feedShuffled = shuffleArray([...filtered]);
+                    feedShuffled = weightedShuffleArray([...filtered], getFeedWeight);
                     feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                     feedIndex = 0;
                     if (container) container.innerHTML = '';
@@ -2020,7 +2070,7 @@
                 const renderedIds = [];
                 for (let i = 0; i < BATCH_SIZE; i++) {
                     if (feedIndex >= feedShuffled.length) {
-                        feedShuffled = shuffleArray([...filtered]);
+                        feedShuffled = weightedShuffleArray([...filtered], getFeedWeight);
                         feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                         feedIndex = 0;
                     }
@@ -2928,4 +2978,4 @@
         })();
     </script>
 </body>
-</html> 
+</html>
