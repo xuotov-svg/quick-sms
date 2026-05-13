@@ -1701,6 +1701,156 @@
                 border-radius: 26px;
             }
         }
+
+
+        .loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #060608 0%, #0a0a14 50%, #060608 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    gap: 30px;
+}
+
+.loading-logo {
+    font-weight: 800;
+    font-size: 42px;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, #ffe564, #ffd700, #ffea70, #ffb800, #ffcc33);
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: loadingLogoShimmer 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(240, 200, 64, 0.6));
+}
+
+@keyframes loadingLogoShimmer {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 150% center; }
+}
+
+.loading-spinner-container {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.loading-spinner {
+    width: 80px;
+    height: 80px;
+    border: 4px solid rgba(255, 215, 0, 0.1);
+    border-top: 4px solid #ffd700;
+    border-right: 4px solid #f0c840;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    box-shadow: 
+        0 0 20px rgba(240, 200, 64, 0.3),
+        0 0 40px rgba(240, 200, 64, 0.1),
+        inset 0 0 20px rgba(240, 200, 64, 0.05);
+}
+
+.loading-spinner-inner {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(255, 215, 0, 0.1);
+    border-bottom: 3px solid #fae56a;
+    border-left: 3px solid #ffcc33;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite reverse;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-dots {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.loading-dot {
+    width: 10px;
+    height: 10px;
+    background: linear-gradient(135deg, #ffd700, #f0c840);
+    border-radius: 50%;
+    animation: dotPulse 1.4s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(240, 200, 64, 0.5);
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.4;
+    }
+    40% {
+        transform: scale(1.3);
+        opacity: 1;
+    }
+}
+
+.loading-progress {
+    width: 200px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #f0c840, #ffe564, #f0c840);
+    background-size: 200% 100%;
+    border-radius: 10px;
+    animation: progressMove 2s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(240, 200, 64, 0.5);
+}
+
+@keyframes progressMove {
+    0% { 
+        width: 0%;
+        background-position: 0% 0;
+    }
+    50% {
+        width: 70%;
+        background-position: 100% 0;
+    }
+    100% {
+        width: 100%;
+        background-position: 0% 0;
+    }
+}
+
+.loading-text {
+    color: #9a9790;
+    font-size: 13px;
+    letter-spacing: 2px;
+    animation: loadingFade 2s ease-in-out infinite;
+}
+
+@keyframes loadingFade {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
     </style>
 </head>
 <body>
@@ -2590,13 +2740,25 @@ function resetFeed() {
 
             function render() {
                 if (!dataLoaded) {
-                    document.getElementById('app').innerHTML = `
-                        <div class="loading-screen">
-                            <div class="loading-spinner"></div>
-                            <div class="loading-text">YOLKAPP</div>
-                        </div>`;
-                    return;
-                }
+    document.getElementById('app').innerHTML = `
+        <div class="loading-screen">
+            <div class="loading-logo">YOLKAPP</div>
+            <div class="loading-spinner-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-spinner-inner"></div>
+            </div>
+            <div class="loading-dots">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+            <div class="loading-progress">
+                <div class="loading-progress-bar"></div>
+            </div>
+            <div class="loading-text">LOADING</div>
+        </div>`;
+    return;
+}
                 if (!currentUser) { document.getElementById('app').innerHTML = renderAuth();
                     attachAuthEvents();
                     applyTheme(); return; }
