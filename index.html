@@ -1860,7 +1860,7 @@
                     const response = await fetch('/api/state', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ users, posts })
+                        body: JSON.stringify({ data: { users, posts } })
                     });
                     if (!response.ok) showToast('Could not sync to server', 3500);
                 } catch (e) { showToast('Server sync failed', 3500); }
