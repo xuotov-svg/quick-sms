@@ -1813,17 +1813,20 @@
                 try {
                     const response = await fetch('/api/state');
                     if (response.ok) {
-                        const data = await response.json();
-                        if (data && typeof data.users === 'object' && data.users !== null) users = data.users;
-                        if (Array.isArray(data.posts)) posts = data.posts;
-                        serverOk = true;
+                        const json = await response.json();
+                        if (json.data && typeof json.data.users === 'object') {
+                            users = json.data.users || {};
+                            posts = json.data.posts || [];
+                            serverOk = true;
+                        }
                     }
                 } catch (e) {}
-                if (!serverOk || (Object.keys(users).length === 0 && posts.length === 0)) {
+                
+                if (!serverOk) {
                     const local = loadFromLocalStorage();
-                    if (local) { users = local.users || {};
-                        posts = local.posts || []; }
+                    if (local) { users = local.users || {}; posts = local.posts || []; }
                 }
+                
                 if (!users[ADMIN_USER]) {
                     users[ADMIN_USER] = {
                         password: 'admin123',
@@ -1838,12 +1841,14 @@
                         premium: true
                     };
                 }
+                
                 Object.keys(users).forEach(u => {
                     if (typeof users[u].premium !== 'boolean') users[u].premium = false;
                     if (!users[u].badges) users[u].badges = [];
                     if (!users[u].followers) users[u].followers = [];
                     if (!users[u].following) users[u].following = [];
                 });
+                
                 normalizePosts(posts);
                 dataLoaded = true;
                 const saved = getCookie('yolk_user');
