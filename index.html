@@ -1640,8 +1640,14 @@
 </head>
 <body>
     <div id="app"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
     <script>
         (function() {
+            const SUPABASE_URL = 'https://hxzgckmnnjabahpmowdw.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_KiD6FCtXOn47And5Wu3THA_AYuKNxtb';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const STATE_ID = 1;
             const ADMIN_USER = '@durov';
             const DEFAULT_AVATAR =
                 'https://raw.githubusercontent.com/xuotov-svg/quick-sms/main/%D1%80%D1%80%D1%80.jpg';
@@ -1809,24 +1815,22 @@
             }
 
             async function loadState() {
-                let serverOk = false;
+                let supabaseOk = false;
                 try {
-                    const response = await fetch('/api/state');
-                    if (response.ok) {
-                        const json = await response.json();
-                        if (json.data && typeof json.data.users === 'object') {
-                            users = json.data.users || {};
-                            posts = json.data.posts || [];
-                            serverOk = true;
-                        }
+                    const { data, error } = await supabase.from('app_state').select('data').eq('id', STATE_ID)
+                        .single();
+                    if (!error && data?.data) {
+                        if (typeof data.data.users === 'object' && data.data.users !== null) users = data.data
+                            .users;
+                        if (Array.isArray(data.data.posts)) posts = data.data.posts;
+                        supabaseOk = true;
                     }
                 } catch (e) {}
-                
-                if (!serverOk) {
+                if (!supabaseOk || (Object.keys(users).length === 0 && posts.length === 0)) {
                     const local = loadFromLocalStorage();
-                    if (local) { users = local.users || {}; posts = local.posts || []; }
+                    if (local) { users = local.users || {};
+                        posts = local.posts || []; }
                 }
-                
                 if (!users[ADMIN_USER]) {
                     users[ADMIN_USER] = {
                         password: 'admin123',
@@ -1841,14 +1845,12 @@
                         premium: true
                     };
                 }
-                
                 Object.keys(users).forEach(u => {
                     if (typeof users[u].premium !== 'boolean') users[u].premium = false;
                     if (!users[u].badges) users[u].badges = [];
                     if (!users[u].followers) users[u].followers = [];
                     if (!users[u].following) users[u].following = [];
                 });
-                
                 normalizePosts(posts);
                 dataLoaded = true;
                 const saved = getCookie('yolk_user');
@@ -1862,12 +1864,9 @@
                 if (!dataLoaded) return;
                 pendingStateSave = false;
                 try {
-                    const response = await fetch('/api/state', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ data: { users, posts } })
-                    });
-                    if (!response.ok) showToast('Could not sync to server', 3500);
+                    const { error } = await supabase.from('app_state').upsert({ id: STATE_ID, data: { users,
+                            posts } }, { onConflict: 'id' });
+                    if (error) showToast('Could not sync to server', 3500);
                 } catch (e) { showToast('Server sync failed', 3500); }
             }
 
@@ -1953,23 +1952,9 @@
                 render();
             }
 
-            function weightedShuffleArray(arr) {
-                const now = Date.now();
-                const tau = 1000 * 60 * 60 * 24; // 1 day in milliseconds
-                const items = arr.map(post => {
-                    const age = now - post.time;
-                    const weight = Math.exp(-age / tau);
-                    return { post, weight };
-                });
-                items.sort((a, b) => {
-                    const ra = Math.random();
-                    const rb = Math.random();
-                    const keyA = Math.pow(ra, 1 / a.weight);
-                    const keyB = Math.pow(rb, 1 / b.weight);
-                    return keyA - keyB;
-                });
-                return items.map(item => item.post);
-            }
+            function shuffleArray(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() *
+                        (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
             function getFeedPosts() {
                 let filtered = posts;
@@ -2026,7 +2011,7 @@
                     return;
                 }
                 if (feedShuffled.length === 0 || feedShuffled._sourceId !== filtered.map(p => p.id).join(',')) {
-                    feedShuffled = weightedShuffleArray([...filtered]);
+                    feedShuffled = shuffleArray([...filtered]);
                     feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                     feedIndex = 0;
                     if (container) container.innerHTML = '';
@@ -2035,7 +2020,7 @@
                 const renderedIds = [];
                 for (let i = 0; i < BATCH_SIZE; i++) {
                     if (feedIndex >= feedShuffled.length) {
-                        feedShuffled = weightedShuffleArray([...filtered]);
+                        feedShuffled = shuffleArray([...filtered]);
                         feedShuffled._sourceId = filtered.map(p => p.id).join(',');
                         feedIndex = 0;
                     }
@@ -2680,7 +2665,8 @@
                         followers: [], following: [], badges: [], premium: false };
                     saveToLocalStorage();
                     if (dataLoaded) {
-                        saveState();
+                        try { await supabase.from('app_state').upsert({ id: STATE_ID, data: { users, posts } }, {
+                                onConflict: 'id' }); } catch (e) {}
                     }
                     loginUser(u);
                 });
@@ -2942,4 +2928,4 @@
         })();
     </script>
 </body>
-</html>
+</html>  
